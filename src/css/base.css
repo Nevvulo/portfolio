@@ -105,6 +105,10 @@ section .flex div p {
 	section {
 		padding: 3em 0 6em 0;
 	}
+
+	.cards {
+		padding: 1em 15em 3em 15em;
+	}
 }
 
 @media screen and (max-width: 1280px) {
@@ -112,17 +116,17 @@ section .flex div p {
 		padding: 6em 0 6em 0;
 	}
 
-		section h1 {
-			font-size: 4em;
-		}
+	section h1 {
+		font-size: 4em;
+	}
 
-		section h3 {
-			font-size: 1.8em;
-		}
+	section h3 {
+		font-size: 1.8em;
+	}
 
-		section .flex div {
-			padding: 0 3em;
-		}
+	section .flex div {
+		padding: 0 3em;
+	}
 }
 
 @media screen and (max-width: 980px) {
@@ -131,44 +135,60 @@ section .flex div p {
 		padding: 5em 0 4em 0;
 	}
 
-		section h1 {
-			font-size: 4em;
-		}
+	section h1 {
+		font-size: 4em;
+	}
 
-		section h3 {
-			font-size: 1.8em;
-		}
+	section h3 {
+		font-size: 1.8em;
+	}
 
-		section .flex div {
-			font-size: .85em;
-			padding: 0 1.5em;
-		}
+	section .flex div {
+		font-size: .85em;
+		padding: 0 1.5em;
+	}
 }
 
 @media screen and (max-width: 736px) {
 	section {
 		padding: 3em 0 3em 0;
 	}
-		section .inner {
-			padding-top: 3em;
-		}
-		section h1 {
-			font-size: 2.8em;
-		}
-		section h3 {
-			font-size: 1.4em;
-		}
-		section .flex {
-			-moz-flex-direction: column;
-			-webkit-flex-direction: column;
-			-ms-flex-direction: column;
-			flex-direction: column;
-			margin: 0 auto 2em auto;
-		}
-			section .flex div {
-				font-size: .85em;
-				padding: 0;
-				border: none;
-				margin-bottom: 1em;
-			}
+
+	section .inner {
+		padding-top: 3em;
+	}
+
+	section h1 {
+		font-size: 2.8em;
+	}
+
+	section h3 {
+		font-size: 1.4em;
+	}
+
+	section .flex {
+		-moz-flex-direction: column;
+		-webkit-flex-direction: column;
+		-ms-flex-direction: column;
+		flex-direction: column;
+		margin: 0 auto 2em auto;
+	}
+
+	section .flex div {
+		font-size: .85em;
+		padding: 0;
+		border: none;
+		margin-bottom: 1em;
+	}
+}
+
+.center {
+	text-align: center;
+	margin-left: auto;
+	margin-right: auto;
+	vertical-align: middle;
+}
+
+.cards {
+	padding: 1em 5em 3em 5em;
 }
