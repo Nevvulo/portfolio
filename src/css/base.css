@@ -190,5 +190,13 @@ section .flex div p {
 }
 
 .cards {
+	margin: 1em 1em 1em 1em;
 	padding: 1em 5em 3em 5em;
+}
+
+.outer-cards {
+	margin: 3em;
+	margin-top: 0.5em;
+	background-color: rgba(0, 0, 0, 0.1);
+	box-shadow: 5px 5px 1px 0px grey;
 }

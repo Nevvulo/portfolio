@@ -7,7 +7,7 @@ const addPortfolioCard = (title, description) => {
 	let html = "";
 	html += `
 	<div class="col s12 m6">
-		<div class="card blue-grey darken-1">
+		<div class="card blue-grey darken-1 z-depth-1">
 			<div class="card-content white-text">
 				<span class="card-title"><b>${title}</b></span>
 				<p>${description}</p>
@@ -28,4 +28,9 @@ document.addEventListener("DOMContentLoaded", function(event) {
 		console.log(addPortfolioCard(key, value))
 		$(".cards").append(addPortfolioCard(key, value));
 	}
+
+	const greetings = ["G'day", "Hello", "Hi there", "Hey", "Hey there"];
+	$(".main-title")
+	.prepend(Math.floor(Math.random()*10)%2==0 ? ", " : "! ")
+	.prepend(greetings[Math.floor(Math.random()*greetings.length)])
 });
