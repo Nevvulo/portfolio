@@ -1,7 +1,7 @@
 /* Banner */
 section {
 	padding: 4em 0 9em 0;
-	background-image: url(./../assets/img/section-background.png);
+	background-image: url(./../assets/img/section-background.jpg);
 	background-size: cover;
 	background-position: bottom;
 	background-attachment: fixed;
@@ -205,5 +205,4 @@ section .flex div p {
 	width: 32px;
 	height: 32px;
 	border-radius: 360px;
-	padding-top: 10px;
 }
