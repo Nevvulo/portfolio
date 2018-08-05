@@ -24,7 +24,7 @@ const portfolioCards = {
 		languages: ["JavaScript"]
 	},
 	"theShell": {
-		description: "theShell is an open-source desktop environment developed entirely in [Qt](https://www.qt.io/). The main goal is to be an \"all-in-one\" package for those who want the simplicity and functionality of a normal desktop environment, whilst also having the advanced features for developers.",
+		description: "theShell is an open-source desktop environment developed using [Qt](https://www.qt.io/). The main goal is to be an \"all-in-one\" package for those who want the simplicity and functionality of a normal desktop environment, whilst also having the advanced features for developers.",
 		moreinfo: false,
 		github: "vicr123/theShell",
 		website: "https://vicr123.com",
@@ -40,6 +40,13 @@ const portfolioCards = {
 		avatar: "https://cdn.discordapp.com/avatars/270904126974590976/7cea1fc3a899e7c1ed3542c0fe630519.png?size=2048",
 		role: "Developer",
 		languages: ["JavaScript"]
+	},
+	"Securebot": {
+		description: "A simple program that had multiple tools that allowed you to generate a password, check your password strength, check how secure your computer was, as well as giving you advice for how to combat viruses and general computer issues. Securebot also featured a password manager that had a master password lock.",
+		moreinfo: false,
+		github: "zBlakee/Securebot",
+		role: "Lead Developer",
+		languages: ["Visual Basic"]
 	}
 }
 
@@ -48,7 +55,8 @@ const languageColors = {
 	"Node.js": "#66bb6a",
 	"C++": "#ec407a",
 	"HTML": "#ef5350",
-	"CSS": "#673ab7"
+	"CSS": "#673ab7",
+	"Visual Basic": "#ba68c8"
 }
 
 const addPortfolioCard = (title, info) => {
@@ -61,7 +69,7 @@ const addPortfolioCard = (title, info) => {
 		}
 	}
 	html += `
-	<div class="col s12 m6 l4">
+	<div class="col s12 m12 l4">
 		<div class="card blue-grey darken-1 z-depth-1">
 			<div class="card-content white-text">
 				<span class="card-title">

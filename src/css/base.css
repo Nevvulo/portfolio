@@ -32,7 +32,7 @@ section h1 {
 	top: 25px;
 	color: white;
 	font-size: 72px;
-	font-family: 'Raleway', sans-serif;
+	font-family: 'Poppins', sans-serif;
 	font-weight: bold;
 	margin: 0.25em 0;
 	text-shadow: 4px 5px 30px black;
@@ -192,6 +192,13 @@ section .flex div p {
 .cards {
 	margin: 1em 1em 1em 1em;
 	padding: 1em 5em 0em 5em;
+	display: flex;
+	flex-wrap: wrap;
+	vertical-align: top;
+}
+
+.card {
+	border: solid 1px;
 }
 
 .cards p a {
@@ -219,6 +226,7 @@ section .flex div p {
 }
 
 .badge {
+	top: -3px;
 	font-family: "Roboto", sans-serif;
 	margin-left: 5px;
 	padding-left: 5px;
@@ -228,6 +236,7 @@ section .flex div p {
 	font-size: 12px;
 	background-color: #263238;
 	display: inline-block;
-	border-radius: 10px;
+	border-radius: 5px;
 	line-height: 2em;
+	position: relative;
 }
