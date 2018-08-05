@@ -200,3 +200,10 @@ section .flex div p {
 	background-color: rgba(0, 0, 0, 0.1);
 	box-shadow: 5px 5px 1px 0px grey;
 }
+
+.avatar-small {
+	width: 32px;
+	height: 32px;
+	border-radius: 360px;
+	padding-top: 10px;
+}
