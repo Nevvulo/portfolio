@@ -191,7 +191,11 @@ section .flex div p {
 
 .cards {
 	margin: 1em 1em 1em 1em;
-	padding: 1em 5em 3em 5em;
+	padding: 1em 5em 0em 5em;
+}
+
+.cards p a {
+	color: #80deea;
 }
 
 .outer-cards {
@@ -202,7 +206,28 @@ section .flex div p {
 }
 
 .avatar-small {
+	margin-right: 5px;
 	width: 32px;
 	height: 32px;
 	border-radius: 360px;
+	position: relative;
+	top: 7px;
+}
+
+.card-content {
+	padding-bottom: 6px !important;
+}
+
+.badge {
+	font-family: "Roboto", sans-serif;
+	margin-left: 5px;
+	padding-left: 5px;
+	padding-right: 5px;
+	height: auto;
+	text-transform: uppercase;
+	font-size: 12px;
+	background-color: #263238;
+	display: inline-block;
+	border-radius: 10px;
+	line-height: 2em;
 }
