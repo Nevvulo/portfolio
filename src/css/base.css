@@ -197,10 +197,6 @@ section .flex div p {
 	vertical-align: top;
 }
 
-.card {
-	border: solid 1px;
-}
-
 .cards p a {
 	color: #80deea;
 }
@@ -216,6 +212,15 @@ section .flex div p {
 	margin-right: 5px;
 	width: 32px;
 	height: 32px;
+	border-radius: 360px;
+	position: relative;
+	top: 7px;
+}
+
+.avatar-medium {
+	margin-right: 5px;
+	width: 72px;
+	height: 72px;
 	border-radius: 360px;
 	position: relative;
 	top: 7px;
