@@ -1,4 +1,8 @@
 /* Banner */
+body {	
+    background-color: #282828;
+}
+
 section {
 	padding: 4em 0 9em 0;
 	background-image: url(./../assets/img/section-background.jpg);
@@ -204,8 +208,6 @@ section .flex div p {
 .outer-cards {
 	margin: 3em;
 	margin-top: 0.5em;
-	background-color: rgba(0, 0, 0, 0.1);
-	box-shadow: 5px 5px 1px 0px grey;
 }
 
 .avatar-small {
