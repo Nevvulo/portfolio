@@ -13,7 +13,7 @@ section {
 	text-align: center;
 	position: relative;
 	width: 100%;
-	height: 50vh;
+	height: 100%;
 }
 
 section:before {
@@ -29,7 +29,12 @@ section:before {
 section .inner {
 	position: relative;
 	z-index: 15;
-	padding-top: 0.5em;
+	padding: 0.5em;
+	background: rgba(0,0,0,0.5);
+	margin-left: 10%;
+	margin-right: 10%;
+	border-radius: 16px;
+	box-shadow: 4px 5px 30px black;
 }
 
 section h1 {
@@ -184,6 +189,22 @@ section .flex div p {
 		border: none;
 		margin-bottom: 1em;
 	}
+}
+
+.links {
+	margin: 20px;
+}
+
+.links a {
+	margin: 20px;
+	font-size: 22px;
+	font-family: 'Jua', sans-serif;
+}
+
+p.scrolldown {
+	font-size: 16px;
+	color: white;
+	font-family: 'Roboto', sans-serif;
 }
 
 .center {
