@@ -110,6 +110,97 @@ section .flex div p {
 	}
 }
 
+@media only screen and (min-device-width: 768px) and (max-device-width: 1024px) and (orientation: landscape) {
+	section {
+		background-attachment: scroll;
+	}
+}
+
+@media screen and (max-width: 1680px) {
+	section {
+		padding: 8em 0 10em 0;
+	}
+
+	.cards {
+		padding: 1em 15em 3em 15em;
+	}
+}
+
+@media screen and (max-width: 1280px) {
+	section {
+		padding: 6em 0 6em 0;
+	}
+
+	section h1 {
+		font-size: 4em;
+	}
+
+	section h3 {
+		font-size: 1.8em;
+	}
+
+	section .flex div {
+		padding: 0 3em;
+	}
+}
+
+@media screen and (max-width: 980px) {
+	section {
+		background-attachment: scroll;
+		padding: 5em 0 4em 0;
+	}
+
+	section h1 {
+		font-size: 4em;
+	}
+
+	section h3 {
+		font-size: 1.8em;
+	}
+
+	section .flex div {
+		font-size: .85em;
+		padding: 0 1.5em;
+	}
+}
+
+@media screen and (max-width: 736px) {
+	section {
+		padding: 3em 0 3em 0;
+	}
+
+	section .inner {
+		padding-top: 3em;
+	}
+
+	section h1 {
+		font-size: 2.8em;
+	}
+
+	section h3 {
+		font-size: 1.4em;
+	}
+
+	.outer-cards .cards {
+		padding: 0em 0em 0em 0em;
+	}
+
+	section .flex {
+		-moz-flex-direction: column;
+		-webkit-flex-direction: column;
+		-ms-flex-direction: column;
+		flex-direction: column;
+		margin: 0 auto 2em auto;
+	}
+
+	section .flex div {
+		font-size: .85em;
+		padding: 0;
+		border: none;
+		margin-bottom: 1em;
+	}
+}
+
 .links {
 	margin: 20px;
 }
