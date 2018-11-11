@@ -5,7 +5,7 @@ body {
 
 section {
 	padding: 10em 0 10em 0;
-	background-image: url(./../assets/img/section-background.jpg);
+	background: linear-gradient(to right, rgba(0,0,0,0.95) 0%,rgba(0,0,0,0.01) 100%,rgba(0,0,0,0) 52%), url(./../assets/img/section-background.jpg) no-repeat fixed;
 	background-size: cover;
 	background-position: bottom;
 	background-attachment: fixed;
@@ -30,11 +30,9 @@ section .inner {
 	position: relative;
 	z-index: 15;
 	padding: 0.5em;
-	background: rgba(149,117,205,0.35);
 	margin-left: 10%;
 	margin-right: 10%;
 	border-radius: 16px;
-	box-shadow: 4px 5px 30px black;
 }
 
 section h1 {
@@ -228,7 +226,6 @@ p.scrolldown {
 	position: fixed;
 	top: 50%;
 	left: 40%;
-	/* bring your own prefixes */
 	transform: translate(-50%, -50%);
   }
 
@@ -237,11 +234,14 @@ p.scrolldown {
 	padding: 1em 2.5em 0em 2.5em;
 	display: flex;
 	flex-wrap: wrap;
-	vertical-align: top;
+}
+
+.card {
+	flex: 1;
 }
 
 .cards p a {
-	color: #80deea;
+	color: #b39ddb;
 }
 
 .outer-cards {

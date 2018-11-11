@@ -17,32 +17,70 @@
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-rc.2/js/materialize.min.js"></script>
 
 		<!-- Scripts that are lower priority -->
+		<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@glidejs/glide"></script>
+		<link rel="stylesheet" href="https://unpkg.com/@glidejs/glide@3.2.3/dist/css/glide.core.min.css">
 		<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 		<script src="js/index.js"></script>
 	</head>
 
 	<body>
 		<div class="main">
-			<section class="top introduction">
-				<div class="inner centered center">
-					<img src="assets/img/zblake.png" class="avatar-medium">
-					<h1 class="main-title">I'm Blake.</h1>
-					<h3>I'm a web and software developer based in Australia.</h3>
+			<section class="top introduction row">
+				<div class="inner">
+					<div class="col s6">
+						<img src="assets/img/zblake.png" class="avatar-medium">
+						<h1 class="main-title">I'm Blake.</h1>
+						<h3>I'm a web and software developer based in Australia.</h3>
 
-					<div class="links">
-						<a class="btn red lighten-2">Projects</a>
-						<a class="btn blue lighten-2">About Me</a>
-						<a class="btn green lighten-2">Social</a>
+						<div class="links">
+							<a class="btn red lighten-2">Projects</a>
+							<a class="btn blue lighten-2">About Me</a>
+							<a class="btn green lighten-2">Social</a>
+						</div>
+
+						<br>
+						<div class="scrolldown-icon avatar-small"></div>
+						<p class="scrolldown">Scroll down to see things I've worked on!</p>
 					</div>
 
-					<br>
-					<p class="scrolldown">Scroll down to see things I've worked on!</p>
+					<div class="col s6">
+						<div class="carousel">
+							<div class="glide__track" data-glide-el="track">
+								<ul class="glide__slides">
+									<li class="glide__slide"><img src="https://absolute-legend.zblake.xyz/AG3VAzia.png"></li>
+									<li class="glide__slide"><img src="https://absolute-legend.zblake.xyz/7y4tewrO.png"></li>
+									<li class="glide__slide"><img src="https://absolute-legend.zblake.xyz/9Hp6lC6n.png"></li>
+								</ul>
+							</div>
+						</div>
+						
+					</div>
 				</div>
 			</section>
 			
 			<div class="outer-cards">
-				<div class="cards row"></div>
+				<div class="cards row">
+					</div>
+				</div>
 			</div>
 		</div>
 	</body>
+
+	<script>
+		var glide = new Glide('.carousel', {
+		type: 'carousel',
+		perView: 4,
+		focusAt: 'center',
+		breakpoints: {
+			800: {
+			perView: 2
+			},
+			480: {
+			perView: 1
+			}
+		}
+		})
+
+		glide.mount()
+	</script>
 </html>

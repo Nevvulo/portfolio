@@ -69,7 +69,6 @@ const addPortfolioCard = (title, info) => {
 		}
 	}
 	html += `
-	<div class="col s12 m12 l4">
 		<div class="card z-depth-1 z-depth-1" style="background-color: #191919">
 			<div class="card-content white-text">
 				<span class="card-title">
@@ -87,7 +86,6 @@ const addPortfolioCard = (title, info) => {
 				${info.website ? `<a href="${info.website}" class="btn light-green darken-1">Website</a>` : ""}
 			</div>
 		</div>
-	</div>
 	`
 	return html;
 }
