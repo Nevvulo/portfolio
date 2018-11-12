@@ -8,6 +8,15 @@ const portfolioCards = {
 		role: "Lead Developer",
 		languages: ["JavaScript", "Node.js", "HTML", "CSS"]
 	},
+	"Dank Memer": {
+		description: "A Discord bot with over 340k servers, mainly in the business of providing it's users with funny memes and joke/entertainment commands to play around with.",
+		moreinfo: false,
+		github: "Dank-Memer",
+		website: "http://dankmemer.lol",
+		avatar: "https://dankmemer.lol/96fe07365c03726ce2b25e4988146aee.png",
+		role: "Developer",
+		languages: ["JavaScript", "Node.js", "Python"]
+	},
 	"Remindo": {
 		description: "Remindo is a desktop application made in Electron with the goal of being a viable replacement for Google Keep by providing advanced reminder options such as timers, comments and markdown whilst maintaining a sleek and simplistic design.",
 		moreinfo: false,
@@ -32,15 +41,6 @@ const portfolioCards = {
 		role: "Contributor",
 		languages: ["C++"]
 	},
-	"Dank Memer": {
-		description: "A Discord bot with over 340k servers, mainly in the business of providing it's users with funny memes and joke/entertainment commands to play around with.",
-		moreinfo: false,
-		github: "Dank-Memer",
-		website: "http://dankmemer.lol",
-		avatar: "https://cdn.discordapp.com/avatars/270904126974590976/7cea1fc3a899e7c1ed3542c0fe630519.png?size=2048",
-		role: "Developer",
-		languages: ["JavaScript"]
-	},
 	"Securebot": {
 		description: "A simple program that had multiple tools that allowed you to generate a password, check your password strength, check how secure your computer was, as well as giving you advice for how to combat viruses and general computer issues. Securebot also featured a password manager that had a master password lock.",
 		moreinfo: false,
@@ -56,7 +56,8 @@ const languageColors = {
 	"C++": "#ec407a",
 	"HTML": "#ef5350",
 	"CSS": "#673ab7",
-	"Visual Basic": "#ba68c8"
+	"Visual Basic": "#ba68c8",
+	"Python": "#1976d2"
 }
 
 const addPortfolioCard = (title, info) => {
@@ -81,9 +82,9 @@ const addPortfolioCard = (title, info) => {
 			</div>
 
 			<div class="card-action">
-				<a href="#" class="btn red lighten-1">More Information</a>
-				${info.github ? `<a href="https://github.com/${info.github}" style="background-color: #333" class="btn">GitHub</a>` : ""}
-				${info.website ? `<a href="${info.website}" class="btn light-green darken-1">Website</a>` : ""}
+				${info.moreinfo ? `<a href="#"><img src="assets/svg/information.svg" height=32 width=32></a>` : ""}
+				${info.github ? `<a href="https://github.com/${info.github}"><img src="assets/svg/github.svg" height=32 width=32></a>` : ""}
+				${info.website ? `<a href="${info.website}"><img src="assets/svg/network.svg" height=32 width=32></a>` : ""}
 			</div>
 		</div>
 	`

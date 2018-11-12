@@ -197,6 +197,21 @@ section .flex div p {
 		border: none;
 		margin-bottom: 1em;
 	}
+
+	.carousel, .carousel-container {
+		display: none;
+	}
+
+	div.col.s6.introduction-container {
+		width: 100%;
+	}
+}
+
+@media screen and (max-width: 340px) {
+	.introduction-container .links a {
+		font-size: 16px;
+		margin: 4px;
+	}
 }
 
 .links {
@@ -234,19 +249,24 @@ p.scrolldown {
 	padding: 1em 2.5em 0em 2.5em;
 	display: flex;
 	flex-wrap: wrap;
+	align-items: center;
+	vertical-align: top;
+	margin: 12px;
 }
 
-.card {
-	flex: 1;
-}
-
-.cards p a {
-	color: #b39ddb;
+div.card {
+	flex: 1 1 25%;
+	padding: 8px;
+	margin: 8px;
 }
 
 .outer-cards {
 	margin: 3em;
 	margin-top: 0.5em;
+}
+
+.cards p a {
+	color: #b39ddb;
 }
 
 .avatar-small {

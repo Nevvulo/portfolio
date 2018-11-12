@@ -27,7 +27,7 @@
 		<div class="main">
 			<section class="top introduction row">
 				<div class="inner">
-					<div class="col s6">
+					<div class="col s6 introduction-container">
 						<img src="assets/img/zblake.png" class="avatar-medium">
 						<h1 class="main-title">I'm Blake.</h1>
 						<h3>I'm a web and software developer based in Australia.</h3>
@@ -43,7 +43,7 @@
 						<p class="scrolldown">Scroll down to see things I've worked on!</p>
 					</div>
 
-					<div class="col s6">
+					<div class="col s6 carousel-container">
 						<div class="carousel">
 							<div class="glide__track" data-glide-el="track">
 								<ul class="glide__slides">
@@ -67,16 +67,13 @@
 	</body>
 
 	<script>
-		var glide = new Glide('.carousel', {
+		const glide = new Glide('.carousel', {
 		type: 'carousel',
-		perView: 4,
+		perView: 1,
 		focusAt: 'center',
 		breakpoints: {
-			800: {
-			perView: 2
-			},
 			480: {
-			perView: 1
+			perView: 0
 			}
 		}
 		})
