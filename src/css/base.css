@@ -75,31 +75,8 @@ section p {
 }
 
 section .flex {
-	-ms-flex-pack: center;
-	-moz-justify-content: center;
-	-webkit-justify-content: center;
-	-ms-justify-content: center;
-	justify-content: center;
-	text-align: center;
+	align-content: stretch;
 	margin: 0 auto 4em auto;
-}
-
-section .flex div {
-	border-right: 2px solid rgba(255, 255, 255, 0.2);
-	padding: 0 8em;
-}
-
-section .flex div:last-child {
-	border: none;
-	padding-right: 0;
-}
-
-section .flex div:first-child {
-	padding-left: 0;
-}
-
-section .flex div p {
-	margin: 0;
 }
 
 @media only screen and (min-device-width: 768px) and (max-device-width: 1024px) and (orientation: landscape) {
@@ -111,6 +88,21 @@ section .flex div p {
 @media only screen and (min-device-width: 768px) and (max-device-width: 1024px) and (orientation: landscape) {
 	section {
 		background-attachment: scroll;
+	}
+}
+
+@media screen and (min-width: 1920px) {
+	section {
+		padding: 8em 0 10em 0;
+	}
+
+	.cards {
+		padding: 1em 15em 3em 15em;
+	}
+
+	div.card {
+		left: 25%;
+		width: 50%;
 	}
 }
 
@@ -121,6 +113,11 @@ section .flex div p {
 
 	.cards {
 		padding: 1em 15em 3em 15em;
+	}
+
+	div.card {
+		left: 25%;
+		width: 50%;
 	}
 }
 
@@ -139,6 +136,11 @@ section .flex div p {
 
 	section .flex div {
 		padding: 0 3em;
+	}
+
+	div.card {
+		left: 15%;
+		width: 66.7%;
 	}
 }
 
@@ -159,6 +161,11 @@ section .flex div p {
 	section .flex div {
 		font-size: .85em;
 		padding: 0 1.5em;
+	}
+
+	div.card {
+		left: 10%;
+		width: 75%;
 	}
 }
 
@@ -205,12 +212,22 @@ section .flex div p {
 	div.col.s6.introduction-container {
 		width: 100%;
 	}
+
+	div.card {
+		left: 5%;
+		width: 85%;
+	}
 }
 
 @media screen and (max-width: 340px) {
 	.introduction-container .links a {
 		font-size: 16px;
 		margin: 4px;
+	}
+
+	div.card {
+		left: 0%;
+		width: 100%;
 	}
 }
 
@@ -247,16 +264,11 @@ p.scrolldown {
 .cards {
 	margin: 1em 1em 1em 1em;
 	padding: 1em 2.5em 0em 2.5em;
-	display: flex;
-	flex-wrap: wrap;
-	align-items: center;
-	vertical-align: top;
-	margin: 12px;
 }
 
 div.card {
-	flex: 1 1 25%;
-	padding: 8px;
+	height: fit-content;
+	padding: 2px;
 	margin: 8px;
 }
 
@@ -306,4 +318,9 @@ div.card {
 	border-radius: 5px;
 	line-height: 2em;
 	position: relative;
+}
+
+*[data-tooltip]:hover:after {
+	content: attr(data-tooltip);
+	color: black;
 }

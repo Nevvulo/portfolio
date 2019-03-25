@@ -92,7 +92,7 @@ const addPortfolioCard = (title, info) => {
 }
 
 document.addEventListener("DOMContentLoaded", function(event) {
-    for (const [key, value] of Object.entries(portfolioCards)) {
+	for (const [key, value] of Object.entries(portfolioCards)) {
 		$(".cards").append(addPortfolioCard(key, value));
 	}
 
