@@ -17,12 +17,12 @@ document.addEventListener("DOMContentLoaded", async function (event) {
 			about.style = back.style = '';
 			about.classList.add('animated', 'animatedFadeInUp', 'fadeInUp');
 			back.classList = about.classList;
-		}, 400);
+		}, 200);
 	}
 
 	mainTitle.innerHTML = splitInnerHTML.join('');
 	// Represents the times between the next animation (100ms, then wait xms until next)
-	const timings = [ 100, 460, 140, 70, 150 ];
+	const timings = [ 100, 230, 140, 70, 150 ];
 
 	let index = 0;
 	const queue = [ ...mainTitle.children ];

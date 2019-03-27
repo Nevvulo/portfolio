@@ -137,12 +137,12 @@ document.addEventListener("DOMContentLoaded", async function (event) {
 		setTimeout(() => {
 			bio.style = '';
 			bio.classList.add('animated', 'animatedFadeInUp', 'fadeInUp');
-		}, 400);
+		}, 200);
 	}
 
 	mainTitle.innerHTML = splitInnerHTML.join('');
 	// Represents the times between the next animation (100ms, then wait xms until next)
-	const timings = [ 460, 200 ];
+	const timings = [ 230, 100 ];
 
 	let index = 0;
 	let elementIndex = 0;
