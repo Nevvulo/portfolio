@@ -93,11 +93,23 @@ const addPortfolioCard = (title, info) => {
 
 document.addEventListener("DOMContentLoaded", function(event) {
 	for (const [key, value] of Object.entries(portfolioCards)) {
-		$(".cards").append(addPortfolioCard(key, value));
+		document.getElementsByClassName('cards')[0].innerHTML += addPortfolioCard(key, value);
 	}
 
 	const greetings = ["G'day", "Hello", "Hi there", "Hey", "Hey there"];
-	$(".main-title")
-	.prepend(Math.floor(Math.random()*10)%2==0 ? ", " : "! ")
-	.prepend(greetings[Math.floor(Math.random()*greetings.length)])
+	document.getElementsByClassName('main-title')[0]
+	.innerHTML
+	.unshift(Math.floor(Math.random()*10)%2==0 ? ", " : "! ")
+	.unshift(greetings[Math.floor(Math.random()*greetings.length)])
+
+	// Represents the times between the next animation (100ms, then wait xms until next)
+	const timings = [ 100, 155, 450, 200 ];
+
+	let index = 0;
+	for (let elm of document.getElementsByClassName('main-title')[0]) {
+		setTimeout(() => {
+			elm.classList.add('fadeUp')
+		}, timings)
+		index++;
+	}
 });
