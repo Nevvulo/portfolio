@@ -1,0 +1,80 @@
+section {
+    height: 35%;
+    padding-top: 2em;
+    padding: 3em;
+}
+
+h3.description {
+    font-weight: 400;
+	color: #fff;
+	margin: 0;
+	font-size: 16px;
+	font-family: "Roboto", sans-serif;
+}
+
+h4 {
+    font-weight: 400;
+	color: #fff;
+	margin: 0;
+	font-size: 18px;
+	font-family: "Roboto", sans-serif;
+}
+
+@media screen and (max-width: 1920px) {
+    .description {
+        padding: 25px;
+        padding-left: 25em;
+        padding-right: 25em;
+    }
+}
+
+@media screen and (max-width: 1680px) {
+    .description {
+        padding: 25px;
+        padding-left: 15em;
+        padding-right: 15em;
+    }
+}
+
+@media screen and (max-width: 1280px) {
+    .description {
+        padding: 25px;
+        padding-left: 5em;
+        padding-right: 5em;
+    }
+}
+
+@media screen and (max-width: 640px) {
+    section h1 {
+        padding: 1.5em;
+        margin: -1.5em;
+    }
+
+    .description {
+        padding: 25px;
+        padding-left: 1em;
+        padding-right: 1em;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    section h1 {
+        padding: 0.25em;
+        padding-bottom: 1em;
+        margin: -1.5em;
+    }
+
+    h4 {
+        font-size: 13px !important;
+    }
+
+    .btn {
+        font-size: 13px !important;
+    }
+
+    .description {
+        padding: 25px;
+        padding-left: 1em;
+        padding-right: 1em;
+    }
+}
