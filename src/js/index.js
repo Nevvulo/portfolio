@@ -1,3 +1,24 @@
+// Thanks to https://github.com/jonathantneal/array-flat-polyfill/blob/master/src/index.js!
+const _flatPolyfill = (arr, argument) => {
+	let depth = isNaN(argument) ? 1 : Number(argument);
+	const stack = Array.prototype.slice.call(arr);
+	const result = [];
+
+	while (depth && stack.length) {
+		const next = stack.pop();
+		if (Object(next) instanceof Array) {
+			--depth;
+			Array.prototype.push.apply(stack, next);
+		} else {
+			result.unshift(next);
+		}
+	}
+
+	return result.concat(stack);
+}
+
+const sleep = (ms) => { return new Promise(resolve => setTimeout(resolve, ms)); };
+
 const portfolioCards = {
 	"zBot": {
 		description: "zBot was a multi-purpose Discord bot application that allowed users to use commands to make their experience on their Discord server more enjoyable and interactive. It provided moderation commands to punish people for breaking rules, general purpose commands for advanced and detailed server management, as well as other fun commands to play around with.",
@@ -91,25 +112,67 @@ const addPortfolioCard = (title, info) => {
 	return html;
 }
 
-document.addEventListener("DOMContentLoaded", function(event) {
+document.addEventListener("DOMContentLoaded", async function (event) {
+	const mainTitle = document.getElementsByClassName('main-title')[0];
+	
 	for (const [key, value] of Object.entries(portfolioCards)) {
 		document.getElementsByClassName('cards')[0].innerHTML += addPortfolioCard(key, value);
 	}
 
-	const greetings = ["G'day", "Hello", "Hi there", "Hey", "Hey there"];
-	document.getElementsByClassName('main-title')[0]
-	.innerHTML
-	.unshift(Math.floor(Math.random()*10)%2==0 ? ", " : "! ")
-	.unshift(greetings[Math.floor(Math.random()*greetings.length)])
+	let greetings = ["G'day", "Hello", "Hi there", "Hey", "Hey there"];
+	greetings = greetings.map(e => e += Math.floor(Math.random()*10)%2==0 ? ", " : "! ");
+	const chosen = greetings[Math.floor(Math.random()*greetings.length)];
+	const splitInnerHTML = mainTitle.innerHTML.split('')
 
+	const greetingSplit = [ ..._flatPolyfill(chosen.trim().split(' ')), 'I\'m', 'Blake.' ].reverse();
+	for (let word in greetingSplit) {
+		splitInnerHTML.unshift(`<div class="word-main-title" style="visibility: collapse;">${greetingSplit[word]}</div>`)
+		if (word) {
+			splitInnerHTML.unshift(' ')
+		}
+	}
+
+	const displayBio = () => {
+		const bio = document.getElementsByClassName('lower-half')[0];
+		setTimeout(() => {
+			bio.style = '';
+			bio.classList.add('animated', 'animatedFadeInUp', 'fadeInUp');
+		}, 400);
+	}
+
+	mainTitle.innerHTML = splitInnerHTML.join('');
 	// Represents the times between the next animation (100ms, then wait xms until next)
-	const timings = [ 100, 155, 450, 200 ];
+	const timings = [ 460, 200 ];
 
 	let index = 0;
-	for (let elm of document.getElementsByClassName('main-title')[0]) {
+	let elementIndex = 0;
+	const queue = [ ...mainTitle.children ];
+	const callNextAnimation = () => {
+		const elm = queue[elementIndex]
+		if (!elm) {
+			// We're done with the introduction now, display description
+			displayBio();
+			return;
+		}
+		const wordIsPartOfGreeting = chosen.includes(elm.innerHTML);
+		const timing = timings[index];
 		setTimeout(() => {
-			elm.classList.add('fadeUp')
-		}, timings)
-		index++;
+			elm.style = '';
+			if (!wordIsPartOfGreeting) {
+				index++;
+			}
+			if (elm.innerHTML.includes('Blake')) {
+				let avatar = document.getElementsByClassName('avatar')[0];
+				avatar.style = '';
+				avatar.classList.add('animated', 'animatedFadeInUp', 'fadeInUp');
+			}
+			elm.classList.add('animated', 'animatedFadeInUp', 'fadeInUp');
+			elementIndex++;
+			callNextAnimation()
+		}, wordIsPartOfGreeting ? 100 : timing);
 	}
+	callNextAnimation()
+	// Finally, remove the style from main title
+	console.log(mainTitle)
+	mainTitle.style = '';
 });
