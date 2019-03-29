@@ -334,6 +334,10 @@ div.card {
 	display: inline-block;
 }
 
+.row {
+	margin-bottom: 0px !important;
+}
+
 @keyframes fadeInUp {
 	from {
 			transform: translate3d(0,40px,0)
