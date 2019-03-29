@@ -34,7 +34,7 @@ const portfolioCards = {
 		moreinfo: false,
 		github: "Dank-Memer",
 		website: "http://dankmemer.lol",
-		avatar: "https://dankmemer.lol/96fe07365c03726ce2b25e4988146aee.png",
+		avatar: "https://dankmemer.lol/assets/memer.png",
 		role: "Developer",
 		languages: ["JavaScript", "Node.js", "Python"]
 	},
