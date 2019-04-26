@@ -84,7 +84,7 @@ const roleColors = {
 const addPortfolioCard = (title, info) => {
   let html = '';
   html += `
-		<div class="card z-depth-1 z-depth-1">
+		<div class="card z-depth-1 z-depth-1" style="visibility: collapse;">
 			<div class="card-content white-text">
 				<span class="card-title">
 				${info.avatar ? `<img class="avatar-small" src="${info.avatar}">` : ''} 
@@ -111,7 +111,7 @@ document.addEventListener('DOMContentLoaded', async (event) => {
   for (const [ key, value ] of Object.entries(portfolioCards)) {
     document.querySelector(`.cards-column-${column}`).innerHTML += addPortfolioCard(key, value);
     column++;
-    if (column > 3) {
+    if (column > 2) {
       column = 1;
     }
   }
@@ -129,12 +129,25 @@ document.addEventListener('DOMContentLoaded', async (event) => {
     }
   }
 
-  const displayBio = () => {
-    const bio = document.getElementsByClassName('lower-half')[0];
+  const displayCards = () => {
+    const cards = document.querySelectorAll('.card');
+    let timing = 100;
+    for (const card of cards) {
+      setTimeout(() => {
+        card.style = '';
+        card.classList.add('animated', 'animatedFadeInUp', 'fadeInUp');
+      }, timing);
+      timing += 100;
+    }
+  };
+
+  const displayRest = () => {
+    const bio = document.querySelector('.lower-half');
     setTimeout(() => {
       bio.style = '';
       bio.classList.add('animated', 'animatedFadeInUp', 'fadeInUp');
     }, 200);
+    displayCards();
   };
 
   mainTitle.innerHTML = splitInnerHTML.join('');
@@ -148,7 +161,7 @@ document.addEventListener('DOMContentLoaded', async (event) => {
     const elm = queue[elementIndex];
     if (!elm) {
       // We're done with the introduction now, display description
-      return displayBio();
+      return displayRest();
     }
     const wordIsPartOfGreeting = chosen.includes(elm.innerHTML);
     const timing = timings[index];

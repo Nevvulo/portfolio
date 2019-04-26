@@ -21,6 +21,8 @@ body {
 	width: 24px;
 	height: 24px;
 	margin-right: 12px;
+	position: relative;
+	top: 5px;
 }
 
 section {
@@ -99,10 +101,25 @@ section .flex {
 	margin: 0 auto 4em auto;
 }
 
-@media only screen and (min-device-width: 768px) and (max-device-width: 1024px) and (orientation: landscape) {
-	section {
-		background-attachment: scroll;
-	}
+.cards {
+	display: flex;
+  flex-wrap: wrap;
+  padding-left: 10%;
+  padding-right: 10%;
+}
+
+div.card {
+	height: fit-content;
+	padding: 2px;
+	background-color: #0f0f0f;
+	margin-top: 8px;
+  vertical-align: middle;
+}
+
+.card-column {
+	flex: 50%;
+	max-width: 50%;
+	padding: 4px 4px;
 }
 
 @media only screen and (min-device-width: 768px) and (max-device-width: 1024px) and (orientation: landscape) {
@@ -111,33 +128,29 @@ section .flex {
 	}
 }
 
-@media screen and (min-width: 1920px) {
+@media only screen and (min-device-width: 768px) and (max-device-width: 1024px) and (orientation: landscape) {
 	section {
-		padding: 8em 0 10em 0;
-	}
-
-	.cards {
-		padding: 1em 15em 3em 15em;
-	}
-
-	div.card {
-		left: 25%;
-		width: 50%;
+		background-attachment: scroll;
 	}
 }
 
-@media screen and (max-width: 1680px) {
+@media screen and (min-width: 1680px) {
 	section {
 		padding: 8em 0 10em 0;
 	}
 
 	.cards {
-		padding: 1em 15em 3em 15em;
+		padding: 0 24em 0 24em;
+	}
+}
+
+@media screen and (max-width: 1420px) {
+	section {
+		padding: 8em 0 10em 0;
 	}
 
-	div.card {
-		left: 25%;
-		width: 50%;
+	.cards {
+		padding: 0 10em 0 10em;
 	}
 }
 
@@ -156,11 +169,6 @@ section .flex {
 
 	section .flex div {
 		padding: 0 3em;
-	}
-
-	div.card {
-		left: 15%;
-		width: 66.7%;
 	}
 }
 
@@ -183,9 +191,13 @@ section .flex {
 		padding: 0 1.5em;
 	}
 
-	div.card {
-		left: 10%;
-		width: 75%;
+	.card-column {
+    flex: 50%;
+    max-width: 50%;
+	}
+	
+	.cards {
+		padding: 0 4em 0 4em;
 	}
 }
 
@@ -206,8 +218,8 @@ section .flex {
 		font-size: 1.4em;
 	}
 
-	.outer-cards .cards {
-		padding: 0em 0em 0em 0em;
+	.scrolldown {
+		top: -50px;
 	}
 
 	section .flex {
@@ -225,17 +237,17 @@ section .flex {
 		margin-bottom: 1em;
 	}
 
-	.carousel, .carousel-container {
-		display: none;
-	}
-
 	div.col.s6.introduction-container {
 		width: 100%;
 	}
 
-	div.card {
-		left: 5%;
-		width: 85%;
+	.card-column {
+    flex: 100%;
+    max-width: 100%;
+	}
+	
+	.cards {
+		padding: 0 2em 0 2em;
 	}
 }
 
@@ -245,9 +257,8 @@ section .flex {
 		margin: 4px;
 	}
 
-	div.card {
-		left: 0%;
-		width: 100%;
+	.cards {
+		padding: 0 1em 0 1em;
 	}
 }
 
@@ -262,6 +273,7 @@ section .flex {
 }
 
 p.scrolldown {
+	position: relative;
 	font-size: 16px;
 	color: white;
 	font-family: 'Roboto', sans-serif;
@@ -272,25 +284,6 @@ p.scrolldown {
 	margin-left: auto;
 	margin-right: auto;
 	vertical-align: middle;
-}
-
-.cards {
-	margin: 1em 1em 1em 1em;
-	display: flex;
-}
-
-div.card {
-	height: fit-content;
-	padding: 2px;
-	width: 100%;
-	background-color: #0f0f0f;
-	vertical-align: middle;
-}
-
-.card-column {
-	flex: 33%;
-	max-width: 33%;
-	padding: 0 4px;
 }
 
 .cards p a {
@@ -323,7 +316,7 @@ div.card {
 .badge {
 	top: -3px;
 	font-family: "Roboto", sans-serif;
-	margin-left: 5px;
+	margin: 5px;
 	padding-left: 5px;
 	padding-right: 5px;
 	height: auto;
@@ -338,10 +331,6 @@ div.card {
 
 .word-main-title {
 	display: inline-block;
-}
-
-.row {
-	margin-bottom: 0px !important;
 }
 
 @keyframes fadeInUp {
