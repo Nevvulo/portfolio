@@ -25,6 +25,10 @@ body {
 	top: 5px;
 }
 
+.discord-server-link {
+	background-color: #7289DA !important;
+}
+
 section {
 	padding: 10em 0 10em 0;
 	background: linear-gradient(to right, rgba(0,0,0,0.95) 0%,rgba(0,0,0,0.01) 100%,rgba(0,0,0,0) 52%), url(./../assets/img/section-background.jpg) no-repeat fixed;
@@ -115,6 +119,11 @@ div.card {
 	background-color: #0f0f0f;
 	margin-top: 8px;
   vertical-align: middle;
+}
+
+div.card > .card-action > .btn {
+	font-family: "Roboto", sans-serif;
+	font-weight: 700;
 }
 
 .card-column {
@@ -252,7 +261,11 @@ div.card {
 	}
 }
 
-@media screen and (max-width: 340px) {
+@media screen and (max-width: 450px) {
+	section {
+		padding: 0;
+	}
+
 	.introduction-container .links a {
 		font-size: 16px;
 		margin: 4px;

@@ -19,17 +19,24 @@ const _flatPolyfill = (arr, argument) => {
 
 const portfolioCards = {
   'Dank Memer': {
-    description: 'A Discord bot serving over 40 thousand users daily (22 million total) in 800k+ servers. Provides users with funny memes and joke/entertainment commands to play around with, as well as an interactive and detailed currency system which is my main area of work.',
+    description: 'A Discord bot serving over 50 thousand users daily (25+ million total) in over 1 million servers. Provides users with funny memes and joke/entertainment commands to play around with, as well as an interactive and detailed currency system which is my main area of work.',
     github: 'Dank-Memer',
     website: 'http://dankmemer.lol',
-    avatar: 'https://dankmemer.lol/assets/memer.png',
+    avatar: './assets/img/dank-memer.png',
     role: 'Developer',
     languages: [ 'JavaScript', 'Node.js', 'Python' ]
   },
+  'Poplet': {
+    description: 'Poplet is a note-taking web application that aims to combine the functionality of multiple services to form an all-in-one useful way to share ideas and collaborate with people easily.',
+    github: 'popletapp',
+    avatar: './assets/svg/poplet.svg',
+    website: 'https://popletapp.com',
+    role: 'Lead Developer',
+    languages: [ 'React', 'JavaScript', 'Node.js', 'HTML', 'CSS' ]
+  },
   'zBot': {
-    description: 'zBot was a multi-purpose Discord bot application that allowed users to use commands to make their experience on their Discord server more enjoyable and interactive. It provided moderation commands to punish people for breaking rules, general purpose commands for advanced and detailed server management, as well as other fun commands to play around with.',
+    description: 'zBot was a multi-purpose Discord bot application that allowed users to use commands to make their experience on their Discord server more enjoyable and interactive. It provided moderation commands to punish people for breaking rules, general purpose commands for advanced and detailed server management, as well as other fun commands to play around with. It has since been discontinued.',
     github: 'zBlakee/zBot',
-    website: 'https://zbot.me',
     avatar: './assets/img/zbot.png',
     role: 'Lead Developer',
     languages: [ 'JavaScript', 'Node.js', 'HTML', 'CSS' ]
