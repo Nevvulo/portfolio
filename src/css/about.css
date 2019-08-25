@@ -20,6 +20,11 @@ h4 {
 	font-family: "Roboto", sans-serif;
 }
 
+.about > a.btn { 
+    font-family: "Roboto", sans-serif;
+    font-weight: 700;
+}
+
 @media screen and (max-width: 1920px) {
     .description {
         padding: 25px;
@@ -69,7 +74,7 @@ h4 {
     }
 
     .btn {
-        font-size: 13px !important;
+        font-size: 11px !important;
     }
 
     .description {
