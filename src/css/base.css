@@ -158,6 +158,19 @@ div.card > .card-action > .btn {
 	}
 }
 
+
+@media screen and (max-height: 850px) {
+	section {
+		height: 450px;
+	}
+}
+
+@media screen and (max-height: 732px) {
+	section {
+		height: 440px;
+	}
+}
+
 @media screen and (min-width: 1680px) {
 	section {
 		padding: 8em 0 10em 0;
