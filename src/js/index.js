@@ -114,13 +114,9 @@ const addPortfolioCard = (title, info) => {
 
 document.addEventListener('DOMContentLoaded', async (event) => {
   const mainTitle = document.getElementsByClassName('main-title')[0];
-  let column = 1;
+  let column = document.querySelector(`.cards`);
   for (const [ key, value ] of Object.entries(portfolioCards)) {
-    document.querySelector(`.cards-column-${column}`).innerHTML += addPortfolioCard(key, value);
-    column++;
-    if (column > 2) {
-      column = 1;
-    }
+    column.innerHTML += addPortfolioCard(key, value);
   }
 
   let greetings = [ "G'day", 'Hello', 'Hi there', 'Hey', 'Hey there' ];
@@ -149,10 +145,13 @@ document.addEventListener('DOMContentLoaded', async (event) => {
   };
 
   const displayRest = () => {
-    const bio = document.querySelector('.lower-half');
+    const bio = document.querySelector('.bio');
+    const lower = document.querySelector('.lower-half');
     setTimeout(() => {
       bio.style = '';
+      lower.style = '';
       bio.classList.add('animated', 'animatedFadeInUp', 'fadeInUp');
+      lower.classList.add('animated', 'animatedFadeInUp', 'fadeInUp');
     }, 200);
     displayCards();
   };
