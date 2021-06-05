@@ -1,6 +1,5 @@
 # Custom ignores
 .DS_Store
-.parcelrc
 .parcel-cache
 dist
 
