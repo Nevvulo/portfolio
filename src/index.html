@@ -1,67 +1,26 @@
-<html>
-	<head>
-		<meta name="viewport" content="width=device-width, initial-scale=1.0">
-		<meta property="og:title" content="Hi there, I'm Blake!">
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <!-- Metadata for website -->
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta property="og:title" content="Hi there, I'm Blake!">
 		<meta property="og:description" content="I'm a web and software developer based in Australia. Click this link to learn more about me!">
 		<meta property="og:url" content="https://nevulo.xyz">
 		<meta property="og:image" content="https://massive-legend.nevulo.xyz/2aRAq5aL.png">
-
-		<link rel="shortcut icon" type="image/jpg" href="assets/img/nevulo.jpg">
 		<meta name="theme-color" content="#26a69a">
+    <link rel="shortcut icon" type="image/jpg" href="assets/img/nevulo.jpg">
+    <title>Nevulo</title>
 
-		<!-- Base stylesheets and scripts -->
-		<link href="css/base.css" rel="stylesheet">
-
-		<title>Nevulo - Portfolio</title>
-
-		<!-- JQuery v 3.2.1 --> 
-		<script
-		src="https://code.jquery.com/jquery-3.3.1.js"
-		integrity="sha256-2Kok7MbOyxpgUVvAk/HJ2jigOSYS2auK4Pfzbm7uH60="
-		crossorigin="anonymous"></script>
-
-		<!-- Materialize Icons, Stylesheets and Fonts -->
-		<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-rc.2/css/materialize.min.css">
-		<link href="https://fonts.googleapis.com/css?family=Fredoka+One|Fugaz+One|Lobster|Raleway:900|Roboto|Heebo:800|Poppins|Jua|Rubik" rel="stylesheet">
-		<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-rc.2/js/materialize.min.js"></script>
-
-		<!-- Scripts that are lower priority -->
-		<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-		<script src="js/index.js"></script>
-	</head>
-
-	<body>
-		<div class="main">
-			<section class="top introduction row">
-				<div class="inner">
-					<div class="introduction-container">
-						<div>
-								<div class="main-title-container">
-										<img src="assets/img/nevulo.jpg" class="avatar avatar-large" style="visibility: collapse;">
-										<h1 class="main-title" style="visibility: collapse;"></h1>	
-								</div>
-								<h3 class="bio" style="visibility: collapse;">I'm a web and software developer based in Australia.</h3>
-						</div>
-						
-						
-						<div class="lower-half" style="visibility: collapse;">
-
-							<div class="links">
-								<a class="btn project-btn" href="#projects">Projects</a>
-								<a class="btn project-btn" href="about.html">About Me</a>
-								<a class="btn project-btn">Social</a>
-								<a class="btn project-btn discord-server-link" href="https://discord.gg/uQWCfXB">Discord Server</a>
-							</div>
-
-							<br>
-						</div>
-					</div>
-				</div>
-			</section>
-	
-			<div class="cards row" id="projects">
-			</div>
-		</div>
-	</body>
+    <!-- Stylesheets and font imports -->
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700;800&family=Roboto+Condensed:wght@700&family=Space+Grotesk:wght@300;400;600;700&display=swap');
+    </style>
+  </head>
+  
+  <body>
+    <noscript>You need to enable JavaScript to run this application.</noscript>
+    <div id="root"></div>
+    <script src="./index.tsx"></script>
+  </body>
 </html>
