@@ -1,30 +1,56 @@
 {
   "name": "portfolio",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "dependencies": {
-    "eslint-config-standard": "^12.0.0",
-    "eslint-plugin-node": "^8.0.1",
-    "eslint-plugin-promise": "^4.1.1",
-    "eslint-plugin-standard": "^4.0.0"
-  },
-  "devDependencies": {
-    "eslint": "^5.16.0",
-    "eslint-config-airbnb-base": "^13.1.0",
-    "eslint-plugin-import": "^2.17.2"
-  },
+  "version": "2.0.0",
+  "description": "Portfolio made using TypeScript + React",
+  "main": "dist/index.html",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest",
+    "prebuild": "run-s clean",
+    "build": "parcel build src/index.html --no-source-maps",
+    "clean": "rimraf ./dist",
+    "start": "parcel src/index.html --open"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/zBlakee/portfolio.git"
+    "url": "git+https://github.com/Nevvulo/portfolio.git"
   },
-  "author": "",
+  "author": "Nevvulo",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/zBlakee/portfolio/issues"
+    "url": "https://github.com/Nevvulo/portfolio/issues"
   },
-  "homepage": "https://github.com/zBlakee/portfolio#readme"
+  "homepage": "https://github.com/Nevvulo/portfolio#readme",
+  "dependencies": {
+    "@fortawesome/fontawesome-svg-core": "^1.2.35",
+    "@fortawesome/free-brands-svg-icons": "^5.15.3",
+    "@fortawesome/free-solid-svg-icons": "^5.15.3",
+    "@fortawesome/react-fontawesome": "^0.1.14",
+    "@parcel/transformer-svg-react": "^2.0.0-nightly.1739",
+    "framer-motion": "^4.1.11",
+    "node-sass": "^5.0.0",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
+    "react-router-dom": "^5.2.0",
+    "styled-components": "^5.2.3"
+  },
+  "devDependencies": {
+    "@babel/preset-react": "^7.13.13",
+    "@babel/preset-typescript": "^7.13.0",
+    "@parcel/transformer-image": "^2.0.0-beta.2",
+    "@parcel/transformer-sass": "^2.0.0-beta.2",
+    "@testing-library/jest-dom": "^5.13.0",
+    "@testing-library/react": "^11.2.7",
+    "@types/jest": "^26.0.23",
+    "@types/react": "^17.0.4",
+    "@types/react-dom": "^17.0.3",
+    "@types/react-router-dom": "^5.1.7",
+    "@types/styled-components": "^5.1.9",
+    "@typescript-eslint/eslint-plugin": "^4.22.0",
+    "eslint-plugin-react-hooks": "^4.2.0",
+    "jest": "^27.0.4",
+    "npm-run-all": "^4.1.5",
+    "parcel": "^2.0.0-beta.2",
+    "rimraf": "^3.0.2",
+    "typescript": "^4.2.4"
+  }
 }
