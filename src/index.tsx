@@ -1,52 +1,46 @@
 import { AnimateSharedLayout } from "framer-motion";
-import React from "react";
+import React, { lazy, Suspense } from "react";
 import { render } from "react-dom";
 import { BrowserRouter as Router, Route } from "react-router-dom";
-import { createGlobalStyle } from "styled-components";
 import { AnimatedRoutes } from "./components/routing/animated-routes";
 import { RouteTransition } from "./components/routing/route-transition";
 import { ROUTES } from "./constants/routes";
-import About from "./pages/about";
-import Contact from "./pages/contact";
-import Home from "./pages/home";
-import Projects from "./pages/projects";
 import "./styles.module.scss";
 
-const GlobalStyle = createGlobalStyle`
-  @media (prefers-color-scheme: dark) {
-    body {
-      background: #151515;
-      color: white;
-    }
+const About = lazy(() => import("./pages/about"));
+const Contact = lazy(() => import("./pages/contact"));
+const Home = lazy(() => import("./pages/home"));
+const Projects = lazy(() => import("./pages/projects"));
 
-    h1, svg[data-icon='arrow-left'] {
-      color: white !important;
-    }
-  }
-`;
+const Content: React.FC = () => {
+  return (
+    <AnimateSharedLayout type="crossfade">
+      <AnimatedRoutes exitBeforeEnter initial={false}>
+        <RouteTransition exact path={ROUTES.ROOT}>
+          <Home />
+        </RouteTransition>
+        <RouteTransition exact path={ROUTES.ABOUT}>
+          <About />
+        </RouteTransition>
+        <RouteTransition exact path={ROUTES.CONTACT}>
+          <Contact />
+        </RouteTransition>
+      </AnimatedRoutes>
+      <Route path={[ROUTES.PROJECTS.PROJECT, ROUTES.PROJECTS.ROOT]}>
+        <Projects />
+      </Route>
+    </AnimateSharedLayout>
+  );
+};
 
 const Application: React.FC = () => {
   return (
     <React.StrictMode>
-      <Router>
-        <GlobalStyle />
-        <AnimateSharedLayout type="crossfade">
-          <AnimatedRoutes exitBeforeEnter initial={false}>
-            <RouteTransition exact path={ROUTES.ROOT}>
-              <Home />
-            </RouteTransition>
-            <RouteTransition exact path={ROUTES.ABOUT}>
-              <About />
-            </RouteTransition>
-            <RouteTransition exact path={ROUTES.CONTACT}>
-              <Contact />
-            </RouteTransition>
-          </AnimatedRoutes>
-          <Route path={[ROUTES.PROJECTS.PROJECT, ROUTES.PROJECTS.ROOT]}>
-            <Projects />
-          </Route>
-        </AnimateSharedLayout>
-      </Router>
+      <Suspense fallback={<></>}>
+        <Router>
+          <Content />
+        </Router>
+      </Suspense>
     </React.StrictMode>
   );
 };

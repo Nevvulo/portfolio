@@ -4,3 +4,15 @@ body {
   margin: 0;
   padding: 0;
 }
+
+@media (prefers-color-scheme: dark) {
+  body {
+    background: #151515;
+    color: white;
+  }
+
+  h1,
+  svg[data-icon="arrow-left"] {
+    color: white !important;
+  }
+}
