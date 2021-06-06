@@ -6,6 +6,7 @@ import { MinimalView } from "../views/minimal";
 
 export const ProjectView = styled(MinimalView)`
   padding: 1em max(20%, 52px);
+  height: 100%;
 
   @media (max-width: 768px) {
     padding: 1em min(10%, 12px);
@@ -18,7 +19,7 @@ export const ProjectContainer = styled(AnimatedContainer)`
 
 export const ProjectContentContainer = styled(Container)`
   border-radius: 8px;
-  padding: 1em;
+  padding: 1em 0.25em;
   width: 100%;
 
   @media (max-width: 468px) {
@@ -42,7 +43,7 @@ export const ProjectContainerExpanded = styled(AnimatedContainer)`
 
     @media (max-width: 468px) {
       margin: 1em;
-      height: 90vh;
+      height: 82.5vh;
     }
   }
 
@@ -60,7 +61,7 @@ export const ProjectContainerExpanded = styled(AnimatedContainer)`
 export const ProjectContent = styled(motion.div).attrs({
   testId: "project",
 })<ProjectStyleProps>`
-  padding: 32px;
+  padding: 1.5em 2em 2.5em 2em;
   overflow: hidden;
   max-height: 90vh;
   z-index: 0;
@@ -73,7 +74,7 @@ export const ProjectContent = styled(motion.div).attrs({
   cursor: ${(props) => (props.pointer ? "pointer" : "auto")};
 
   @media (max-width: 468px) {
-    padding: 1.5em 2em;
+    padding: 1.25em 1.75em 2.25em 1.75em;
   }
 `;
 
@@ -173,7 +174,7 @@ export interface Links {
   website?: string;
 }
 
-export interface ProjectProps {
+export interface ProjectProps extends ProjectStyleProps {
   projectId: string;
   preview: React.FC;
   component: React.FC;

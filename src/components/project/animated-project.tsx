@@ -12,11 +12,15 @@ import {
 import { ColorsRGBA } from "../../constants/colors";
 import { AnimatedContainer, FadeAnimatedContainer } from "../container";
 
-export const AnimatedProject: React.FC<
-  ProjectProps &
-    ProjectStyleProps &
-    HTMLMotionProps<"div"> & { onClose?: () => void }
-> = ({ projectId, className, component, links, onClose }) => {
+type AnimatedProjectProps = ProjectProps &
+  HTMLMotionProps<"div"> & { onClose?: () => void };
+export const AnimatedProject: React.FC<AnimatedProjectProps> = ({
+  projectId,
+  className,
+  component,
+  links,
+  onClose,
+}) => {
   const Component = component;
   return (
     <ProjectContainerExpanded
@@ -49,7 +53,7 @@ const ComponentContainer = styled(AnimatedContainer).attrs({
   display: block;
   overflow: auto;
   overflow-x: hidden;
-  height: 80vh;
+  height: 75vh;
   overflow-wrap: break-word;
   margin-bottom: 12px;
 `;

@@ -1,7 +1,8 @@
 import { AnimatePresence, motion } from "framer-motion";
 import React, { useEffect, useState } from "react";
 import { useHistory, useParams } from "react-router-dom";
-import styled from "styled-components";
+import styled, { css, keyframes } from "styled-components";
+import { ROUTES } from "../../constants/routes";
 import { AnimatedContainer, Container } from "../../components/container";
 import { BackButton } from "../../components/generics/button";
 import {
@@ -91,21 +92,21 @@ const ProjectsPage: React.FC = () => {
   const history = useHistory();
 
   useEffect(() => {
+    const unsub = history.listen(() => {
+      if (history.action === "POP") setSelectedItem(undefined);
+    });
+    return unsub;
+  }, [history]);
+
+  useEffect(() => {
     if (!selectedTab) setSelectedTab(FilterNames.ALL);
   }, [selectedTab]);
 
   return (
     <>
       <ProjectView>
-        <AnimatedContainer
-          initial={{ x: 25, opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-          exit={{ x: -25, opacity: 0 }}
-          transition={{ ease: "easeInOut", duration: 0.2 }}
-          direction="column"
-          style={{ width: "100%" }}
-        >
-          <Header direction="column" style={{ height: "200px" }}>
+        <AnimatedContainer direction="column" style={{ width: "100%" }}>
+          <Header direction="column">
             <Container alignItems="center">
               <BackButton to="/" />
               <Title>Projects</Title>
@@ -127,7 +128,11 @@ const ProjectsPage: React.FC = () => {
               >
                 <ProjectPreview
                   hidden={!shouldShowItem(item, selectedTab)}
-                  style={{ filter: selectedItem ? "blur(4px)" : "" }}
+                  style={{
+                    filter: selectedItem ? "blur(4px)" : "",
+                    opacity: selectedItem ? 0 : 1,
+                    transition: "0.2s opacity",
+                  }}
                   {...item}
                 />
               </div>
@@ -169,6 +174,7 @@ const Title = styled.h1`
 
 const Header = styled(Container)`
   margin: 12px;
+  height: 150px;
   margin-top: clamp(24px, 10vw, 42px);
   display: revert !important;
 `;

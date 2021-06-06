@@ -11,6 +11,7 @@ export const Tab = styled.div<TabProps & HTMLAttributes<HTMLDivElement>>`
     props.selected ? Colors.TAB_SELECTED : Colors.TAB_UNFOCUSED};
   margin: 0.5em;
   margin-left: 0;
+  color: ${(props) => (!props.selected ? Colors.BLACK : Colors.WHITE)};
   border-radius: 6px;
   box-shadow: 1px 2px 3px rgba(0, 0, 0, 0.3);
   font-family: "Inter", sans-serif;

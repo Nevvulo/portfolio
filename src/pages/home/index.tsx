@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useHistory } from "react-router-dom";
 import styled, { keyframes } from "styled-components";
 import Background from "url:../../assets/img/alt.jpg?as=webp";
@@ -10,9 +10,25 @@ import { MinimalView } from "../../components/views/minimal";
 
 const Home: React.FC = () => {
   const history = useHistory();
+  const [backgroundImageLoaded, setBackgroundImageLoaded] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  if (loading)
+    return (
+      <PreloadBackground
+        onComplete={() => {
+          setLoading(false);
+          setBackgroundImageLoaded(true);
+        }}
+        onError={() => {
+          console.error("error loading background image");
+        }}
+      />
+    );
+
   return (
     <MinimalView>
-      <Page>
+      <Page fallback={!backgroundImageLoaded}>
         <HomeContainer direction="row">
           <Container flex="1" direction="column">
             <FadeUp delay={50}>
@@ -57,6 +73,16 @@ const Home: React.FC = () => {
     </MinimalView>
   );
 };
+
+type PreloadBackgroundProps = { onComplete: () => void; onError: () => void };
+const PreloadBackground = ({ onComplete, onError }: PreloadBackgroundProps) => (
+  <img
+    style={{ opacity: 0, transform: "scale(0)" }}
+    src={Background}
+    onLoad={() => onComplete()}
+    onError={() => onError()}
+  />
+);
 
 const riseUp = keyframes`
 from {
@@ -109,10 +135,13 @@ const FadeUp = styled.span<{ delay: number; bounce?: boolean }>`
   }
 `;
 
-const Page = styled.div`
+const Page = styled.div<{ fallback: boolean }>`
   opacity: 0.75;
   animation: 1s ${fadeIn} forwards;
-  background-image: url("${Background}");
+  background-image: ${(props) =>
+    !props.fallback
+      ? `url("${Background}")`
+      : "linear-gradient(135deg, #667eea 0%, #764ba2 100%)"};
   width: max(300px, 100%);
   border-radius: 24px;
   padding: 1em 3em 2vh 3em;
@@ -139,8 +168,8 @@ const Title = styled.h1`
   font-family: "Inter", sans-serif;
   font-weight: 900;
   color: white;
-  line-height: clamp(32px, 7vmax, 92px);
-  font-size: clamp(32px, 7vmax, 92px);
+  line-height: clamp(32px, 6vmax, 72px);
+  font-size: clamp(32px, 6vmax, 72px);
   margin-bottom: 0px;
   margin-top: 0px;
   letter-spacing: -1.5px;
@@ -150,7 +179,7 @@ const Subtitle = styled.h2`
   font-family: "RobotoCondensed", sans-serif;
   font-weight: 400;
   color: #eeeeee;
-  font-size: max(18.5px, 3vh);
+  font-size: max(16px, 2.5vh);
   margin-top: max(4px, 2vh);
 `;
 
@@ -177,10 +206,14 @@ const ButtonContainer = styled(Container)`
   @media (min-width: 768px) {
     width: 385px;
   }
+
+  @media (max-width: 468px) {
+    margin-top: 0;
+  }
 `;
 
 const HomeContainer = styled(Container).attrs({ ariaRole: "container" })`
-  margin-top: min(3vw, 26px);
+  margin-top: min(3vw, 6px);
   @media (max-width: 768px) {
     flex-direction: column !important;
   }
