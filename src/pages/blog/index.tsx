@@ -127,9 +127,9 @@ const Blog: React.FC = () => {
 const PostsLoading: React.FC = () => {
   return (
     <>
-      <Preview title="..." slug="loading" image="" />
-      <Preview title="..." slug="loading" image="" />
-      <Preview title="..." slug="loading" image="" />
+      <Preview title="..." description="" slug="loading" image="" />
+      <Preview title="..." description="" slug="loading" image="" />
+      <Preview title="..." description="" slug="loading" image="" />
     </>
   );
 };
