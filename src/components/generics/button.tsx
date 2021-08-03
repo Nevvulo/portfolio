@@ -1,4 +1,4 @@
-import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
+import { faArrowLeft, faHome } from "@fortawesome/free-solid-svg-icons";
 import {
   FontAwesomeIcon,
   FontAwesomeIconProps,
@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import React, { HTMLAttributes } from "react";
 import { Link, LinkProps } from "react-router-dom";
 import styled from "styled-components";
+import { ROUTES } from "../../constants/routes";
 import { Container } from "../container";
 
 const ButtonIcon = styled(FontAwesomeIcon)`
@@ -60,18 +61,40 @@ export type IconLinkProps = LinkProps & FontAwesomeIconProps;
 export const IconLink: React.FC<IconLinkProps> = ({
   to,
   className,
+  children,
   ...iconProps
 }) => (
   <Link to={to} className={className}>
     <FontAwesomeIcon {...iconProps} />
+    {children}
   </Link>
 );
 
 export const BackButton = styled(IconLink).attrs((props) => ({
   ...props,
   icon: faArrowLeft,
-  color: props.color || "black",
   role: "back",
 }))`
   padding: 1em;
+  color: ${(props) => props.color || "white"};
+  font-family: "Roboto", sans-serif;
+
+  svg {
+    padding-right: 12px;
+  }
+`;
+
+export const HomeButton = styled(IconLink).attrs((props) => ({
+  ...props,
+  icon: faHome,
+  role: "back",
+  to: ROUTES.ROOT,
+}))`
+  padding: 1em;
+  color: ${(props) => props.color || "white"};
+  font-family: "Roboto", sans-serif;
+
+  svg {
+    padding-right: 12px;
+  }
 `;

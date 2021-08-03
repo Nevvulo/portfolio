@@ -1,20 +1,14 @@
 import styled from "styled-components";
 
-export const Title = styled.h1`
+export const Title = styled.h1<{
+  fontSize?: string | number;
+  padding?: string;
+}>`
   font-family: "Inter", sans-serif;
-  font-weight: 800;
-  color: white;
-  line-height: 58px;
-  font-size: 68px;
+  font-weight: 700;
+  color: black;
+  font-size: ${(props) => props.fontSize ?? "42px"};
+  padding: ${(props) => props.padding ?? "0px"};
   margin: 0px;
   letter-spacing: -1.5px;
-
-  @media (max-width: 1000px) {
-    font-size: 50px;
-    line-height: 48px;
-  }
-
-  @media (max-width: 468px) {
-    font-size: 10vw;
-  }
 `;

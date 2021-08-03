@@ -7,7 +7,6 @@ import {
   ProjectContainerExpanded,
   ProjectContent,
   ProjectProps,
-  ProjectStyleProps,
 } from ".";
 import { ColorsRGBA } from "../../constants/colors";
 import { AnimatedContainer, FadeAnimatedContainer } from "../container";

@@ -1,6 +1,6 @@
 import React from "react";
 import styled from "styled-components";
-import zBotLogo from "url:../../../assets/img/zbot.png?as=webp";
+import zBotLogo from "./../../../assets/img/zbot.png";
 import {
   AnimatedContainer,
   FadeAnimatedContainer,

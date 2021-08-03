@@ -1,8 +1,8 @@
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, AnimateSharedLayout, motion } from "framer-motion";
 import React, { useEffect, useState } from "react";
 import { useHistory, useParams } from "react-router-dom";
-import styled, { css, keyframes } from "styled-components";
-import { ROUTES } from "../../constants/routes";
+import styled from "styled-components";
+import { Header, Title } from "../../components/generics";
 import { AnimatedContainer, Container } from "../../components/container";
 import { BackButton } from "../../components/generics/button";
 import {
@@ -35,7 +35,7 @@ export const Projects: Item[] = [
   },
   {
     projectId: "zbot",
-    background: "linear-gradient(to right,#1d2826,#1e2928);",
+    background: "linear-gradient(to right,#16222a, #3a6073);",
     preview: zBotPreview,
     component: zBot,
     links: {
@@ -44,7 +44,7 @@ export const Projects: Item[] = [
   },
   {
     projectId: "poplet",
-    background: "linear-gradient(to right,#6c4386,#9e599e);",
+    background: "linear-gradient(to right, #8e2de2, #4a00e0);",
     preview: PopletPreview,
     component: Poplet,
     links: {
@@ -106,45 +106,42 @@ const ProjectsPage: React.FC = () => {
     <>
       <ProjectView>
         <AnimatedContainer direction="column" style={{ width: "100%" }}>
-          <Header direction="column">
-            <Container alignItems="center">
-              <BackButton to="/" />
-              <Title>Projects</Title>
-            </Container>
-            <ProjectFilter
-              selected={selectedTab}
-              onTabClick={(tab) => setSelectedTab(tab)}
-            />
-          </Header>
           <Page>
+            <Header direction="column">
+              <Container alignItems="center">
+                <BackButton to="/" />
+                <Title>Projects</Title>
+              </Container>
+              <ProjectFilter
+                selected={selectedTab}
+                onTabClick={(tab) => setSelectedTab(tab)}
+              />
+            </Header>
             {Projects.map((item, i) => (
-              <div
-                key={i}
+              <ProjectPreview
+                key={item.projectId}
+                hidden={!shouldShowItem(item, selectedTab)}
                 onClick={() => {
-                  if (selectedItem) return;
                   setSelectedItem(item);
+                  if (selectedItem) return;
                   history.push(`/projects/${item.projectId}`);
                 }}
-              >
-                <ProjectPreview
-                  hidden={!shouldShowItem(item, selectedTab)}
-                  style={{
-                    filter: selectedItem ? "blur(4px)" : "",
-                    opacity: selectedItem ? 0 : 1,
-                    transition: "0.2s opacity",
-                  }}
-                  {...item}
-                />
-              </div>
+                // style={{
+                //   filter: selectedItem ? "blur(4px)" : "",
+                //   transition: "0.2s opacity",
+                // }}
+                {...item}
+              />
             ))}
           </Page>
         </AnimatedContainer>
       </ProjectView>
-      <AnimatePresence>
+      <AnimatePresence exitBeforeEnter presenceAffectsLayout={false}>
         {selectedItem && (
           <AnimatedProject
-            onClose={() => setSelectedItem(undefined)}
             key="selected"
+            layout
+            onClose={() => setSelectedItem(undefined)}
             {...selectedItem}
           />
         )}
@@ -157,26 +154,6 @@ const Page = styled(motion.div)`
   width: auto;
   height: 100%;
   border-radius: 24px;
-`;
-
-const Title = styled.h1`
-  font-family: "Inter", sans-serif;
-  font-weight: 800;
-  color: white;
-  line-height: 62px;
-  letter-spacing: -2.5px;
-  font-size: clamp(24px, 15vw, 52px);
-  margin-bottom: 12px;
-  margin-top: 16px;
-  padding-left: 8px;
-  color: rgba(10, 10, 10);
-`;
-
-const Header = styled(Container)`
-  margin: 12px;
-  height: 150px;
-  margin-top: clamp(24px, 10vw, 42px);
-  display: revert !important;
 `;
 
 export default ProjectsPage;

@@ -1,6 +1,7 @@
 html,
-body {
-  height: 100vh;
+body,
+#root {
+  height: 100%;
   margin: 0;
   padding: 0;
 }
@@ -14,5 +15,11 @@ body {
   h1,
   svg[data-icon="arrow-left"] {
     color: white !important;
+  }
+}
+
+@media (prefers-color-scheme: light) {
+  svg[data-icon="arrow-left"] {
+    color: black !important;
   }
 }

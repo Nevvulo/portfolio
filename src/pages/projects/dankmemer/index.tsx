@@ -1,6 +1,6 @@
 import React from "react";
 import styled from "styled-components";
-import DankMemerLogo from "url:../../../assets/img/dank-memer.png?as=webp";
+import DankMemerLogo from "./../../../assets/img/dank-memer.png";
 import {
   AnimatedContainer,
   FadeAnimatedContainer,

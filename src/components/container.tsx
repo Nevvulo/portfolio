@@ -10,7 +10,9 @@ export interface ContainerProps {
   direction?: FlexDirection;
   background?: string;
   borderRadius?: any;
+  alignSelf?: string;
   alignItems?: string;
+  padding?: string;
 }
 
 const StyledContainer = styled.div<
@@ -20,8 +22,10 @@ const StyledContainer = styled.div<
   flex: ${(props) => props.flex};
   flex-direction: ${(props) => props.direction};
   background: ${(props) => props.background || "none"};
+  padding: ${(props) => props.padding || "0px"};
   border-radius: ${(props) => props.borderRadius || "0px"};
   align-items: ${(props) => props.alignItems || "initial"};
+  align-self: ${(props) => props.alignSelf || "initial"};
 `;
 
 export const AnimatedContainer = styled(motion.div)<ContainerProps>`

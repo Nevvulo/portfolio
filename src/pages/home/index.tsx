@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { useHistory } from "react-router-dom";
 import styled, { keyframes } from "styled-components";
-import Background from "url:../../assets/img/alt.jpg?as=webp";
-import NevuloImg from "url:../../assets/img/nevulo.jpg?as=webp";
+import Background from "./../../assets/img/alt.jpg";
+import NevuloImg from "./../../assets/img/nevulo.jpg";
 import { ROUTES } from "../../constants/routes";
 import { Container } from "../../components/container";
 import { SocialLinks } from "../../components/social-links";
@@ -53,14 +53,17 @@ const Home: React.FC = () => {
 
             <FadeUp delay={400}>
               <ButtonContainer direction="column">
+                <Button onClick={() => history.push(ROUTES.BLOG.ROOT)}>
+                  📖 Blog
+                </Button>
                 <Button onClick={() => history.push(ROUTES.PROJECTS.ROOT)}>
-                  Projects
+                  🛠 Projects
                 </Button>
                 <Button onClick={() => history.push(ROUTES.ABOUT)}>
-                  About Me
+                  👋 About Me
                 </Button>
                 <Button onClick={() => history.push(ROUTES.CONTACT)}>
-                  Contact
+                  📧 Contact
                 </Button>
               </ButtonContainer>
             </FadeUp>
@@ -107,7 +110,7 @@ const riseUpBounce = keyframes`
 }
 `;
 
-const fadeIn = keyframes`
+export const fadeIn = keyframes`
 0% {
   opacity: 0.75;
   box-shadow: inset 0px -20px 0px 0px rgb(20 20 20 / 50%), 30px 30px 100px black;
@@ -120,7 +123,7 @@ const fadeIn = keyframes`
 }
 `;
 
-const FadeUp = styled.span<{ delay: number; bounce?: boolean }>`
+export const FadeUp = styled.span<{ delay: number; bounce?: boolean }>`
   display: inline-block;
   animation: 0.8s ${(props) => (!props.bounce ? riseUp : riseUpBounce)} forwards;
   opacity: 0;
@@ -142,12 +145,11 @@ const Page = styled.div<{ fallback: boolean }>`
     !props.fallback
       ? `url("${Background}")`
       : "linear-gradient(135deg, #667eea 0%, #764ba2 100%)"};
-  width: max(300px, 100%);
   border-radius: 24px;
+  height: 60vh;
+  margin: 0 5vw;
   padding: 1em 3em 2vh 3em;
-  @media (max-width: 468px) {
-    padding: min(6vh, 2em) 3em 2vh 3em;
-  }
+
   @media (prefers-reduced-motion) {
     animation: none;
     opacity: 1;
@@ -187,24 +189,27 @@ const Button = styled.button`
   opacity: 0.75;
   cursor: pointer;
   background: linear-gradient(to bottom, #212121, #171717);
-  padding: min(2vw, 1.5em);
-  font-family: "Space Grotesk", sans-serif;
+  padding: 0.6em min(2vw, 1.5em);
+  font-family: "Inter", sans-serif;
   font-weight: 600;
-  font-size: clamp(2vmin, 0.85rem, 6vmax);
+  font-size: clamp(2vmin, 1rem, 6vmax);
   margin: 0.25em;
   border: 0;
   outline: 0;
   color: white;
   border-radius: 4px;
-  text-transform: uppercase;
 `;
 
 const ButtonContainer = styled(Container)`
+  flex: 1 0 25%;
+  flex-wrap: wrap;
+  flex-direction: row;
+  justify-content: flex-start;
   width: 100%;
   margin-top: max(4px, 2vh);
 
-  @media (min-width: 768px) {
-    width: 385px;
+  @media (min-height: 768px) {
+    flex-direction: column;
   }
 
   @media (max-width: 468px) {
@@ -213,7 +218,6 @@ const ButtonContainer = styled(Container)`
 `;
 
 const HomeContainer = styled(Container).attrs({ ariaRole: "container" })`
-  margin-top: min(3vw, 6px);
   @media (max-width: 768px) {
     flex-direction: column !important;
   }

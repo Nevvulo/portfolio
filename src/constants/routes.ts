@@ -13,9 +13,15 @@ const ROOT = "/";
 const ABOUT = "/about";
 const CONTACT = "/contact";
 
+enum BLOG {
+  ROOT = "/blog",
+  POST = "/blog/:id",
+}
+
 export const ROUTES = {
   ROOT,
   ABOUT,
   CONTACT,
   PROJECTS,
+  BLOG,
 };

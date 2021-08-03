@@ -6,7 +6,8 @@ import { MinimalView } from "../views/minimal";
 
 export const ProjectView = styled(MinimalView)`
   padding: 1em max(20%, 52px);
-  height: 100%;
+  align-items: flex-start;
+  height: auto;
 
   @media (max-width: 768px) {
     padding: 1em min(10%, 12px);
@@ -28,11 +29,10 @@ export const ProjectContentContainer = styled(Container)`
 `;
 
 export const ProjectContainerExpanded = styled(AnimatedContainer)`
-  z-index: 1;
   position: fixed;
-  will-change: opacity;
-  margin: 2vh 0;
   top: 0;
+  z-index: 1;
+  margin: 2vh 0;
   width: 100%;
   justify-content: center;
 
