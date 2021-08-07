@@ -34,6 +34,7 @@ export const ProjectContainerExpanded = styled(AnimatedContainer)`
   z-index: 1;
   margin: 2vh 0;
   width: 100%;
+  height: 100%;
   justify-content: center;
 
   > div {
@@ -42,8 +43,9 @@ export const ProjectContainerExpanded = styled(AnimatedContainer)`
     max-width: 600px;
 
     @media (max-width: 468px) {
-      margin: 1em;
-      height: 82.5vh;
+      margin: 0;
+      border-radius: 0;
+      height: 100%;
     }
   }
 
@@ -63,7 +65,6 @@ export const ProjectContent = styled(motion.div).attrs({
 })<ProjectStyleProps>`
   padding: 1.5em 2em 2.5em 2em;
   overflow: hidden;
-  max-height: 90vh;
   z-index: 0;
   background: ${(props) => props.background};
   margin: 1em;

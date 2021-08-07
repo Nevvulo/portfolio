@@ -103,7 +103,7 @@ const ProjectsPage: React.FC = () => {
   }, [selectedTab]);
 
   return (
-    <>
+    <div>
       <ProjectView>
         <AnimatedContainer direction="column" style={{ width: "100%" }}>
           <Page>
@@ -126,10 +126,10 @@ const ProjectsPage: React.FC = () => {
                   if (selectedItem) return;
                   history.push(`/projects/${item.projectId}`);
                 }}
-                // style={{
-                //   filter: selectedItem ? "blur(4px)" : "",
-                //   transition: "0.2s opacity",
-                // }}
+                style={{
+                  filter: selectedItem ? "blur(4px)" : "",
+                  transition: "0.2s opacity",
+                }}
                 {...item}
               />
             ))}
@@ -137,16 +137,16 @@ const ProjectsPage: React.FC = () => {
         </AnimatedContainer>
       </ProjectView>
       <AnimatePresence exitBeforeEnter presenceAffectsLayout={false}>
-        {selectedItem && (
+        {selectedItem ? (
           <AnimatedProject
             key="selected"
             layout
             onClose={() => setSelectedItem(undefined)}
             {...selectedItem}
           />
-        )}
+        ) : null}
       </AnimatePresence>
-    </>
+    </div>
   );
 };
 

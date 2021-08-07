@@ -2,9 +2,7 @@ import { HTMLMotionProps, motion } from "framer-motion";
 import React from "react";
 import { Route, RouteProps } from "react-router-dom";
 
-export const RouteTransition: React.FC<
-  RouteProps & HTMLMotionProps<"div"> & { doAnimate?: boolean }
-> = ({
+export const RouteTransition: React.FC<RouteProps & HTMLMotionProps<"div">> = ({
   children,
   exact,
   path,
@@ -12,33 +10,28 @@ export const RouteTransition: React.FC<
   animate,
   exit,
   transition,
-  doAnimate = true,
   ...rest
 }) => (
   <Route exact={exact} path={path} {...rest}>
-    {doAnimate ? (
-      <motion.div
-        initial={initial ?? { y: 50, opacity: 0.1 }}
-        animate={
-          animate ?? {
-            y: 0,
-            opacity: 1,
-            transition: { type: "spring", damping: 11, duration: 0.1 },
-          }
+    <motion.div
+      initial={initial ?? { y: 20, opacity: 0 }}
+      animate={
+        animate ?? {
+          y: 0,
+          opacity: 1,
+          transition: { duration: 0.2 },
         }
-        exit={
-          exit ?? {
-            y: -100,
-            opacity: 0,
-            transition: { type: "spring", duration: 0.2 },
-          }
+      }
+      exit={
+        exit ?? {
+          y: -10,
+          opacity: 0,
+          transition: { duration: 0.23 },
         }
-        style={{ height: "100%" }}
-      >
-        {children}
-      </motion.div>
-    ) : (
-      children
-    )}
+      }
+      style={{ height: "100%" }}
+    >
+      {children}
+    </motion.div>
   </Route>
 );

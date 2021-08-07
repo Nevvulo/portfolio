@@ -1,7 +1,7 @@
 import { AnimateSharedLayout } from "framer-motion";
 import React, { Suspense } from "react";
 import { render } from "react-dom";
-import { BrowserRouter as Router, Route, Switch } from "react-router-dom";
+import { BrowserRouter as Router, Route } from "react-router-dom";
 import { AnimatedRoutes } from "./components/routing/animated-routes";
 import { RouteTransition } from "./components/routing/route-transition";
 import { ROUTES } from "./constants/routes";
@@ -16,7 +16,7 @@ import "./styles.module.scss";
 const Content: React.FC = () => {
   return (
     <>
-      <AnimatedRoutes exitBeforeEnter={false} initial={true}>
+      <AnimatedRoutes exitBeforeEnter={true} initial={true}>
         <RouteTransition exact path={ROUTES.ROOT}>
           <Home />
         </RouteTransition>

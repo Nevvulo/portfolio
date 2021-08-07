@@ -29,7 +29,7 @@ export const ProjectPreview: React.FC<
         layoutId={`content-${projectId}`}
         background={background}
       >
-        <Component />
+        {Component ? <Component /> : null}
       </ProjectContent>
     </ProjectContainer>
   );

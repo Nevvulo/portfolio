@@ -18,6 +18,7 @@ export const BlogView = styled(MinimalView)`
   justify-content: flex-start;
   flex-direction: column;
   padding: 1em max(20%, 52px);
+  overflow: auto;
 
   @media (max-width: 768px) {
     padding: 1em min(10%, 12px);
@@ -36,7 +37,14 @@ const PostContainer = styled(Container)`
   flex-direction: column;
   flex-wrap: wrap;
   max-width: 650px;
+  width: 100%;
   justify-content: center;
+
+  @media (max-width: 768px) {
+    width: 100%;
+    max-width: 100%;
+    margin: 1em;
+  }
 `;
 const Post = styled.div`
   display: flex;
@@ -47,7 +55,6 @@ const Post = styled.div`
   align-self: center;
   justify-self: center;
   text-decoration: none;
-  margin: 1em;
 
   @media (max-width: 460px) {
     flex-direction: column;
@@ -74,6 +81,10 @@ const PreviewDescription = styled.p`
   color: rgb(200, 200, 200);
 `;
 
+const PreviewContainer = styled.div`
+  margin: 1em;
+`;
+
 const Preview: React.FC<PreviewProps> = ({
   title,
   slug,
@@ -81,15 +92,17 @@ const Preview: React.FC<PreviewProps> = ({
   description,
 }) => {
   return (
-    <StrippedLink to={`/blog/${slug}`}>
-      <Post>
-        <PostImage loading="eager" src={image} />
-        <PreviewText direction="column">
-          <Title fontSize="27px">{title}</Title>
-          <PreviewDescription>{description}</PreviewDescription>
-        </PreviewText>
-      </Post>
-    </StrippedLink>
+    <PreviewContainer>
+      <StrippedLink to={`/blog/${slug}`}>
+        <Post>
+          <PostImage loading="eager" src={image} />
+          <PreviewText direction="column">
+            <Title fontSize="27px">{title}</Title>
+            <PreviewDescription>{description}</PreviewDescription>
+          </PreviewText>
+        </Post>
+      </StrippedLink>
+    </PreviewContainer>
   );
 };
 
