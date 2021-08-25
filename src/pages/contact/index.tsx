@@ -11,13 +11,14 @@ import { SocialLinks } from "../../components/social-links";
 import { MinimalView } from "../../components/views/minimal";
 import { Page } from "../../components/views/page";
 import Colors, { Gradients } from "../../constants/colors";
+import { ContactView } from "../../components/views/contact";
 
 const Contact: React.FC = () => (
-  <MinimalView>
-    <Page background={Gradients.CONTACT_PAGE}>
+  <ContactView>
+    <Page>
       <Header>
         <BackButton color={Colors.WHITE} size="lg" to="/" />
-        <Title>Contact</Title>
+        <Title color="white">Contact</Title>
       </Header>
       <Text>Wanna get in touch?</Text>
       <SocialLinks direction="row" />
@@ -28,7 +29,7 @@ const Contact: React.FC = () => (
         shoot me an e-mail by clicking the icon above.
       </Text>
     </Page>
-  </MinimalView>
+  </ContactView>
 );
 
 export default Contact;

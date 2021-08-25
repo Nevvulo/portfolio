@@ -7,6 +7,8 @@ import { ROUTES } from "../../constants/routes";
 import { Container } from "../../components/container";
 import { SocialLinks } from "../../components/social-links";
 import { MinimalView } from "../../components/views/minimal";
+import { Page } from "../../components/views/page";
+import { HomeView } from "../../components/views/home";
 
 const Home: React.FC = () => {
   const history = useHistory();
@@ -27,24 +29,28 @@ const Home: React.FC = () => {
     );
 
   return (
-    <MinimalView>
-      <Page fallback={!backgroundImageLoaded}>
+    <HomeView>
+      <Page>
         <HomeContainer direction="row">
           <Container flex="1" direction="column">
             <FadeUp delay={50}>
               <Nevulo />
             </FadeUp>
-            <Title>
-              <FadeUp bounce delay={0}>
-                Hi,
-              </FadeUp>{" "}
-              <FadeUp bounce delay={200}>
-                I'm
-              </FadeUp>{" "}
-              <FadeUp bounce delay={310}>
-                Blake
-              </FadeUp>
-            </Title>
+            <Container direction="row">
+              <Border />
+              <Title>
+                <FadeUp bounce delay={0}>
+                  Hi,
+                </FadeUp>{" "}
+                <FadeUp bounce delay={200}>
+                  I'm
+                </FadeUp>{" "}
+                <FadeUp bounce delay={310}>
+                  Blake
+                </FadeUp>
+              </Title>
+            </Container>
+
             <Subtitle>
               <FadeUp delay={400}>
                 I'm a full-stack developer based in Melbourne.
@@ -73,7 +79,7 @@ const Home: React.FC = () => {
           </FadeUp>
         </HomeContainer>
       </Page>
-    </MinimalView>
+    </HomeView>
   );
 };
 
@@ -100,13 +106,13 @@ to {
 
 const riseUpBounce = keyframes`
 0% {
-  opacity: 0;
-  transform: scale(1.75) translateY(10px);
+  opacity: 0.1;
+  transform: scale(3);
 }
 100% {
   opacity: 1;
-  transform: scale(1) translateY(0px);
-  transform-origin: 0px;
+  transform: scale(1);
+  transform-origin: 25px;
 }
 `;
 
@@ -138,22 +144,13 @@ export const FadeUp = styled.span<{ delay: number; bounce?: boolean }>`
   }
 `;
 
-const Page = styled.div<{ fallback: boolean }>`
-  opacity: 0.75;
-  animation: 1s ${fadeIn} forwards;
-  background-image: ${(props) =>
-    !props.fallback
-      ? `url("${Background}")`
-      : "linear-gradient(135deg, #667eea 0%, #764ba2 100%)"};
-  border-radius: 24px;
-  height: 60vh;
-  margin: 0 5vw;
-  padding: 1em 3em 2vh 3em;
-
-  @media (prefers-reduced-motion) {
-    animation: none;
-    opacity: 1;
-  }
+const Border = styled.div`
+  background: #4f4dc1;
+  width: 8px;
+  border-radius: 12px;
+  height: auto;
+  margin: 0.1em 0;
+  margin-right: 8px;
 `;
 
 const Nevulo = styled.img.attrs({

@@ -9,6 +9,7 @@ import { MinimalView } from "../../components/views/minimal";
 import Colors from "../../constants/colors";
 import { useRepoFile } from "../../hooks/useRepoFile";
 import { ROUTES } from "../../constants/routes";
+import { Skeleton } from "../../components/skeleton";
 
 const PostContainer = styled.div`
   @import url("https://fonts.googleapis.com/css2?family=Fira+Code&display=swap");
@@ -65,43 +66,6 @@ export const BlogView = styled(MinimalView)`
   max-width: 700px;
 `;
 
-const Skeleton = styled.div<{ height: number; space: number }>`
-  background: #1c1c1c;
-  color: transparent;
-  position: relative;
-  overflow: hidden;
-  height: ${(props) => props.height}px;
-  margin-top: ${(props) => props.space}px;
-
-  ::before {
-    content: "";
-    position: absolute;
-    left: 0%;
-    top: 0;
-    height: 100%;
-    width: 50px;
-    background: linear-gradient(
-      to right,
-      #1e1e1e 25%,
-      #313131 50%,
-      #3b3b3b 100%
-    );
-    animation-name: gradient-animation;
-    animation-duration: 2s;
-    animation-iteration-count: infinite;
-    filter: blur(5px);
-  }
-
-  @keyframes gradient-animation {
-    from {
-      left: 0%;
-    }
-    to {
-      left: 100%;
-    }
-  }
-`;
-
 const components = {
   pre: (props: any) => <CodeBlock {...props} />,
 };
@@ -115,11 +79,11 @@ const Post: React.FC = () => {
       <PostContainer>
         {loading ? (
           <>
-            <Skeleton height={45} space={50} />
+            <Skeleton height={45} marginTop={50} />
             {Array.from({ length: 25 }).map((m, i) => (
               <Skeleton
                 height={Math.max(10, Math.random() * 15)}
-                space={
+                marginTop={
                   i % Math.max(3, Math.floor(Math.random() * 7)) === 0 ? 20 : 8
                 }
               />

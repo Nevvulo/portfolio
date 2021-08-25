@@ -16,33 +16,35 @@ interface BadgesProps {
 export const ProjectBadges: React.FC<BadgesProps> = ({
   roles,
   technologies,
-}) => (
-  <BadgesContainer direction="row">
-    <Container direction="column">
-      <Subtitle>Roles</Subtitle>
-      <Container direction="row">
-        {roles.map((role) => (
-          <Badge key={role} background={RoleColors[role]}>
-            {RoleNames[role]}
-          </Badge>
-        ))}
-      </Container>
-    </Container>
-
-    {technologies.length && (
+}) => {
+  return (
+    <BadgesContainer direction="row">
       <Container direction="column">
-        <Subtitle>Technologies Used</Subtitle>
+        <Subtitle>Roles</Subtitle>
         <Container direction="row">
-          {technologies?.map((role) => (
-            <Badge key={role} background={TechnologiesColors[role]}>
-              {TechnologiesNames[role]}
+          {roles.map((role) => (
+            <Badge key={role} background={RoleColors[role]}>
+              {RoleNames[role]}
             </Badge>
           ))}
         </Container>
       </Container>
-    )}
-  </BadgesContainer>
-);
+
+      {technologies.length > 0 ? (
+        <Container direction="column">
+          <Subtitle>Technologies Used</Subtitle>
+          <Container direction="row">
+            {technologies?.map((role) => (
+              <Badge key={role} background={TechnologiesColors[role]}>
+                {TechnologiesNames[role]}
+              </Badge>
+            ))}
+          </Container>
+        </Container>
+      ) : null}
+    </BadgesContainer>
+  );
+};
 
 type BadgeProps = { background: string };
 const Badge = styled(motion.div)<BadgeProps>`

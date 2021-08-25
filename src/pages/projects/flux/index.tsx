@@ -5,8 +5,8 @@ import {
   AnimatedContainer,
   FadeAnimatedContainer,
 } from "../../../components/container";
+import { ProjectBadges } from "../../../components/project/badges";
 import {
-  ProjectBadges,
   ProjectContentContainer,
   ProjectContentHeader,
   ProjectContentSubheader,

@@ -29,7 +29,12 @@ export const RouteTransition: React.FC<RouteProps & HTMLMotionProps<"div">> = ({
           transition: { duration: 0.23 },
         }
       }
-      style={{ height: "100%" }}
+      style={{
+        height: "100%",
+        width: "100%",
+        justifyContent: "center",
+        display: "flex",
+      }}
     >
       {children}
     </motion.div>

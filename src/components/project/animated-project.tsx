@@ -3,13 +3,13 @@ import React from "react";
 import styled from "styled-components";
 import {
   CloseButton,
-  ProjectButtons,
   ProjectContainerExpanded,
   ProjectContent,
   ProjectProps,
-} from ".";
-import { ColorsRGBA } from "../../constants/colors";
+} from "./index";
+import { ProjectButtons } from "../../components/project/button-container";
 import { AnimatedContainer, FadeAnimatedContainer } from "../container";
+import { ColorsRGBA } from "../../constants/colors";
 
 type AnimatedProjectProps = ProjectProps &
   HTMLMotionProps<"div"> & { onClose?: () => void };

@@ -32,10 +32,16 @@ const Content: React.FC = () => {
         <RouteTransition path={ROUTES.BLOG.POST}>
           <Post />
         </RouteTransition>
+        <RouteTransition
+          animate={{}}
+          exit={{}}
+          initial={{}}
+          exact
+          path={[ROUTES.PROJECTS.ROOT, ROUTES.PROJECTS.PROJECT]}
+        >
+          <Projects />
+        </RouteTransition>
       </AnimatedRoutes>
-      <Route exact path={[ROUTES.PROJECTS.ROOT, ROUTES.PROJECTS.PROJECT]}>
-        <Projects />
-      </Route>
     </>
   );
 };

@@ -19,7 +19,11 @@ body,
 }
 
 @media (prefers-color-scheme: light) {
-  svg[data-icon="arrow-left"] {
-    color: black !important;
+  // svg[data-icon="arrow-left"] {
+  //   color: black !important;
+  // }
+
+  span {
+    color: black;
   }
 }

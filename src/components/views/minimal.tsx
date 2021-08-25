@@ -6,5 +6,6 @@ export const MinimalView = styled(Container)`
   align-items: center;
   justify-content: center;
   height: 100%;
+  flex-direction: column;
   overflow: hidden;
 `;

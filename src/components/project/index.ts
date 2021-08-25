@@ -2,17 +2,6 @@ import { motion } from "framer-motion";
 import styled from "styled-components";
 import { AnimatedContainer, Container } from "../container";
 import { Link } from "../generics";
-import { MinimalView } from "../views/minimal";
-
-export const ProjectView = styled(MinimalView)`
-  padding: 1em max(20%, 52px);
-  align-items: flex-start;
-  height: auto;
-
-  @media (max-width: 768px) {
-    padding: 1em min(10%, 12px);
-  }
-`;
 
 export const ProjectContainer = styled(AnimatedContainer)`
   flex: 1 1 100%;
@@ -32,50 +21,25 @@ export const ProjectContainerExpanded = styled(AnimatedContainer)`
   position: fixed;
   top: 0;
   z-index: 1;
-  margin: 2vh 0;
   width: 100%;
   height: 100%;
-  justify-content: center;
 
   > div {
-    margin: 0 10%;
-    width: 85%;
-    max-width: 600px;
-
-    @media (max-width: 468px) {
-      margin: 0;
-      border-radius: 0;
-      height: 100%;
-    }
-  }
-
-  @media (max-width: 468px) {
-    padding: 0;
-    width: 100% !important;
     margin: 0;
-  }
-
-  @media (max-width: 360px) {
-    max-width: 100%;
   }
 `;
 
-export const ProjectContent = styled(motion.div).attrs({
-  testId: "project",
-})<ProjectStyleProps>`
+export const ProjectContent = styled(motion.div)<any>`
   padding: 1.5em 2em 2.5em 2em;
   overflow: hidden;
   z-index: 0;
   background: ${(props) => props.background};
   margin: 1em;
-  border-radius: 24px;
-  box-shadow: inset 0px -20px 0px 0px rgb(20 20 20 / 50%),
-    5px 5px 15px rgba(0, 0, 0, 0.6);
   width: 100%;
   cursor: ${(props) => (props.pointer ? "pointer" : "auto")};
 
-  @media (max-width: 468px) {
-    padding: 1.25em 1.75em 2.25em 1.75em;
+  @media (min-width: 650px) {
+    padding: 4vh 20%;
   }
 `;
 
@@ -178,7 +142,7 @@ export interface Links {
 export interface ProjectProps extends ProjectStyleProps {
   projectId: string;
   preview: React.FC;
-  component: React.FC;
+  component: any;
   maintained?: boolean;
   links?: Links;
 }

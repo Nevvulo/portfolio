@@ -2,9 +2,9 @@ import React from "react";
 import styled from "styled-components";
 import { Container } from "../../components/container";
 import { BackButton, Header, Text, Title } from "../../components/generics";
-import { MinimalView } from "../../components/views/minimal";
+import { AboutView } from "../../components/views/about";
 import { Page } from "../../components/views/page";
-import Colors, { Gradients } from "../../constants/colors";
+import Colors from "../../constants/colors";
 
 const TextContainer = styled(Container)`
   display: block;
@@ -13,11 +13,11 @@ const TextContainer = styled(Container)`
 `;
 
 const About: React.FC = () => (
-  <MinimalView>
-    <Page background={Gradients.ABOUT_PAGE}>
+  <AboutView>
+    <Page>
       <Header>
         <BackButton color={Colors.WHITE} to="/" />
-        <Title>About Me</Title>
+        <Title color="white">About Me</Title>
       </Header>
       <TextContainer direction="column" padding="0 12px">
         <Text>
@@ -39,7 +39,7 @@ const About: React.FC = () => (
         </Text>
       </TextContainer>
     </Page>
-  </MinimalView>
+  </AboutView>
 );
 
 export default About;
