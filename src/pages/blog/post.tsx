@@ -1,15 +1,22 @@
+import {
+  faFacebook,
+  faGithub,
+  faTwitter,
+} from "@fortawesome/free-brands-svg-icons";
 import MDX from "@mdx-js/runtime";
 import React from "react";
 import { useParams } from "react-router-dom";
 import styled from "styled-components";
-import { Navbar } from "../../components/navbar";
 import CodeBlock from "../../components/blog/codeblock";
-import { BackButton } from "../../components/generics";
-import { MinimalView } from "../../components/views/minimal";
-import Colors from "../../constants/colors";
-import { useRepoFile } from "../../hooks/useRepoFile";
-import { ROUTES } from "../../constants/routes";
+import { PostFooter } from "../../components/blog/post-footer";
+import { Container } from "../../components/container";
+import { IconLink } from "../../components/generics";
+import { Navbar } from "../../components/navbar";
 import { Skeleton } from "../../components/skeleton";
+import { MinimalView } from "../../components/views/minimal";
+import { ROUTES } from "../../constants/routes";
+import { useBlogMap } from "../../hooks/useBlogMap";
+import { useRepoFile } from "../../hooks/useRepoFile";
 
 const PostContainer = styled.div`
   @import url("https://fonts.googleapis.com/css2?family=Fira+Code&display=swap");
@@ -66,13 +73,25 @@ export const BlogView = styled(MinimalView)`
   max-width: 700px;
 `;
 
+const generateSharableTwitterLink = (title: string, link: string) =>
+  `https://twitter.com/intent/tweet?text=Check out "${title}" at ${link}!`;
+const generateSharableFacebookLink = (link: string) =>
+  `https://www.facebook.com/sharer/sharer.php?u=${link}`;
+
 const components = {
   pre: (props: any) => <CodeBlock {...props} />,
 };
 
 const Post: React.FC = () => {
   const { id } = useParams<{ id?: string }>();
-  const { loading, contents } = useRepoFile(`${id}.mdx`);
+  const posts = useBlogMap();
+  const post = posts?.find((m) => m.slug === id);
+  const filename = `${id}.mdx`;
+  const filepath = `posts/${filename}`;
+  const { loading, contents } = useRepoFile(filepath);
+  if (!post) return <>not found</>;
+  const location = `https://nevulo.xyz/blog/${post.slug}`;
+
   return (
     <BlogView>
       <Navbar title="Blog" route={ROUTES.BLOG.ROOT} />
@@ -90,7 +109,45 @@ const Post: React.FC = () => {
             ))}
           </>
         ) : (
-          <MDX components={components} children={contents} />
+          <>
+            <MDX components={components} children={contents} />
+            <PostFooter>
+              <h2 style={{ marginTop: 0 }}>Thanks for reading!</h2>
+              <p style={{ color: "grey" }}>
+                Feel free to share around, or if you think I've made a mistake,
+                request a change on GitHub!
+              </p>
+              <Container direction="column">
+                <IconLink
+                  icon={faGithub}
+                  isExternal
+                  target="_blank"
+                  href={`https://github.com/Nevvulo/blog/blob/main/${filepath}`}
+                >
+                  {" "}
+                  View (or edit) on GitHub
+                </IconLink>
+                <IconLink
+                  icon={faTwitter}
+                  isExternal
+                  target="_blank"
+                  href={generateSharableTwitterLink(post.title, location)}
+                >
+                  {" "}
+                  Share on Twitter
+                </IconLink>
+                <IconLink
+                  icon={faFacebook}
+                  isExternal
+                  target="_blank"
+                  href={generateSharableFacebookLink(location)}
+                >
+                  {" "}
+                  Share on Facebook
+                </IconLink>
+              </Container>
+            </PostFooter>
+          </>
         )}
       </PostContainer>
     </BlogView>

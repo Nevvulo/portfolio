@@ -11,6 +11,7 @@ import Post from "./pages/blog/post";
 import Contact from "./pages/contact";
 import Home from "./pages/home";
 import Projects from "./pages/projects";
+import Project from "./pages/projects/project";
 import "./styles.module.scss";
 
 const Content: React.FC = () => {
@@ -33,12 +34,15 @@ const Content: React.FC = () => {
           <Post />
         </RouteTransition>
         <RouteTransition
+          initial={{}}
           animate={{}}
           exit={{}}
-          initial={{}}
           exact
-          path={[ROUTES.PROJECTS.ROOT, ROUTES.PROJECTS.PROJECT]}
+          path={ROUTES.PROJECTS.PROJECT}
         >
+          <Project />
+        </RouteTransition>
+        <RouteTransition path={ROUTES.PROJECTS.ROOT}>
           <Projects />
         </RouteTransition>
       </AnimatedRoutes>

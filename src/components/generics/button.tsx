@@ -1,4 +1,8 @@
-import { faArrowLeft, faHome } from "@fortawesome/free-solid-svg-icons";
+import {
+  faArrowLeft,
+  faExternalLinkAlt,
+  faHome,
+} from "@fortawesome/free-solid-svg-icons";
 import {
   FontAwesomeIcon,
   FontAwesomeIconProps,
@@ -57,17 +61,29 @@ export const AnimatedButton: React.FC<AnimatedButtonProps> = ({
   </motion.a>
 );
 
-export type IconLinkProps = LinkProps & FontAwesomeIconProps;
+export type IconLinkProps = Partial<LinkProps> &
+  FontAwesomeIconProps & { isExternal?: boolean };
 export const IconLink: React.FC<IconLinkProps> = ({
   to,
+  href,
   className,
   children,
+  isExternal = false,
   ...iconProps
 }) => (
-  <Link to={to} className={className}>
-    <FontAwesomeIcon {...iconProps} />
-    {children}
-  </Link>
+  <>
+    {href ? (
+      <a href={href}>
+        <FontAwesomeIcon {...iconProps} />
+        {children} {isExternal && <FontAwesomeIcon icon={faExternalLinkAlt} />}
+      </a>
+    ) : (
+      <Link to={to || ""} className={className}>
+        <FontAwesomeIcon {...iconProps} />
+        {children} {isExternal && <FontAwesomeIcon icon={faExternalLinkAlt} />}
+      </Link>
+    )}
+  </>
 );
 
 export const BackButton = styled(IconLink).attrs((props) => ({

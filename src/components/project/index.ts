@@ -37,10 +37,7 @@ export const ProjectContent = styled(motion.div)<any>`
   margin: 1em;
   width: 100%;
   cursor: ${(props) => (props.pointer ? "pointer" : "auto")};
-
-  @media (min-width: 650px) {
-    padding: 4vh 20%;
-  }
+  border-radius: 6px;
 `;
 
 export const ProjectTitleContainer = styled(AnimatedContainer)`

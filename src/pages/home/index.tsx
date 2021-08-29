@@ -29,8 +29,8 @@ const Home: React.FC = () => {
     );
 
   return (
-    <HomeView>
-      <Page>
+    <Page>
+      <HomeView>
         <HomeContainer direction="row">
           <Container flex="1" direction="column">
             <FadeUp delay={50}>
@@ -78,8 +78,8 @@ const Home: React.FC = () => {
             <SocialLinks />
           </FadeUp>
         </HomeContainer>
-      </Page>
-    </HomeView>
+      </HomeView>
+    </Page>
   );
 };
 

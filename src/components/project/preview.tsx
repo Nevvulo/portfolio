@@ -14,13 +14,11 @@ export const ProjectPreview: React.FC<
       hidden?: boolean;
       onClick?: any;
     }
-> = ({ projectId, style, preview, background, className, hidden, onClick }) => {
+> = ({ projectId, preview, background, className, hidden, onClick }) => {
   const Component = preview;
   return (
     <ProjectContainer
-      layout
       onClick={onClick}
-      style={{ ...style, display: hidden ? "none" : void 0 }}
       layoutId={`container-${projectId}`}
       className={className}
     >
@@ -29,7 +27,7 @@ export const ProjectPreview: React.FC<
         layoutId={`content-${projectId}`}
         background={background}
       >
-        {Component ? <Component /> : null}
+        <Component />
       </ProjectContent>
     </ProjectContainer>
   );
