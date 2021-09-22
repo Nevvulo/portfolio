@@ -1,11 +1,10 @@
 import React from "react";
 import { useParams } from "react-router-dom";
-import { Projects } from "../../constants/projects";
+import styled from "styled-components";
 import { Page } from "../../components/views/page";
 import { ProjectView } from "../../components/views/project";
+import { Projects } from "../../constants/projects";
 import ProjectNotFound from "./not-found";
-import { Container } from "../../components/container";
-import styled from "styled-components";
 
 const ComponentContainer = styled.div`
   padding: 1em 0;
