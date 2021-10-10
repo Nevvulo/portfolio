@@ -102,7 +102,7 @@ export const BackButton = styled(IconLink).attrs((props) => ({
   style: { marginRight: 24, cursor: "pointer" },
 }))`
   padding: 1em;
-  color: ${(props) => props.color || (props.theme.dark ? "white" : "black")};
+  color: ${(props) => props.color || props.theme.pure};
   font-family: "Roboto", sans-serif;
 
   svg {
