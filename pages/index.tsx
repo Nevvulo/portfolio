@@ -1,8 +1,12 @@
+import { faBell } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Image from "next/image";
 import { useRouter } from "next/router";
 import React from "react";
 import styled, { keyframes } from "styled-components";
 import { Container } from "../components/container";
+import { Link, Text } from "../components/generics";
+import { Announcement } from "../components/generics/announcement";
 import { SocialLinks } from "../components/social-links";
 import { HomeView } from "../components/views/home";
 import { ROUTES } from "../constants/routes";
@@ -22,6 +26,15 @@ export default function Home() {
 
   return (
     <HomeView>
+      <Announcement alignItems="center">
+        <p style={{ margin: "0.5em 0", fontSize: "16px" }}>
+          <FontAwesomeIcon
+            style={{ marginRight: 8, width: "14px", height: "14px" }}
+            icon={faBell}
+          />
+          Check out the new <Link href="/blog">Nevulo blog</Link>!
+        </p>
+      </Announcement>
       <HomeContainer direction="row">
         <Container flex="1" direction="column">
           <FadeUp delay={50}>

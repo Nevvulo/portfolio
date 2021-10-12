@@ -1,5 +1,6 @@
 import NextAuth from "next-auth";
 import GitHubProvider from "next-auth/providers/github";
+import * as Fathom from "fathom-client";
 
 export default (req, res) =>
   NextAuth(req, res, {
@@ -16,6 +17,11 @@ export default (req, res) =>
     jwt: { secret: process.env.JWT_SECRET },
     session: { jwt: true },
     callbacks: {
+      async signIn() {
+        // github authentication goal
+        Fathom.trackGoal("CT5MFO6L", 0);
+        return true;
+      },
       async redirect({ url, baseUrl }) {
         return "/blog";
       },

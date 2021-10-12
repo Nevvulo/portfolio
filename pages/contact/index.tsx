@@ -1,5 +1,6 @@
 import React from "react";
 import styled from "styled-components";
+import { Container } from "../../components/container";
 import { BackButton, Header, Text, Title } from "../../components/generics";
 import { SocialLinks } from "../../components/social-links";
 import { ContactView } from "../../components/views/contact";
@@ -9,10 +10,12 @@ import Colors, { Gradients } from "../../constants/colors";
 const Contact: React.FC = () => (
   <ContactView>
     <ContactBox>
-      <Header>
-        <BackButton color={Colors.WHITE} size="lg" href="/" />
-        <Title color="white">Contact</Title>
-      </Header>
+      <Container padding="1em 0" alignItems="center">
+        <BackButton color={Colors.WHITE} href="/" />
+        <Title fontSize="36px" color="white">
+          Contact
+        </Title>
+      </Container>
       <Text>Wanna get in touch?</Text>
       <SocialLinks include={{ linkedIn: true }} direction="row" />
       <Text>

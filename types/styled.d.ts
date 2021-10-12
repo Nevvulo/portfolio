@@ -7,6 +7,7 @@ interface GenericTheme {
   contrast: string;
   pure: string;
   textColor: string;
+  linkColor: string;
   postBackground: string;
   postImageBoxShadow: string;
 }

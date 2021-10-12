@@ -4,7 +4,7 @@ import styled from "styled-components";
 import { Container } from "../../components/container";
 import { Header, Title } from "../../components/generics";
 import { BackButton } from "../../components/generics/button";
-import { Hero } from "../../components/hero";
+import { HeroImage, HeroContainer } from "../../components/hero";
 import { ProjectPreview } from "../../components/project";
 import { ProjectFilter } from "../../components/project/filter";
 import { ProjectView } from "../../components/views/project";
@@ -26,11 +26,14 @@ function ProjectsPage() {
 
   return (
     <ProjectView>
-      <Hero
-        style={{ marginBottom: "24px", height: "150px" }}
-        image={Background.src}
-      >
-        <Header direction="column">
+      <HeroContainer style={{ marginBottom: "24px", height: "150px" }}>
+        <HeroImage
+          priority
+          loading="eager"
+          layout="fill"
+          src={Background.src}
+        />
+        <Header justifyContent="center" direction="column">
           <Container alignItems="center">
             <BackButton href="/" />
             <Title fontSize="36px" color="white">
@@ -42,7 +45,7 @@ function ProjectsPage() {
             onTabClick={(tab) => setSelectedTab(tab)}
           />
         </Header>
-      </Hero>
+      </HeroContainer>
 
       <ProjectContainer>
         {Projects.filter((m) => filter(m, selectedTab)).map((item) => (

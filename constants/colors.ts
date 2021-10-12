@@ -6,6 +6,7 @@ enum COLORS {
   LIGHT_PURPLE = "#b39ddb",
   FLUX_GREEN = "#6cea9c",
   TAB_SELECTED = "#f7be5c",
+  TEXT_COLOR = "#f7be5c",
   TAB_UNFOCUSED = "#d6d6d6",
 }
 
@@ -14,8 +15,8 @@ enum ColorsRGBA {
 }
 
 enum Gradients {
-  ABOUT_PAGE = "linear-gradient(to right, #eb3349, #f45c43)",
-  CONTACT_PAGE = "linear-gradient( 109.6deg,  rgba(102,203,149,1) 11.2%, rgba(39,210,175,1) 98.7% )",
+  ABOUT_PAGE = "linear-gradient(to right, #cb356b, #bd3f32)",
+  CONTACT_PAGE = "linear-gradient(to right, #4568dc, #b06ab3)",
   BLOG_POST = "linear-gradient(315deg, #000000 0%, #414141 74%)",
 }
 

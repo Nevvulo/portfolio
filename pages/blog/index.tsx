@@ -5,7 +5,7 @@ import { BlogHomepageFooter } from "../../components/blog/homepage-footer";
 import { PostPreview } from "../../components/blog/post-preview";
 import { Container } from "../../components/container";
 import { BackButton, Header, Text, Title } from "../../components/generics";
-import { Hero } from "../../components/hero";
+import { HeroContainer, HeroImage } from "../../components/hero";
 import { BlogView } from "../../components/views/blog";
 import getFile from "../../modules/getFile";
 import Background from "./../../assets/img/section-background.jpg";
@@ -26,12 +26,21 @@ export default function Blog({ posts }) {
     <BlogView>
       <GitHubAuthSection />
 
-      <Hero style={{ justifyContent: "space-between" }} image={Background.src}>
-        <Header alignItems="center">
-          <BackButton href="/" />
-          <Title color="white">📘 Blog</Title>
+      <HeroContainer>
+        <HeroImage
+          priority
+          loading="eager"
+          layout="fill"
+          objectFit="cover"
+          src={Background.src}
+        />
+        <Header justifyContent="flex-start">
+          <Container alignItems="center">
+            <BackButton href="/" />
+            <Title color="white">📘 Blog</Title>
+          </Container>
         </Header>
-      </Hero>
+      </HeroContainer>
 
       <PostContainer>
         {!posts && <PostsLoading />}

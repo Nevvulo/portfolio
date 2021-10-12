@@ -11,6 +11,7 @@ export interface ContainerProps {
   background?: string;
   borderRadius?: any;
   alignSelf?: string;
+  justifyContent?: string;
   alignItems?: string;
   padding?: string;
 }
@@ -25,6 +26,7 @@ const StyledContainer = styled.div<
   padding: ${(props) => props.padding || "0px"};
   border-radius: ${(props) => props.borderRadius || "0px"};
   align-items: ${(props) => props.alignItems || "initial"};
+  justify-content: ${(props) => props.justifyContent || "initial"};
   align-self: ${(props) => props.alignSelf || "initial"};
 `;
 

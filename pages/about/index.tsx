@@ -1,20 +1,15 @@
-import { faGithub } from "@fortawesome/free-brands-svg-icons";
 import React from "react";
 import styled from "styled-components";
 import { Container } from "../../components/container";
-import {
-  BackButton,
-  Header,
-  IconLink,
-  Text,
-  Title,
-} from "../../components/generics";
+import { BackButton, Link, Text, Title } from "../../components/generics";
+import { Footer } from "../../components/generics/footer";
 import { AboutView } from "../../components/views/about";
 import { MinimalView } from "../../components/views/minimal";
 import Colors, { Gradients } from "../../constants/colors";
 
 const TextContainer = styled(Container)`
   display: block;
+  color: ${(props) => props.theme.textColor} !important;
   height: 80%;
   overflow: auto;
 `;
@@ -37,10 +32,12 @@ export const AboutBox = styled(MinimalView)`
 const About: React.FC = () => (
   <AboutView>
     <AboutBox>
-      <Header>
+      <Container padding="1em 0" alignItems="center">
         <BackButton color={Colors.WHITE} href="/" />
-        <Title color="white">About Me</Title>
-      </Header>
+        <Title fontSize="36px" color="white">
+          About Me
+        </Title>
+      </Container>
       <TextContainer direction="column" padding="0 12px">
         <Text>
           I'm Blake - a full-stack software engineer based in Melbourne,
@@ -60,6 +57,12 @@ const About: React.FC = () => (
           (and React Native), Python, Ionic + Capacitor and others.
         </Text>
       </TextContainer>
+      <Footer>
+        <Text>
+          Wanna get in touch? You can <Link href="/contact">contact me</Link>,
+          or check out some of <Link href="/projects">my projects</Link>
+        </Text>
+      </Footer>
     </AboutBox>
   </AboutView>
 );

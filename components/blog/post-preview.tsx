@@ -5,6 +5,7 @@ import { StrippedLink } from "../generics/link";
 import { Title } from "../generics/title";
 import { Skeleton } from "../skeleton";
 import { Label, Labels } from "./labels";
+import * as Fathom from "fathom-client";
 
 //https://codepen.io/taylorvowell/pen/BkxbC
 const Post = styled.div`
@@ -88,7 +89,8 @@ export const PostPreview: React.FC<PreviewProps> = ({
   loading,
 }) => {
   return (
-    <PreviewContainer>
+    // view blog post goal
+    <PreviewContainer onClick={() => Fathom.trackGoal("CTGT4BLM", 0)}>
       <StrippedLink href={`/blog/${slug}`}>
         <Post>
           <PreviewText direction="column">
