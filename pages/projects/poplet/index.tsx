@@ -19,11 +19,23 @@ import { Technologies } from "../../../constants/technologies";
 import styled from "styled-components";
 import { ROUTES } from "../../../constants/routes";
 import { Navbar } from "../../../components/navbar";
+import { useTheme } from "../../../hooks/useTheme";
 
 const id = "poplet";
 const title = "Poplet";
 const shortDescription =
   "Note taking app with advanced features and customisability";
+
+const LogoInverted = styled.img.attrs({
+  src: PopletLogo.src,
+})`
+  filter: invert(1);
+  align-self: flex-end;
+  margin-right: 8px;
+  margin-bottom: 4px;
+  height: 42px;
+  width: 42px;
+`;
 
 const Logo = styled.img.attrs({
   src: PopletLogo.src,
@@ -48,11 +60,12 @@ export const PopletPreview: React.FC = () => (
 );
 
 export default function Poplet() {
+  const [theme] = useTheme();
   return (
     <ProjectContainer>
       <Navbar title={title} route={ROUTES.PROJECTS.ROOT} />
       <AnimatedContainer layoutId={`logo-${id}`}>
-        <Logo />
+        {theme === 'light' ? <LogoInverted /> : <Logo />}
         <ProjectTitle>{title}</ProjectTitle>
       </AnimatedContainer>
       <AnimatedContainer layoutId={`description-${id}`}>

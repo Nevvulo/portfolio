@@ -2,6 +2,7 @@ import React from "react";
 import Image from "next/image";
 import FluxColoredLogo from "../../../assets/svg/flux.svg";
 import FluxBlackLogo from "../../../assets/svg/logo.svg";
+import FluxWhiteLogo from "../../../assets/svg/flux-white.svg";
 import {
   AnimatedContainer,
   FadeAnimatedContainer,
@@ -21,6 +22,7 @@ import { Technologies } from "../../../constants/technologies";
 import styled from "styled-components";
 import { Navbar } from "../../../components/navbar";
 import { ROUTES } from "../../../constants/routes";
+import { useTheme } from "../../../hooks/useTheme";
 
 const id = "flux";
 const shortDescription = "Helping 150,000 Aussies win at money";
@@ -34,6 +36,15 @@ const Logo = styled(Image).attrs({
   align-self: flex-start;
 `;
 
+const LogoWhite = styled(Image).attrs({
+  src: FluxWhiteLogo,
+  height: "42",
+})`
+  object-position: left;
+  object-fit: contain;
+  align-self: flex-start;
+`;
+
 const LogoFilled = styled(Image).attrs({
   src: FluxColoredLogo,
 })`
@@ -44,23 +55,28 @@ const LogoFilled = styled(Image).attrs({
   width: 42px;
 `;
 
-export const FluxPreview: React.FC = () => (
-  <>
-    <AnimatedContainer layoutId={`logo-${id}`}>
-      <Logo />
-    </AnimatedContainer>
-    <AnimatedContainer layoutId={`description-${id}`}>
-      <ProjectSubtitle color={Colors.WHITE}>{shortDescription}</ProjectSubtitle>
-    </AnimatedContainer>
-  </>
-);
+export const FluxPreview: React.FC = () => {
+  return (
+    <>
+      <AnimatedContainer layoutId={`logo-${id}`}>
+        <LogoWhite />
+      </AnimatedContainer>
+      <AnimatedContainer layoutId={`description-${id}`}>
+        <ProjectSubtitle color={Colors.WHITE}>
+          {shortDescription}
+        </ProjectSubtitle>
+      </AnimatedContainer>
+    </>
+  );
+};
 
 export default function Flux() {
+  const [theme] = useTheme();
   return (
     <ProjectContainer>
       <Navbar title="Flux" route={ROUTES.PROJECTS.ROOT} />
-      <AnimatedContainer layoutId={`logo-${id}`}>
-        <Logo />
+      <AnimatedContainer style={{ marginTop: '16px' }} layoutId={`logo-${id}`}>
+        {theme === "light" ? <LogoFilled /> : <Logo />}
       </AnimatedContainer>
       <AnimatedContainer layoutId={`description-${id}`}>
         <ProjectSubtitle>{shortDescription}</ProjectSubtitle>

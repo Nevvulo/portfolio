@@ -11,10 +11,10 @@ const NavbarBackground = styled(Container)`
   align-items: center;
   padding: 1em;
   border-radius: 6px;
-  background-color: rgba(225, 225, 225, 0.1);
+  background-color: rgba(215, 215, 215, 0.25);
   -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
-  box-shadow: 0px 0px 16px rgba(0, 0, 0, 0.2);
+  box-shadow: 0px 0px 16px rgba(0, 0, 0, 0.35);
 
   a {
     justify-self: flex-start;
@@ -26,6 +26,7 @@ const NavbarContainer = styled(Container)`
   position: sticky;
   top: 0;
   margin: 1em;
+  z-index: 9;
 `;
 
 interface NavbarProps {

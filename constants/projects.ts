@@ -5,8 +5,8 @@ import Powercord, { PowercordPreview } from "../pages/projects/powercord";
 import zBot, { zBotPreview } from "../pages/projects/zbot";
 import Flux, { FluxPreview } from "../pages/projects/flux";
 
-type Item = ProjectProps & ProjectStyleProps;
-export const Projects: Item[] = [
+export type Project = ProjectProps & ProjectStyleProps;
+export const Projects: Project[] = [
   {
     projectId: "flux",
     background: "linear-gradient(to right,#6cea9c,#2faf60);",

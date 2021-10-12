@@ -24,6 +24,10 @@ const LineNo = styled.span`
 
 const LineContent = styled.span`
   display: table-cell;
+
+  span.token {
+    color: #9efeff;
+  }
 `;
 
 const WithLineNumbers = ({ children }: PropsWithChildren<any>) => {

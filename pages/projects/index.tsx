@@ -9,7 +9,7 @@ import { ProjectPreview } from "../../components/project";
 import { ProjectFilter } from "../../components/project/filter";
 import { ProjectView } from "../../components/views/project";
 import { FilterNames } from "../../constants/filters";
-import { Projects } from "../../constants/projects";
+import { Project, Projects } from "../../constants/projects";
 import Background from "./../../assets/img/alt.jpg";
 
 const ProjectContainer = styled.div`
@@ -22,6 +22,7 @@ const ProjectContainer = styled.div`
 
 function ProjectsPage() {
   const router = useRouter();
+  const [selectedTab, setSelectedTab] = useState("all");
 
   return (
     <ProjectView>
@@ -36,15 +37,15 @@ function ProjectsPage() {
               🛠 Projects
             </Title>
           </Container>
-          {/* <ProjectFilter
+          <ProjectFilter
             selected={selectedTab}
             onTabClick={(tab) => setSelectedTab(tab)}
-          /> */}
+          />
         </Header>
       </Hero>
 
       <ProjectContainer>
-        {Projects.map((item) => (
+        {Projects.filter((m) => filter(m, selectedTab)).map((item) => (
           <ProjectPreview
             key={item.projectId}
             onClick={() => router.push(`/projects/${item.projectId}`)}
@@ -54,6 +55,15 @@ function ProjectsPage() {
       </ProjectContainer>
     </ProjectView>
   );
+}
+
+function filter(project: Project, tab: string) {
+  switch (tab) {
+    case "maintained":
+      return project.maintained;
+    case "all":
+      return true;
+  }
 }
 
 export default ProjectsPage;

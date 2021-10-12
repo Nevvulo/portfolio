@@ -33,10 +33,12 @@ const Logo = styled.img.attrs({
   layout: "fixed",
 })`
   position: relative !important;
-  top: 8px !important;
   height: 36px !important;
   width: 36px !important;
   border-radius: 4px;
+  display: flex;
+  align-self: center;
+  margin-right: 10px;
 `;
 
 export const zBotPreview: React.FC = () => (

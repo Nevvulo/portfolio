@@ -5,6 +5,14 @@ import Head from "next/head";
 import { createGlobalStyle, ThemeProvider } from "styled-components";
 import { SessionProvider } from "next-auth/react";
 import { useTheme } from "../hooks/useTheme";
+import Router from 'next/router';
+import NProgress from 'nprogress'; //nprogress module
+import './nprogress.css'; //styles of nprogress
+
+//Binding events. 
+Router.events.on('routeChangeStart', () => NProgress.start()); 
+Router.events.on('routeChangeComplete', () => NProgress.done()); 
+Router.events.on('routeChangeError', () => NProgress.done());  
 
 const GlobalStyle = createGlobalStyle`
   html, #__next, #root, body {
@@ -12,14 +20,12 @@ const GlobalStyle = createGlobalStyle`
     margin: 0;
     padding: 0;
   }
+`;
 
+const BodyStyle = createGlobalStyle`
   body {
     background: ${(props) => props.theme.background};
-    color: ${(props) => props.theme.foreground}
-  }
-
-  span.token {
-    color: #9EFEFF;
+    color: ${(props) => props.theme.foreground};
   }
 `;
 
@@ -50,7 +56,9 @@ export default function MyApp({ Component, pageProps }: AppProps) {
     <React.StrictMode>
       <AnimateSharedLayout type="crossfade">
         <SessionProvider session={pageProps.session}>
+          <GlobalStyle />
           <ThemeProvider theme={mode}>
+            <BodyStyle />
             <Content />
             <Component {...pageProps} />
           </ThemeProvider>
@@ -63,7 +71,6 @@ export default function MyApp({ Component, pageProps }: AppProps) {
 function Content() {
   return (
     <>
-      <GlobalStyle />
       <Head>
         <script
           src="https://cdn.usefathom.com/script.js"
@@ -91,13 +98,18 @@ function Content() {
         />
         <title>Nevulo</title>
 
-        <style jsx>
-          {`
-            @import url("https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700;800&family=Roboto+Condensed:wght@700&family=Space+Grotesk:wght@300;400;600;700&display=swap");
-            @import url("https://fonts.googleapis.com/css2?family=Archivo:wght@400;900;694&display=swap");
-            @import url("https://fonts.googleapis.com/css2?family=Archivo:wght@400;900;694&family=Cousine:wght@700&display=swap");
-          `}
-        </style>
+        <link
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700;800&family=Roboto+Condensed:wght@700&family=Space+Grotesk:wght@300;400;600;700&display=swap"
+          rel="stylesheet"
+        />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;900;694&display=swap"
+          rel="stylesheet"
+        />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;900;694&family=Cousine:wght@700&display=swap"
+          rel="stylesheet"
+        />
       </Head>
     </>
   );

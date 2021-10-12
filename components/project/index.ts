@@ -5,6 +5,12 @@ import { Link } from "../generics";
 
 export const ProjectContainer = styled.div`
   padding: 2em 1em;
+  max-width: 650px;
+  display: flex;
+  justify-content: center;
+  margin-left: auto;
+  margin-right: auto;
+  flex-direction: column;
 `;
 
 export const ProjectContentContainer = styled(Container)`
@@ -33,6 +39,10 @@ export const ProjectContent = styled(motion.div)<any>`
   padding: 1.5em 2em 2.5em 2em;
   overflow: hidden;
   z-index: 0;
+
+  h1 {
+    color: white;
+  }
 `;
 
 export const ProjectTitleContainer = styled(AnimatedContainer)`
