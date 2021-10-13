@@ -39,7 +39,7 @@ const CommentCount = styled.h4`
 `;
 
 export default function Comments({ total, comments, onCommentSubmitted }: any) {
-  const { status } = useSession({ required: true });
+  const { status } = useSession({ required: false });
   return (
     <CommentsContainer>
       <Header alignItems="center">

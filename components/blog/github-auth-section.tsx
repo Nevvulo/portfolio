@@ -4,6 +4,7 @@ import { signIn, signOut, useSession } from "next-auth/react";
 import React from "react";
 import styled from "styled-components";
 import { Text } from "../generics";
+import * as Fathom from "fathom-client";
 
 const Container = styled.div`
   border-radius: 4px;
@@ -75,12 +76,18 @@ const UserSection = styled(Text)`
 `;
 
 export default function GitHubAuthSection() {
-  const { data: session } = useSession({ required: true });
+  const { data: session } = useSession({ required: false });
   return (
     <Container>
       {!session ? (
         <UserSection>
-          <ActionButton onClick={() => signIn("credentials")}>
+          <ActionButton
+            onClick={() => {
+              // github authentication goal
+              Fathom.trackGoal("CT5MFO6L", 0);
+              signIn("credentials");
+            }}
+          >
             <FontAwesomeIcon
               color="white"
               height="16"
