@@ -1,29 +1,30 @@
+import * as Fathom from "fathom-client";
 import { AnimateSharedLayout } from "framer-motion";
-import { AppProps } from "next/app";
-import React, { useEffect } from "react";
-import Head from "next/head";
-import { createGlobalStyle, ThemeProvider } from "styled-components";
 import { SessionProvider } from "next-auth/react";
-import { useTheme } from "../hooks/useTheme";
+import { AppProps } from "next/app";
+import Head from "next/head";
 import Router, { useRouter } from "next/router";
 import NProgress from "nprogress"; //nprogress module
+import React, { useEffect } from "react";
+import { createGlobalStyle, ThemeProvider } from "styled-components";
+import { useTheme } from "../hooks/useTheme";
 import "./nprogress.css"; //styles of nprogress
-import * as Fathom from "fathom-client";
 
 //Binding events.
 Router.events.on("routeChangeStart", () => NProgress.start());
 Router.events.on("routeChangeComplete", () => NProgress.done());
 Router.events.on("routeChangeError", () => NProgress.done());
 
-const GlobalStyle = createGlobalStyle`
-  html, #__next, #root, body {
+const BodyStyle = createGlobalStyle`
+  html,
+  #__next,
+  #root,
+  body {
     height: 100%;
     margin: 0;
     padding: 0;
   }
-`;
 
-const BodyStyle = createGlobalStyle`
   body {
     background: ${(props) => props.theme.background};
     color: ${(props) => props.theme.foreground};
@@ -78,7 +79,6 @@ export default function MyApp({ Component, pageProps }: AppProps) {
     <React.StrictMode>
       <AnimateSharedLayout type="crossfade">
         <SessionProvider session={pageProps.session}>
-          <GlobalStyle />
           <ThemeProvider theme={mode}>
             <BodyStyle />
             <Content />

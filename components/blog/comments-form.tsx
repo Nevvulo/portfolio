@@ -82,7 +82,9 @@ export function CommentsForm({ disabled, onCommentSubmitted }) {
     return (
       <>
         <HintText>You need to be signed in to comment</HintText>
-        <SignInButton onClick={() => signIn("github")}>Sign in</SignInButton>
+        <SignInButton onClick={() => signIn("credentials")}>
+          Sign in
+        </SignInButton>
       </>
     );
 

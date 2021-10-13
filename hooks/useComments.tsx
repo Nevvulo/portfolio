@@ -60,7 +60,7 @@ function reducer(state: State, action: Action): State {
 }
 
 export const useComments = (discussionNo: number, discussionId: string) => {
-  const { data: session, status } = useSession();
+  const { data: session, status } = useSession({ required: true });
 
   const [state, dispatch] = useReducer(reducer, initialState);
   const token = session?.accessToken as string;

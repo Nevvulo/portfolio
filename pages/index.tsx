@@ -5,7 +5,7 @@ import { useRouter } from "next/router";
 import React from "react";
 import styled, { keyframes } from "styled-components";
 import { Container } from "../components/container";
-import { Link, Text } from "../components/generics";
+import { Link } from "../components/generics";
 import { Announcement } from "../components/generics/announcement";
 import { SocialLinks } from "../components/social-links";
 import { HomeView } from "../components/views/home";

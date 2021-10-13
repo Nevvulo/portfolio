@@ -1,10 +1,9 @@
-import LinkComponent from "next/link";
 import styled from "styled-components";
 
-export const Link = styled(LinkComponent)`
-  color: white !important;
+export const Link = styled.a`
+  color: white;
 `;
 
-export const StrippedLink = styled(LinkComponent)`
+export const StrippedLink = styled.a`
   text-decoration: none;
 `;

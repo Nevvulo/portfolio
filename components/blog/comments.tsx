@@ -39,7 +39,7 @@ const CommentCount = styled.h4`
 `;
 
 export default function Comments({ total, comments, onCommentSubmitted }: any) {
-  const { data: session, status } = useSession();
+  const { status } = useSession({ required: true });
   return (
     <CommentsContainer>
       <Header alignItems="center">
@@ -55,7 +55,7 @@ export default function Comments({ total, comments, onCommentSubmitted }: any) {
         />
       ))}
       <CommentsForm
-        disabled={status === "unauthenticated"}
+        disabled={status !== "authenticated"}
         onCommentSubmitted={onCommentSubmitted}
       />
     </CommentsContainer>

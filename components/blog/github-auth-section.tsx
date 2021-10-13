@@ -75,12 +75,12 @@ const UserSection = styled(Text)`
 `;
 
 export default function GitHubAuthSection() {
-  const { data: session } = useSession();
+  const { data: session } = useSession({ required: true });
   return (
     <Container>
       {!session ? (
         <UserSection>
-          <ActionButton onClick={() => signIn("github")}>
+          <ActionButton onClick={() => signIn("credentials")}>
             <FontAwesomeIcon
               color="white"
               height="16"

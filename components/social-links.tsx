@@ -29,7 +29,7 @@ const SocialLinksContainer = styled(AnimatedContainer)`
   padding-left: 32px;
   @media (max-width: 768px) {
     display: flex;
-    flex-direction: revert !important;
+    flex-direction: revert;
     padding: 0;
   }
 `;
