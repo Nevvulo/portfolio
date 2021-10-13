@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import styled from "styled-components";
 import { AnimatedContainer, Container } from "../container";
 import { Link } from "../generics";
@@ -35,7 +35,7 @@ export const ProjectContainerExpanded = styled(AnimatedContainer)`
   }
 `;
 
-export const ProjectContent = styled(motion.div)<any>`
+export const ProjectContent = styled(m.div)<any>`
   padding: 1.5em 2em 2.5em 2em;
   overflow: hidden;
   z-index: 0;
@@ -50,7 +50,7 @@ export const ProjectTitleContainer = styled(AnimatedContainer)`
   padding: 0.25em 0;
 `;
 
-export const ProjectTitle = styled(motion.h1)`
+export const ProjectTitle = styled(m.h1)`
   font-family: "Inter", sans-serif;
   font-weight: 600;
   color: ${(props) => props.theme.contrast};
@@ -68,7 +68,7 @@ export const ProjectTitle = styled(motion.h1)`
   }
 `;
 
-export const ProjectSubtitle = styled(motion.h2)`
+export const ProjectSubtitle = styled(m.h2)`
   font-family: "RobotoCondensed", sans-serif;
   font-weight: 400;
   color: ${(props) => props.color || "#c2c2c2"};
@@ -76,7 +76,7 @@ export const ProjectSubtitle = styled(motion.h2)`
   margin: 0;
 `;
 
-export const ProjectContentHeader = styled(motion.h3)`
+export const ProjectContentHeader = styled(m.h3)`
   font-family: "Inter", sans-serif;
   font-weight: 700;
   color: ${(props) => props.theme.contrast};
@@ -85,7 +85,7 @@ export const ProjectContentHeader = styled(motion.h3)`
   margin-bottom: 2px;
 `;
 
-export const ProjectContentSubheader = styled(motion.p)`
+export const ProjectContentSubheader = styled(m.p)`
   font-family: "Inter", sans-serif;
   font-weight: 600;
   color: ${(props) => props.theme.contrast};
@@ -94,7 +94,7 @@ export const ProjectContentSubheader = styled(motion.p)`
   margin-bottom: 2px;
 `;
 
-export const ProjectContentText = styled(motion.p)`
+export const ProjectContentText = styled(m.p)`
   font-family: "Inter", sans-serif;
   font-weight: 400;
   color: #b0b0b0;
@@ -103,7 +103,7 @@ export const ProjectContentText = styled(motion.p)`
   margin-top: 4px;
 `;
 
-export const ProjectImage = motion.img;
+export const ProjectImage = m.img;
 
 export const CloseButton = styled(Link)`
   position: absolute;

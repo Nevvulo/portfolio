@@ -108,8 +108,8 @@ export const PostPreview: React.FC<PreviewProps> = ({
               {labels
                 .map((m) => m.replace(/-/g, " "))
                 .slice(0, 3)
-                .map((label) => (
-                  <Label>{label}</Label>
+                .map((label, i) => (
+                  <Label key={i}>{label}</Label>
                 ))}
             </Labels>
           </PreviewText>

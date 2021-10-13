@@ -31,8 +31,9 @@ export default function Blog({ posts }) {
           priority
           loading="eager"
           layout="fill"
+          placeholder="blur"
           objectFit="cover"
-          src={Background.src}
+          src={Background}
         />
         <Header justifyContent="flex-start">
           <Container alignItems="center">

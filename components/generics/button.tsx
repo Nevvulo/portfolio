@@ -7,7 +7,7 @@ import {
   FontAwesomeIcon,
   FontAwesomeIconProps,
 } from "@fortawesome/react-fontawesome";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import React, { HTMLAttributes } from "react";
 import Link, { LinkProps } from "next/link";
 import styled from "styled-components";
@@ -57,7 +57,7 @@ export const AnimatedButton: React.FC<AnimatedButtonProps> = ({
   children,
   href,
 }) => (
-  <motion.a
+  <m.a
     onClick={onClick}
     target={href ? "_blank" : void 0}
     href={href}
@@ -68,7 +68,7 @@ export const AnimatedButton: React.FC<AnimatedButtonProps> = ({
       <ButtonIcon icon={icon} color={color} size={size} />
       {children}
     </Container>
-  </motion.a>
+  </m.a>
 );
 
 export type IconLinkProps = Partial<LinkProps> &

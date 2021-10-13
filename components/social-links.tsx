@@ -6,13 +6,13 @@ import {
 } from "@fortawesome/free-brands-svg-icons";
 import { faEnvelope } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import React from "react";
 import styled from "styled-components";
 import Socials from "../constants/socials";
 import { AnimatedContainer, ContainerProps } from "./container";
 
-const IconContainer = styled(motion.a).attrs({ target: "_blank" })`
+const IconContainer = styled(m.a).attrs({ target: "_blank" })`
   flex: 1;
   display: flex;
   flex-direction: column;

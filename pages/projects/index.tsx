@@ -1,14 +1,13 @@
 import { useRouter } from "next/router";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import styled from "styled-components";
 import { Container } from "../../components/container";
 import { Header, Title } from "../../components/generics";
 import { BackButton } from "../../components/generics/button";
-import { HeroImage, HeroContainer } from "../../components/hero";
+import { HeroContainer, HeroImage } from "../../components/hero";
 import { ProjectPreview } from "../../components/project";
 import { ProjectFilter } from "../../components/project/filter";
 import { ProjectView } from "../../components/views/project";
-import { FilterNames } from "../../constants/filters";
 import { Project, Projects } from "../../constants/projects";
 import Background from "./../../assets/img/alt.jpg";
 

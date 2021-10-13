@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import React from "react";
 import styled from "styled-components";
 import { RoleColors, RoleNames, Roles } from "../../constants/roles";
@@ -47,7 +47,7 @@ export const ProjectBadges: React.FC<BadgesProps> = ({
 };
 
 type BadgeProps = { background: string };
-const Badge = styled(motion.div)<BadgeProps>`
+const Badge = styled(m.div)<BadgeProps>`
   padding: 0.35em;
   font-family: "Inter", sans-serif;
   border-radius: 6px;

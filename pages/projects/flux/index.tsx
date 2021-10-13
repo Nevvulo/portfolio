@@ -23,6 +23,7 @@ import styled from "styled-components";
 import { Navbar } from "../../../components/navbar";
 import { ROUTES } from "../../../constants/routes";
 import { useTheme } from "../../../hooks/useTheme";
+import { LazyMotion } from "framer-motion";
 
 const id = "flux";
 const shortDescription = "Helping 150,000 Aussies win at money";
@@ -75,7 +76,7 @@ export default function Flux() {
   return (
     <ProjectContainer>
       <Navbar title="Flux" route={ROUTES.PROJECTS.ROOT} />
-      <AnimatedContainer style={{ marginTop: '16px' }} layoutId={`logo-${id}`}>
+      <AnimatedContainer style={{ marginTop: "16px" }} layoutId={`logo-${id}`}>
         {theme === "light" ? <LogoFilled /> : <Logo />}
       </AnimatedContainer>
       <AnimatedContainer layoutId={`description-${id}`}>

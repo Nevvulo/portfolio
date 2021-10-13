@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { HTMLAttributes } from "react";
 import styled from "styled-components";
 
@@ -30,7 +30,7 @@ const StyledContainer = styled.div<
   align-self: ${(props) => props.alignSelf || "initial"};
 `;
 
-export const AnimatedContainer = styled(motion.div)<ContainerProps>`
+export const AnimatedContainer = styled(m.div)<ContainerProps>`
   display: flex;
   flex: ${(props) => props.flex};
   flex-direction: ${(props) => props.direction};

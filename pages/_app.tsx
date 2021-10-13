@@ -1,5 +1,11 @@
 import * as Fathom from "fathom-client";
-import { AnimateSharedLayout } from "framer-motion";
+import {
+  AnimatePresence,
+  AnimateSharedLayout,
+  domAnimation,
+  LazyMotion,
+  m,
+} from "framer-motion";
 import { SessionProvider } from "next-auth/react";
 import { AppProps } from "next/app";
 import Head from "next/head";
@@ -77,15 +83,35 @@ export default function MyApp({ Component, pageProps }: AppProps) {
   const mode = theme === "light" ? LightTheme : DarkTheme;
   return (
     <React.StrictMode>
-      <AnimateSharedLayout type="crossfade">
-        <SessionProvider session={pageProps.session}>
-          <ThemeProvider theme={mode}>
-            <BodyStyle />
-            <Content />
-            <Component {...pageProps} />
-          </ThemeProvider>
-        </SessionProvider>
-      </AnimateSharedLayout>
+      <LazyMotion strict features={domAnimation}>
+        <AnimateSharedLayout type="crossfade">
+          <SessionProvider session={pageProps.session}>
+            <ThemeProvider theme={mode}>
+              <BodyStyle />
+              <Content />
+              <AnimatePresence exitBeforeEnter>
+                <m.div
+                  key={router.route.concat("animate")}
+                  style={{ height: "100%" }}
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{
+                    y: 0,
+                    opacity: 1,
+                    transition: { duration: 0.2 },
+                  }}
+                  exit={{
+                    y: -10,
+                    opacity: 0,
+                    transition: { duration: 0.23 },
+                  }}
+                >
+                  <Component {...pageProps} />
+                </m.div>
+              </AnimatePresence>
+            </ThemeProvider>
+          </SessionProvider>
+        </AnimateSharedLayout>
+      </LazyMotion>
     </React.StrictMode>
   );
 }
@@ -107,18 +133,13 @@ function Content() {
           content="https://massive-legend.nevulo.xyz/2aRAq5aL.png"
         />
         <meta name="theme-color" content="#26a69a" />
-        <link
-          rel="shortcut icon"
-          type="image/jpg"
-          href="assets/img/nevulo.jpg"
-        />
+        <link rel="shortcut icon" type="image/jpg" href="nevulo.jpg" />
         <title>Nevulo</title>
 
         <style jsx>
           {`
             @import url("https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700;800&family=Roboto+Condensed:wght@700&family=Space+Grotesk:wght@300;400;600;700&display=swap");
-            @import url("https://fonts.googleapis.com/css2?family=Archivo:wght@400;900;694&display=swap");
-            @import url("https://fonts.googleapis.com/css2?family=Archivo:wght@400;900;694&family=Cousine:wght@700&display=swap");
+            @import url("https://fonts.googleapis.com/css2?family=Cousine:wght@700&display=swap");
             @import url("https://fonts.googleapis.com/css2?family=Fira+Code:wght@200;300;400;500;600;700;800&display=swap");
           `}
         </style>
