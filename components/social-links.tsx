@@ -12,7 +12,9 @@ import styled from "styled-components";
 import Socials from "../constants/socials";
 import { AnimatedContainer, ContainerProps } from "./container";
 
-const IconContainer = styled(m.a).attrs({ target: "_blank" })`
+const IconContainer = styled(m.a).attrs((props) => ({
+  target: "_blank",
+}))`
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -42,20 +44,20 @@ export const SocialLinks: React.FC<
   ContainerProps & { include?: ExtraSocialLinks }
 > = ({ direction = "column", include = {} }) => (
   <SocialLinksContainer direction={direction}>
-    <IconContainer target="_blank" href={Socials.GitHub}>
+    <IconContainer aria-label="GitHub" target="_blank" href={Socials.GitHub}>
       <Icon icon={faGithub} />
     </IconContainer>
-    <IconContainer target="_blank" href={Socials.Twitter}>
+    <IconContainer aria-label="Twitter" target="_blank" href={Socials.Twitter}>
       <Icon icon={faTwitter} />
     </IconContainer>
-    <IconContainer target="_blank" href={Socials.Discord}>
+    <IconContainer aria-label="Discord" target="_blank" href={Socials.Discord}>
       <Icon icon={faDiscord} size="2x" />
     </IconContainer>
-    <IconContainer href={`mailto:${Socials.Email}`}>
+    <IconContainer aaria-labellt="E-mail" href={`mailto:${Socials.Email}`}>
       <Icon icon={faEnvelope} />
     </IconContainer>
     {include.linkedIn && (
-      <IconContainer href={Socials.LinkedIn}>
+      <IconContainer aria-label="LinkedIn" href={Socials.LinkedIn}>
         <Icon icon={faLinkedin} />
       </IconContainer>
     )}

@@ -17,6 +17,7 @@ const ProfilePic = styled(Image).attrs({
   src: NevuloImg,
   width: "32",
   height: "32",
+  alt: "Nevulo profile picture",
 })`
   border-radius: 32px;
 `;
