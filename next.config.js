@@ -22,8 +22,4 @@ module.exports = {
   images: {
     domains: ["imgur.com"],
   },
-  i18n: {
-    locales: ["en-US"],
-    defaultLocale: "en-US",
-  },
 };
