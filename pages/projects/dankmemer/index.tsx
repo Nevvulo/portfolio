@@ -25,14 +25,12 @@ const title = "Dank Memer";
 const shortDescription =
   "Multi-purpose Discord bot featuring a community-driven economy";
 
-const Logo = styled.img.attrs({ src: DankMemerLogo.src })`
-  align-self: flex-end;
-  margin-right: 8px;
-  height: 36px;
-  position: relative;
-  top: -6px;
-  width: 36px;
-  border-radius: 12px;
+const Logo = styled(Image).attrs({
+  src: DankMemerLogo,
+  width: "52",
+  height: "32",
+  quality: 25,
+})`
   align-items: center;
 `;
 

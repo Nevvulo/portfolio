@@ -26,8 +26,10 @@ const title = "Poplet";
 const shortDescription =
   "Note taking app with advanced features and customisability";
 
-const LogoInverted = styled.img.attrs({
-  src: PopletLogo.src,
+const LogoInverted = styled(Image).attrs({
+  src: PopletLogo,
+  width: "42px",
+  height: "42px",
 })`
   filter: invert(1);
   align-self: flex-end;
@@ -37,8 +39,11 @@ const LogoInverted = styled.img.attrs({
   width: 42px;
 `;
 
-const Logo = styled.img.attrs({
-  src: PopletLogo.src,
+const Logo = styled(Image).attrs({
+  src: PopletLogo,
+  width: "42px",
+  height: "42px",
+  quality: 25,
 })`
   align-self: flex-end;
   margin-right: 8px;
@@ -65,7 +70,7 @@ export default function Poplet() {
     <ProjectContainer>
       <Navbar title={title} route={ROUTES.PROJECTS.ROOT} />
       <AnimatedContainer layoutId={`logo-${id}`}>
-        {theme === 'light' ? <LogoInverted /> : <Logo />}
+        {theme === "light" ? <LogoInverted /> : <Logo />}
         <ProjectTitle>{title}</ProjectTitle>
       </AnimatedContainer>
       <AnimatedContainer layoutId={`description-${id}`}>

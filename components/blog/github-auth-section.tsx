@@ -85,7 +85,7 @@ export default function GitHubAuthSection() {
             onClick={() => {
               // github authentication goal
               Fathom.trackGoal("CT5MFO6L", 0);
-              signIn("credentials");
+              signIn("credentials", { redirect: false });
             }}
           >
             <FontAwesomeIcon

@@ -26,24 +26,21 @@ const title = "zBot";
 const shortDescription =
   "Multi-purpose Discord bot featuring a community-driven economy";
 
-const Logo = styled.img.attrs({
+const Logo = styled(Image).attrs({
   src: zBotLogo.src,
   height: "36",
   width: "36",
   layout: "fixed",
+  quality: 25,
 })`
-  position: relative !important;
-  height: 36px !important;
-  width: 36px !important;
   border-radius: 4px;
-  display: flex;
-  align-self: center;
-  margin-right: 10px;
+  position: relative !important;
+  top: -24px;
 `;
 
 export const zBotPreview: React.FC = () => (
   <>
-    <AnimatedContainer layoutId={`logo-${id}`}>
+    <AnimatedContainer style={{ alignItems: "center" }} layoutId={`logo-${id}`}>
       <Logo />
       <ProjectTitle aria-expanded="false">{title}</ProjectTitle>
     </AnimatedContainer>

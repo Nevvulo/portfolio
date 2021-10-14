@@ -123,17 +123,22 @@ function Content() {
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta property="og:title" content="Hi there, I'm Blake!" />
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <meta
+          http-equiv="Content-Type"
+          content="text/html; charset=ISO-8859-1"
+        ></meta>
         <meta
           property="og:description"
-          content="I'm a web and software developer based in Australia. Click this link to learn more about me!"
+          content="I'm a software engineer based in Australia working at Flux. Click this link to learn more about me!"
         />
         <meta property="og:url" content="https://nevulo.xyz" />
         <meta
           property="og:image"
           content="https://massive-legend.nevulo.xyz/2aRAq5aL.png"
         />
-        <meta name="theme-color" content="#26a69a" />
-        <link rel="shortcut icon" type="image/jpg" href="nevulo.jpg" />
+        <meta name="theme-color" content="#9074f2" />
+        <link rel="icon" href="favicon.ico" />
         <title>Nevulo</title>
 
         <style jsx>

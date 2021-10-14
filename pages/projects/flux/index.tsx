@@ -40,6 +40,7 @@ const Logo = styled(Image).attrs({
 const LogoWhite = styled(Image).attrs({
   src: FluxWhiteLogo,
   height: "42",
+  quality: 25,
 })`
   object-position: left;
   object-fit: contain;
@@ -48,6 +49,7 @@ const LogoWhite = styled(Image).attrs({
 
 const LogoFilled = styled(Image).attrs({
   src: FluxColoredLogo,
+  quality: 25,
 })`
   align-self: flex-end;
   margin-right: 8px;

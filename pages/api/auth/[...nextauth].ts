@@ -7,8 +7,7 @@ export default (req, res) =>
       GitHubProvider({
         clientId: process.env.GITHUB_CLIENT_ID,
         clientSecret: process.env.GITHUB_CLIENT_SECRET,
-        authorization:
-          "https://github.com/login/oauth/authorize?scope=read%3Auser%20user%3Aemail%20public_repo&client_id=66f5a7dccea02921dc2b&response_type=code&redirect_uri=https%3A%2F%2Fnevulo.xyz%2Fapi%2Fauth%2Fcallback%2Fgithub&state=532ff498fc279a35c30175832c7c9249a1f16b3cc63831d53699ee33749c3758",
+        scopes: "read:user user:email public_repo",
       } as any),
     ],
     debug: process.env.NODE_ENV === "development",

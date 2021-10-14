@@ -25,7 +25,7 @@ const shortDescription = "Client modification for the Discord desktop client";
 export const PowercordPreview: React.FC = () => (
   <>
     <AnimatedContainer layoutId={`logo-${id}`}>
-      <Image src={PowercordLogo} height="46" width="46" />
+      <Image quality={25} src={PowercordLogo} height="46" width="46" />
       <ProjectTitle>{title}</ProjectTitle>
     </AnimatedContainer>
     <AnimatedContainer layoutId={`description-${id}`}>
@@ -39,7 +39,7 @@ export default function Powercord() {
     <ProjectContainer>
       <Navbar title={title} route={ROUTES.PROJECTS.ROOT} />
       <AnimatedContainer layoutId={`logo-${id}`}>
-        <Image src={PowercordLogo} height="46" width="46" />
+        <Image quality={25} src={PowercordLogo} height="46" width="46" />
         <ProjectTitle>{title}</ProjectTitle>
       </AnimatedContainer>
       <AnimatedContainer layoutId={`description-${id}`}>

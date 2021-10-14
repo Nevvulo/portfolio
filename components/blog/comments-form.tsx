@@ -82,7 +82,9 @@ export function CommentsForm({ disabled, onCommentSubmitted }) {
     return (
       <>
         <HintText>You need to be signed in to comment</HintText>
-        <SignInButton onClick={() => signIn("credentials")}>
+        <SignInButton
+          onClick={() => signIn("credentials", { redirect: false })}
+        >
           Sign in
         </SignInButton>
       </>
