@@ -58,24 +58,24 @@ export default function Home() {
 
           <Subtitle>
             <FadeUp delay={400}>
-              I'm a full-stack developer based in Melbourne.
+              I'm a software engineer based in Melbourne, Australia.
             </FadeUp>
           </Subtitle>
 
           <FadeUp delay={400}>
             <ButtonContainer direction="column">
-              <Button onClick={() => history.push(ROUTES.BLOG.ROOT)}>
-                📖 Blog
-              </Button>
-              <Button onClick={() => history.push(ROUTES.PROJECTS.ROOT)}>
-                🛠 Projects
-              </Button>
-              <Button onClick={() => history.push(ROUTES.ABOUT)}>
-                👋 About Me
-              </Button>
-              <Button onClick={() => history.push(ROUTES.CONTACT)}>
-                📧 Contact
-              </Button>
+              <Link href={ROUTES.BLOG.ROOT} passHref>
+                <Button>📖 Blog</Button>
+              </Link>
+              <Link href={ROUTES.PROJECTS.ROOT} passHref>
+                <Button>🛠 Projects</Button>
+              </Link>
+              <Link href={ROUTES.ABOUT} passHref>
+                <Button>👋 About Me</Button>
+              </Link>
+              <Link href={ROUTES.CONTACT} passHref>
+                <Button>📧 Contact</Button>
+              </Link>
             </ButtonContainer>
           </FadeUp>
         </Container>
@@ -167,7 +167,8 @@ const Subtitle = styled.h2`
   margin-top: max(4px, 2vh);
 `;
 
-const Button = styled.button`
+const Button = styled.a`
+  text-decoration: none;
   opacity: 0.75;
   cursor: pointer;
   background: linear-gradient(to bottom, #212121, #171717);

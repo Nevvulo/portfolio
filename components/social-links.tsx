@@ -14,6 +14,7 @@ import { AnimatedContainer, ContainerProps } from "./container";
 
 const IconContainer = styled(m.a).attrs((props) => ({
   target: "_blank",
+  rel: "noreferrer",
 }))`
   flex: 1;
   display: flex;
@@ -53,7 +54,7 @@ export const SocialLinks: React.FC<
     <IconContainer aria-label="Discord" target="_blank" href={Socials.Discord}>
       <Icon icon={faDiscord} size="2x" />
     </IconContainer>
-    <IconContainer aaria-labellt="E-mail" href={`mailto:${Socials.Email}`}>
+    <IconContainer aria-label="E-mail" href={`mailto:${Socials.Email}`}>
       <Icon icon={faEnvelope} />
     </IconContainer>
     {include.linkedIn && (

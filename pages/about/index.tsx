@@ -53,8 +53,8 @@ const About: React.FC = () => (
         </Text>
 
         <Text>
-          I'm also well-versed in many other technologies such as CSS, React
-          (and React Native), Python, Ionic + Capacitor and others.
+          I'm also well-versed in many other areas such as CSS, React (and React
+          Native), Python, Ionic/Capacitor and others.
         </Text>
       </TextContainer>
       <Footer>

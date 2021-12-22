@@ -82,7 +82,7 @@ const components = {
   img: (props: any) => <PostImg loading="lazy" {...props} />,
 };
 
-function Post({ content, properties }) {
+function Post({ content, properties, session }) {
   const { total, comments, postComment } = useComments(
     properties.discussionNo,
     properties.discussionId
@@ -109,6 +109,8 @@ function Post({ content, properties }) {
               isExternal
               target="_blank"
               href={`https://github.com/Nevvulo/blog/blob/main/${filepath}`}
+              width="16"
+              height="16"
             >
               View (or edit) on GitHub
             </IconLink>
@@ -117,6 +119,8 @@ function Post({ content, properties }) {
               isExternal
               target="_blank"
               href={generateSharableTwitterLink(properties.title, location)}
+              width="16"
+              height="16"
             >
               Share on Twitter
             </IconLink>
@@ -125,6 +129,8 @@ function Post({ content, properties }) {
               isExternal
               target="_blank"
               href={generateSharableFacebookLink(location)}
+              width="16"
+              height="16"
             >
               Share on Facebook
             </IconLink>

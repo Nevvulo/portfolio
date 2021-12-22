@@ -67,7 +67,8 @@ const PreviewDescription = styled.p`
   color: rgb(150, 150, 150);
 `;
 
-const PreviewContainer = styled.div`
+const PreviewContainer = styled.a`
+  text-decoration: none;
   overflow: hidden;
   margin: 0 1em;
 `;
@@ -90,8 +91,8 @@ export const PostPreview: React.FC<PreviewProps> = ({
 }) => {
   return (
     // view blog post goal
-    <PreviewContainer onClick={() => Fathom.trackGoal("CTGT4BLM", 0)}>
-      <StrippedLink href={`/blog/${slug}`}>
+    <StrippedLink passHref href={`/blog/${slug}`}>
+      <PreviewContainer onClick={() => Fathom.trackGoal("CTGT4BLM", 0)}>
         <Post>
           <PreviewText direction="column">
             {!loading ? (
@@ -115,7 +116,7 @@ export const PostPreview: React.FC<PreviewProps> = ({
           </PreviewText>
           <PostImage loading="eager" src={image} />
         </Post>
-      </StrippedLink>
-    </PreviewContainer>
+      </PreviewContainer>
+    </StrippedLink>
   );
 };

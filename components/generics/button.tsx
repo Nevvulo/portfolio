@@ -9,10 +9,11 @@ import {
 } from "@fortawesome/react-fontawesome";
 import { m } from "framer-motion";
 import React, { HTMLAttributes } from "react";
-import Link, { LinkProps } from "next/link";
+import { LinkProps } from "next/link";
 import styled from "styled-components";
 import { ROUTES } from "../../constants/routes";
 import { Container } from "../container";
+import { Link } from "./link";
 
 const ButtonIcon = styled(FontAwesomeIcon)`
   margin-right: 12px;
@@ -86,7 +87,12 @@ export const IconLink: React.FC<IconLinkProps> = ({
         <FontAwesomeIcon width="24" height="24" {...iconProps} />
       </Link>
     ) : (
-      <Link href={href}>{children || " "}</Link>
+      <Link href={href}>
+        <>
+          <FontAwesomeIcon width="24" height="24" {...iconProps} />
+          <Link href={href}>{children || " "}</Link>
+        </>
+      </Link>
     )}
 
     {isExternal && (

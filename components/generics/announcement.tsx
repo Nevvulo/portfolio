@@ -10,7 +10,7 @@ export const Announcement = styled(Container)`
   position: absolute;
   color: rgba(255, 230, 140) !important;
   top: 0;
-  margin: 1em;
+  margin-top: 1em;
   border: 0.25px solid rgba(25, 25, 25, 0.25);
   border-radius: 8px;
   color: white;
