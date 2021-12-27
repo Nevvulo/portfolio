@@ -87,6 +87,7 @@ export default function GitHubAuthSection() {
               Fathom.trackGoal("CT5MFO6L", 0);
               // NextAuth doesn't let me put "github" in first arg for `signIn`
               // but it works so I need to suppress error, wtf
+              // @ts-ignore
               signIn("github", {
                 callbackUrl:
                   process.env.NODE_ENV === "development"
