@@ -25,6 +25,8 @@ const NavbarBackground = styled(Container)`
 const NavbarContainer = styled(Container)`
   position: sticky;
   top: 0;
+  width: 85%;
+  max-width: 700px;
   margin: 1em;
   z-index: 9;
 `;
@@ -32,10 +34,11 @@ const NavbarContainer = styled(Container)`
 interface NavbarProps {
   title: string;
   route: string;
+  style?: any;
 }
-export const Navbar: React.FC<NavbarProps> = ({ title, route }) => {
+export const Navbar: React.FC<NavbarProps> = ({ title, route, style }) => {
   return (
-    <NavbarContainer>
+    <NavbarContainer style={style}>
       <NavbarBackground>
         <BackButton href={route} />
         <Title fontSize="20px">{title}</Title>

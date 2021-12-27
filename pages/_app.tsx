@@ -93,16 +93,19 @@ export default function MyApp({ Component, pageProps }: AppProps) {
                 <m.div
                   key={router.route.concat("animate")}
                   style={{ height: "100%" }}
-                  initial={{ y: 20, opacity: 0 }}
+                  initial={{
+                    transformOrigin: "center",
+                    opacity: 0.5,
+                  }}
                   animate={{
-                    y: 0,
+                    transformOrigin: "center",
                     opacity: 1,
-                    transition: { duration: 0.2 },
+                    transition: { duration: 0.1 },
                   }}
                   exit={{
-                    y: -10,
+                    transformOrigin: "center",
                     opacity: 0,
-                    transition: { duration: 0.23 },
+                    transition: { duration: 0.2 },
                   }}
                 >
                   <Component {...pageProps} />

@@ -1,30 +1,16 @@
 import { faBell } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import Image from "next/image";
-import { useRouter } from "next/router";
 import React from "react";
 import styled, { keyframes } from "styled-components";
 import { Container } from "../components/container";
 import { Link } from "../components/generics";
 import { Announcement } from "../components/generics/announcement";
+import { Avatar } from "../components/generics/avatar";
 import { SocialLinks } from "../components/social-links";
 import { HomeView } from "../components/views/home";
 import { ROUTES } from "../constants/routes";
-import NevuloImg from "./../assets/img/nevulo.jpg";
-
-const ProfilePic = styled(Image).attrs({
-  quality: 10,
-  src: NevuloImg,
-  width: "32",
-  height: "32",
-  alt: "Nevulo profile picture",
-})`
-  border-radius: 32px;
-`;
 
 export default function Home() {
-  const history = useRouter();
-
   return (
     <HomeView>
       <Announcement alignItems="center">
@@ -39,7 +25,7 @@ export default function Home() {
       <HomeContainer direction="row">
         <Container flex="1" direction="column">
           <FadeUp delay={50}>
-            <ProfilePic />
+            <Avatar width="32" height="32" />
           </FadeUp>
           <Container direction="row">
             <Border />

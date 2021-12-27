@@ -16,13 +16,11 @@ const TextContainer = styled(Container)`
 
 export const AboutBox = styled(MinimalView)`
   display: flex;
-  background: ${Gradients.ABOUT_PAGE};
 
   align-items: flex-start;
   border-radius: 4px;
   max-width: 650px;
   padding: 1em;
-  box-shadow: 0px 0px 40px rgba(0, 0, 0, 0.4);
 
   @media (max-width: 460px) {
     margin: 1em 5%;

@@ -7,13 +7,14 @@ export default (req, res) =>
       GitHubProvider({
         clientId: process.env.GITHUB_CLIENT_ID,
         clientSecret: process.env.GITHUB_CLIENT_SECRET,
-        scopes: "read:user user:email public_repo",
+        authorization: {
+          params: { scope: "read:user user:email public_repo" },
+        },
       } as any),
     ],
     debug: process.env.NODE_ENV === "development",
     secret: process.env.AUTH_SECRET,
     jwt: { secret: process.env.JWT_SECRET },
-    session: { jwt: true },
     callbacks: {
       async signIn() {
         return true;

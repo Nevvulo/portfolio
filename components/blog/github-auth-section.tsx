@@ -9,7 +9,7 @@ import * as Fathom from "fathom-client";
 const Container = styled.div`
   border-radius: 4px;
   width: 100%;
-  background: rgba(0, 0, 0, 0.75);
+  background: rgba(0, 0, 0, 0.4);
   font-family: "Inter", sans-serif;
   padding: 0.25em 1em;
   align-items: center;
@@ -85,7 +85,14 @@ export default function GitHubAuthSection() {
             onClick={() => {
               // github authentication goal
               Fathom.trackGoal("CT5MFO6L", 0);
-              signIn("credentials", { redirect: false });
+              // NextAuth doesn't let me put "github" in first arg for `signIn`
+              // but it works so I need to suppress error, wtf
+              signIn("github", {
+                callbackUrl:
+                  process.env.NODE_ENV === "development"
+                    ? "http://localhost:3000/api/auth/callback/github"
+                    : "https://nevulo.xyz/api/auth/callback/github",
+              });
             }}
           >
             <FontAwesomeIcon

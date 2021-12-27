@@ -21,7 +21,7 @@
     "gray-matter": "^4.0.3",
     "jsonwebtoken": "^8.5.1",
     "next": "^11.0.0",
-    "next-auth": "^4.0.0-beta.2",
+    "next-auth": "^4.0.6",
     "next-mdx-remote": "^3.0.4",
     "nprogress": "^0.2.0",
     "preact": "^10.5.15",

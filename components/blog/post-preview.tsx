@@ -25,8 +25,7 @@ const Post = styled.div`
 
   @media (max-width: 460px) {
     flex-direction: column-reverse;
-    margin: 1em 0;
-    max-width: 350px;
+    min-width: 200px;
     border-radius: 8px;
     padding: 0;
   }
@@ -34,18 +33,20 @@ const Post = styled.div`
 
 const PostImage = styled.img`
   width: 150px;
+  min-width: 150px;
   height: 150px;
   object-fit: cover;
-  margin: 1em;
   border-radius: 4px;
+  margin: 1em;
+
   background: grey;
   border: 0.1px solid ${(props) => props.theme.postImageBoxShadow};
   box-shadow: 0px 0px 8px 1px ${(props) => props.theme.postImageBoxShadow};
 
   @media (max-width: 460px) {
     width: auto;
-    margin-bottom: 0;
-    height: 100px;
+    margin: 0;
+    height: 90px;
   }
 `;
 

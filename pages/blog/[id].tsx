@@ -11,10 +11,13 @@ import styled from "styled-components";
 import CodeBlock from "../../components/blog/codeblock";
 import Comments from "../../components/blog/comments";
 import { PostFooter } from "../../components/blog/post-footer";
+import { PostHeader } from "../../components/blog/post-header";
 import { PostHeroImg } from "../../components/blog/post-hero-img";
 import { PostImg } from "../../components/blog/post-img";
+import { PostSubheader } from "../../components/blog/post-sub-header";
 import { Container } from "../../components/container";
 import { IconLink } from "../../components/generics";
+import { Avatar } from "../../components/generics/avatar";
 import { Navbar } from "../../components/navbar";
 import { MinimalView } from "../../components/views/minimal";
 import { ROUTES } from "../../constants/routes";
@@ -24,9 +27,10 @@ import getFile from "../../modules/getFile";
 const PostContainer = styled.div`
   @import url("https://fonts.googleapis.com/css2?family=Fira+Code&display=swap");
   font-family: "Inter", sans-serif;
-  padding: 0em 1em;
   border-radius: 4px;
   margin: 0.5em;
+  max-width: 700px;
+  width: 90%;
 
   h1 {
     margin-top: 38px;
@@ -36,7 +40,13 @@ const PostContainer = styled.div`
 
   h2 {
     margin-top: 32px;
-    margin-bottom: 12px;
+    margin-bottom: 0px;
+    font-family: "Fira Code", sans-serif;
+    letter-spacing: -1.5px;
+
+    + p {
+      margin-top: 0.5em;
+    }
   }
 
   a {
@@ -62,14 +72,8 @@ const PostContainer = styled.div`
 `;
 
 export const BlogView = styled(MinimalView)`
-  display: block;
-  width: 100%;
-  overflow: auto;
+  display: flex;
   padding: 0;
-  margin-left: auto;
-  margin-right: auto;
-  height: 100%;
-  max-width: 700px;
 `;
 
 const generateSharableTwitterLink = (title: string, link: string) =>
@@ -94,8 +98,20 @@ function Post({ content, properties, session }) {
   return (
     <BlogView>
       <Navbar title="Blog" route={ROUTES.BLOG.ROOT} />
+      <PostHeroImg src={properties.image}>
+        <PostHeader>
+          <PostSubheader>
+            <p>
+              Published on {new Date(properties.createdAt).toLocaleDateString()}{" "}
+              by <Avatar width="16" height="16" /> <strong>Nevulo</strong>{" "}
+            </p>
+          </PostSubheader>
+          <h1>{properties.title}</h1>
+          <h3>{properties.description}</h3>
+        </PostHeader>
+      </PostHeroImg>
+
       <PostContainer>
-        <PostHeroImg src={properties.image} />
         <MDXRemote components={components} {...content} />
         <PostFooter>
           <h2 style={{ marginTop: 0 }}>Thanks for reading!</h2>
