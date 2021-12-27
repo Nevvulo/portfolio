@@ -76,24 +76,16 @@ const UserSection = styled(Text)`
 `;
 
 export default function GitHubAuthSection() {
-  const { data: session } = useSession({ required: false });
+  const { status, data } = useSession({ required: false });
   return (
     <Container>
-      {!session ? (
+      {status !== "authenticated" ? (
         <UserSection>
           <ActionButton
             onClick={() => {
               // github authentication goal
               Fathom.trackGoal("CT5MFO6L", 0);
-              // NextAuth doesn't let me put "github" in first arg for `signIn`
-              // but it works so I need to suppress error, wtf
-              // @ts-ignore
-              signIn("github", {
-                callbackUrl:
-                  process.env.NODE_ENV === "development"
-                    ? "http://localhost:3000/api/auth/callback/github"
-                    : "https://nevulo.xyz/api/auth/callback/github",
-              });
+              signIn("github");
             }}
           >
             <FontAwesomeIcon
@@ -115,8 +107,8 @@ export default function GitHubAuthSection() {
           />
           <UserSection fontSize="14px">
             Signed in as{" "}
-            <Avatar width="16px" height="16px" src={session.user.image} />
-            <b>{session.user.name || session.user.email}</b>
+            <Avatar width="16px" height="16px" src={data.user.image} />
+            <b>{data.user.name || data.user.email}</b>
           </UserSection>
           <LogoutButton onClick={() => signOut()}>Logout</LogoutButton> <br />
         </UserContainer>

@@ -1,4 +1,3 @@
-import { SessionProvider } from "next-auth/react";
 import React from "react";
 import styled from "styled-components";
 import GitHubAuthSection from "../../components/blog/github-auth-section";
@@ -25,9 +24,7 @@ const PostContainer = styled(Container)`
 export default function Blog({ posts }) {
   return (
     <BlogView>
-      <SessionProvider>
-        <GitHubAuthSection />
-      </SessionProvider>
+      <GitHubAuthSection />
 
       <HeroContainer>
         <HeroImage

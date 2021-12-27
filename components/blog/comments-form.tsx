@@ -1,6 +1,6 @@
+import { signIn } from "next-auth/react";
 import { useState } from "react";
 import styled from "styled-components";
-import { signIn } from "next-auth/react";
 
 const Form = styled.form`
   margin-top: 4px;
@@ -82,9 +82,7 @@ export function CommentsForm({ disabled, onCommentSubmitted }) {
     return (
       <>
         <HintText>You need to be signed in to comment</HintText>
-        <SignInButton
-          onClick={() => signIn("credentials", { redirect: false })}
-        >
+        <SignInButton onClick={() => signIn("github", { redirect: false })}>
           Sign in
         </SignInButton>
       </>
