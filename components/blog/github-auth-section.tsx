@@ -50,6 +50,8 @@ const LogoutButton = styled.button`
 const Avatar = styled.img`
   border-radius: 100%;
   padding: 4px;
+  min-width: 16px;
+  min-height: 16px;
   margin: 0 2px 0 6px;
 `;
 
