@@ -27,15 +27,12 @@ const shortDescription =
   "Multi-purpose Discord bot featuring a community-driven economy";
 
 const Logo = styled(Image).attrs({
-  src: zBotLogo.src,
-  height: "36",
-  width: "36",
-  layout: "fixed",
+  src: zBotLogo,
+  height: "42px",
+  width: "42px",
   quality: 25,
 })`
   border-radius: 4px;
-  position: relative !important;
-  top: -24px;
 `;
 
 export const zBotPreview: React.FC = () => (

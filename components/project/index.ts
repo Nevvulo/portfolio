@@ -4,10 +4,11 @@ import { AnimatedContainer, Container } from "../container";
 import { Link } from "../generics";
 
 export const ProjectContainer = styled.div`
-  padding: 2em 1em;
+  padding: 2em 0.5em;
   max-width: 650px;
   display: flex;
-  justify-content: center;
+  align-items: flex-start;
+  overflow-x: hidden;
   margin-left: auto;
   margin-right: auto;
   flex-direction: column;
@@ -54,10 +55,11 @@ export const ProjectTitle = styled(m.h1)`
   font-family: "Inter", sans-serif;
   font-weight: 600;
   color: ${(props) => props.theme.contrast};
-  line-height: 48px;
+  line-height: 32px;
   font-size: 48px;
-  margin-bottom: 0px;
+  margin-bottom: 8px;
   margin-top: 4px;
+  margin-left: 4px;
 
   [aria-expanded="false"] {
     color: white;

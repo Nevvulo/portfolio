@@ -41,15 +41,11 @@ const LogoInverted = styled(Image).attrs({
 
 const Logo = styled(Image).attrs({
   src: PopletLogo,
-  width: "42px",
-  height: "42px",
+  width: "46px",
+  height: "46px",
   quality: 25,
 })`
-  align-self: flex-end;
-  margin-right: 8px;
-  margin-bottom: 4px;
-  height: 42px;
-  width: 42px;
+  top: -6px !important;
 `;
 
 export const PopletPreview: React.FC = () => (

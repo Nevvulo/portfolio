@@ -5,6 +5,7 @@ import {
 } from "@fortawesome/free-brands-svg-icons";
 import { MDXRemote } from "next-mdx-remote";
 import { serialize } from "next-mdx-remote/serialize";
+import Head from "next/head";
 import React from "react";
 import matter from "section-matter";
 import styled from "styled-components";
@@ -95,15 +96,34 @@ function Post({ content, properties, session }) {
   const location = `https://nevulo.xyz/blog/${properties.slug}`;
   const filename = `${properties.slug}.mdx`;
   const filepath = `posts/${filename}`;
+  const creationDate = new Date(properties.createdAt);
   return (
     <BlogView>
+      <Head>
+        <title>Nevulo - Blog › {properties.title}</title>
+        <meta property="og:title" content={properties.title} />
+        <meta property="og:description" content={properties.description} />
+        <meta property="og:image" content={properties.image} />
+        <meta property="og:site_name" content="Nevulo Blog" />
+        <meta property="og:url" content={location} />
+        <meta property="og:type" content="article" />
+        <meta
+          property="og:article:published_time"
+          content={creationDate.toISOString()}
+        />
+        <meta property="og:article:author:username" content="Nevulo" />
+        <meta property="og:article:section" content="Technology" />
+        {properties.labels.map((tag) => (
+          <meta property="og:article:tag" content={tag} />
+        ))}
+      </Head>
       <Navbar title="Blog" route={ROUTES.BLOG.ROOT} />
       <PostHeroImg src={properties.image}>
         <PostHeader>
           <PostSubheader>
             <p>
-              Published on {new Date(properties.createdAt).toLocaleDateString()}{" "}
-              by <Avatar width="16" height="16" /> <strong>Nevulo</strong>{" "}
+              Published on {creationDate.toLocaleDateString()} by{" "}
+              <Avatar width="16" height="16" /> <strong>Nevulo</strong>{" "}
             </p>
           </PostSubheader>
           <h1>{properties.title}</h1>

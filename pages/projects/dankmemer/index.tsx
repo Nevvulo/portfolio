@@ -28,6 +28,7 @@ const shortDescription =
 const Logo = styled(Image).attrs({
   src: DankMemerLogo,
   width: "52",
+  objectFit: "scale-down",
   height: "32",
   quality: 25,
 })`

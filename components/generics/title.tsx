@@ -5,11 +5,18 @@ export const Title = styled.h1<{
   padding?: string;
   color?: string;
 }>`
-  font-family: "Cousine", sans-serif;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  font-family: "Inter", sans-serif;
   font-weight: 900;
   color: ${(props) => props.color};
   font-size: ${(props) => props.fontSize ?? "42px"};
   padding: ${(props) => props.padding ?? "0px"};
   margin: 0px;
   letter-spacing: -1.25px;
+
+  > * {
+    margin-right: 12px;
+  }
 `;

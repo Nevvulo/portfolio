@@ -10,12 +10,17 @@ import {
 const Container = styled.div<any>`
   background: ${(props) => props.background};
   width: auto;
-  max-width: 450px;
+  max-width: 650px;
   cursor: pointer;
   border-radius: 6px;
-  width: 100%;
+  width: 90%;
+  min-width: 450px;
   margin: 1em;
   box-shadow: 1px 2px 3px rgba(0, 0, 0, 0.5);
+
+  @media (max-width: 512px) {
+    min-width: 200px;
+  }
 `;
 
 export const ProjectPreview: React.FC<

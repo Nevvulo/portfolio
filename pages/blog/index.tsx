@@ -1,14 +1,20 @@
+import Head from "next/head";
 import React from "react";
 import styled from "styled-components";
 import GitHubAuthSection from "../../components/blog/github-auth-section";
 import { BlogHomepageFooter } from "../../components/blog/homepage-footer";
 import { PostPreview } from "../../components/blog/post-preview";
 import { Container } from "../../components/container";
-import { BackButton, Header, Text, Title } from "../../components/generics";
+import {
+  BackButton,
+  Header,
+  Text,
+  Title,
+  Emoji,
+} from "../../components/generics";
 import { HeroContainer, HeroImage } from "../../components/hero";
 import { BlogView } from "../../components/views/blog";
 import getFile from "../../modules/getFile";
-import Background from "./../../assets/img/section-background.jpg";
 
 const PostContainer = styled(Container)`
   display: flex;
@@ -21,27 +27,39 @@ const PostContainer = styled(Container)`
   justify-content: center;
 `;
 
+const Background = styled.div`
+  width: 100%;
+  background: url("/alt-background.png");
+  height: 100%;
+  opacity: 0.5;
+  z-index: -1;
+  position: fixed;
+  top: 0;
+`;
+
 export default function Blog({ posts }) {
+  const latestPost = posts[0];
   return (
     <BlogView>
+      <Head>
+        <title>Blog - Nevulo</title>
+        <meta property="og:title" content="Nevulo Blog" />
+        <meta
+          property="og:description"
+          content={`${posts.length} posts ▪ ${latestPost.title}`}
+        />
+      </Head>
       <GitHubAuthSection />
 
-      <HeroContainer>
-        <HeroImage
-          priority
-          loading="eager"
-          layout="fill"
-          placeholder="blur"
-          objectFit="cover"
-          src={Background}
-        />
-        <Header justifyContent="flex-start">
-          <Container alignItems="center">
-            <BackButton href="/" />
-            <Title color="white">📘 Blog</Title>
-          </Container>
-        </Header>
-      </HeroContainer>
+      <Background />
+      <Header justifyContent="center" direction="column">
+        <Container alignItems="center">
+          <BackButton href="/" />
+          <Title fontSize="36px" color="white">
+            <Emoji>📖</Emoji> Blog
+          </Title>
+        </Container>
+      </Header>
 
       <PostContainer>
         {!posts && <PostsLoading />}

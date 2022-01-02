@@ -1,11 +1,21 @@
+import Head from "next/head";
 import React from "react";
 import styled from "styled-components";
 import { Container } from "../../components/container";
-import { BackButton, Link, Text, Title } from "../../components/generics";
+import {
+  BackButton,
+  Emoji,
+  Header,
+  IconLink,
+  Link,
+  Text,
+  Title,
+} from "../../components/generics";
 import { Footer } from "../../components/generics/footer";
 import { AboutView } from "../../components/views/about";
 import { MinimalView } from "../../components/views/minimal";
-import Colors, { Gradients } from "../../constants/colors";
+import COLORS from "../../constants/colors";
+import { ROUTES } from "../../constants/routes";
 
 const TextContainer = styled(Container)`
   display: block;
@@ -16,7 +26,6 @@ const TextContainer = styled(Container)`
 
 export const AboutBox = styled(MinimalView)`
   display: flex;
-
   align-items: flex-start;
   border-radius: 4px;
   max-width: 650px;
@@ -27,33 +36,101 @@ export const AboutBox = styled(MinimalView)`
   }
 `;
 
+const Subtitle = styled.h2`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  font-family: "Inter", sans-serif;
+  font-weight: 600;
+  color: white;
+  font-size: 22px;
+  padding: 0px;
+  letter-spacing: -1.25px;
+  margin: 0;
+  margin-top: 8px;
+`;
+
+const Background = styled.div`
+  width: 100%;
+  background: url("/alt-background.png");
+  height: 100%;
+  opacity: 0.5;
+  z-index: -1;
+  position: fixed;
+  top: 0;
+`;
+
 const About: React.FC = () => (
   <AboutView>
-    <AboutBox>
-      <Container padding="1em 0" alignItems="center">
-        <BackButton color={Colors.WHITE} href="/" />
+    <Head>
+      <title>About Me - Nevulo</title>
+      <meta property="og:title" content="Learn more about Nevulo" />
+      <meta
+        property="og:description"
+        content="I'm Blake, a software engineer based in Melbourne, Australia. Click here to learn more about who I am and what I do!"
+      />
+    </Head>
+    <Background />
+    <Header justifyContent="center" direction="column">
+      <Container alignItems="center">
+        <BackButton href="/" />
         <Title fontSize="36px" color="white">
-          About Me
+          <Emoji>👋</Emoji> About Me
         </Title>
       </Container>
+    </Header>
+    <AboutBox>
       <TextContainer direction="column" padding="0 12px">
-        <Text>
-          I'm Blake - a full-stack software engineer based in Melbourne,
-          Australia.
+        <Subtitle>Who am I?</Subtitle>
+        <Text linkColor={COLORS.FLUX_GREEN}>
+          I'm Blake - a software engineer based in Melbourne, Australia working
+          at <Link href={ROUTES.PROJECTS.FLUX}>Flux</Link>. I'm passionate about
+          giving users the best experiences in applications because that's what
+          they deserve.
         </Text>
 
+        <Subtitle>What do I do?</Subtitle>
         <Text>
-          Most of the projects I work on use JavaScript or TypeScript but I'm
-          also experienced in other languages such as Java and Swift for native
-          app development. I'm motivated to learn new concepts and languages
-          taking advantage of existing knowledge of programming paradigms to
-          pick them up efficiently and effectively.
+          I primarily work with <b>TypeScript</b> and <b>JavaScript</b>, but I
+          have experience working with lower level languages such as <b>Java</b>{" "}
+          and <b>Swift</b> for native app development. I am proficient with{" "}
+          <IconLink
+            icon="invision"
+            isExternal
+            target="_blank"
+            href={`https://reactjs.org`}
+            width="16"
+            height="16"
+          >
+            React
+          </IconLink>
+          for building front-end interfaces with layouts and performance built
+          for the modern web. I also spend just as much time working on the
+          back-end of applications, such as handling business logic, solving
+          problems at scale and server management.
+        </Text>
+        <Text>
+          I'm also well-versed in many other areas such as CSS, Python,
+          Ionic/Capacitor and{" "}
+          <IconLink
+            icon="invision"
+            isExternal
+            target="_blank"
+            href={`https://firebase.google.com`}
+            width="16"
+            height="16"
+          >
+            Firebase
+          </IconLink>
+        </Text>
+        <Text linkColor={COLORS.TAB_SELECTED}>
+          Always looking to improve, I use my{" "}
+          <Link href={ROUTES.BLOG.ROOT}>Blog</Link> as a medium to learn new (or
+          solidify existing) concepts while teaching others in a concise, fun
+          and unique way.
         </Text>
 
-        <Text>
-          I'm also well-versed in many other areas such as CSS, React (and React
-          Native), Python, Ionic/Capacitor and others.
-        </Text>
+        <Text></Text>
       </TextContainer>
       <Footer>
         <Text>

@@ -50,19 +50,24 @@ type BadgeProps = { background: string };
 const Badge = styled(m.div)<BadgeProps>`
   padding: 0.35em;
   font-family: "Inter", sans-serif;
-  border-radius: 6px;
+  letter-spacing: -0.2px;
+  font-weight: 600;
+  border-radius: 4px;
   background: ${(props) => props.background};
   margin-right: 12px;
   margin-bottom: 6px;
   font-size: 0.75em;
+  white-space: nowrap;
   overflow: hidden;
   width: auto;
-  height: 12px;
+  height: 10px;
+  line-height: 12px;
   color: white;
   text-transform: uppercase;
 `;
 
 const BadgesContainer = styled(Container)`
+  width: 100%;
   border-radius: 12px;
   background-color: rgba(0, 0, 0, 0.25);
   padding: 1em 12px;

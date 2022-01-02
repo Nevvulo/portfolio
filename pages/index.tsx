@@ -25,7 +25,7 @@ export default function Home() {
       <HomeContainer direction="row">
         <Container flex="1" direction="column">
           <FadeUp delay={50}>
-            <Avatar width="32" height="32" />
+            <Avatar width="52" height="52" />
           </FadeUp>
           <Container direction="row">
             <Border />
@@ -136,7 +136,7 @@ const Border = styled.div`
 const Title = styled.h1`
   display: block;
   color: ${(props) => props.theme.contrast};
-  font-family: "Inter", sans-serif;
+  font-family: "Work Sans";
   font-weight: 900;
   line-height: clamp(32px, 6vmax, 72px);
   font-size: clamp(32px, 6vmax, 72px);
@@ -146,7 +146,8 @@ const Title = styled.h1`
 `;
 
 const Subtitle = styled.h2`
-  font-family: "RobotoCondensed", sans-serif;
+  font-family: "Inter", sans-serif;
+  letter-spacing: -0.2px;
   color: ${(props) => props.theme.textColor};
   font-weight: 400;
   font-size: max(16px, 2.5vh);

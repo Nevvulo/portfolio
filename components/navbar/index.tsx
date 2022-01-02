@@ -25,7 +25,7 @@ const NavbarBackground = styled(Container)`
 const NavbarContainer = styled(Container)`
   position: sticky;
   top: 0;
-  width: 85%;
+  width: 95%;
   max-width: 700px;
   margin: 1em;
   z-index: 9;

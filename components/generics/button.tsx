@@ -20,7 +20,7 @@ const ButtonIcon = styled(FontAwesomeIcon)`
 `;
 
 const IconLinkContainer = styled.div`
-  display: flex;
+  display: inline-flex;
   align-items: center;
   flex-direction: row;
 
@@ -84,12 +84,16 @@ export const IconLink: React.FC<IconLinkProps> = ({
   <IconLinkContainer>
     {!children ? (
       <Link href={href}>
-        <FontAwesomeIcon width="24" height="24" {...iconProps} />
+        {iconProps.icon && (
+          <FontAwesomeIcon width="24" height="24" {...iconProps} />
+        )}
       </Link>
     ) : (
       <Link href={href}>
         <>
-          <FontAwesomeIcon width="24" height="24" {...iconProps} />
+          {iconProps.icon && (
+            <FontAwesomeIcon width="24" height="24" {...iconProps} />
+          )}
           <Link href={href}>{children || " "}</Link>
         </>
       </Link>
@@ -121,6 +125,7 @@ export const HomeButton = styled(IconLink).attrs((props) => ({
   icon: faHome,
   role: "back",
   to: ROUTES.ROOT,
+  style: { cursor: "pointer" },
 }))`
   padding: 1em;
   color: ${(props) => props.color || "white"};

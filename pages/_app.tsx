@@ -149,6 +149,7 @@ function Content() {
             @import url("https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700;800&family=Roboto+Condensed:wght@700&family=Space+Grotesk:wght@300;400;600;700&display=swap");
             @import url("https://fonts.googleapis.com/css2?family=Cousine:wght@700&display=swap");
             @import url("https://fonts.googleapis.com/css2?family=Fira+Code:wght@200;300;400;500;600;700;800&display=swap");
+            @import url("https://fonts.googleapis.com/css2?family=Work+Sans:wght@800&display=swap");
           `}
         </style>
       </Head>
