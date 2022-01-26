@@ -50,7 +50,7 @@ function MainHead() {
       />
       <link rel="icon" href="favicon.ico" />
 
-      <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+      <meta httpEquiv="Content-Type" content="text/html; charset=utf-8" />
       <meta charSet="utf-8" />
       <meta name="viewport" content="width=device-width, initial-scale=1" />
 
@@ -62,7 +62,7 @@ function MainHead() {
       <meta property="og:url" content="https://nevulo.xyz" />
       <meta
         property="og:image"
-        content="https://massive-legend.nevulo.xyz/2aRAq5aL.png"
+        content="https://nevulo.xyz/nevuletter-square.png"
       />
       <meta name="theme-color" content="#9074f2" />
     </Head>
