@@ -78,7 +78,7 @@ export default function Blog(props: BlogProps & { session: Session }) {
 
 const Background = styled.div`
   width: 100%;
-  background: url("/alt-background.png");
+  background: url("/images/alt-background.png");
   height: 100%;
   opacity: 0.5;
   z-index: -1;

@@ -77,7 +77,7 @@ export default function Home() {
 
 const Background = styled.div`
   width: 100%;
-  background: url("/background.png");
+  background: url("/images/background.png");
   height: 100%;
   opacity: 0.35;
   z-index: -1;
