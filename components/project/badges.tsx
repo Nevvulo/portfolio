@@ -59,7 +59,6 @@ const Badge = styled(m.div)<BadgeProps>`
   font-size: 0.75em;
   white-space: nowrap;
   overflow: hidden;
-  width: auto;
   height: 10px;
   line-height: 12px;
   color: white;
@@ -67,7 +66,6 @@ const Badge = styled(m.div)<BadgeProps>`
 `;
 
 const BadgesContainer = styled(Container)`
-  width: 100%;
   border-radius: 12px;
   background-color: rgba(0, 0, 0, 0.25);
   padding: 1em 12px;

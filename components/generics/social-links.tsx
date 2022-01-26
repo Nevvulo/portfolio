@@ -9,8 +9,8 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { m } from "framer-motion";
 import React from "react";
 import styled from "styled-components";
-import Socials from "../constants/socials";
-import { AnimatedContainer, ContainerProps } from "./container";
+import Socials from "../../constants/socials";
+import { AnimatedContainer, ContainerProps } from "../container";
 
 const IconContainer = styled(m.a).attrs((props) => ({
   target: "_blank",

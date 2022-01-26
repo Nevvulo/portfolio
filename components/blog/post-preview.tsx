@@ -1,11 +1,65 @@
+import * as Fathom from "fathom-client";
 import React from "react";
 import styled from "styled-components";
 import { Container } from "../container";
 import { StrippedLink } from "../generics/link";
+import { Skeleton } from "../generics/skeleton";
 import { Title } from "../generics/title";
-import { Skeleton } from "../skeleton";
 import { Label, Labels } from "./labels";
-import * as Fathom from "fathom-client";
+
+type PreviewProps = {
+  title?: string;
+  slug: string;
+  labels?: string[];
+  image: string;
+  description?: string;
+  loading?: boolean;
+};
+export function PostPreview({
+  title,
+  slug,
+  labels,
+  image,
+  description,
+  loading,
+}: PreviewProps) {
+  // view blog post goal
+  function onClick() {
+    Fathom.trackGoal("CTGT4BLM", 0);
+  }
+
+  return (
+    <StrippedLink scroll={false} passHref href={`/blog/${slug}`}>
+      <PreviewContainer onClick={onClick}>
+        <Post>
+          <PreviewText direction="column">
+            {!loading ? (
+              <Title fontSize="27px">{title}</Title>
+            ) : (
+              <Skeleton height={32} />
+            )}
+            {!loading ? (
+              <PreviewDescription>{description}</PreviewDescription>
+            ) : (
+              <Skeleton height={12} marginTop={12} marginBottom={12} />
+            )}
+            {labels?.length ? (
+              <Labels>
+                {labels
+                  .map((m) => m.replace(/-/g, " "))
+                  .slice(0, 3)
+                  .map((label, i) => (
+                    <Label key={i}>{label}</Label>
+                  ))}
+              </Labels>
+            ) : null}
+          </PreviewText>
+          <PostImage loading="lazy" src={image} />
+        </Post>
+      </PreviewContainer>
+    </StrippedLink>
+  );
+}
 
 //https://codepen.io/taylorvowell/pen/BkxbC
 const Post = styled.div`
@@ -20,7 +74,7 @@ const Post = styled.div`
   text-decoration: none;
   max-width: 650px;
   cursor: pointer;
-  margin: 1em;
+  margin: 1em 0.5em;
   padding: 0.5em;
 
   @media (max-width: 460px) {
@@ -73,51 +127,3 @@ const PreviewContainer = styled.a`
   overflow: hidden;
   margin: 0 1em;
 `;
-
-type PreviewProps = {
-  title?: string;
-  slug: string;
-  labels?: string[];
-  image: string;
-  description?: string;
-  loading?: boolean;
-};
-export const PostPreview: React.FC<PreviewProps> = ({
-  title,
-  slug,
-  labels,
-  image,
-  description,
-  loading,
-}) => {
-  return (
-    // view blog post goal
-    <StrippedLink passHref href={`/blog/${slug}`}>
-      <PreviewContainer onClick={() => Fathom.trackGoal("CTGT4BLM", 0)}>
-        <Post>
-          <PreviewText direction="column">
-            {!loading ? (
-              <Title fontSize="27px">{title}</Title>
-            ) : (
-              <Skeleton height={32} />
-            )}
-            {!loading ? (
-              <PreviewDescription>{description}</PreviewDescription>
-            ) : (
-              <Skeleton height={12} marginTop={12} marginBottom={12} />
-            )}
-            <Labels>
-              {labels
-                .map((m) => m.replace(/-/g, " "))
-                .slice(0, 3)
-                .map((label, i) => (
-                  <Label key={i}>{label}</Label>
-                ))}
-            </Labels>
-          </PreviewText>
-          <PostImage loading="eager" src={image} />
-        </Post>
-      </PreviewContainer>
-    </StrippedLink>
-  );
-};

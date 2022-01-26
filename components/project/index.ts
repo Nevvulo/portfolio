@@ -1,4 +1,5 @@
 import { m } from "framer-motion";
+import React from "react";
 import styled from "styled-components";
 import { AnimatedContainer, Container } from "../container";
 import { Link } from "../generics";
@@ -36,7 +37,7 @@ export const ProjectContainerExpanded = styled(AnimatedContainer)`
   }
 `;
 
-export const ProjectContent = styled(m.div)<any>`
+export const ProjectContent = styled(m.div)`
   padding: 1.5em 2em 2.5em 2em;
   overflow: hidden;
   z-index: 0;
@@ -151,7 +152,7 @@ export interface Links {
 export interface ProjectProps extends ProjectStyleProps {
   projectId: string;
   preview: React.FC;
-  component: any;
+  component: (...args: unknown[]) => JSX.Element;
   maintained?: boolean;
   links?: Links;
 }

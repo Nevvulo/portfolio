@@ -6,8 +6,9 @@ export default NextAuth({
     GitHubProvider({
       clientId: process.env.GITHUB_CLIENT_ID,
       clientSecret: process.env.GITHUB_CLIENT_SECRET,
-      authorization: "https://github.com/login/oauth/authorize?scope=read:user+user:email+public_repo",
-    } as any),
+      authorization:
+        "https://github.com/login/oauth/authorize?scope=read:user+user:email+public_repo",
+    }),
   ],
   secret: process.env.AUTH_SECRET,
   callbacks: {
@@ -18,7 +19,7 @@ export default NextAuth({
       }
       return token;
     },
-    
+
     async session({ session, token }) {
       // Send properties to the client, like an access_token from a provider.
       session.accessToken = token.accessToken;

@@ -1,13 +1,28 @@
 import React from "react";
 import styled from "styled-components";
-import {
-  ProjectContainer,
-  ProjectContent,
-  ProjectProps,
-  ProjectStyleProps,
-} from ".";
+import type { ProjectProps, ProjectStyleProps } from ".";
+import { ProjectContent } from ".";
+import { StrippedLink } from "../generics";
 
-const Container = styled.div<any>`
+type ProjectPreviewProps = ProjectProps & ProjectStyleProps & { href: string };
+export function ProjectPreview({
+  projectId,
+  preview: Component,
+  background,
+  href,
+}: ProjectPreviewProps) {
+  return (
+    <StrippedLink passHref href={href}>
+      <ProjectPreviewContainer background={background}>
+        <ProjectContent layoutId={`content-${projectId}`}>
+          <Component />
+        </ProjectContent>
+      </ProjectPreviewContainer>
+    </StrippedLink>
+  );
+}
+
+const ProjectPreviewContainer = styled.div<ProjectStyleProps>`
   background: ${(props) => props.background};
   width: auto;
   max-width: 650px;
@@ -22,22 +37,3 @@ const Container = styled.div<any>`
     min-width: 200px;
   }
 `;
-
-export const ProjectPreview: React.FC<
-  ProjectProps &
-    ProjectStyleProps & {
-      className?: string;
-      style?: any;
-      hidden?: boolean;
-      onClick?: any;
-    }
-> = ({ projectId, preview, background, className, hidden, onClick }) => {
-  const Component = preview;
-  return (
-    <Container onClick={onClick} className={className} background={background}>
-      <ProjectContent pointer layoutId={`content-${projectId}`}>
-        <Component />
-      </ProjectContent>
-    </Container>
-  );
-};

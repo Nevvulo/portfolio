@@ -62,9 +62,9 @@ interface Ratings {
   upvotes: number;
 }
 
-interface CommentProps {
+export interface CommentProps {
   content: string;
-  author?: CommentAuthor;
+  author: CommentAuthor;
   timestamp: string;
   ratings?: Ratings;
 }

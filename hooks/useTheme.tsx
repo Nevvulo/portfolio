@@ -7,7 +7,7 @@ export const useTheme = () => {
     window.matchMedia &&
     window.matchMedia("(prefers-color-scheme: dark)").matches;
 
-  const setMode = (mode) => {
+  const setMode = (mode: string) => {
     if (typeof window === "undefined") return;
     window.localStorage.setItem("theme", mode);
     setTheme(mode);

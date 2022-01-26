@@ -1,5 +1,6 @@
 // all colors here will be specified in hex
 enum COLORS {
+  LINK = "#9074f2",
   BACKGROUND = "#151515",
   WHITE = "#ffffff",
   BLACK = "#000000",

@@ -1,8 +1,9 @@
 import { useSession } from "next-auth/react";
 import React from "react";
 import styled from "styled-components";
+import { GetDiscussionCommentsResponseNode } from "../../modules/getDiscussionComments";
 import { Container } from "../container";
-import { Comment } from "./comment";
+import { Comment, CommentProps } from "./comment";
 import { CommentsForm } from "./comments-form";
 
 export const CommentsContainer = styled.div`
@@ -38,7 +39,16 @@ const CommentCount = styled.h4`
   color: ${(props) => props.theme.pure};
 `;
 
-export default function Comments({ total, comments, onCommentSubmitted }: any) {
+interface CommentsProps {
+  total: number;
+  comments: GetDiscussionCommentsResponseNode[];
+  onCommentSubmitted: (content: string) => Promise<void>;
+}
+export default function Comments({
+  total,
+  comments,
+  onCommentSubmitted,
+}: CommentsProps) {
   const { status } = useSession({ required: false });
   return (
     <CommentsContainer>

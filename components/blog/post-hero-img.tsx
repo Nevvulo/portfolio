@@ -1,7 +1,7 @@
 import { PropsWithChildren } from "react";
 import styled from "styled-components";
 
-const PostHeroImgContainer = styled.div<{ img?: any }>`
+const PostHeroImgContainer = styled.div<{ img?: string }>`
   display: flex;
   height: 100%;
   width: 100%;
@@ -34,7 +34,8 @@ const PostHeroImgContainer = styled.div<{ img?: any }>`
   }
 `;
 
-export function PostHeroImg(props: PropsWithChildren<any>) {
+type PostHeroImgProps = { src: string };
+export function PostHeroImg(props: PropsWithChildren<PostHeroImgProps>) {
   return (
     <PostHeroImgContainer img={props.src}>
       {props.children}

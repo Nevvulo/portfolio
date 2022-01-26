@@ -75,7 +75,14 @@ const HintText = styled.p`
   margin-left: 0 !important;
 `;
 
-export function CommentsForm({ disabled, onCommentSubmitted }) {
+interface CommentsFormProps {
+  disabled: boolean;
+  onCommentSubmitted: (value: string) => Promise<void>;
+}
+export function CommentsForm({
+  disabled,
+  onCommentSubmitted,
+}: CommentsFormProps) {
   const [value, setValue] = useState("");
 
   if (disabled)

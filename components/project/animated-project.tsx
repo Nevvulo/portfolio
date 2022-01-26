@@ -1,15 +1,14 @@
 import { HTMLMotionProps } from "framer-motion";
 import React from "react";
 import styled from "styled-components";
+import { ProjectButtons } from "../../components/project/button-container";
+import { AnimatedContainer, FadeAnimatedContainer } from "../container";
 import {
   CloseButton,
   ProjectContainerExpanded,
   ProjectContent,
   ProjectProps,
 } from "./index";
-import { ProjectButtons } from "../../components/project/button-container";
-import { AnimatedContainer, FadeAnimatedContainer } from "../container";
-import { ColorsRGBA } from "../../constants/colors";
 
 type AnimatedProjectProps = ProjectProps &
   HTMLMotionProps<"div"> & { onClose?: () => void };
@@ -26,10 +25,7 @@ export const AnimatedProject: React.FC<AnimatedProjectProps> = ({
       layoutId={`container-${projectId}`}
       className={className}
     >
-      <ProjectContent
-        layoutId={`content-${projectId}`}
-        background={ColorsRGBA.PROJECT_BACKGROUND}
-      >
+      <ProjectContent layoutId={`content-${projectId}`}>
         <FadeAnimatedContainer
           style={{ pointerEvents: "auto", top: 0, position: "relative" }}
         >

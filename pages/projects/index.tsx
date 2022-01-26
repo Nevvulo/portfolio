@@ -1,16 +1,57 @@
-import { useRouter } from "next/router";
+import Head from "next/head";
 import React, { useState } from "react";
 import styled from "styled-components";
-import Image from "next/image";
-import { Container } from "../../components/container";
-import { Header, Title } from "../../components/generics";
-import { BackButton } from "../../components/generics/button";
-import { HeroContainer, HeroImage } from "../../components/hero";
+import { ProjectView } from "../../components/layout/project";
+import { SimpleNavbar } from "../../components/navbar/simple";
 import { ProjectPreview } from "../../components/project";
 import { ProjectFilter } from "../../components/project/filter";
-import { ProjectView } from "../../components/views/project";
-import { Emoji } from "../../components/generics/emoji";
 import { Project, Projects } from "../../constants/projects";
+
+export default function ProjectsPage() {
+  const [selectedTab, setSelectedTab] = useState("all");
+
+  return (
+    <ProjectView>
+      <Background />
+
+      <SimpleNavbar emoji="🛠" title="Projects">
+        <ProjectFilter
+          selected={selectedTab}
+          onTabClick={(tab) => setSelectedTab(tab)}
+        />
+      </SimpleNavbar>
+
+      <ProjectContainer>
+        {Projects.filter((m) => filter(m, selectedTab)).map((item) => (
+          <ProjectPreview
+            key={item.projectId}
+            href={`/projects/${item.projectId}`}
+            {...item}
+          />
+        ))}
+      </ProjectContainer>
+
+      <Head key="projects">
+        <title>Projects - Nevulo</title>
+        <meta property="og:title" content="Projects I've worked on" />
+        <meta
+          property="og:description"
+          content={`${Projects.length} projects ▪ Get more information on projects I'm currently working on and projects I've worked on in the past`}
+        />
+      </Head>
+    </ProjectView>
+  );
+}
+
+const Background = styled.div`
+  width: 100%;
+  background: url("/alt-background.png");
+  height: 100%;
+  opacity: 0.5;
+  z-index: -1;
+  position: fixed;
+  top: 0;
+`;
 
 const ProjectContainer = styled.div`
   display: flex;
@@ -27,49 +68,6 @@ const ProjectContainer = styled.div`
   }
 `;
 
-const Background = styled.div`
-  width: 100%;
-  background: url("/alt-background.png");
-  height: 100%;
-  opacity: 0.5;
-  z-index: -1;
-  position: fixed;
-  top: 0;
-`;
-
-function ProjectsPage() {
-  const router = useRouter();
-  const [selectedTab, setSelectedTab] = useState("all");
-
-  return (
-    <ProjectView>
-      <Background />
-      <Header justifyContent="center" direction="column">
-        <Container alignItems="center">
-          <BackButton href="/" />
-          <Title fontSize="36px" color="white">
-            <Emoji>🛠</Emoji> Projects
-          </Title>
-        </Container>
-        <ProjectFilter
-          selected={selectedTab}
-          onTabClick={(tab) => setSelectedTab(tab)}
-        />
-      </Header>
-
-      <ProjectContainer>
-        {Projects.filter((m) => filter(m, selectedTab)).map((item) => (
-          <ProjectPreview
-            key={item.projectId}
-            onClick={() => router.push(`/projects/${item.projectId}`)}
-            {...item}
-          />
-        ))}
-      </ProjectContainer>
-    </ProjectView>
-  );
-}
-
 function filter(project: Project, tab: string) {
   switch (tab) {
     case "maintained":
@@ -78,5 +76,3 @@ function filter(project: Project, tab: string) {
       return true;
   }
 }
-
-export default ProjectsPage;

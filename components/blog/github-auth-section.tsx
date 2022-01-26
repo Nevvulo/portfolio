@@ -1,6 +1,11 @@
 import { faGithub } from "@fortawesome/free-brands-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { signIn, signOut, useSession } from "next-auth/react";
+import {
+  SessionContextValue,
+  signIn,
+  signOut,
+  useSession,
+} from "next-auth/react";
 import React from "react";
 import styled from "styled-components";
 import { Text } from "../generics";
@@ -77,11 +82,14 @@ const UserSection = styled(Text)`
   }
 `;
 
-export default function GitHubAuthSection() {
-  const { status, data } = useSession({ required: false });
+type GitHubAuthSectionProps = {
+  session: SessionContextValue;
+};
+export default function GitHubAuthSection({ session }: GitHubAuthSectionProps) {
+  const { status, data } = session;
   return (
     <Container>
-      {status !== "authenticated" ? (
+      {status !== "authenticated" || !data?.user ? (
         <UserSection>
           <ActionButton
             onClick={() => {
@@ -109,7 +117,7 @@ export default function GitHubAuthSection() {
           />
           <UserSection fontSize="14px">
             Signed in as{" "}
-            <Avatar width="16px" height="16px" src={data.user.image} />
+            <Avatar width="16px" height="16px" src={data.user.image || ""} />
             <b>{data.user.name || data.user.email}</b>
           </UserSection>
           <LogoutButton onClick={() => signOut()}>Logout</LogoutButton> <br />

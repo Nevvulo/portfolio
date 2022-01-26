@@ -1,13 +1,16 @@
+// @ts-nocheck
 import Highlight, { defaultProps } from "prism-react-renderer";
-import React, { PropsWithChildren } from "react";
-import styled from "styled-components";
 import theme from "prism-react-renderer/themes/shadesOfPurple";
+import React from "react";
+import styled from "styled-components";
 
 const Pre = styled.pre`
   text-align: left;
   margin: 1em 0;
-  padding: 0.5em;
   overflow: scroll;
+  padding: 1em;
+  border-radius: 6px;
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.7);
 `;
 
 const Line = styled.div`
@@ -30,7 +33,11 @@ const LineContent = styled.span`
   }
 `;
 
-const WithLineNumbers = ({ children }: PropsWithChildren<any>) => {
+function WithLineNumbers({
+  children,
+}: {
+  children?: { props: { children: string } };
+}) {
   return (
     <Highlight
       {...defaultProps}
@@ -54,6 +61,13 @@ const WithLineNumbers = ({ children }: PropsWithChildren<any>) => {
       )}
     </Highlight>
   );
-};
+}
+
+export const Inline = styled.span`
+  background: rgba(150, 150, 150, 0.3);
+  padding: 0.1em 0.35em;
+  border-radius: 3px;
+  font-weight: 600;
+`;
 
 export default WithLineNumbers;

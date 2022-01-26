@@ -1,10 +1,29 @@
 import { graphql } from "@octokit/graphql";
 
+export type GetDiscussionCommentsResponseNode = {
+  publishedAt: string;
+  body: string;
+  author: {
+    login: string;
+    avatarUrl: string;
+  };
+};
+interface GetDiscussionCommentsResponse {
+  repository: {
+    discussion: {
+      comments: {
+        totalCount: number;
+        nodes: GetDiscussionCommentsResponseNode[];
+      };
+    };
+  };
+}
+
 export default async function getDiscussionComments(
   discussionId: number,
   token: string
 ) {
-  const data = await graphql(
+  const data = await graphql<GetDiscussionCommentsResponse>(
     `
       {
         repository(owner: "Nevvulo", name: "blog") {
@@ -30,6 +49,8 @@ export default async function getDiscussionComments(
       },
     }
   );
-  const comments = (data as any).repository.discussion.comments;
-  return { total: comments.totalCount, comments: comments.nodes };
+
+  const { totalCount: total, nodes: comments } =
+    data.repository.discussion.comments;
+  return { total, comments };
 }

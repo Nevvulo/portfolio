@@ -1,32 +1,17 @@
-import {
-  faArrowLeft,
-  faExternalLinkAlt,
-  faHome,
-} from "@fortawesome/free-solid-svg-icons";
+import { faArrowLeft, faHome } from "@fortawesome/free-solid-svg-icons";
 import {
   FontAwesomeIcon,
   FontAwesomeIconProps,
 } from "@fortawesome/react-fontawesome";
 import { m } from "framer-motion";
 import React, { HTMLAttributes } from "react";
-import { LinkProps } from "next/link";
 import styled from "styled-components";
 import { ROUTES } from "../../constants/routes";
 import { Container } from "../container";
-import { Link } from "./link";
+import { IconLink } from "./link";
 
 const ButtonIcon = styled(FontAwesomeIcon)`
   margin-right: 12px;
-`;
-
-const IconLinkContainer = styled.div`
-  display: inline-flex;
-  align-items: center;
-  flex-direction: row;
-
-  * {
-    margin-right: 12px;
-  }
 `;
 
 export type ButtonProps = HTMLAttributes<HTMLButtonElement> &
@@ -72,66 +57,19 @@ export const AnimatedButton: React.FC<AnimatedButtonProps> = ({
   </m.a>
 );
 
-export type IconLinkProps = Partial<LinkProps> &
-  FontAwesomeIconProps & { isExternal?: boolean };
-export const IconLink: React.FC<IconLinkProps> = ({
-  href = "/",
-  className,
-  children,
-  isExternal = false,
-  ...iconProps
-}) => (
-  <IconLinkContainer>
-    {!children ? (
-      <Link href={href}>
-        {iconProps.icon && (
-          <FontAwesomeIcon width="24" height="24" {...iconProps} />
-        )}
-      </Link>
-    ) : (
-      <Link href={href}>
-        <>
-          {iconProps.icon && (
-            <FontAwesomeIcon width="24" height="24" {...iconProps} />
-          )}
-          <Link href={href}>{children || " "}</Link>
-        </>
-      </Link>
-    )}
-
-    {isExternal && (
-      <FontAwesomeIcon width="12" height="12" icon={faExternalLinkAlt} />
-    )}
-  </IconLinkContainer>
-);
-
 export const BackButton = styled(IconLink).attrs((props) => ({
   ...props,
   icon: faArrowLeft,
   role: "back",
+  color: props.color || "white",
   style: { marginRight: 24, cursor: "pointer" },
-}))`
-  padding: 1em;
-  color: ${(props) => props.color || props.theme.pure};
-  font-family: "Roboto", sans-serif;
-
-  svg {
-    padding-right: 12px;
-  }
-`;
+}))``;
 
 export const HomeButton = styled(IconLink).attrs((props) => ({
   ...props,
   icon: faHome,
   role: "back",
+  color: props.color || "white",
   to: ROUTES.ROOT,
   style: { cursor: "pointer" },
-}))`
-  padding: 1em;
-  color: ${(props) => props.color || "white"};
-  font-family: "Roboto", sans-serif;
-
-  svg {
-    padding-right: 12px;
-  }
-`;
+}))``;

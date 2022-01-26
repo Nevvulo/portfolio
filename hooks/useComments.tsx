@@ -1,9 +1,11 @@
 import { useSession } from "next-auth/react";
 import { useEffect, useReducer } from "react";
-import getDiscussionComments from "../modules/getDiscussionComments";
+import getDiscussionComments, {
+  GetDiscussionCommentsResponseNode,
+} from "../modules/getDiscussionComments";
 import postDiscussionComment from "../modules/postDiscussionComment";
 
-type Contents = any;
+type Contents = GetDiscussionCommentsResponseNode[];
 type ErrorType = "retrieval" | "post";
 type ActionError = {
   type: "error";
@@ -15,7 +17,10 @@ type ActionSuccess = {
 };
 type ActionLoading = { type: "loading" };
 type ActionPosting = { type: "posting" };
-type ActionPosted = { type: "posted"; payload: { comment: any } };
+type ActionPosted = {
+  type: "posted";
+  payload: { comment: GetDiscussionCommentsResponseNode };
+};
 type Action =
   | ActionSuccess
   | ActionLoading
@@ -47,7 +52,10 @@ function reducer(state: State, action: Action): State {
     case "posting":
       return { ...state, posting: true };
     case "posted":
-      const updatedComments = [...state.comments, action.payload.comment];
+      const updatedComments = [
+        ...(state.comments || []),
+        action.payload.comment,
+      ];
       return {
         ...state,
         posting: false,
@@ -78,7 +86,10 @@ export const useComments = (discussionNo: number, discussionId: string) => {
       console.error(err);
       return dispatch({
         type: "error",
-        payload: { type: "post", message: err.message },
+        payload: {
+          type: "post",
+          message: err instanceof Error ? err.message : "Unknown error",
+        },
       });
     }
   }

@@ -5,11 +5,11 @@ import styled from "styled-components";
 type FlexDirection = "row" | "column" | "row-reverse" | "column-reverse";
 
 export interface ContainerProps {
-  className?: any;
+  className?: string;
   flex?: string;
   direction?: FlexDirection;
   background?: string;
-  borderRadius?: any;
+  borderRadius?: string | number;
   alignSelf?: string;
   justifyContent?: string;
   alignItems?: string;

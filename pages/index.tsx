@@ -1,27 +1,28 @@
-import { faBell } from "@fortawesome/free-solid-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import React from "react";
-import styled, { keyframes } from "styled-components";
+import styled from "styled-components";
 import { Container } from "../components/container";
-import { Link } from "../components/generics";
-import { Announcement } from "../components/generics/announcement";
-import { Avatar } from "../components/generics/avatar";
-import { SocialLinks } from "../components/social-links";
-import { HomeView } from "../components/views/home";
+import { Announcement, Avatar, CustomLink, Link } from "../components/generics";
+import { SocialLinks } from "../components/generics/social-links";
+import { FadeUp } from "../components/home/animation";
+import { Button, ButtonContainer } from "../components/home/button";
+import { Subtitle, Title } from "../components/home/typography";
+import { HomeView } from "../components/layout/home";
+import COLORS from "../constants/colors";
 import { ROUTES } from "../constants/routes";
 
 export default function Home() {
   return (
     <HomeView>
-      <Announcement alignItems="center">
-        <p style={{ margin: "0.5em 0", fontSize: "16px" }}>
-          <FontAwesomeIcon
-            style={{ marginRight: 8, width: "14px", height: "14px" }}
-            icon={faBell}
-          />
-          Check out the new <Link href="/blog">Nevulo blog</Link>!
-        </p>
+      <Background />
+
+      <Announcement>
+        Check out the new{" "}
+        <Link color={COLORS.TAB_SELECTED} href="/blog">
+          Nevulo blog
+        </Link>
+        !
       </Announcement>
+
       <HomeContainer direction="row">
         <Container flex="1" direction="column">
           <FadeUp delay={50}>
@@ -50,21 +51,22 @@ export default function Home() {
 
           <FadeUp delay={400}>
             <ButtonContainer direction="column">
-              <Link href={ROUTES.BLOG.ROOT} passHref>
+              <CustomLink href={ROUTES.BLOG.ROOT}>
                 <Button>📖 Blog</Button>
-              </Link>
-              <Link href={ROUTES.PROJECTS.ROOT} passHref>
+              </CustomLink>
+              <CustomLink href={ROUTES.PROJECTS.ROOT}>
                 <Button>🛠 Projects</Button>
-              </Link>
-              <Link href={ROUTES.ABOUT} passHref>
+              </CustomLink>
+              <CustomLink href={ROUTES.ABOUT}>
                 <Button>👋 About Me</Button>
-              </Link>
-              <Link href={ROUTES.CONTACT} passHref>
+              </CustomLink>
+              <CustomLink href={ROUTES.CONTACT}>
                 <Button>📧 Contact</Button>
-              </Link>
+              </CustomLink>
             </ButtonContainer>
           </FadeUp>
         </Container>
+
         <FadeUp delay={545}>
           <SocialLinks />
         </FadeUp>
@@ -73,55 +75,14 @@ export default function Home() {
   );
 }
 
-const riseUp = keyframes`
-from {
-  opacity: 0;
-  transform: translateY(40px);
-}
-to {
-  opacity: 1;
-  transform: translateY(0px);
-}
-`;
-
-const riseUpBounce = keyframes`
-0% {
-  opacity: 0.1;
-  transform: scale(3);
-}
-100% {
-  opacity: 1;
-  transform: scale(1);
-  transform-origin: 25px;
-}
-`;
-
-export const fadeIn = keyframes`
-0% {
-  opacity: 0.75;
-  box-shadow: inset 0px -20px 0px 0px rgb(20 20 20 / 50%), 30px 30px 100px black;
-  transform: scale(0.85) rotate(${Math.random() * 3}deg);
-}
-100% {
-  opacity: 1;
-  box-shadow: inset 0px -20px 0px 0px rgb(20 20 20 / 50%), 10px 10px 20px rgba(0, 0, 0, 0.5);
-  transform: scale(1) rotate(0deg);
-}
-`;
-
-export const FadeUp = styled.span<{ delay: number; bounce?: boolean }>`
-  display: inline-block;
-  animation: 0.8s ${(props) => (!props.bounce ? riseUp : riseUpBounce)} forwards;
-  opacity: 0;
-  transform: translateY(20px);
-  animation-timing-function: cubic-bezier(0.33, 0.71, 0.58, 0.99);
-  animation-delay: ${(props) => props.delay}ms;
-
-  @media (prefers-reduced-motion) {
-    animation: none;
-    opacity: 1;
-    transform: translateY(0px);
-  }
+const Background = styled.div`
+  width: 100%;
+  background: url("/background.png");
+  height: 100%;
+  opacity: 0.35;
+  z-index: -1;
+  position: fixed;
+  top: 0;
 `;
 
 const Border = styled.div`
@@ -131,60 +92,6 @@ const Border = styled.div`
   height: auto;
   margin: 0.1em 0;
   margin-right: 8px;
-`;
-
-const Title = styled.h1`
-  display: block;
-  color: ${(props) => props.theme.contrast};
-  font-family: "Work Sans";
-  font-weight: 900;
-  line-height: clamp(32px, 6vmax, 72px);
-  font-size: clamp(32px, 6vmax, 72px);
-  margin-bottom: 0px;
-  margin-top: 0px;
-  letter-spacing: -1.5px;
-`;
-
-const Subtitle = styled.h2`
-  font-family: "Inter", sans-serif;
-  letter-spacing: -0.2px;
-  color: ${(props) => props.theme.textColor};
-  font-weight: 400;
-  font-size: max(16px, 2.5vh);
-  margin-top: max(4px, 2vh);
-`;
-
-const Button = styled.a`
-  text-decoration: none;
-  opacity: 0.75;
-  cursor: pointer;
-  background: linear-gradient(to bottom, #212121, #171717);
-  padding: 0.6em min(2vw, 1.5em);
-  font-family: "Inter", sans-serif;
-  font-weight: 600;
-  font-size: clamp(2vmin, 1rem, 6vmax);
-  margin: 0.25em;
-  border: 0;
-  outline: 0;
-  color: white;
-  border-radius: 4px;
-`;
-
-const ButtonContainer = styled(Container)`
-  flex: 1 0 25%;
-  flex-wrap: wrap;
-  flex-direction: row;
-  justify-content: flex-start;
-  width: 100%;
-  margin-top: max(4px, 2vh);
-
-  @media (min-height: 768px) {
-    flex-direction: column;
-  }
-
-  @media (max-width: 468px) {
-    margin-top: 0;
-  }
 `;
 
 const HomeContainer = styled(Container).attrs({ ariaRole: "container" })`
