@@ -1,4 +1,5 @@
 import { useState } from "react";
+import Fathom from "fathom-client";
 
 export function useNewsletterSubscribe() {
   const [error, setError] = useState("");
@@ -7,6 +8,7 @@ export function useNewsletterSubscribe() {
 
   async function subscribe(email: string) {
     setLoading(true);
+    Fathom.trackGoal("IWGMSY8R", 0);
     const res = await fetch("/api/subscribe", {
       body: JSON.stringify({ email: email }),
       headers: { "Content-Type": "application/json" },
