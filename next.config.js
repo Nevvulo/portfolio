@@ -20,6 +20,17 @@ module.exports = {
     return config;
   },
   images: {
-    domains: ["imgur.com"],
+    domains: ["nevulo.xyz", "imgur.com"],
+  },
+  async redirects() {
+    return [
+      {
+        source: "/blog/:slug/images/:image",
+        destination:
+          "https://raw.githubusercontent.com/Nevvulo/blog/main/posts/assets/:slug/:image",
+        permanent: true,
+        basePath: false,
+      },
+    ];
   },
 };

@@ -1,6 +1,7 @@
 import {
   faFacebook,
   faGithub,
+  faMedium,
   faTwitter,
 } from "@fortawesome/free-brands-svg-icons";
 import { GetStaticPropsContext } from "next";
@@ -57,6 +58,9 @@ const NavbarContainer = styled.div`
 
 function PostBody({ content, properties }: PostProps) {
   const location = `https://nevulo.xyz/blog/${properties.slug}`;
+  const ogImage = `${
+    "window" in global ? window.location.origin : "https://nevulo.xyz"
+  }/blog/${properties.slug}/images/${properties.image}`;
   const filename = `${properties.slug}.mdx`;
   const filepath = `posts/${filename}`;
   const creationDate = new Date(properties.createdAt);
@@ -76,7 +80,7 @@ function PostBody({ content, properties }: PostProps) {
         <Navbar title="Blog" route={ROUTES.BLOG.ROOT} />
       </NavbarContainer>
 
-      <PostHeroImg src={properties.image}>
+      <PostHeroImg src={`/blog/${properties.slug}/images/${properties.image}`}>
         <PostHeader>
           <PostSubheader>
             <p>
@@ -133,6 +137,18 @@ function PostBody({ content, properties }: PostProps) {
             >
               Share on Facebook
             </IconLink>
+            {/* {properties.mediumUrl && (
+              <IconLink
+                icon={faMedium}
+                isExternal
+                target="_blank"
+                href={properties.mediumUrl}
+                width="16"
+                height="16"
+              >
+                View & share on Medium
+              </IconLink>
+            )} */}
           </Container>
         </PostFooter>
 
@@ -156,13 +172,13 @@ function PostBody({ content, properties }: PostProps) {
         <meta property="description" content={properties.description} />
         <meta property="og:title" content={properties.title} />
         <meta property="og:description" content={properties.description} />
-        <meta property="og:image" content={properties.image} />
+        <meta property="og:image" content={ogImage} />
         <meta property="og:site_name" content="Nevulo Blog" />
         <meta property="og:url" content={location} />
         <meta property="og:type" content="article" />
         <meta property="twitter:title" content={properties.title} />
         <meta property="twitter:description" content={properties.description} />
-        <meta property="twitter:image" content={properties.image} />
+        <meta property="twitter:image" content={ogImage} />
         <meta property="twitter:site" content="@Nevvulo" />
         <meta property="twitter:creator" content="@Nevvulo" />
         <meta property="creator" content="Nevulo" />
@@ -185,9 +201,18 @@ const generateSharableTwitterLink = (title: string, link: string) =>
 const generateSharableFacebookLink = (link: string) =>
   `https://www.facebook.com/sharer/sharer.php?u=${link}`;
 
+const getPostImage = (src: string) => {
+  const isRelative = src.startsWith("./");
+  const [, , slug, asset] = src.split("/");
+  return isRelative && asset ? `/blog/${slug}/images/${asset}` : src;
+};
+
 const components = {
   pre: (props: never) => <CodeBlock {...props} />,
-  img: (props: never) => <PostImg loading="lazy" {...props} />,
+  img: (props: any) => {
+    const src = getPostImage(props.src);
+    return <PostImg loading="lazy" {...props} src={src} />;
+  },
   a: (props: { children: ReactNode; href: string }) => (
     <IconLink
       isExternal={!props.href.startsWith("https://nevulo.xyz")}
@@ -199,7 +224,35 @@ const components = {
   ),
   h1: (props: never) => <Title {...props} />,
   h2: (props: never) => <Subtitle {...props} />,
+  p: (props: never) => <Text {...props} />,
+  ol: (props: never) => <List {...props} />,
 };
+
+const List = styled.ol`
+  color: rgb(225 225 225);
+  line-height: 1.55;
+  font-size: 1.1em;
+
+  code {
+    background: rgba(150, 150, 150, 0.3);
+    padding: 0.1em 0.35em;
+    border-radius: 3px;
+    font-weight: 600;
+  }
+`;
+
+const Text = styled.p`
+  color: rgb(225 225 225);
+  line-height: 1.55;
+  font-size: 1.1em;
+
+  code {
+    background: rgba(150, 150, 150, 0.3);
+    padding: 0.1em 0.35em;
+    border-radius: 3px;
+    font-weight: 600;
+  }
+`;
 
 const Title = styled.h3`
   margin-top: 38px;
@@ -218,6 +271,13 @@ const Subtitle = styled.h2`
   + p {
     margin-top: 0.5em;
   }
+
+  code {
+    background: rgba(150, 150, 150, 0.3);
+    padding: 0.1em 0.35em;
+    border-radius: 3px;
+    font-weight: 600;
+  }
 `;
 
 const PostContainer = styled.div`
@@ -227,14 +287,6 @@ const PostContainer = styled.div`
   margin: 0.5em;
   max-width: 700px;
   width: 90%;
-
-  p > code,
-  h2 > code {
-    background: rgba(150, 150, 150, 0.3);
-    padding: 0.1em 0.35em;
-    border-radius: 3px;
-    font-weight: 600;
-  }
 `;
 
 export async function getStaticPaths() {

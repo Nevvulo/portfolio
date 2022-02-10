@@ -37,15 +37,8 @@ function BlogContent({ posts }: BlogProps) {
       </Container>
 
       <PostContainer>
-        {posts.map(({ title, labels, slug, image, description }) => (
-          <PostPreview
-            key={slug}
-            title={title}
-            labels={labels}
-            slug={slug}
-            image={image}
-            description={description}
-          />
+        {posts.map((properties) => (
+          <PostPreview key={properties.slug} {...properties} />
         ))}
         <Footer>
           <Text color="white">📚 More posts coming soon! ⏱</Text>
@@ -54,7 +47,6 @@ function BlogContent({ posts }: BlogProps) {
 
       <Head key="blog">
         <title>Blog - Nevulo</title>
-        <meta property="og:title" content="Nevulo Blog" />
         <meta property="og:title" content="Nevulo Blog" />
         <meta
           property="og:description"

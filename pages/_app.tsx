@@ -54,16 +54,6 @@ function MainHead() {
       <meta charSet="utf-8" />
       <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-      <meta property="og:title" content="Hi there, I'm Blake!" />
-      <meta
-        property="og:description"
-        content="I'm a software engineer based in Australia working at Flux. Click this link to learn more about me!"
-      />
-      <meta property="og:url" content="https://nevulo.xyz" />
-      <meta
-        property="og:image"
-        content="https://nevulo.xyz/nevuletter-square.png"
-      />
       <meta name="theme-color" content="#9074f2" />
     </Head>
   );

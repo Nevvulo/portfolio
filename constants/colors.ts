@@ -21,5 +21,11 @@ enum Gradients {
   BLOG_POST = "linear-gradient(315deg, #000000 0%, #414141 74%)",
 }
 
+export const DifficultyColors = {
+  Beginner: "#898141",
+  Intermediate: "#896341",
+  Advanced: "#894c41",
+};
+
 export default COLORS;
 export { ColorsRGBA, Gradients };

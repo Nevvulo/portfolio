@@ -1,8 +1,13 @@
 // @ts-nocheck
 import Highlight, { defaultProps } from "prism-react-renderer";
+import Prism from "prism-react-renderer/prism";
 import theme from "prism-react-renderer/themes/shadesOfPurple";
 import React from "react";
 import styled from "styled-components";
+
+(typeof global !== "undefined" ? global : window).Prism = Prism;
+require("prismjs/components/prism-csharp");
+require("prismjs/components/prism-python");
 
 const Pre = styled.pre`
   text-align: left;
@@ -36,14 +41,14 @@ const LineContent = styled.span`
 function WithLineNumbers({
   children,
 }: {
-  children?: { props: { children: string } };
+  children?: { props: { children: string; className: string } };
 }) {
   return (
     <Highlight
       {...defaultProps}
       theme={theme}
       code={children.props.children}
-      language="jsx"
+      language={children?.props?.className?.slice(9) || "jsx"}
     >
       {({ className, style, tokens, getLineProps, getTokenProps }) => (
         <Pre className={className} style={style}>

@@ -9,6 +9,7 @@ import { Subtitle, Title } from "../components/home/typography";
 import { HomeView } from "../components/layout/home";
 import COLORS from "../constants/colors";
 import { ROUTES } from "../constants/routes";
+import Head from "next/head";
 
 export default function Home() {
   return (
@@ -71,6 +72,18 @@ export default function Home() {
           <SocialLinks />
         </FadeUp>
       </HomeContainer>
+      <Head>
+        <meta property="og:title" content="Hi there, I'm Blake!" />
+        <meta
+          property="og:description"
+          content="I'm a software engineer based in Australia working at Flux. Click this link to learn more about me!"
+        />
+        <meta property="og:url" content="https://nevulo.xyz" />
+        <meta
+          property="og:image"
+          content="https://nevulo.xyz/nevuletter-square.png"
+        />
+      </Head>
     </HomeView>
   );
 }

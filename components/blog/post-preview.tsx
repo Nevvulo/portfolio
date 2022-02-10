@@ -1,12 +1,16 @@
+import { faClock } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import * as Fathom from "fathom-client";
 import React from "react";
 import styled from "styled-components";
+import { DifficultyColors } from "../../constants/colors";
 import { Container } from "../container";
 import { StrippedLink } from "../generics/link";
 import { Skeleton } from "../generics/skeleton";
 import { Title } from "../generics/title";
 import { Label, Labels } from "./labels";
 
+type Difficulty = "Beginner" | "Intermediate" | "Advanced";
 type PreviewProps = {
   title?: string;
   slug: string;
@@ -14,6 +18,9 @@ type PreviewProps = {
   image: string;
   description?: string;
   loading?: boolean;
+  readTimeMins?: number;
+  difficulty?: string;
+  author?: string;
 };
 export function PostPreview({
   title,
@@ -22,6 +29,8 @@ export function PostPreview({
   image,
   description,
   loading,
+  readTimeMins,
+  difficulty,
 }: PreviewProps) {
   // view blog post goal
   function onClick() {
@@ -53,8 +62,23 @@ export function PostPreview({
                   ))}
               </Labels>
             ) : null}
+            <Container alignItems="center" direction="row">
+              {readTimeMins && (
+                <ReadTimeContainer direction="row">
+                  <FontAwesomeIcon icon={faClock} />
+                  <p>{readTimeMins} mins</p>
+                </ReadTimeContainer>
+              )}
+              {difficulty && (
+                <DifficultyIndicator
+                  color={DifficultyColors[difficulty as Difficulty]}
+                >
+                  {difficulty}
+                </DifficultyIndicator>
+              )}
+            </Container>
           </PreviewText>
-          <PostImage loading="lazy" src={image} />
+          <PostImage loading="lazy" src={`/blog/${slug}/images/${image}`} />
         </Post>
       </PreviewContainer>
     </StrippedLink>
@@ -114,6 +138,21 @@ const PreviewText = styled(Container)`
   }
 `;
 
+const ReadTimeContainer = styled(Container)`
+  font-size: 14px;
+  font-weight: 500;
+  font-family: "Inter", sans-serif;
+  align-items: center;
+  margin: 0;
+  font-size: 12px;
+  color: ${(props) => props.theme.textColor};
+
+  p {
+    margin: 0.5em;
+    margin-left: 8px;
+  }
+`;
+
 const PreviewDescription = styled.p`
   font-size: 14px;
   font-weight: 500;
@@ -126,4 +165,19 @@ const PreviewContainer = styled.a`
   text-decoration: none;
   overflow: hidden;
   margin: 0 1em;
+`;
+
+const DifficultyIndicator = styled.div<{ color: string }>`
+  background: ${(props) => props.color};
+  padding: 0.07em 0.5em;
+  font-weight: 700;
+  line-height: 14px;
+  border: 0.1px solid #212121;
+  box-shadow: 2px 2px 0px black;
+  font-family: "Fira Code", monospace;
+  font-size: 12px;
+  height: 14px;
+  border-radius: 4px;
+  margin: 0em;
+  color: white;
 `;
