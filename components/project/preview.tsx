@@ -3,6 +3,14 @@ import styled from "styled-components";
 import type { ProjectProps, ProjectStyleProps } from ".";
 import { ProjectContent } from ".";
 import { StrippedLink } from "../generics";
+import Image from "next/image";
+
+export const ProjectPreviewImage = styled(Image)`
+  display: block;
+  border: none;
+  background: none;
+  border-radius: 8px;
+`;
 
 type ProjectPreviewProps = ProjectProps & ProjectStyleProps & { href: string };
 export function ProjectPreview({
@@ -14,7 +22,7 @@ export function ProjectPreview({
   return (
     <StrippedLink passHref href={href}>
       <ProjectPreviewContainer background={background}>
-        <ProjectContent layoutId={`content-${projectId}`}>
+        <ProjectContent>
           <Component />
         </ProjectContent>
       </ProjectPreviewContainer>
@@ -28,8 +36,8 @@ const ProjectPreviewContainer = styled.div<ProjectStyleProps>`
   max-width: 650px;
   cursor: pointer;
   border-radius: 6px;
-  width: 90%;
   min-width: 450px;
+  width: 100%;
   margin: 1em;
   box-shadow: 1px 2px 3px rgba(0, 0, 0, 0.5);
 

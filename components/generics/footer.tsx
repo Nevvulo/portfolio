@@ -2,12 +2,12 @@ import styled from "styled-components";
 import { Container } from "../container";
 
 export const Footer = styled(Container)`
-  background: rgba(0, 0, 0, 0.5);
+  background: ${(props) => props.theme.postBackground};
   padding: 0.65em;
   margin: 1em;
   border: 0.25px solid rgba(50, 25, 50, 0.5);
   border-radius: 8px;
-  color: white;
+  color: ${(props) => props.theme.pure};
   font-family: "Inter", sans-serif;
   letter-spacing: -0.5px;
 `;

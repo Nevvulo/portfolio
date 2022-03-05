@@ -5,14 +5,20 @@ import {
   FontAwesomeIcon,
 } from "@fortawesome/react-fontawesome";
 import NextLink from "next/link";
-import { PropsWithChildren } from "react";
+import { CSSProperties, PropsWithChildren } from "react";
 import styled from "styled-components";
 import COLORS from "../../constants/colors";
 
-type LinkProps = { href: string; color?: string; underline?: boolean };
+type LinkProps = {
+  href: string;
+  style?: CSSProperties;
+  color?: string;
+  underline?: boolean;
+};
 export function Link({
   href,
   color,
+  style,
   children,
   underline,
 }: PropsWithChildren<LinkProps>) {
@@ -27,7 +33,9 @@ export function Link({
 
   return (
     <StrippedLink passHref href={href}>
-      <LinkText color={color}>{children}</LinkText>
+      <LinkText style={style} color={color}>
+        {children}
+      </LinkText>
     </StrippedLink>
   );
 }
@@ -56,6 +64,7 @@ export const IconLink: React.FC<IconLinkProps> = ({
   className,
   color,
   children,
+  style,
   spacing,
   isExternal = false,
   ...iconProps
@@ -68,6 +77,7 @@ export const IconLink: React.FC<IconLinkProps> = ({
             width="24"
             height="24"
             {...iconProps}
+            style={style}
             icon={iconProps.icon}
           />
         )}
@@ -84,7 +94,7 @@ export const IconLink: React.FC<IconLinkProps> = ({
             icon={iconProps.icon}
           />
         )}
-        <Link color={color} href={href}>
+        <Link style={style} color={color} href={href}>
           {children || " "}
         </Link>
       </>

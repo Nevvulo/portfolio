@@ -9,7 +9,14 @@ interface GenericTheme {
   textColor: string;
   linkColor: string;
   postBackground: string;
+  postImageLoadingBackground: string;
+  postDescriptionText: string;
   postImageBoxShadow: string;
+  subscriptionBackground: string;
+  subscriptionText: string;
+  difficultyBeginnerBackground: string;
+  difficultyIntermediateBackground: string;
+  difficultyAdvancedBackground: string;
 }
 
 // and extend them!

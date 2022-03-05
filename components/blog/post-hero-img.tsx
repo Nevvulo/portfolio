@@ -3,6 +3,7 @@ import styled from "styled-components";
 
 const PostHeroImgContainer = styled.div<{ img?: string }>`
   display: flex;
+  position: relative;
   height: 100%;
   width: 100%;
 
@@ -13,15 +14,14 @@ const PostHeroImgContainer = styled.div<{ img?: string }>`
   align-items: center;
   border: 2.5px solid #212121;
   max-height: 300px;
-  border-radius: 8px;
   background: #131313;
 
   object-fit: contain;
   background-image: linear-gradient(
       249deg,
-      rgba(163, 108, 228, 0.46682422969187676) 0%,
-      rgba(36, 18, 50, 0.9626225490196079) 50%,
-      rgba(24, 24, 24, 0.9626225490196079) 99%
+      rgba(144, 116, 242, 1) 0%,
+      rgb(38 23 90 / 88%) 50%,
+      rgba(24, 24, 24, 0.9626225490196079) 98%
     ),
     url("${(props) => props.img}");
   background-size: cover;
@@ -34,11 +34,37 @@ const PostHeroImgContainer = styled.div<{ img?: string }>`
   }
 `;
 
-type PostHeroImgProps = { src: string };
+const CoverAuthorContainer = styled.div`
+  position: absolute;
+  font-size: 10px;
+  background: rgba(0, 0, 0, 0.4);
+  bottom: 0;
+  right: 0;
+  font-family: "Inter", system-ui, sans-serif;
+  padding: 0.4em;
+`;
+
+const CoverAuthor = styled.a`
+  color: rgb(225, 225, 225);
+  text-decoration: underline;
+`;
+
+type PostHeroImgProps = {
+  src: string;
+  coverAuthor?: string;
+  coverAuthorUrl?: string;
+};
 export function PostHeroImg(props: PropsWithChildren<PostHeroImgProps>) {
   return (
     <PostHeroImgContainer img={props.src}>
       {props.children}
+      {props.coverAuthor && (
+        <CoverAuthorContainer>
+          <CoverAuthor href={props.coverAuthorUrl}>
+            Cover image by {props.coverAuthor}
+          </CoverAuthor>
+        </CoverAuthorContainer>
+      )}
     </PostHeroImgContainer>
   );
 }

@@ -1,6 +1,7 @@
 // all colors here will be specified in hex
 enum COLORS {
   LINK = "#9074f2",
+  PURPLE = "#9074f2",
   BACKGROUND = "#151515",
   WHITE = "#ffffff",
   BLACK = "#000000",
@@ -22,9 +23,9 @@ enum Gradients {
 }
 
 export const DifficultyColors = {
-  Beginner: "#898141",
-  Intermediate: "#896341",
-  Advanced: "#894c41",
+  Beginner: "rgba(177, 204, 80, 0.4)",
+  Intermediate: "rgba(204, 138, 80, 0.4)",
+  Advanced: "rgba(204, 94, 80, 0.4)",
 };
 
 export default COLORS;

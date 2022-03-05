@@ -1,11 +1,11 @@
+import Image from "next/image";
 import React from "react";
 import styled from "styled-components";
-import Image from "next/image";
-import DankMemerLogo from "./../../../assets/img/dank-memer.png";
 import {
   AnimatedContainer,
   FadeAnimatedContainer,
 } from "../../../components/container";
+import { DetailedNavbar } from "../../../components/navbar/detailed";
 import {
   ProjectBadges,
   ProjectContainer,
@@ -14,11 +14,12 @@ import {
   ProjectContentText,
   ProjectSubtitle,
   ProjectTitle,
+  ProjectTitleContainer,
 } from "../../../components/project";
+import Colors from "../../../constants/colors";
 import { Roles } from "../../../constants/roles";
 import { Technologies } from "../../../constants/technologies";
-import { Navbar } from "../../../components/navbar";
-import { ROUTES } from "../../../constants/routes";
+import DankMemerLogo from "./../../../assets/img/projects/logo/dank-memer.png";
 
 const id = "dankmemer";
 const title = "Dank Memer";
@@ -37,12 +38,12 @@ const Logo = styled(Image).attrs({
 
 export const DankMemerPreview: React.FC = () => (
   <>
-    <AnimatedContainer layoutId={`logo-${id}`}>
+    <AnimatedContainer>
       <Logo />
       <ProjectTitle>{title}</ProjectTitle>
     </AnimatedContainer>
-    <AnimatedContainer layoutId={`description-${id}`}>
-      <ProjectSubtitle>{shortDescription}</ProjectSubtitle>
+    <AnimatedContainer>
+      <ProjectSubtitle color={Colors.WHITE}>{shortDescription}</ProjectSubtitle>
     </AnimatedContainer>
   </>
 );
@@ -50,14 +51,13 @@ export const DankMemerPreview: React.FC = () => (
 export default function DankMemer() {
   return (
     <ProjectContainer>
-      <Navbar title={title} route={ROUTES.PROJECTS.ROOT} />
-      <AnimatedContainer layoutId={`logo-${id}`}>
+      <DetailedNavbar />
+
+      <ProjectTitleContainer>
         <Logo />
         <ProjectTitle>{title}</ProjectTitle>
-      </AnimatedContainer>
-      <AnimatedContainer layoutId={`description-${id}`}>
-        <ProjectSubtitle>{shortDescription}</ProjectSubtitle>
-      </AnimatedContainer>
+      </ProjectTitleContainer>
+      <ProjectSubtitle>{shortDescription}</ProjectSubtitle>
       <FadeAnimatedContainer direction="column" layoutId={`badges-${id}`}>
         <ProjectBadges
           technologies={[
@@ -74,7 +74,7 @@ export default function DankMemer() {
       </FadeAnimatedContainer>
 
       <ProjectContentContainer direction="column">
-        <FadeAnimatedContainer direction="column" layoutId={`header-${id}-1`}>
+        <FadeAnimatedContainer direction="column">
           <ProjectContentHeader>
             🏃‍♂️ Your average economy with a spin
           </ProjectContentHeader>

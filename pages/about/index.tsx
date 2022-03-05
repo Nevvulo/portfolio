@@ -15,7 +15,7 @@ export default function About() {
   return (
     <MinimalView>
       <Background />
-      <SimpleNavbar emoji="👋" title="About Me" />
+      <SimpleNavbar id="about" emoji="👋" title="About Me" />
 
       <AboutBox>
         <TextContainer>
@@ -99,6 +99,7 @@ export default function About() {
 
 const Background = styled.div`
   width: 100%;
+  filter: ${(props) => (props.theme.contrast === "#000" ? "invert(1)" : "")}
   background: url("/images/alt-background.png");
   height: 100%;
   opacity: 0.5;

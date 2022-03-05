@@ -21,11 +21,8 @@ export const AnimatedProject: React.FC<AnimatedProjectProps> = ({
 }) => {
   const Component = component;
   return (
-    <ProjectContainerExpanded
-      layoutId={`container-${projectId}`}
-      className={className}
-    >
-      <ProjectContent layoutId={`content-${projectId}`}>
+    <ProjectContainerExpanded className={className}>
+      <ProjectContent>
         <FadeAnimatedContainer
           style={{ pointerEvents: "auto", top: 0, position: "relative" }}
         >

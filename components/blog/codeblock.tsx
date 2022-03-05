@@ -14,8 +14,13 @@ const Pre = styled.pre`
   margin: 1em 0;
   overflow: scroll;
   padding: 1em;
-  border-radius: 6px;
+  border-radius: 4px;
   box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.7);
+
+  @media (max-width: 400px) {
+    margin: 0 -2em;
+    padding: 1.35em;
+  }
 `;
 
 const Line = styled.div`

@@ -61,8 +61,8 @@ export const BackButton = styled(IconLink).attrs((props) => ({
   ...props,
   icon: faArrowLeft,
   role: "back",
-  color: props.color || "white",
-  style: { marginRight: 24, cursor: "pointer" },
+  color: props.color || props.theme.contrast || "white",
+  style: { marginRight: 22, height: 24, fontWeight: 800, cursor: "pointer" },
 }))``;
 
 export const HomeButton = styled(IconLink).attrs((props) => ({

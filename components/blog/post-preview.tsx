@@ -2,13 +2,34 @@ import { faClock } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import * as Fathom from "fathom-client";
 import React from "react";
-import styled from "styled-components";
+import styled, { DefaultTheme, useTheme } from "styled-components";
 import { DifficultyColors } from "../../constants/colors";
 import { Container } from "../container";
 import { StrippedLink } from "../generics/link";
 import { Skeleton } from "../generics/skeleton";
 import { Title } from "../generics/title";
 import { Label, Labels } from "./labels";
+import Image from "next/image";
+import useMediaQuery from "../../hooks/useMediaQuery";
+
+function getDifficultyBackground(difficulty: Difficulty, theme: DefaultTheme) {
+  const {
+    difficultyAdvancedBackground,
+    difficultyIntermediateBackground,
+    difficultyBeginnerBackground,
+  } = theme;
+
+  switch (difficulty) {
+    case "Beginner":
+      return difficultyBeginnerBackground;
+    case "Intermediate":
+      return difficultyIntermediateBackground;
+    case "Advanced":
+      return difficultyAdvancedBackground;
+    default:
+      return undefined;
+  }
+}
 
 type Difficulty = "Beginner" | "Intermediate" | "Advanced";
 type PreviewProps = {
@@ -32,6 +53,11 @@ export function PostPreview({
   readTimeMins,
   difficulty,
 }: PreviewProps) {
+  const theme = useTheme();
+  const smallDisplay = useMediaQuery("(max-width: 460px)");
+  const difficultyBackground = difficulty
+    ? getDifficultyBackground(difficulty as Difficulty, theme)
+    : undefined;
   // view blog post goal
   function onClick() {
     Fathom.trackGoal("CTGT4BLM", 0);
@@ -69,16 +95,24 @@ export function PostPreview({
                   <p>{readTimeMins} mins</p>
                 </ReadTimeContainer>
               )}
-              {difficulty && (
-                <DifficultyIndicator
-                  color={DifficultyColors[difficulty as Difficulty]}
-                >
+              {difficultyBackground && (
+                <DifficultyIndicator color={difficultyBackground}>
                   {difficulty}
                 </DifficultyIndicator>
               )}
             </Container>
           </PreviewText>
-          <PostImage loading="lazy" src={`/blog/${slug}/images/${image}`} />
+          <PostImageContainer>
+            <PostImage
+              width={!smallDisplay ? "150px" : "100%"}
+              height={!smallDisplay ? "150px" : "125px"}
+              layout={!smallDisplay ? "fixed" : "intrinsic"}
+              quality={75}
+              priority
+              objectFit="cover"
+              src={`https://raw.githubusercontent.com/Nevvulo/blog/main/posts/assets/${slug}/${image}`}
+            />
+          </PostImageContainer>
         </Post>
       </PreviewContainer>
     </StrippedLink>
@@ -104,27 +138,41 @@ const Post = styled.div`
   @media (max-width: 460px) {
     flex-direction: column-reverse;
     min-width: 200px;
-    border-radius: 8px;
     padding: 0;
   }
 `;
 
-const PostImage = styled.img`
-  width: 150px;
-  min-width: 150px;
-  height: 150px;
-  object-fit: cover;
+const PostImageContainer = styled.div`
+  position: relative;
+  max-height: 150px;
+  position: relative;
   border-radius: 4px;
   margin: 1em;
 
-  background: grey;
+  @media (max-width: 460px) {
+    max-width: 100% !important;
+    width: 100% !important;
+    margin: 0;
+    border-radius: 10px;
+    border-end-end-radius: 0px;
+    border-end-start-radius: 0px;
+
+    > div {
+      display: contents !important;
+    }
+  }
+`;
+
+const PostImage = styled(Image).attrs({ key: "image" })`
+  border-radius: 4px;
+  background: ${(props) => props.theme.postImageLoadingBackground};
   border: 0.1px solid ${(props) => props.theme.postImageBoxShadow};
   box-shadow: 0px 0px 8px 1px ${(props) => props.theme.postImageBoxShadow};
 
   @media (max-width: 460px) {
-    width: auto;
-    margin: 0;
-    height: 90px;
+    border-radius: 10px;
+    border-end-end-radius: 0px;
+    border-end-start-radius: 0px;
   }
 `;
 
@@ -158,7 +206,7 @@ const PreviewDescription = styled.p`
   font-weight: 500;
   font-family: "Inter", sans-serif;
   letter-spacing: -0.5px;
-  color: rgb(150, 150, 150);
+  color: ${(props) => props.theme.postDescriptionText};
 `;
 
 const PreviewContainer = styled.a`
@@ -168,14 +216,16 @@ const PreviewContainer = styled.a`
 `;
 
 const DifficultyIndicator = styled.div<{ color: string }>`
+  position: relative;
   background: ${(props) => props.color};
   padding: 0.07em 0.5em;
-  font-weight: 700;
+  font-weight: 600;
+  top: 0px;
   line-height: 14px;
   border: 0.1px solid #212121;
   box-shadow: 2px 2px 0px black;
   font-family: "Fira Code", monospace;
-  font-size: 12px;
+  font-size: 11.8px;
   height: 14px;
   border-radius: 4px;
   margin: 0em;

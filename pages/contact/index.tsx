@@ -9,12 +9,16 @@ import { SimpleNavbar } from "../../components/navbar/simple";
 export default function Contact() {
   return (
     <MinimalView>
-      <SimpleNavbar emoji="📧" title="Contact" />
+      <SimpleNavbar id="contact" emoji="📧" title="Contact" />
 
       <ContactBox>
-        <Subtitle>Socials</Subtitle>
-        <SocialLinks include={{ linkedIn: true }} direction="row" />
-        <Subtitle>Security & Privacy</Subtitle>
+        <Subtitle color="white">Socials</Subtitle>
+        <SocialLinks
+          color="white"
+          include={{ linkedIn: true }}
+          direction="row"
+        />
+        <Subtitle color="white">Security & Privacy</Subtitle>
         <Notice>
           Reporting a potential security vulnerability or privacy concern
           regarding one of my maintained projects? Please shoot me an e-mail by

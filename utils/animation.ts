@@ -1,10 +1,21 @@
+import { domMax } from "framer-motion";
 import { keyframes } from "styled-components";
-import { domAnimation } from "framer-motion";
 
 export const riseUp = keyframes`
 from {
   opacity: 0;
   transform: translateY(40px);
+}
+to {
+  opacity: 1;
+  transform: translateY(0px);
+}
+`;
+
+export const riseUpSmall = keyframes`
+from {
+  opacity: 0;
+  transform: translateY(15px);
 }
 to {
   opacity: 1;
@@ -37,4 +48,4 @@ export const fadeIn = keyframes`
 }
 `;
 
-export const animationFeatures = domAnimation;
+export const animationFeatures = domMax;

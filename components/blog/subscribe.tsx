@@ -4,14 +4,15 @@ import styled from "styled-components";
 import COLORS from "../../constants/colors";
 import { Container } from "../container";
 import { faNewspaper, faSpinner } from "@fortawesome/free-solid-svg-icons";
+import { Title } from "../generics";
 
 const SubscriptionBackground = styled(Container)`
-  background-color: rgba(247, 190, 92, 0.1);
+  background-color: ${(props) => props.theme.subscriptionBackground};
   padding: 1em 3em;
   width: auto;
   margin: 12px 0em 12px 0em;
   max-width: 650px;
-  border: 2px solid rgba(229, 231, 235, 0.1);
+  border: 2px solid ${(props) => props.theme.postImageBoxShadow};
   border-radius: 0.5rem;
   flex-direction: column;
 
@@ -85,7 +86,7 @@ const Text = styled.p`
   font-weight: 400;
   font-size: 18px;
   margin: 0.25rem 4px 1rem 0;
-  color: ${COLORS.TAB_SELECTED};
+  color: ${(props) => props.theme.subscriptionText};
 
   @media (max-width: 468px) {
     font-size: 17px;
@@ -107,6 +108,7 @@ export function NewsletterSubscription({
   const [email, setEmail] = useState("");
   return (
     <SubscriptionBackground>
+      <Title fontSize="1.5rem">Nevuletter</Title>
       <Text>
         <FontAwesomeIcon
           style={{ marginRight: 8, width: "16px", height: "16px" }}

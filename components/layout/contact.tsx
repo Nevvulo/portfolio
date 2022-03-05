@@ -9,6 +9,6 @@ export const ContactBox = styled(MinimalView)`
   border-radius: 4px;
   max-width: 650px;
   padding: 1em;
-  box-shadow: 0px 0px 40px rgba(0, 0, 0, 0.4);
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.4);
   margin: 1em 5%;
 `;

@@ -1,21 +1,24 @@
 import {
+  faDev,
   faFacebook,
   faGithub,
   faMedium,
   faTwitter,
 } from "@fortawesome/free-brands-svg-icons";
+import * as Fathom from "fathom-client";
+import { useViewportScroll } from "framer-motion";
 import { GetStaticPropsContext } from "next";
-import { SessionProvider } from "next-auth/react";
 import {
   MDXRemote as PostContent,
   MDXRemoteSerializeResult,
 } from "next-mdx-remote";
 import { serialize } from "next-mdx-remote/serialize";
 import Head from "next/head";
-import React, { ReactNode, useEffect } from "react";
+import React, { ReactNode, useEffect, useState } from "react";
 // @ts-expect-error
 import matter from "section-matter";
 import styled from "styled-components";
+import { CircleIndicator } from "../../components/blog/circle-indicator";
 import CodeBlock from "../../components/blog/codeblock";
 import Comments from "../../components/blog/comments";
 import { PostFooter } from "../../components/blog/post-footer";
@@ -28,8 +31,7 @@ import { Container } from "../../components/container";
 import { IconLink } from "../../components/generics";
 import { Avatar } from "../../components/generics/avatar";
 import { BlogView } from "../../components/layout/blog";
-import { Navbar } from "../../components/navbar";
-import { ROUTES } from "../../constants/routes";
+import { DetailedNavbar } from "../../components/navbar/detailed";
 import { useComments } from "../../hooks/useComments";
 import { useNewsletterSubscribe } from "../../hooks/useNewsletterSubscribe";
 import getFile from "../../modules/getFile";
@@ -40,21 +42,24 @@ type PostProps = {
   properties: Blogmap[number];
 };
 export default function Post({ content, properties }: PostProps) {
+  const { scrollYProgress } = useViewportScroll();
+  const [completed, setCompleted] = useState(false);
+
+  useEffect(() => {
+    // finished blog post goal
+    if (completed) Fathom.trackGoal("5RLNED6W", 0);
+  }, [completed]);
+
   return (
-    <SessionProvider>
+    <>
+      <CircleIndicator
+        onComplete={() => setCompleted(true)}
+        scrollYProgress={scrollYProgress}
+      />
       <PostBody content={content} properties={properties} />
-    </SessionProvider>
+    </>
   );
 }
-
-const NavbarContainer = styled.div`
-  display: flex;
-  align-items: flex-start;
-  margin-left: auto;
-  margin-right: auto;
-  width: 100%;
-  padding-top: 0.75em;
-`;
 
 function PostBody({ content, properties }: PostProps) {
   const location = `https://nevulo.xyz/blog/${properties.slug}`;
@@ -65,22 +70,20 @@ function PostBody({ content, properties }: PostProps) {
   const filepath = `posts/${filename}`;
   const creationDate = new Date(properties.createdAt);
   const newsletter = useNewsletterSubscribe();
-
   const { total, comments, postComment } = useComments(
     properties.discussionNo,
     properties.discussionId
   );
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
 
   return (
     <BlogView>
-      <NavbarContainer>
-        <Navbar title="Blog" route={ROUTES.BLOG.ROOT} />
-      </NavbarContainer>
+      <DetailedNavbar />
 
-      <PostHeroImg src={`/blog/${properties.slug}/images/${properties.image}`}>
+      <PostHeroImg
+        coverAuthor={properties.coverAuthor}
+        coverAuthorUrl={properties.coverAuthorUrl}
+        src={`/blog/${properties.slug}/images/${properties.image}`}
+      >
         <PostHeader>
           <PostSubheader>
             <p>
@@ -137,7 +140,7 @@ function PostBody({ content, properties }: PostProps) {
             >
               Share on Facebook
             </IconLink>
-            {/* {properties.mediumUrl && (
+            {properties.mediumUrl && (
               <IconLink
                 icon={faMedium}
                 isExternal
@@ -148,7 +151,31 @@ function PostBody({ content, properties }: PostProps) {
               >
                 View & share on Medium
               </IconLink>
-            )} */}
+            )}
+            {properties.hashnodeUrl && (
+              <IconLink
+                icon={["fab", "hashnode"]}
+                isExternal
+                target="_blank"
+                href={properties.hashnodeUrl}
+                width="16"
+                height="16"
+              >
+                View & share on Hashnode
+              </IconLink>
+            )}
+            {properties.devToUrl && (
+              <IconLink
+                icon={faDev}
+                isExternal
+                target="_blank"
+                href={properties.devToUrl}
+                width="16"
+                height="16"
+              >
+                View & share on dev.to
+              </IconLink>
+            )}
           </Container>
         </PostFooter>
 
@@ -215,6 +242,7 @@ const components = {
   },
   a: (props: { children: ReactNode; href: string }) => (
     <IconLink
+      style={{ fontSize: "inherit" }}
       isExternal={!props.href.startsWith("https://nevulo.xyz")}
       {...props}
       href={props.href}
@@ -224,12 +252,28 @@ const components = {
   ),
   h1: (props: never) => <Title {...props} />,
   h2: (props: never) => <Subtitle {...props} />,
+  h3: (props: never) => <Heading3 {...props} />,
+  h4: (props: never) => <Heading4 {...props} />,
   p: (props: never) => <Text {...props} />,
-  ol: (props: never) => <List {...props} />,
+  ol: (props: never) => <DotpointList {...props} />,
+  ul: (props: never) => <NumberedList {...props} />,
 };
 
-const List = styled.ol`
-  color: rgb(225 225 225);
+const NumberedList = styled.ul`
+  color: ${(props) => props.theme.textColor};
+  line-height: 1.55;
+  font-size: 1.1em;
+
+  code {
+    background: rgba(150, 150, 150, 0.3);
+    padding: 0.1em 0.35em;
+    border-radius: 3px;
+    font-weight: 600;
+  }
+`;
+
+const DotpointList = styled.ol`
+  color: ${(props) => props.theme.textColor};
   line-height: 1.55;
   font-size: 1.1em;
 
@@ -242,9 +286,12 @@ const List = styled.ol`
 `;
 
 const Text = styled.p`
-  color: rgb(225 225 225);
+  color: ${(props) => props.theme.textColor};
   line-height: 1.55;
   font-size: 1.1em;
+  font-weight: 400;
+  letter-spacing: 0.3px;
+  font-family: -apple-system, BlinkMacSystemFont, "Inter", "Roboto", sans-serif;
 
   code {
     background: rgba(150, 150, 150, 0.3);
@@ -254,22 +301,67 @@ const Text = styled.p`
   }
 `;
 
-const Title = styled.h3`
-  margin-top: 38px;
-  letter-spacing: -1.5px;
+const Title = styled.h1`
+  margin-top: 0.75em;
+  letter-spacing: -1.25px;
   margin-bottom: 0px;
   font-size: 32px;
 `;
 
 const Subtitle = styled.h2`
-  margin-top: 32px;
+  margin-top: 1.35em;
+  margin-bottom: 0px;
+  font-family: "Fira Code", sans-serif;
+  letter-spacing: -1.55px;
+  font-size: 28px;
+  font-weight: 600;
+
+  + p {
+    margin-top: 0.35em;
+  }
+
+  code {
+    background: rgba(150, 150, 150, 0.3);
+    padding: 0.1em 0.35em;
+    border-radius: 3px;
+    font-weight: 600;
+  }
+`;
+
+const Heading3 = styled.h3`
+  margin-top: 1.2em;
   margin-bottom: 0px;
   font-family: "Fira Code", sans-serif;
   letter-spacing: -1.5px;
+  font-weight: 500;
   font-size: 24px;
 
   + p {
-    margin-top: 0.5em;
+    margin-top: 0.25em;
+  }
+
+  code {
+    background: rgba(150, 150, 150, 0.3);
+    padding: 0.1em 0.35em;
+    border-radius: 3px;
+    font-weight: 600;
+  }
+`;
+
+const Heading4 = styled.h4`
+  margin-top: 2em;
+  margin-bottom: 0px;
+  font-family: "Fira Code", sans-serif;
+  letter-spacing: -0.45px;
+  font-weight: 500;
+  font-size: 18px;
+
+  * {
+    padding-left: 1em;
+  }
+
+  + p {
+    margin-top: 0.25em;
   }
 
   code {
@@ -301,10 +393,16 @@ export async function getStaticProps({ params }: GetStaticPropsContext) {
   if (!posts) return { notFound: true };
   const post = await getFile(`posts/${params.id}.mdx`, "text");
   if (!post) return { notFound: true };
-  const parsed = matter(post, {
+  const contents = post.replace(/^#(.+)/g, "");
+  const parsed = matter(contents, {
     section_delimiter: `<!--[PROPERTIES]`,
   });
   const properties = posts.find((post) => post.slug === params.id);
   const { content } = parsed;
-  return { props: { content: await serialize(content), properties } };
+  return {
+    props: {
+      content: await serialize(content),
+      properties,
+    },
+  };
 }

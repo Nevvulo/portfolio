@@ -14,6 +14,7 @@ import { SimpleNavbar } from "../../components/navbar/simple";
 import { useNewsletterSubscribe } from "../../hooks/useNewsletterSubscribe";
 import getFile from "../../modules/getFile";
 import { Blogmap } from "../../types/blog";
+import generateRssFeed from "../../utils/rss";
 
 type BlogProps = { posts: Blogmap };
 function BlogContent({ posts }: BlogProps) {
@@ -25,7 +26,7 @@ function BlogContent({ posts }: BlogProps) {
     <BlogView>
       <Background />
       <GitHubAuthSection session={session} />
-      <SimpleNavbar emoji="📖" title="Blog" />
+      <SimpleNavbar id="blog" emoji="📖" title="Blog" />
 
       <Container padding="0em 1.5em">
         <NewsletterSubscription
@@ -71,6 +72,7 @@ export default function Blog(props: BlogProps & { session: Session }) {
 const Background = styled.div`
   width: 100%;
   background: url("/images/alt-background.png");
+  filter: ${(props) => (props.theme.contrast === "#000" ? "invert(1)" : "")};
   height: 100%;
   opacity: 0.5;
   z-index: -1;
@@ -91,5 +93,6 @@ const PostContainer = styled(Container)`
 
 export async function getStaticProps() {
   const posts = await getFile("blogmap.json");
+  if (posts) generateRssFeed(posts);
   return { props: { posts } };
 }

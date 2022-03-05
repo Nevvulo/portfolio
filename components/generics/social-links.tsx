@@ -22,7 +22,10 @@ const IconContainer = styled(m.a).attrs((props) => ({
   align-items: center;
 `;
 
-const Icon = styled(FontAwesomeIcon).attrs({ size: "2x", color: "white" })`
+const Icon = styled(FontAwesomeIcon).attrs((props) => ({
+  size: "2x",
+  color: props.color || props.theme.contrast,
+}))`
   margin: 0.45em;
   width: 5vw !important;
   height: 5vh !important;
@@ -42,24 +45,24 @@ interface ExtraSocialLinks {
 }
 
 export const SocialLinks: React.FC<
-  ContainerProps & { include?: ExtraSocialLinks }
-> = ({ direction = "column", include = {} }) => (
+  ContainerProps & { include?: ExtraSocialLinks } & { color?: string }
+> = ({ direction = "column", include = {}, color }) => (
   <SocialLinksContainer direction={direction}>
     <IconContainer aria-label="GitHub" target="_blank" href={Socials.GitHub}>
-      <Icon icon={faGithub} />
+      <Icon color={color} icon={faGithub} />
     </IconContainer>
     <IconContainer aria-label="Twitter" target="_blank" href={Socials.Twitter}>
-      <Icon icon={faTwitter} />
+      <Icon color={color} icon={faTwitter} />
     </IconContainer>
     <IconContainer aria-label="Discord" target="_blank" href={Socials.Discord}>
-      <Icon icon={faDiscord} size="2x" />
+      <Icon color={color} icon={faDiscord} size="2x" />
     </IconContainer>
     <IconContainer aria-label="E-mail" href={`mailto:${Socials.Email}`}>
-      <Icon icon={faEnvelope} />
+      <Icon color={color} icon={faEnvelope} />
     </IconContainer>
     {include.linkedIn && (
       <IconContainer aria-label="LinkedIn" href={Socials.LinkedIn}>
-        <Icon icon={faLinkedin} />
+        <Icon color={color} icon={faLinkedin} />
       </IconContainer>
     )}
   </SocialLinksContainer>

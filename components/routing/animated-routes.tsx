@@ -13,7 +13,7 @@ export function AnimatedRoutes({
   currentRoute,
 }: PropsWithChildren<AnimatedRoutesProps>) {
   return (
-    <AnimatePresence exitBeforeEnter={exitBeforeEnter}>
+    <AnimatePresence key="routes" exitBeforeEnter={exitBeforeEnter}>
       <m.div
         key={currentRoute.concat("animate")}
         style={{ height: "100%" }}
@@ -24,11 +24,15 @@ export function AnimatedRoutes({
         animate={{
           transformOrigin: "center",
           opacity: 1,
-          transition: { duration: 0.1 },
+          filter: "blur(0px)",
+          y: 0,
+          transition: { duration: 0.05 },
         }}
         exit={{
           transformOrigin: "center",
           opacity: 0,
+          y: 0,
+          filter: "blur(1px)",
           transition: { duration: 0.2 },
         }}
       >

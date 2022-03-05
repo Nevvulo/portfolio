@@ -5,7 +5,7 @@ import { AnimatedContainer, Container } from "../container";
 import { Link } from "../generics";
 
 export const ProjectContainer = styled.div`
-  padding: 2em 0.5em;
+  padding: 0 1em;
   max-width: 650px;
   display: flex;
   align-items: flex-start;
@@ -50,6 +50,12 @@ export const ProjectContent = styled(m.div)`
 export const ProjectTitleContainer = styled(AnimatedContainer)`
   align-items: center;
   padding: 0.25em 0;
+  margin-top: 2em;
+`;
+
+export const ProjectSubtitleContainer = styled(AnimatedContainer)`
+  align-items: center;
+  padding: 0.25em 0;
 `;
 
 export const ProjectTitle = styled(m.h1)`
@@ -74,7 +80,7 @@ export const ProjectTitle = styled(m.h1)`
 export const ProjectSubtitle = styled(m.h2)`
   font-family: "RobotoCondensed", sans-serif;
   font-weight: 400;
-  color: ${(props) => props.color || "#c2c2c2"};
+  color: ${(props) => props.color || props.theme.textColor || "#c2c2c2"};
   font-size: 18px;
   margin: 0;
 `;

@@ -5,8 +5,15 @@ export const DarkTheme = {
   pure: "#fff",
   textColor: "#bdbdbd",
   postBackground: "rgba(50, 50, 50, 0.5)",
+  postImageLoadingBackground: "#212121",
+  postDescriptionText: "rgb(174 174 174)",
   linkColor: "#9074f2",
   postImageBoxShadow: "rgba(0, 0, 0, 0.5)",
+  subscriptionBackground: "rgba(247, 190, 92, 0.2)",
+  subscriptionText: "#f7be5c",
+  difficultyBeginnerBackground: "rgb(0 132 72)",
+  difficultyIntermediateBackground: "rgb(0 108 150)",
+  difficultyAdvancedBackground: "rgb(168 87 76 / 96%)",
 };
 
 export const LightTheme = {
@@ -16,6 +23,13 @@ export const LightTheme = {
   pure: "#fff",
   textColor: "#212121",
   linkColor: "#9074f2",
-  postBackground: "rgba(225, 225, 225, 0.5)",
+  postBackground: "rgb(218 211 245 / 17%)",
+  postImageLoadingBackground: "#e2e1e8",
+  postDescriptionText: "rgb(76 76 76)",
   postImageBoxShadow: "rgba(210, 210, 210, 0.5)",
+  subscriptionBackground: "rgba(247, 190, 92, 0.4)",
+  subscriptionText: "#916a0f",
+  difficultyBeginnerBackground: "rgb(0 128 11 / 68%)",
+  difficultyIntermediateBackground: "rgb(0 29 178 / 52%)",
+  difficultyAdvancedBackground: "rgb(204 52 34 / 71%)",
 };

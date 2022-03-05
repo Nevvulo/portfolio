@@ -3,6 +3,7 @@ import styled from "styled-components";
 export const Labels = styled.div`
   border-radius: 8px;
   padding: 0.2em 0;
+  padding-left: 0;
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
@@ -20,4 +21,8 @@ export const Label = styled.div`
   border-radius: 4px;
   margin: 0.25em;
   color: white;
+
+  :first-child {
+    margin-left: 0;
+  }
 `;

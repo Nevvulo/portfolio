@@ -1,10 +1,10 @@
 import styled from "styled-components";
-import { MinimalView } from "./minimal";
+import { AnimatedMinimalView } from "./minimal";
 
-export const HomeView = styled(MinimalView)`
+export const HomeView = styled(AnimatedMinimalView)`
   overflow: hidden;
   display: flex;
   justify-items: center;
   width: 100%;
-  height: 100%;
+  height: 100vh;
 `;

@@ -1,5 +1,11 @@
 import { AppPropsType, AppType } from "next/dist/shared/lib/utils";
-import Document, { DocumentContext } from "next/document";
+import Document, {
+  DocumentContext,
+  Head,
+  Html,
+  Main,
+  NextScript,
+} from "next/document";
 import { ServerStyleSheet } from "styled-components";
 
 export default class MyDocument extends Document {
@@ -27,5 +33,33 @@ export default class MyDocument extends Document {
     } finally {
       sheet.seal();
     }
+  }
+
+  render() {
+    return (
+      <Html>
+        <Head>
+          <link rel="preconnect" href="https://fonts.googleapis.com" />
+          <link
+            rel="preconnect"
+            href="https://fonts.gstatic.com"
+            crossOrigin="anonymous"
+          />
+          <link
+            href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500;600;700;800&family=Roboto+Condensed:wght@700&family=Work+Sans:wght@800"
+            rel="stylesheet"
+          />
+          <link rel="icon" href="./images/nevulo.jpg" />
+          <meta httpEquiv="Content-Type" content="text/html; charset=utf-8" />
+          <meta charSet="utf-8" />
+
+          <meta name="theme-color" content="#9074f2" />
+        </Head>
+        <body>
+          <Main />
+          <NextScript />
+        </body>
+      </Html>
+    );
   }
 }

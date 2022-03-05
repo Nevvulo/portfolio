@@ -1,28 +1,22 @@
+import { AnimatePresence } from "framer-motion";
+import Head from "next/head";
 import React from "react";
 import styled from "styled-components";
 import { Container } from "../components/container";
-import { Announcement, Avatar, CustomLink, Link } from "../components/generics";
+import { Avatar, CustomLink } from "../components/generics";
 import { SocialLinks } from "../components/generics/social-links";
 import { FadeUp } from "../components/home/animation";
-import { Button, ButtonContainer } from "../components/home/button";
+import { ButtonLink, ButtonContainer } from "../components/home/button";
 import { Subtitle, Title } from "../components/home/typography";
 import { HomeView } from "../components/layout/home";
-import COLORS from "../constants/colors";
 import { ROUTES } from "../constants/routes";
-import Head from "next/head";
+import Background from "../assets/img/background.png";
+import Image from "next/image";
 
 export default function Home() {
   return (
     <HomeView>
-      <Background />
-
-      <Announcement>
-        Check out the new{" "}
-        <Link color={COLORS.TAB_SELECTED} href="/blog">
-          Nevulo blog
-        </Link>
-        !
-      </Announcement>
+      <BackgroundImg />
 
       <HomeContainer direction="row">
         <Container flex="1" direction="column">
@@ -53,16 +47,24 @@ export default function Home() {
           <FadeUp delay={400}>
             <ButtonContainer direction="column">
               <CustomLink href={ROUTES.BLOG.ROOT}>
-                <Button>📖 Blog</Button>
+                <ButtonLink key="blog-btn" layoutId="blog-title">
+                  📖 Blog
+                </ButtonLink>
               </CustomLink>
               <CustomLink href={ROUTES.PROJECTS.ROOT}>
-                <Button>🛠 Projects</Button>
+                <ButtonLink key="projects-btn" layoutId="projects-title">
+                  🛠 Projects
+                </ButtonLink>
               </CustomLink>
               <CustomLink href={ROUTES.ABOUT}>
-                <Button>👋 About Me</Button>
+                <ButtonLink key="about-btn" layoutId="about-title">
+                  👋 About Me
+                </ButtonLink>
               </CustomLink>
               <CustomLink href={ROUTES.CONTACT}>
-                <Button>📧 Contact</Button>
+                <ButtonLink key="contact-btn" layoutId="contact-title">
+                  📧 Contact
+                </ButtonLink>
               </CustomLink>
             </ButtonContainer>
           </FadeUp>
@@ -88,14 +90,15 @@ export default function Home() {
   );
 }
 
-const Background = styled.div`
-  width: 100%;
-  background: url("/images/background.png");
-  height: 100%;
-  opacity: 0.35;
+const BackgroundImg = styled(Image).attrs({
+  layout: "fill",
+  objectFit: "cover",
+  priority: true,
+  src: Background,
+})`
+  filter: ${(props) => (props.theme.contrast === "#000" ? "invert(1)" : "")};
+  opacity: 0.1;
   z-index: -1;
-  position: fixed;
-  top: 0;
 `;
 
 const Border = styled.div`

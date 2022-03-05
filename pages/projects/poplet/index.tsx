@@ -1,10 +1,12 @@
 import Image from "next/image";
 import React from "react";
-import PopletLogo from "../../../assets/svg/poplet.svg";
+import styled from "styled-components";
+import PopletLogo from "../../../assets/svg/projects/logo/poplet.svg";
 import {
   AnimatedContainer,
   FadeAnimatedContainer,
 } from "../../../components/container";
+import { DetailedNavbar } from "../../../components/navbar/detailed";
 import {
   ProjectBadges,
   ProjectContainer,
@@ -13,12 +15,11 @@ import {
   ProjectContentText,
   ProjectSubtitle,
   ProjectTitle,
+  ProjectTitleContainer,
 } from "../../../components/project";
+import Colors from "../../../constants/colors";
 import { Roles } from "../../../constants/roles";
 import { Technologies } from "../../../constants/technologies";
-import styled from "styled-components";
-import { ROUTES } from "../../../constants/routes";
-import { Navbar } from "../../../components/navbar";
 import { useTheme } from "../../../hooks/useTheme";
 
 const id = "poplet";
@@ -50,12 +51,12 @@ const Logo = styled(Image).attrs({
 
 export const PopletPreview: React.FC = () => (
   <>
-    <AnimatedContainer layoutId={`logo-${id}`}>
+    <AnimatedContainer>
       <Logo />
       <ProjectTitle>{title}</ProjectTitle>
     </AnimatedContainer>
-    <AnimatedContainer layoutId={`description-${id}`}>
-      <ProjectSubtitle>{shortDescription}</ProjectSubtitle>
+    <AnimatedContainer>
+      <ProjectSubtitle color={Colors.WHITE}>{shortDescription}</ProjectSubtitle>
     </AnimatedContainer>
   </>
 );
@@ -64,15 +65,14 @@ export default function Poplet() {
   const [theme] = useTheme();
   return (
     <ProjectContainer>
-      <Navbar title={title} route={ROUTES.PROJECTS.ROOT} />
-      <AnimatedContainer layoutId={`logo-${id}`}>
+      <DetailedNavbar />
+
+      <ProjectTitleContainer>
         {theme === "light" ? <LogoInverted /> : <Logo />}
         <ProjectTitle>{title}</ProjectTitle>
-      </AnimatedContainer>
-      <AnimatedContainer layoutId={`description-${id}`}>
-        <ProjectSubtitle>{shortDescription}</ProjectSubtitle>
-      </AnimatedContainer>
-      <FadeAnimatedContainer direction="column" layoutId={`badges-${id}`}>
+      </ProjectTitleContainer>
+      <ProjectSubtitle>{shortDescription}</ProjectSubtitle>
+      <FadeAnimatedContainer direction="column">
         <ProjectBadges
           technologies={[
             Technologies.REACT,

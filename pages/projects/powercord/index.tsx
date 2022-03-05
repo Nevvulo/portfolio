@@ -1,11 +1,11 @@
 import Image from "next/image";
 import React from "react";
-import PowercordLogo from "../../../assets/svg/powercord.svg";
+import PowercordLogo from "../../../assets/svg/projects/logo/powercord.svg";
 import {
   AnimatedContainer,
   FadeAnimatedContainer,
 } from "../../../components/container";
-import { Navbar } from "../../../components/navbar";
+import { DetailedNavbar } from "../../../components/navbar/detailed";
 import {
   ProjectBadges,
   ProjectContainer,
@@ -13,9 +13,10 @@ import {
   ProjectContentText,
   ProjectSubtitle,
   ProjectTitle,
+  ProjectTitleContainer,
 } from "../../../components/project";
+import Colors from "../../../constants/colors";
 import { Roles } from "../../../constants/roles";
-import { ROUTES } from "../../../constants/routes";
 import { Technologies } from "../../../constants/technologies";
 
 const id = "powercord";
@@ -24,12 +25,12 @@ const shortDescription = "Client modification for the Discord desktop client";
 
 export const PowercordPreview: React.FC = () => (
   <>
-    <AnimatedContainer layoutId={`logo-${id}`}>
+    <AnimatedContainer>
       <Image quality={25} src={PowercordLogo} height="46" width="46" />
       <ProjectTitle>{title}</ProjectTitle>
     </AnimatedContainer>
-    <AnimatedContainer layoutId={`description-${id}`}>
-      <ProjectSubtitle>{shortDescription}</ProjectSubtitle>
+    <AnimatedContainer>
+      <ProjectSubtitle color={Colors.WHITE}>{shortDescription}</ProjectSubtitle>
     </AnimatedContainer>
   </>
 );
@@ -37,15 +38,14 @@ export const PowercordPreview: React.FC = () => (
 export default function Powercord() {
   return (
     <ProjectContainer>
-      <Navbar title={title} route={ROUTES.PROJECTS.ROOT} />
-      <AnimatedContainer layoutId={`logo-${id}`}>
+      <DetailedNavbar />
+
+      <ProjectTitleContainer>
         <Image quality={25} src={PowercordLogo} height="46" width="46" />
         <ProjectTitle>{title}</ProjectTitle>
-      </AnimatedContainer>
-      <AnimatedContainer layoutId={`description-${id}`}>
-        <ProjectSubtitle>{shortDescription}</ProjectSubtitle>
-      </AnimatedContainer>
-      <FadeAnimatedContainer direction="column" layoutId={`badges-${id}`}>
+      </ProjectTitleContainer>
+      <ProjectSubtitle>{shortDescription}</ProjectSubtitle>
+      <FadeAnimatedContainer direction="column">
         <ProjectBadges
           technologies={[
             Technologies.NODEJS,
@@ -58,7 +58,7 @@ export default function Powercord() {
       </FadeAnimatedContainer>
 
       <ProjectContentContainer direction="column">
-        <FadeAnimatedContainer direction="column" layoutId={`header-${id}-1`}>
+        <FadeAnimatedContainer direction="column">
           <ProjectContentText>
             A client modification made for Discord. I have helped write code for
             the client injector, as well as multiple plugins that range

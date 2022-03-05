@@ -4,17 +4,22 @@ import styled from "styled-components";
 import { ProjectView } from "../../components/layout/project";
 import { SimpleNavbar } from "../../components/navbar/simple";
 import { ProjectPreview } from "../../components/project";
+import { FeaturedProjectPreview } from "../../components/project/featured-project";
 import { ProjectFilter } from "../../components/project/filter";
 import { Project, Projects } from "../../constants/projects";
 
 export default function ProjectsPage() {
   const [selectedTab, setSelectedTab] = useState("all");
+  const featuredProject = Projects.find((m) => m.projectId === "flux");
+  const projects = Projects.filter((m) => filter(m, selectedTab)).filter(
+    (m) => m.projectId !== featuredProject?.projectId
+  );
 
   return (
     <ProjectView>
       <Background />
 
-      <SimpleNavbar emoji="🛠" title="Projects">
+      <SimpleNavbar id="projects" emoji="🛠" title="Projects">
         <ProjectFilter
           selected={selectedTab}
           onTabClick={(tab) => setSelectedTab(tab)}
@@ -22,7 +27,15 @@ export default function ProjectsPage() {
       </SimpleNavbar>
 
       <ProjectContainer>
-        {Projects.filter((m) => filter(m, selectedTab)).map((item) => (
+        {featuredProject && (
+          <FeaturedProjectPreview
+            key={featuredProject.projectId}
+            href={`/projects/${featuredProject.projectId}`}
+            {...featuredProject}
+          />
+        )}
+
+        {projects.map((item) => (
           <ProjectPreview
             key={item.projectId}
             href={`/projects/${item.projectId}`}
@@ -45,6 +58,7 @@ export default function ProjectsPage() {
 
 const Background = styled.div`
   width: 100%;
+  filter: ${(props) => (props.theme.contrast === "#000" ? "invert(1)" : "")}
   background: url("/images/alt-background.png");
   height: 100%;
   opacity: 0.5;

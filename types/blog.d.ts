@@ -20,6 +20,10 @@ export type Blogmap = (BlogPost & {
   discussionNo: number;
   mediumId: string;
   mediumUrl: string;
+  hashnodeId: string;
+  hashnodeUrl: string;
+  devToUrl: string;
+  devToUrl: string;
 })[];
 
 export type BlogPostContent = string;

@@ -6,7 +6,7 @@ export const Subtitle = styled.h2`
   align-items: center;
   font-family: "Inter", sans-serif;
   font-weight: 600;
-  color: white;
+  color: ${(props) => props.theme.contrast};
   font-size: 22px;
   padding: 0px;
   letter-spacing: -1.25px;
