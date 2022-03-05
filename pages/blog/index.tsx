@@ -15,6 +15,8 @@ import { useNewsletterSubscribe } from "../../hooks/useNewsletterSubscribe";
 import getFile from "../../modules/getFile";
 import { Blogmap } from "../../types/blog";
 import generateRssFeed from "../../utils/rss";
+// import Background from "../../assets/img/alt-background.jpg";
+// import Image from "next/image";
 
 type BlogProps = { posts: Blogmap };
 function BlogContent({ posts }: BlogProps) {
@@ -24,7 +26,7 @@ function BlogContent({ posts }: BlogProps) {
 
   return (
     <BlogView>
-      <Background />
+      {/* <BackgroundImg /> */}
       <GitHubAuthSection session={session} />
       <SimpleNavbar id="blog" emoji="📖" title="Blog" />
 
@@ -69,16 +71,16 @@ export default function Blog(props: BlogProps & { session: Session }) {
   );
 }
 
-const Background = styled.div`
-  width: 100%;
-  background: url("/images/alt-background.png");
-  filter: ${(props) => (props.theme.contrast === "#000" ? "invert(1)" : "")};
-  height: 100%;
-  opacity: 0.5;
-  z-index: -1;
-  position: fixed;
-  top: 0;
-`;
+// const BackgroundImg = styled(Image).attrs({
+//   priority: true,
+//   layout: "fill",
+//   objectFit: "cover",
+//   src: Background,
+// })`
+//   filter: ${(props) => (props.theme.contrast === "#000" ? "invert(1)" : "")};
+//   opacity: 0.1;
+//   z-index: -99 !important;
+// `;
 
 const PostContainer = styled(Container)`
   display: flex;

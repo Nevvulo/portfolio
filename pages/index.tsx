@@ -10,7 +10,7 @@ import { ButtonLink, ButtonContainer } from "../components/home/button";
 import { Subtitle, Title } from "../components/home/typography";
 import { HomeView } from "../components/layout/home";
 import { ROUTES } from "../constants/routes";
-import Background from "../assets/img/background.png";
+import Background from "../assets/img/background.jpg";
 import Image from "next/image";
 
 export default function Home() {
