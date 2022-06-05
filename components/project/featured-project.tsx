@@ -22,11 +22,21 @@ export function FeaturedProjectPreview({
           src={FluxBanner}
         ></ProjectPreviewImage>
 
-        <ProjectPreviewContainer background={background}>
+        <div
+          style={{
+            position: "absolute",
+            bottom: 0,
+            width: "100%",
+            paddingTop: "2em",
+          }}
+        >
+          <ProjectPreviewContainer
+            background={background}
+          ></ProjectPreviewContainer>
           <ProjectContent>
             <Component />
           </ProjectContent>
-        </ProjectPreviewContainer>
+        </div>
       </Container>
     </StrippedLink>
   );
@@ -41,7 +51,7 @@ const Container = styled.div`
   width: 100%;
   min-width: 450px;
   margin: 1em;
-  box-shadow: 1px 2px 3px rgba(0, 0, 0, 0.5);
+  box-shadow: 1px 2px 3px rgba(0, 0, 0, 0.3);
 
   @media (max-width: 512px) {
     min-width: 200px;
@@ -54,9 +64,19 @@ const Container = styled.div`
 `;
 
 const ProjectPreviewContainer = styled.div<ProjectStyleProps>`
-  background: ${(props) => props.background};
   position: absolute;
   bottom: 0;
   padding-top: 2em;
   width: 100%;
+  height: 135%;
+  border-end-end-radius: 6px;
+  border-end-start-radius: 6px;
+
+  background: rgba(0, 0, 0, 0.3);
+  background-image: ${(props) => props.background};
+  -webkit-mask-image: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgb(0, 0, 0) 100%
+  );
 `;

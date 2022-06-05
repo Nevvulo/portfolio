@@ -25,15 +25,13 @@ export function AnimatedRoutes({
           transformOrigin: "center",
           opacity: 1,
           filter: "blur(0px)",
-          y: 0,
-          transition: { duration: 0.05 },
+          transition: { duration: 0.2 },
         }}
         exit={{
           transformOrigin: "center",
           opacity: 0,
-          y: 0,
-          filter: "blur(1px)",
-          transition: { duration: 0.2 },
+          filter: "blur(2px)",
+          transition: { duration: 0.25 },
         }}
       >
         {children}

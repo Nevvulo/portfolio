@@ -38,7 +38,7 @@ const Logo = styled(Image).attrs({
 
 const LogoWhite = styled(Image).attrs({
   src: FluxWhiteLogo,
-  height: "42",
+  height: "52",
   quality: 25,
 })`
   object-position: left;
@@ -64,7 +64,7 @@ export const FluxPreview: React.FC = () => {
         <LogoWhite />
       </AnimatedContainer>
       <AnimatedContainer>
-        <ProjectSubtitle color={Colors.WHITE}>
+        <ProjectSubtitle style={{ zIndex: 2 }} color={Colors.WHITE}>
           {shortDescription}
         </ProjectSubtitle>
       </AnimatedContainer>

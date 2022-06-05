@@ -41,7 +41,7 @@ async function generateRssFeed(posts: Blogmap) {
   });
 
   posts.forEach(async (post) => {
-    const content = await getFile(`posts/${post.slug}`);
+    const content = await getFile(`posts/${post.slug}.mdx`);
     if (!content) return;
     const parsed = matter(content, {
       section_delimiter: `<!--[PROPERTIES]`,

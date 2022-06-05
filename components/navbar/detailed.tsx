@@ -72,8 +72,9 @@ const ContextMenu = styled(Container).attrs({ direction: "column" })`
   background: rgba(0, 0, 0, 0.8);
   animation: ${riseUpSmall} 0.3s ease-in-out;
   padding: 0.4em;
-  right: 10%;
-  top: 64px;
+  right: 2.5%;
+  z-index: 99;
+  top: 82px;
   position: fixed;
   margin-left: auto;
   border-radius: 6px;

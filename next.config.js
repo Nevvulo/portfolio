@@ -20,7 +20,7 @@ module.exports = {
     return config;
   },
   images: {
-    domains: ["nevulo.xyz", "raw.githubusercontent.com"],
+    domains: ["nevulo.xyz", "raw.githubusercontent.com", "images.unsplash.com"],
   },
   async redirects() {
     return [

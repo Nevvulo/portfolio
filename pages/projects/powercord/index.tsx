@@ -26,7 +26,10 @@ const shortDescription = "Client modification for the Discord desktop client";
 export const PowercordPreview: React.FC = () => (
   <>
     <AnimatedContainer>
-      <Image quality={25} src={PowercordLogo} height="46" width="46" />
+      <div style={{ paddingRight: "0.5em" }}>
+        <Image quality={25} src={PowercordLogo} height="38" width="38" />
+      </div>
+
       <ProjectTitle>{title}</ProjectTitle>
     </AnimatedContainer>
     <AnimatedContainer>

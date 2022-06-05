@@ -10,6 +10,7 @@ interface GenericTheme {
   linkColor: string;
   postBackground: string;
   postImageLoadingBackground: string;
+  postImageLoadingBackgroundShimmerRgb: string;
   postDescriptionText: string;
   postImageBoxShadow: string;
   subscriptionBackground: string;

@@ -13,7 +13,6 @@ const PostHeroImgContainer = styled.div<{ img?: string }>`
   transition: border 0.3s;
   align-items: center;
   border: 2.5px solid #212121;
-  max-height: 300px;
   background: #131313;
 
   object-fit: contain;
@@ -21,7 +20,7 @@ const PostHeroImgContainer = styled.div<{ img?: string }>`
       249deg,
       rgba(144, 116, 242, 1) 0%,
       rgb(38 23 90 / 88%) 50%,
-      rgba(24, 24, 24, 0.9626225490196079) 98%
+      rgb(61 38 38 / 96%) 98%
     ),
     url("${(props) => props.img}");
   background-size: cover;

@@ -23,9 +23,11 @@ export const useTheme = () => {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const localTheme = window.localStorage.getItem("theme");
-    if (systemDarkMode) return setMode("dark");
-    if (localTheme) return setTheme(localTheme);
+    if (systemDarkMode) {
+      setComponentMounted(true);
+      setMode("dark");
+      return;
+    }
     setMode("light");
     setComponentMounted(true);
   }, []);

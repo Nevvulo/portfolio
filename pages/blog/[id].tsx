@@ -1,10 +1,13 @@
+import Playground from "@agney/playground";
 import {
   faDev,
   faFacebook,
   faGithub,
   faMedium,
   faTwitter,
+  faHashnode,
 } from "@fortawesome/free-brands-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import * as Fathom from "fathom-client";
 import { useViewportScroll } from "framer-motion";
 import { GetStaticPropsContext } from "next";
@@ -17,10 +20,11 @@ import Head from "next/head";
 import React, { ReactNode, useEffect, useState } from "react";
 // @ts-expect-error
 import matter from "section-matter";
-import styled from "styled-components";
+import styled, { createGlobalStyle } from "styled-components";
 import { CircleIndicator } from "../../components/blog/circle-indicator";
 import CodeBlock from "../../components/blog/codeblock";
 import Comments from "../../components/blog/comments";
+import { Label, Labels } from "../../components/blog/labels";
 import { PostFooter } from "../../components/blog/post-footer";
 import { PostHeader } from "../../components/blog/post-header";
 import { PostHeroImg } from "../../components/blog/post-hero-img";
@@ -77,6 +81,7 @@ function PostBody({ content, properties }: PostProps) {
 
   return (
     <BlogView>
+      <BlogStyle />
       <DetailedNavbar />
 
       <PostHeroImg
@@ -94,6 +99,68 @@ function PostBody({ content, properties }: PostProps) {
 
           <h1>{properties.title}</h1>
           <h3>{properties.description}</h3>
+
+          {properties.labels?.length ? (
+            <Labels>
+              {properties.labels
+                .map((m) => m.replace(/-/g, " "))
+                .slice(0, 3)
+                .map((label, i) => (
+                  <Label key={i}>{label}</Label>
+                ))}
+            </Labels>
+          ) : null}
+
+          <IconContainer direction="row">
+            <IconLink
+              icon={faGithub}
+              target="_blank"
+              href={`https://github.com/Nevvulo/blog/blob/main/${filepath}`}
+              width="24"
+              height="24"
+            ></IconLink>
+            <IconLink
+              icon={faTwitter}
+              target="_blank"
+              href={generateSharableTwitterLink(properties.title, location)}
+              width="24"
+              height="24"
+            ></IconLink>
+            <IconLink
+              icon={faFacebook}
+              target="_blank"
+              href={generateSharableFacebookLink(location)}
+              width="24"
+              height="24"
+            ></IconLink>
+            {properties.mediumUrl && (
+              <IconLink
+                icon={faMedium}
+                target="_blank"
+                href={properties.mediumUrl}
+                width="24"
+                height="24"
+              ></IconLink>
+            )}
+            {properties.hashnodeUrl && (
+              <IconLink
+                icon={faHashnode}
+                target="_blank"
+                href={properties.hashnodeUrl}
+                width="24"
+                height="24"
+              ></IconLink>
+            )}
+            {properties.devToUrl && (
+              <IconLink
+                icon={faDev}
+                target="_blank"
+                href={properties.devToUrl}
+                width="24"
+                height="24"
+              ></IconLink>
+            )}
+          </IconContainer>
         </PostHeader>
       </PostHeroImg>
 
@@ -154,7 +221,7 @@ function PostBody({ content, properties }: PostProps) {
             )}
             {properties.hashnodeUrl && (
               <IconLink
-                icon={["fab", "hashnode"]}
+                icon={faHashnode}
                 isExternal
                 target="_blank"
                 href={properties.hashnodeUrl}
@@ -242,7 +309,7 @@ const components = {
   },
   a: (props: { children: ReactNode; href: string }) => (
     <IconLink
-      style={{ fontSize: "inherit" }}
+      style={{ textDecorationThickness: "0.125em", fontSize: "0.975em" }}
       isExternal={!props.href.startsWith("https://nevulo.xyz")}
       {...props}
       href={props.href}
@@ -250,6 +317,7 @@ const components = {
       {props.children}
     </IconLink>
   ),
+  strong: (props: never) => <BoldText {...props} />,
   h1: (props: never) => <Title {...props} />,
   h2: (props: never) => <Subtitle {...props} />,
   h3: (props: never) => <Heading3 {...props} />,
@@ -257,32 +325,71 @@ const components = {
   p: (props: never) => <Text {...props} />,
   ol: (props: never) => <DotpointList {...props} />,
   ul: (props: never) => <NumberedList {...props} />,
+  li: (props: never) => <ListItem {...props} />,
+  Playground: (props: never) => <Playground mode="dark" {...props} />,
 };
+
+const IconContainer = styled(Container).attrs({ direction: "row" })`
+  margin: 1em 0 0 0;
+
+  * {
+    margin-left: 6px;
+    margin-right: 6px;
+    height: 32px;
+  }
+`;
+
+const BlogStyle = createGlobalStyle`
+  pre {
+    font-size: 1.25em;
+  }
+
+  h1, h2, h3, h4, h5, h6, p, span, li, ul {
+    code {
+      background: rgba(150, 150, 150, 0.3);
+      padding: 0.1em 0.35em;
+      border-radius: 3px;
+      font-weight: 600;
+      color: ${(props) => props.theme.contrast};
+    }
+  }
+
+  p, span, li, ul {
+    code {
+      font-size: 1.2em;
+    }
+  }
+
+  a > code {
+    text-decoration-thickness: 0.1em;
+  }
+`;
+
+const ListItem = styled.li`
+  color: ${(props) => props.theme.textColor};
+  font-size: 1.05em;
+`;
 
 const NumberedList = styled.ul`
   color: ${(props) => props.theme.textColor};
   line-height: 1.55;
-  font-size: 1.1em;
-
-  code {
-    background: rgba(150, 150, 150, 0.3);
-    padding: 0.1em 0.35em;
-    border-radius: 3px;
-    font-weight: 600;
-  }
+  font-size: 1em;
 `;
 
 const DotpointList = styled.ol`
   color: ${(props) => props.theme.textColor};
   line-height: 1.55;
-  font-size: 1.1em;
+  font-size: 1em;
+`;
 
-  code {
-    background: rgba(150, 150, 150, 0.3);
-    padding: 0.1em 0.35em;
-    border-radius: 3px;
-    font-weight: 600;
-  }
+const BoldText = styled.span`
+  color: ${(props) => props.theme.contrast};
+  line-height: 1.55;
+  font-size: 1em;
+  font-weight: 600;
+  margin: initial;
+  letter-spacing: 0.3px;
+  font-family: -apple-system, BlinkMacSystemFont, "Inter", "Roboto", sans-serif;
 `;
 
 const Text = styled.p`
@@ -292,13 +399,6 @@ const Text = styled.p`
   font-weight: 400;
   letter-spacing: 0.3px;
   font-family: -apple-system, BlinkMacSystemFont, "Inter", "Roboto", sans-serif;
-
-  code {
-    background: rgba(150, 150, 150, 0.3);
-    padding: 0.1em 0.35em;
-    border-radius: 3px;
-    font-weight: 600;
-  }
 `;
 
 const Title = styled.h1`
@@ -319,13 +419,6 @@ const Subtitle = styled.h2`
   + p {
     margin-top: 0.35em;
   }
-
-  code {
-    background: rgba(150, 150, 150, 0.3);
-    padding: 0.1em 0.35em;
-    border-radius: 3px;
-    font-weight: 600;
-  }
 `;
 
 const Heading3 = styled.h3`
@@ -339,13 +432,6 @@ const Heading3 = styled.h3`
   + p {
     margin-top: 0.25em;
   }
-
-  code {
-    background: rgba(150, 150, 150, 0.3);
-    padding: 0.1em 0.35em;
-    border-radius: 3px;
-    font-weight: 600;
-  }
 `;
 
 const Heading4 = styled.h4`
@@ -356,19 +442,8 @@ const Heading4 = styled.h4`
   font-weight: 500;
   font-size: 18px;
 
-  * {
-    padding-left: 1em;
-  }
-
   + p {
     margin-top: 0.25em;
-  }
-
-  code {
-    background: rgba(150, 150, 150, 0.3);
-    padding: 0.1em 0.35em;
-    border-radius: 3px;
-    font-weight: 600;
   }
 `;
 

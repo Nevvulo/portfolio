@@ -18,7 +18,7 @@ export const Button = styled(m.button)`
   border-radius: 4px;
 `;
 
-export const ButtonLink = styled(m.a)`
+export const ButtonLink = styled.a`
   text-decoration: none;
   opacity: 0.75;
   cursor: pointer;
@@ -26,12 +26,16 @@ export const ButtonLink = styled(m.a)`
   padding: 0.6em min(2vw, 1.5em);
   font-family: "Inter", sans-serif;
   font-weight: 600;
-  font-size: clamp(2vmin, 1.4rem, 6vmax);
+  font-size: clamp(0.5vw, 1.4rem, 6vmax);
   margin: 0.25em;
   border: 0;
   outline: 0;
   color: white;
   border-radius: 4px;
+
+  @media (max-width: 500px) {
+    font-size: clamp(0.5vw, 1rem, 6vmax);
+  }
 `;
 
 export const ButtonContainer = styled(Container)`

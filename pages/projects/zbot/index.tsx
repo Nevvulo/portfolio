@@ -28,17 +28,21 @@ const shortDescription =
 
 const Logo = styled(Image).attrs({
   src: zBotLogo,
-  height: "42px",
-  width: "42px",
+  height: "38px",
+  width: "38px",
   quality: 25,
+  placeholder: "blur",
 })`
   border-radius: 4px;
+  padding-right: 1em;
 `;
 
 export const zBotPreview: React.FC = () => (
   <>
     <AnimatedContainer style={{ alignItems: "center" }}>
-      <Logo />
+      <div style={{ paddingRight: "0.5em" }}>
+        <Logo />
+      </div>
       <ProjectTitle aria-expanded="false">{title}</ProjectTitle>
     </AnimatedContainer>
     <AnimatedContainer>

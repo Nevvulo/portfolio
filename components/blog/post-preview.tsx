@@ -1,18 +1,21 @@
 import { faClock } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import * as Fathom from "fathom-client";
+import Image from "next/image";
 import React from "react";
 import styled, { DefaultTheme, useTheme } from "styled-components";
-import { DifficultyColors } from "../../constants/colors";
+import useMediaQuery from "../../hooks/useMediaQuery";
 import { Container } from "../container";
 import { StrippedLink } from "../generics/link";
 import { Skeleton } from "../generics/skeleton";
 import { Title } from "../generics/title";
 import { Label, Labels } from "./labels";
-import Image from "next/image";
-import useMediaQuery from "../../hooks/useMediaQuery";
+import { SkeletonImage } from "./skeleton-image";
 
-function getDifficultyBackground(difficulty: Difficulty, theme: DefaultTheme) {
+function getDifficultyBackground(
+  difficulty: Difficulty | undefined,
+  theme: DefaultTheme
+) {
   const {
     difficultyAdvancedBackground,
     difficultyIntermediateBackground,
@@ -37,6 +40,7 @@ type PreviewProps = {
   slug: string;
   labels?: string[];
   image: string;
+  prioritizeImage?: boolean;
   description?: string;
   loading?: boolean;
   readTimeMins?: number;
@@ -48,16 +52,19 @@ export function PostPreview({
   slug,
   labels,
   image,
+  prioritizeImage,
   description,
   loading,
   readTimeMins,
   difficulty,
 }: PreviewProps) {
   const theme = useTheme();
-  const smallDisplay = useMediaQuery("(max-width: 460px)");
-  const difficultyBackground = difficulty
-    ? getDifficultyBackground(difficulty as Difficulty, theme)
-    : undefined;
+  const isSmallDisplay = useMediaQuery("(max-width: 460px)");
+  const difficultyBackground = getDifficultyBackground(
+    difficulty as Difficulty,
+    theme
+  );
+
   // view blog post goal
   function onClick() {
     Fathom.trackGoal("CTGT4BLM", 0);
@@ -102,17 +109,15 @@ export function PostPreview({
               )}
             </Container>
           </PreviewText>
-          <PostImageContainer>
-            <PostImage
-              width={!smallDisplay ? "150px" : "100%"}
-              height={!smallDisplay ? "150px" : "125px"}
-              layout={!smallDisplay ? "fixed" : "intrinsic"}
-              quality={75}
-              priority
-              objectFit="cover"
-              src={`https://raw.githubusercontent.com/Nevvulo/blog/main/posts/assets/${slug}/${image}`}
-            />
-          </PostImageContainer>
+          <SkeletonImage
+            width={!isSmallDisplay ? "150px" : "100%"}
+            height={!isSmallDisplay ? "150px" : "125px"}
+            layout={!isSmallDisplay ? "fixed" : "intrinsic"}
+            quality={75}
+            priority={prioritizeImage}
+            objectFit="cover"
+            src={`https://raw.githubusercontent.com/Nevvulo/blog/main/posts/assets/${slug}/${image}`}
+          />
         </Post>
       </PreviewContainer>
     </StrippedLink>
@@ -139,40 +144,6 @@ const Post = styled.div`
     flex-direction: column-reverse;
     min-width: 200px;
     padding: 0;
-  }
-`;
-
-const PostImageContainer = styled.div`
-  position: relative;
-  max-height: 150px;
-  position: relative;
-  border-radius: 4px;
-  margin: 1em;
-
-  @media (max-width: 460px) {
-    max-width: 100% !important;
-    width: 100% !important;
-    margin: 0;
-    border-radius: 10px;
-    border-end-end-radius: 0px;
-    border-end-start-radius: 0px;
-
-    > div {
-      display: contents !important;
-    }
-  }
-`;
-
-const PostImage = styled(Image).attrs({ key: "image" })`
-  border-radius: 4px;
-  background: ${(props) => props.theme.postImageLoadingBackground};
-  border: 0.1px solid ${(props) => props.theme.postImageBoxShadow};
-  box-shadow: 0px 0px 8px 1px ${(props) => props.theme.postImageBoxShadow};
-
-  @media (max-width: 460px) {
-    border-radius: 10px;
-    border-end-end-radius: 0px;
-    border-end-start-radius: 0px;
   }
 `;
 

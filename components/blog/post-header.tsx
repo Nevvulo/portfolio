@@ -17,10 +17,10 @@ export const PostHeader = styled.div`
 
   h3 {
     font-size: 16px;
-    color: grey;
+    color: #b5b5b5;
     font-family: "Roboto", sans-serif;
     letter-spacing: 0px;
-    font-weight: 500;
+    font-weight: 400;
     margin-top: 0.2em;
   }
 

@@ -1,12 +1,29 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
+const isValidEmail = (email: string) => {
+  return email
+    .toLowerCase()
+    .match(
+      /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+    );
+};
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
   const { email } = req.body as { email: string };
   if (!email) {
-    return res.status(400).json({ error: "Please provide a valid email" });
+    return res.status(400).json({
+      error: "You need to enter an e-mail to subscribe!",
+    });
+  }
+
+  if (!isValidEmail(email)) {
+    return res.status(400).json({
+      error:
+        "Sorry, looks like that's an invalid e-mail. Check your input and try again.",
+    });
   }
 
   try {

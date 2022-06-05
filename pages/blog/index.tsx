@@ -40,8 +40,12 @@ function BlogContent({ posts }: BlogProps) {
       </Container>
 
       <PostContainer>
-        {posts.map((properties) => (
-          <PostPreview key={properties.slug} {...properties} />
+        {posts.map((properties, i) => (
+          <PostPreview
+            key={properties.slug}
+            prioritizeImage={i < 3}
+            {...properties}
+          />
         ))}
         <Footer>
           <Text color="white">📚 More posts coming soon! ⏱</Text>

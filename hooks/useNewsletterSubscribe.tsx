@@ -8,7 +8,7 @@ export function useNewsletterSubscribe() {
 
   async function subscribe(email: string) {
     setLoading(true);
-    Fathom.trackGoal("IWGMSY8R", 0);
+    if (Fathom) Fathom.trackGoal("IWGMSY8R", 0);
     const res = await fetch("/api/subscribe", {
       body: JSON.stringify({ email: email }),
       headers: { "Content-Type": "application/json" },

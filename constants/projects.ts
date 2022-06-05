@@ -9,8 +9,7 @@ export type Project = ProjectProps & ProjectStyleProps;
 export const Projects: Project[] = [
   {
     projectId: "flux",
-    background:
-      "linear-gradient(0deg, rgba(0,0,0,1) 0%, rgba(13,13,13,0.9570421918767507) 41%, rgba(12,12,12,0.9262298669467787) 48%, rgba(13,13,13,0.8954175420168067) 65%, rgba(13,13,13,0.8590029761904762) 69%, rgba(14,14,14,0.8085828081232493) 73%, rgba(58,58,58,0.8618040966386554) 78%, rgba(131,131,131,0.7777704831932774) 89%, rgba(187,187,187,0.35480129551820727) 97%, rgba(254,254,254,0) 100%)",
+    background: `linear-gradient(30deg, #1f005c, #260062, #3d0074, #67008d, #ab00ad, #d10098, #f5006b, #ff1a3c, #ff4e3a, #ff8953, #ffaa65, #ffb56b)`,
     preview: FluxPreview,
     component: Flux,
     maintained: true,

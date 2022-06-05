@@ -31,6 +31,7 @@ const LogoInverted = styled(Image).attrs({
   src: PopletLogo,
   width: "42px",
   height: "42px",
+  placeholder: "blur",
 })`
   filter: invert(1);
   align-self: flex-end;

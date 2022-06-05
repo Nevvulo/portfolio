@@ -28,10 +28,11 @@ const shortDescription =
 
 const Logo = styled(Image).attrs({
   src: DankMemerLogo,
-  width: "52",
+  width: "38",
   objectFit: "scale-down",
-  height: "32",
+  height: "38",
   quality: 25,
+  placeholder: "blur",
 })`
   align-items: center;
 `;
@@ -39,7 +40,9 @@ const Logo = styled(Image).attrs({
 export const DankMemerPreview: React.FC = () => (
   <>
     <AnimatedContainer>
-      <Logo />
+      <div style={{ paddingRight: "0.5em" }}>
+        <Logo />
+      </div>
       <ProjectTitle>{title}</ProjectTitle>
     </AnimatedContainer>
     <AnimatedContainer>

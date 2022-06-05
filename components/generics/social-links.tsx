@@ -27,8 +27,8 @@ const Icon = styled(FontAwesomeIcon).attrs((props) => ({
   color: props.color || props.theme.contrast,
 }))`
   margin: 0.45em;
-  width: 5vw !important;
-  height: 5vh !important;
+  width: min(7.5vw, 38px) !important;
+  height: min(7.5vh, 38px) !important;
 `;
 
 const SocialLinksContainer = styled(AnimatedContainer)`
