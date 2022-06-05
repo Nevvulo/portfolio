@@ -133,6 +133,7 @@ const BackgroundImg = styled(Image).attrs({
   objectFit: "cover",
   priority: true,
   src: Background,
+  placeholder: "blur",
 })`
   filter: ${(props) => (props.theme.contrast === "#000" ? "invert(1)" : "")};
   opacity: 0.1;
