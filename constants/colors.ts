@@ -1,4 +1,4 @@
-// all colors here will be specified in hex
+// colors here will be specified in hex
 enum COLORS {
   LINK = "#9074f2",
   PURPLE = "#9074f2",
