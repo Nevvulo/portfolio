@@ -40,9 +40,9 @@ async function generateRssFeed(posts: Blogmap) {
     author,
   });
 
-  posts.forEach(async (post) => {
+  for (const post of posts) {
     const content = await getFile(`posts/${post.slug}.mdx`);
-    if (!content) return;
+    if (!content) continue;
     const parsed = matter(content, {
       section_delimiter: `<!--[PROPERTIES]`,
     });
@@ -58,7 +58,7 @@ async function generateRssFeed(posts: Blogmap) {
       contributor: [author],
       date: new Date(post.createdAt),
     });
-  });
+  }
 
   fs.mkdirSync("./public/rss", { recursive: true });
   fs.writeFileSync("./public/rss/feed.xml", feed.rss2());
