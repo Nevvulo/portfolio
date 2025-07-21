@@ -71,7 +71,7 @@ export const useComments = (discussionNo: number, discussionId: string) => {
   const { data: session, status } = useSession({ required: false });
 
   const [state, dispatch] = useReducer(reducer, initialState);
-  const token = session?.accessToken as string;
+  const token = (session as any)?.accessToken as string;
 
   async function postComment(content: string) {
     dispatch({ type: "posting" });

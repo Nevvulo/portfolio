@@ -302,7 +302,7 @@ const getPostImage = (src: string) => {
 };
 
 const components = {
-  pre: (props: never) => <CodeBlock {...props} />,
+  pre: (props: Record<string, unknown>) => <CodeBlock {...props} />,
   img: (props: any) => {
     const src = getPostImage(props.src);
     return <PostImg loading="lazy" {...props} src={src} />;
@@ -317,16 +317,16 @@ const components = {
       {props.children}
     </IconLink>
   ),
-  strong: (props: never) => <BoldText {...props} />,
-  h1: (props: never) => <Title {...props} />,
-  h2: (props: never) => <Subtitle {...props} />,
-  h3: (props: never) => <Heading3 {...props} />,
-  h4: (props: never) => <Heading4 {...props} />,
-  p: (props: never) => <Text {...props} />,
-  ol: (props: never) => <DotpointList {...props} />,
-  ul: (props: never) => <NumberedList {...props} />,
-  li: (props: never) => <ListItem {...props} />,
-  Playground: (props: never) => <Playground mode="dark" {...props} />,
+  strong: (props: Record<string, unknown>) => <BoldText {...props} />,
+  h1: (props: Record<string, unknown>) => <Title {...props} />,
+  h2: (props: Record<string, unknown>) => <Subtitle {...props} />,
+  h3: (props: Record<string, unknown>) => <Heading3 {...props} />,
+  h4: (props: Record<string, unknown>) => <Heading4 {...props} />,
+  p: (props: Record<string, unknown>) => <Text {...props} />,
+  ol: (props: Record<string, unknown>) => <DotpointList {...props} />,
+  ul: (props: Record<string, unknown>) => <NumberedList {...props} />,
+  li: (props: Record<string, unknown>) => <ListItem {...props} />,
+  Playground: (props: any) => <Playground mode="dark" {...props} />,
 };
 
 const IconContainer = styled(Container).attrs({ direction: "row" })`
@@ -458,7 +458,9 @@ const PostContainer = styled.div`
 
 export async function getStaticPaths() {
   const posts = await getFile("blogmap.json");
-  if (!posts) return { notFound: true };
+  if (!posts) {
+    return { paths: [], fallback: false };
+  }
   return { paths: posts.map((m) => `/blog/${m.slug}`), fallback: false };
 }
 

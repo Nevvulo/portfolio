@@ -1,5 +1,5 @@
 import { useState } from "react";
-import Fathom from "fathom-client";
+import * as Fathom from "fathom-client";
 
 export function useNewsletterSubscribe() {
   const [error, setError] = useState("");
