@@ -458,7 +458,9 @@ const PostContainer = styled.div`
 
 export async function getStaticPaths() {
   const posts = await getFile("blogmap.json");
-  if (!posts) return { notFound: true };
+  if (!posts) {
+    return { paths: [], fallback: false };
+  }
   return { paths: posts.map((m) => `/blog/${m.slug}`), fallback: false };
 }
 

@@ -22,7 +22,7 @@ type BlogProps = { posts: Blogmap };
 function BlogContent({ posts }: BlogProps) {
   const session = useSession({ required: false });
   const newsletter = useNewsletterSubscribe();
-  const latestPost = posts[0];
+  const latestPost = posts[0] || { title: "" };
 
   return (
     <BlogView>
@@ -99,6 +99,9 @@ const PostContainer = styled(Container)`
 
 export async function getStaticProps() {
   const posts = await getFile("blogmap.json");
-  if (posts) generateRssFeed(posts);
+  if (!posts) {
+    return { props: { posts: [] } };
+  }
+  generateRssFeed(posts);
   return { props: { posts } };
 }
