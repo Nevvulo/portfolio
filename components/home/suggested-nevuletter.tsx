@@ -1,6 +1,6 @@
 import { faExternalLinkAlt } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import Fathom from "fathom-client";
+import * as Fathom from "fathom-client";
 import { m } from "framer-motion";
 import Image from "next/image";
 import styled from "styled-components";
