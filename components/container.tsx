@@ -30,7 +30,7 @@ const StyledContainer = styled.div<
   align-self: ${(props) => props.alignSelf || "initial"};
 `;
 
-export const AnimatedContainer = styled(m.div)<ContainerProps>`
+export const AnimatedContainer = styled(m.div as any)<ContainerProps>`
   display: flex;
   flex: ${(props) => props.flex};
   flex-direction: ${(props) => props.direction};

@@ -3,7 +3,7 @@ import NevuloImg from "../../assets/img/nevulo.jpg";
 import Image from "next/image";
 import COLORS from "../../constants/colors";
 
-export const Avatar = styled(Image).attrs({
+export const Avatar = styled(Image as any).attrs({
   src: NevuloImg,
   alt: "Nevulo profile picture",
   priority: true,

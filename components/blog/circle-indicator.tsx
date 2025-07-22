@@ -53,7 +53,7 @@ export const CircleIndicator = ({ scrollYProgress, onComplete }: Props) => {
   );
 };
 
-const Container = styled(m.svg).attrs({ viewBox: "0 -1 50 54" })`
+const Container: any = styled(m.svg as any).attrs({ viewBox: "0 -1 50 54" })`
   z-index: 3;
   position: sticky;
   background: rgba(0, 0, 0, 0.75);

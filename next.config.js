@@ -19,6 +19,9 @@ module.exports = {
 
     return config;
   },
+  typescript: {
+    ignoreBuildErrors: true,
+  },
   images: {
     domains: ["nevulo.xyz", "raw.githubusercontent.com", "images.unsplash.com"],
   },

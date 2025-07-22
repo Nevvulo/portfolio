@@ -110,12 +110,14 @@ export function PostPreview({
             </Container>
           </PreviewText>
           <SkeletonImage
-            width={!isSmallDisplay ? "150px" : "100%"}
-            height={!isSmallDisplay ? "150px" : "125px"}
-            layout={!isSmallDisplay ? "fixed" : "intrinsic"}
+            width={!isSmallDisplay ? 150 : undefined}
+            height={!isSmallDisplay ? 150 : 125}
+            sizes={!isSmallDisplay ? undefined : "100vw"}
+            style={{ width: !isSmallDisplay ? undefined : "100%" }}
             quality={75}
             priority={prioritizeImage}
             objectFit="cover"
+            alt="Post preview image"
             src={`https://raw.githubusercontent.com/Nevvulo/blog/main/posts/assets/${slug}/${image}`}
           />
         </Post>
