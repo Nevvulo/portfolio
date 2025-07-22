@@ -21,8 +21,8 @@
   "include": [
     "next-env.d.ts",
     "**/*.ts",
-    "**/*.tsx", 
-    "public/robots.txt"  
+    "**/*.tsx",
+    "public/robots.txt"
   ],
   "exclude": [
     "node_modules"

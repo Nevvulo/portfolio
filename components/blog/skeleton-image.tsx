@@ -108,7 +108,7 @@ const PostImageContainer = styled.div`
   }
 `;
 
-const PostImage = styled(Image)`
+const PostImage = styled(Image as any)`
   border-radius: 6px;
   border: 0.1px solid ${(props) => props.theme.postImageBoxShadow};
   box-shadow: 0px 0px 8px 1px ${(props) => props.theme.postImageBoxShadow};

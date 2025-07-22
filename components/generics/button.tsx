@@ -57,7 +57,7 @@ export const AnimatedButton: React.FC<AnimatedButtonProps> = ({
   </m.a>
 );
 
-export const BackButton = styled(IconLink).attrs((props) => ({
+export const BackButton = styled(IconLink as any).attrs((props) => ({
   ...props,
   icon: faArrowLeft,
   role: "back",
@@ -65,7 +65,7 @@ export const BackButton = styled(IconLink).attrs((props) => ({
   style: { marginRight: 22, height: 24, fontWeight: 800, cursor: "pointer" },
 }))``;
 
-export const HomeButton = styled(IconLink).attrs((props) => ({
+export const HomeButton = styled(IconLink as any).attrs((props) => ({
   ...props,
   icon: faHome,
   role: "back",

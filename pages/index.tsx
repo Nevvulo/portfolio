@@ -15,7 +15,6 @@ import { Subtitle, Title } from "../components/home/typography";
 import { HomeView } from "../components/layout/home";
 import { ROUTES } from "../constants/routes";
 import useMediaQuery from "../hooks/useMediaQuery";
-import getLatestNevuletter from "../modules/getLatestNevuletter";
 import { LatestNevuletterResponse } from "../types/nevuletter";
 
 interface HomeProps {
@@ -122,10 +121,7 @@ export default function Home({ latestNevuletter }: HomeProps) {
 }
 
 export async function getStaticProps() {
-  const nevuletter = await getLatestNevuletter();
-  if (!nevuletter) return { props: { latestNevuletter: null } };
-  if (nevuletter.error) return { props: { latestNevuletter: null } };
-  return { props: { latestNevuletter: nevuletter.email } };
+  return { props: { latestNevuletter: null } };
 }
 
 const BackgroundImg = styled(Image).attrs({
