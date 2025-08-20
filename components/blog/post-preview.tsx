@@ -1,6 +1,5 @@
 import { faClock } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import * as Fathom from "fathom-client";
 import Image from "next/image";
 import React from "react";
 import styled, { DefaultTheme, useTheme } from "styled-components";
@@ -65,14 +64,10 @@ export function PostPreview({
     theme
   );
 
-  // view blog post goal
-  function onClick() {
-    Fathom.trackGoal("CTGT4BLM", 0);
-  }
 
   return (
     <StrippedLink scroll={false} passHref href={`/blog/${slug}`}>
-      <PreviewContainer onClick={onClick}>
+      <PreviewContainer>
         <Post>
           <PreviewText direction="column">
             {!loading ? (
@@ -110,12 +105,12 @@ export function PostPreview({
             </Container>
           </PreviewText>
           <SkeletonImage
-            width={!isSmallDisplay ? "150px" : "100%"}
-            height={!isSmallDisplay ? "150px" : "125px"}
-            layout={!isSmallDisplay ? "fixed" : "intrinsic"}
+            alt={title || "Blog post image"}
+            width={!isSmallDisplay ? 150 : 350}
+            height={!isSmallDisplay ? 150 : 125}
             quality={75}
             priority={prioritizeImage}
-            objectFit="cover"
+            style={{ objectFit: "cover", width: !isSmallDisplay ? "150px" : "100%" }}
             src={`https://raw.githubusercontent.com/Nevvulo/blog/main/posts/assets/${slug}/${image}`}
           />
         </Post>

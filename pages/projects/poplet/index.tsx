@@ -27,33 +27,18 @@ const title = "Poplet";
 const shortDescription =
   "Note taking app with advanced features and customisability";
 
-const LogoInverted = styled(Image).attrs({
-  src: PopletLogo,
-  width: "42px",
-  height: "42px",
-  placeholder: "blur",
-})`
-  filter: invert(1);
-  align-self: flex-end;
-  margin-right: 8px;
-  margin-bottom: 4px;
-  height: 42px;
-  width: 42px;
-`;
-
-const Logo = styled(Image).attrs({
-  src: PopletLogo,
-  width: "46px",
-  height: "46px",
-  quality: 25,
-})`
-  top: -6px !important;
-`;
 
 export const PopletPreview: React.FC = () => (
   <>
     <AnimatedContainer>
-      <Logo />
+      <Image
+        src={PopletLogo}
+        width={46}
+        height={46}
+        alt="Poplet Logo"
+        quality={25}
+        style={{ top: '-6px', position: 'relative' }}
+      />
       <ProjectTitle>{title}</ProjectTitle>
     </AnimatedContainer>
     <AnimatedContainer>
@@ -69,7 +54,25 @@ export default function Poplet() {
       <DetailedNavbar />
 
       <ProjectTitleContainer>
-        {theme === "light" ? <LogoInverted /> : <Logo />}
+        {theme === "light" ? (
+          <Image
+            src={PopletLogo}
+            width={42}
+            height={42}
+            alt="Poplet Logo"
+            placeholder="blur"
+            style={{ filter: 'invert(1)', alignSelf: 'flex-end', marginRight: '8px', marginBottom: '4px' }}
+          />
+        ) : (
+          <Image
+            src={PopletLogo}
+            width={46}
+            height={46}
+            alt="Poplet Logo"
+            quality={25}
+            style={{ top: '-6px', position: 'relative' }}
+          />
+        )}
         <ProjectTitle>{title}</ProjectTitle>
       </ProjectTitleContainer>
       <ProjectSubtitle>{shortDescription}</ProjectSubtitle>

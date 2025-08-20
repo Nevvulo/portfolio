@@ -9,7 +9,6 @@ import {
 import React from "react";
 import styled from "styled-components";
 import { Text } from "../generics";
-import * as Fathom from "fathom-client";
 
 const Container = styled.div`
   border-radius: 4px;
@@ -93,8 +92,6 @@ export default function GitHubAuthSection({ session }: GitHubAuthSectionProps) {
         <UserSection>
           <ActionButton
             onClick={() => {
-              // github authentication goal
-              Fathom.trackGoal("CT5MFO6L", 0);
               signIn("github");
             }}
           >

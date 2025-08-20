@@ -1,9 +1,10 @@
 import React from "react";
 import styled from "styled-components";
-import { ProjectPreviewImage, ProjectProps, ProjectStyleProps } from ".";
+import { ProjectProps, ProjectStyleProps } from ".";
 import { ProjectContent } from ".";
 import { StrippedLink } from "../generics";
 import FluxBanner from "../../assets/img/projects/banner/flux.png";
+import Image from "next/image";
 
 type ProjectPreviewProps = ProjectProps & ProjectStyleProps & { href: string };
 export function FeaturedProjectPreview({
@@ -15,12 +16,22 @@ export function FeaturedProjectPreview({
   return (
     <StrippedLink passHref href={href}>
       <Container>
-        <ProjectPreviewImage
-          placeholder="blur"
-          priority
-          quality={50}
-          src={FluxBanner}
-        ></ProjectPreviewImage>
+        <ImageWrapper>
+          <Image
+            alt="Flux project banner"
+            placeholder="blur"
+            priority
+            quality={50}
+            src={FluxBanner}
+            width={650}
+            height={350}
+            style={{ 
+              width: '100%', 
+              height: '100%',
+              objectFit: 'cover'
+            }}
+          />
+        </ImageWrapper>
 
         <div
           style={{
@@ -44,22 +55,30 @@ export function FeaturedProjectPreview({
 
 const Container = styled.div`
   position: relative;
-  width: auto;
-  max-width: 650px;
   cursor: pointer;
   border-radius: 6px;
-  width: 100%;
-  min-width: 450px;
+  width: 650px;
+  max-width: 650px;
   margin: 1em;
-  box-shadow: 1px 2px 3px rgba(0, 0, 0, 0.3);
+  box-shadow: 1px 2px 3px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
 
-  @media (max-width: 512px) {
-    min-width: 200px;
+  @media (max-width: 700px) {
+    width: calc(100vw - 3em);
+    max-width: calc(100vw - 3em);
   }
+`;
 
-  > div {
-    display: block !important;
-    border-radius: 8px;
+const ImageWrapper = styled.div`
+  position: relative;
+  width: 100%;
+  height: 350px;
+  overflow: hidden;
+  
+  img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
   }
 `;
 
