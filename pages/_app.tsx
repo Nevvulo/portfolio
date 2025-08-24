@@ -1,3 +1,4 @@
+import { Analytics } from "@vercel/analytics/react";
 import { LazyMotion } from "framer-motion";
 import { SessionProvider } from "next-auth/react";
 import { AppProps } from "next/app";
@@ -8,13 +9,11 @@ import React from "react";
 import { createGlobalStyle, ThemeProvider } from "styled-components";
 import { AnimatedRoutes } from "../components/routing/animated-routes";
 import { DarkTheme, LightTheme } from "../constants/theme";
-import { useAnalytics } from "../hooks/useAnalytics";
 import { useTheme } from "../hooks/useTheme";
 import "./nprogress.css"; //styles for nprogress
 
 export default function MyApp({ Component, router, pageProps }: AppProps) {
   const [userTheme] = useTheme();
-  useAnalytics("NBVZGEFK");
   const theme = userTheme === "light" ? LightTheme : DarkTheme;
 
   return (
@@ -27,6 +26,7 @@ export default function MyApp({ Component, router, pageProps }: AppProps) {
             <AnimatedRoutes currentRoute={router.route}>
               <Component {...pageProps} />
             </AnimatedRoutes>
+            <Analytics />
           </LazyMotion>
         </ThemeProvider>
       </SessionProvider>

@@ -58,6 +58,7 @@ export type IconLinkProps = Partial<LinkProps> &
   Omit<FontAwesomeIconProps, "icon"> & {
     isExternal?: boolean;
     icon?: IconProp;
+    children?: React.ReactNode;
   };
 export const IconLink: React.FC<IconLinkProps> = ({
   href = "/",

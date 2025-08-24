@@ -6,12 +6,10 @@ import styled from "styled-components";
 import { BlogHomepageFooter as Footer } from "../../components/blog/footer";
 import GitHubAuthSection from "../../components/blog/github-auth-section";
 import { PostPreview } from "../../components/blog/post-preview";
-import { NewsletterSubscription } from "../../components/blog/subscribe";
 import { Container } from "../../components/container";
 import { Text } from "../../components/generics";
 import { BlogView } from "../../components/layout/blog";
 import { SimpleNavbar } from "../../components/navbar/simple";
-import { useNewsletterSubscribe } from "../../hooks/useNewsletterSubscribe";
 import getFile from "../../modules/getFile";
 import { Blogmap } from "../../types/blog";
 import generateRssFeed from "../../utils/rss";
@@ -21,7 +19,6 @@ import generateRssFeed from "../../utils/rss";
 type BlogProps = { posts: Blogmap };
 function BlogContent({ posts }: BlogProps) {
   const session = useSession({ required: false });
-  const newsletter = useNewsletterSubscribe();
   const latestPost = posts[0];
 
   return (
@@ -29,15 +26,6 @@ function BlogContent({ posts }: BlogProps) {
       {/* <BackgroundImg /> */}
       <GitHubAuthSection session={session} />
       <SimpleNavbar id="blog" emoji="📖" title="Blog" />
-
-      <Container padding="0em 1.5em">
-        <NewsletterSubscription
-          error={newsletter.error}
-          loading={newsletter.loading}
-          success={newsletter.success}
-          onSubscribe={newsletter.subscribe}
-        />
-      </Container>
 
       <PostContainer>
         {posts.map((properties, i) => (
@@ -47,9 +35,6 @@ function BlogContent({ posts }: BlogProps) {
             {...properties}
           />
         ))}
-        <Footer>
-          <Text color="white">📚 More posts coming soon! ⏱</Text>
-        </Footer>
       </PostContainer>
 
       <Head key="blog">

@@ -26,22 +26,20 @@ const title = "zBot";
 const shortDescription =
   "Multi-purpose Discord bot featuring a community-driven economy";
 
-const Logo = styled(Image).attrs({
-  src: zBotLogo,
-  height: "38px",
-  width: "38px",
-  quality: 25,
-  placeholder: "blur",
-})`
-  border-radius: 4px;
-  padding-right: 1em;
-`;
 
 export const zBotPreview: React.FC = () => (
   <>
     <AnimatedContainer style={{ alignItems: "center" }}>
       <div style={{ paddingRight: "0.5em" }}>
-        <Logo />
+        <Image
+          src={zBotLogo}
+          height={38}
+          width={38}
+          alt="zBot Logo"
+          quality={25}
+          placeholder="blur"
+          style={{ borderRadius: '4px', paddingRight: '1em' }}
+        />
       </div>
       <ProjectTitle aria-expanded="false">{title}</ProjectTitle>
     </AnimatedContainer>
@@ -58,7 +56,15 @@ export default function zBot() {
 
       <ProjectContainer>
         <ProjectTitleContainer layoutId={`logo-${id}`}>
-          <Logo />
+          <Image
+          src={zBotLogo}
+          height={38}
+          width={38}
+          alt="zBot Logo"
+          quality={25}
+          placeholder="blur"
+          style={{ borderRadius: '4px', paddingRight: '1em' }}
+        />
           <ProjectTitle>{title}</ProjectTitle>
         </ProjectTitleContainer>
         <ProjectSubtitle layoutId={`description-${id}`}>

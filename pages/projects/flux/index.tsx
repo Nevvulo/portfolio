@@ -27,44 +27,22 @@ import { useTheme } from "../../../hooks/useTheme";
 const id = "flux";
 const shortDescription = "Helping 200,000 Aussies win at money";
 
-const Logo = styled(Image).attrs({
-  src: FluxBlackLogo,
-  height: "50",
-  style: { fill: "white" },
-})`
-  fill: white;
-  align-self: flex-start;
-`;
-
-const LogoWhite = styled(Image).attrs({
-  src: FluxWhiteLogo,
-  height: "52",
-  quality: 25,
-})`
-  object-position: left;
-  object-fit: contain;
-  align-self: flex-start;
-`;
-
-const LogoFilled = styled(Image).attrs({
-  src: FluxColoredLogo,
-  quality: 25,
-})`
-  align-self: flex-end;
-  margin-right: 8px;
-  margin-bottom: 4px;
-  height: 42px;
-  width: 42px;
-`;
 
 export const FluxPreview: React.FC = () => {
   return (
     <>
-      <AnimatedContainer>
-        <LogoWhite />
+      <AnimatedContainer style={{ marginBottom: '-3em' }}>
+        <Image
+          src={FluxWhiteLogo}
+          height={180}
+          width={180}
+          alt="Flux Logo White"
+          quality={100}
+          style={{ objectPosition: 'left', objectFit: 'contain', alignSelf: 'flex-start', filter: 'drop-shadow(0px 4px 8px rgba(0,0,0,0.8))' }}
+        />
       </AnimatedContainer>
-      <AnimatedContainer>
-        <ProjectSubtitle style={{ zIndex: 2 }} color={Colors.WHITE}>
+      <AnimatedContainer style={{ marginTop: 0 }}>
+        <ProjectSubtitle style={{ zIndex: 2, fontSize: '20px', fontWeight: 600, marginTop: 0 }} color={Colors.WHITE}>
           {shortDescription}
         </ProjectSubtitle>
       </AnimatedContainer>
@@ -79,7 +57,24 @@ export default function Flux() {
       <DetailedNavbar />
       <ProjectContainer>
         <ProjectTitleContainer>
-          {theme === "light" ? <LogoFilled /> : <Logo />}
+          {theme === "light" ? (
+            <Image
+              src={FluxColoredLogo}
+              width={42}
+              height={42}
+              alt="Flux Logo Colored"
+              quality={25}
+              style={{ alignSelf: 'flex-end', marginRight: '8px', marginBottom: '4px' }}
+            />
+          ) : (
+            <Image
+              src={FluxBlackLogo}
+              height={50}
+              width={50}
+              alt="Flux Logo"
+              style={{ fill: 'white', alignSelf: 'flex-start' }}
+            />
+          )}
         </ProjectTitleContainer>
         <ProjectSubtitle>{shortDescription}</ProjectSubtitle>
         <FadeAnimatedContainer direction="column">

@@ -26,22 +26,20 @@ const title = "Dank Memer";
 const shortDescription =
   "Multi-purpose Discord bot featuring a community-driven economy";
 
-const Logo = styled(Image).attrs({
-  src: DankMemerLogo,
-  width: "38",
-  objectFit: "scale-down",
-  height: "38",
-  quality: 25,
-  placeholder: "blur",
-})`
-  align-items: center;
-`;
 
 export const DankMemerPreview: React.FC = () => (
   <>
     <AnimatedContainer>
       <div style={{ paddingRight: "0.5em" }}>
-        <Logo />
+        <Image 
+          src={DankMemerLogo}
+          width={38}
+          height={38}
+          alt="Dank Memer Logo"
+          quality={25}
+          placeholder="blur"
+          style={{ alignItems: 'center' }}
+        />
       </div>
       <ProjectTitle>{title}</ProjectTitle>
     </AnimatedContainer>
@@ -57,7 +55,15 @@ export default function DankMemer() {
       <DetailedNavbar />
 
       <ProjectTitleContainer>
-        <Logo />
+        <Image 
+          src={DankMemerLogo}
+          width={38}
+          height={38}
+          alt="Dank Memer Logo"
+          quality={25}
+          placeholder="blur"
+          style={{ alignItems: 'center' }}
+        />
         <ProjectTitle>{title}</ProjectTitle>
       </ProjectTitleContainer>
       <ProjectSubtitle>{shortDescription}</ProjectSubtitle>

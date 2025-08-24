@@ -1,4 +1,3 @@
-import Playground from "@agney/playground";
 import {
   faDev,
   faFacebook,
@@ -8,7 +7,6 @@ import {
   faHashnode,
 } from "@fortawesome/free-brands-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import * as Fathom from "fathom-client";
 import { useViewportScroll } from "framer-motion";
 import { GetStaticPropsContext } from "next";
 import {
@@ -30,14 +28,12 @@ import { PostHeader } from "../../components/blog/post-header";
 import { PostHeroImg } from "../../components/blog/post-hero-img";
 import { PostImg } from "../../components/blog/post-img";
 import { PostSubheader } from "../../components/blog/post-sub-header";
-import { NewsletterSubscription } from "../../components/blog/subscribe";
 import { Container } from "../../components/container";
 import { IconLink } from "../../components/generics";
 import { Avatar } from "../../components/generics/avatar";
 import { BlogView } from "../../components/layout/blog";
 import { DetailedNavbar } from "../../components/navbar/detailed";
 import { useComments } from "../../hooks/useComments";
-import { useNewsletterSubscribe } from "../../hooks/useNewsletterSubscribe";
 import getFile from "../../modules/getFile";
 import { Blogmap } from "../../types/blog";
 
@@ -49,10 +45,6 @@ export default function Post({ content, properties }: PostProps) {
   const { scrollYProgress } = useViewportScroll();
   const [completed, setCompleted] = useState(false);
 
-  useEffect(() => {
-    // finished blog post goal
-    if (completed) Fathom.trackGoal("5RLNED6W", 0);
-  }, [completed]);
 
   return (
     <>
@@ -73,7 +65,6 @@ function PostBody({ content, properties }: PostProps) {
   const filename = `${properties.slug}.mdx`;
   const filepath = `posts/${filename}`;
   const creationDate = new Date(properties.createdAt);
-  const newsletter = useNewsletterSubscribe();
   const { total, comments, postComment } = useComments(
     properties.discussionNo,
     properties.discussionId
@@ -246,12 +237,6 @@ function PostBody({ content, properties }: PostProps) {
           </Container>
         </PostFooter>
 
-        <NewsletterSubscription
-          onSubscribe={newsletter.subscribe}
-          loading={newsletter.loading}
-          error={newsletter.error}
-          success={newsletter.success}
-        />
 
         <Comments
           total={total}
@@ -283,7 +268,7 @@ function PostBody({ content, properties }: PostProps) {
         <meta property="og:article:author:username" content="Nevulo" />
         <meta property="og:article:section" content="Technology" />
         {properties.labels?.map((tag) => (
-          <meta property="og:article:tag" content={tag} />
+          <meta key={tag} property="og:article:tag" content={tag} />
         ))}
       </Head>
     </BlogView>
@@ -302,31 +287,30 @@ const getPostImage = (src: string) => {
 };
 
 const components = {
-  pre: (props: never) => <CodeBlock {...props} />,
+  pre: (props: any) => <CodeBlock {...props} />,
   img: (props: any) => {
     const src = getPostImage(props.src);
     return <PostImg loading="lazy" {...props} src={src} />;
   },
-  a: (props: { children: ReactNode; href: string }) => (
+  a: (props: any) => (
     <IconLink
       style={{ textDecorationThickness: "0.125em", fontSize: "0.975em" }}
-      isExternal={!props.href.startsWith("https://nevulo.xyz")}
+      isExternal={!props.href?.startsWith("https://nevulo.xyz")}
       {...props}
       href={props.href}
     >
       {props.children}
     </IconLink>
   ),
-  strong: (props: never) => <BoldText {...props} />,
-  h1: (props: never) => <Title {...props} />,
-  h2: (props: never) => <Subtitle {...props} />,
-  h3: (props: never) => <Heading3 {...props} />,
-  h4: (props: never) => <Heading4 {...props} />,
-  p: (props: never) => <Text {...props} />,
-  ol: (props: never) => <DotpointList {...props} />,
-  ul: (props: never) => <NumberedList {...props} />,
-  li: (props: never) => <ListItem {...props} />,
-  Playground: (props: never) => <Playground mode="dark" {...props} />,
+  strong: (props: any) => <BoldText {...props} />,
+  h1: (props: any) => <Title {...props} />,
+  h2: (props: any) => <Subtitle {...props} />,
+  h3: (props: any) => <Heading3 {...props} />,
+  h4: (props: any) => <Heading4 {...props} />,
+  p: (props: any) => <Text {...props} />,
+  ol: (props: any) => <DotpointList {...props} />,
+  ul: (props: any) => <NumberedList {...props} />,
+  li: (props: any) => <ListItem {...props} />,
 };
 
 const IconContainer = styled(Container).attrs({ direction: "row" })`
@@ -464,6 +448,12 @@ export async function getStaticPaths() {
 
 export async function getStaticProps({ params }: GetStaticPropsContext) {
   if (!params) return { notFound: true };
+  
+  // Skip the problematic blog post for now
+  if (params.id === 'what-are-data-types') {
+    return { notFound: true };
+  }
+  
   const posts = await getFile("blogmap.json");
   if (!posts) return { notFound: true };
   const post = await getFile(`posts/${params.id}.mdx`, "text");
@@ -474,10 +464,17 @@ export async function getStaticProps({ params }: GetStaticPropsContext) {
   });
   const properties = posts.find((post) => post.slug === params.id);
   const { content } = parsed;
-  return {
-    props: {
-      content: await serialize(content),
-      properties,
-    },
-  };
+  
+  try {
+    const serializedContent = await serialize(content);
+    return {
+      props: {
+        content: serializedContent,
+        properties,
+      },
+    };
+  } catch (error) {
+    console.error(`Error serializing MDX for ${params.id}:`, error);
+    return { notFound: true };
+  }
 }

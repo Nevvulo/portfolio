@@ -4,24 +4,19 @@ import styled from "styled-components";
 
 export function SkeletonImage({
   ...props
-}: Omit<ImageProps, "onLoadingComplete">) {
+}: ImageProps) {
   const [isLoaded, setIsLoaded] = useState(false);
-  const [isSkeleton, setIsSkeleton] = useState(true);
 
   return (
     <PostImageContainer
-      className={isLoaded ? "fade" : ""}
+      className={isLoaded ? "loaded" : ""}
       data-loaded={isLoaded}
-      /* remove skeleton after transition ends */
-      onTransitionEnd={(event) =>
-        event.propertyName === "opacity" && setIsSkeleton(false)
-      }
     >
-      <SkeletonContainer className={isSkeleton ? "skeleton" : ""}>
+      <SkeletonContainer className={!isLoaded ? "skeleton" : ""}>
         <PostImage
           quality={90}
           {...props}
-          onLoadingComplete={() => setIsLoaded(true)}
+          onLoad={() => setIsLoaded(true)}
         />
       </SkeletonContainer>
     </PostImageContainer>
@@ -96,14 +91,14 @@ const SkeletonContainer = styled.div`
 const PostImageContainer = styled.div`
   position: relative;
   max-height: 150px;
-  position: relative;
+  transition: opacity 200ms ease;
+  opacity: 1;
 
-  &.fade {
-    transition: opacity 200ms ease;
-    opacity: 0;
+  &:not(.loaded) {
+    opacity: 0.95;
   }
 
-  &[data-loaded="true"] {
+  &.loaded {
     opacity: 1;
   }
 `;

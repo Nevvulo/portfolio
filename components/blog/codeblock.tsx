@@ -1,13 +1,10 @@
 // @ts-nocheck
-import Highlight, { defaultProps } from "prism-react-renderer";
-import Prism from "prism-react-renderer/prism";
-import theme from "prism-react-renderer/themes/shadesOfPurple";
+import { Highlight, themes } from "prism-react-renderer";
+const theme = themes.shadesOfPurple;
 import React from "react";
 import styled from "styled-components";
 
-(typeof global !== "undefined" ? global : window).Prism = Prism;
-require("prismjs/components/prism-csharp");
-require("prismjs/components/prism-python");
+// Prism language extensions removed - not needed with prism-react-renderer v2
 
 const Pre = styled.pre`
   text-align: left;
@@ -50,7 +47,6 @@ function WithLineNumbers({
 }) {
   return (
     <Highlight
-      {...defaultProps}
       theme={theme}
       code={children.props.children}
       language={children?.props?.className?.slice(9) || "jsx"}

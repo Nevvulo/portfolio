@@ -76,7 +76,7 @@ const ProjectContainer = styled.div`
   min-width: 300px;
 
   @media (min-width: 1024px) {
-    align-items: flex-start;
+    align-items: center;
     min-width: 700px;
     width: 50%;
   }

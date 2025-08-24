@@ -32,16 +32,15 @@ export function ProjectPreview({
 
 const ProjectPreviewContainer = styled.div<ProjectStyleProps>`
   background: ${(props) => props.background};
-  width: auto;
-  max-width: 650px;
   cursor: pointer;
   border-radius: 6px;
-  min-width: 450px;
-  width: 100%;
+  width: 650px;
+  max-width: 650px;
   margin: 1em;
   box-shadow: 1px 2px 3px rgba(0, 0, 0, 0.5);
 
-  @media (max-width: 512px) {
-    min-width: 200px;
+  @media (max-width: 700px) {
+    width: calc(100vw - 3em);
+    max-width: calc(100vw - 3em);
   }
 `;

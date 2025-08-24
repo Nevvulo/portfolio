@@ -1,14 +1,24 @@
-import styled from "styled-components";
+import React from "react";
 import NevuloImg from "../../assets/img/nevulo.jpg";
-import Image from "next/image";
+import Image, { ImageProps } from "next/image";
 import COLORS from "../../constants/colors";
 
-export const Avatar = styled(Image).attrs({
-  src: NevuloImg,
-  alt: "Nevulo profile picture",
-  priority: true,
-})<{ border?: boolean }>`
-  border: ${(props) =>
-    props.border ? `1px solid ${COLORS.PURPLE}` : ""} !important;
-  border-radius: 32px;
-`;
+interface AvatarProps extends Omit<ImageProps, 'src' | 'alt'> {
+  border?: boolean;
+}
+
+export const Avatar: React.FC<AvatarProps> = ({ border, ...props }) => {
+  return (
+    <Image
+      {...props}
+      src={NevuloImg}
+      alt="Nevulo profile picture"
+      priority={true}
+      style={{
+        border: border ? `1px solid ${COLORS.PURPLE}` : undefined,
+        borderRadius: '32px',
+        ...props.style
+      }}
+    />
+  );
+};

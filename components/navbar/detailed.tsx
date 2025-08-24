@@ -22,7 +22,7 @@ export function DetailedNavbar({ style }: NavbarProps) {
       <NavbarContainer style={style}>
         <NavbarBackground>
           <Link href={ROUTES.ROOT}>
-            <Avatar border width="38" height="38" />
+            <Avatar border width={38} height={38} />
           </Link>
 
           <CustomLink href={ROUTES.BLOG.ROOT}>

@@ -27,7 +27,7 @@ export const PowercordPreview: React.FC = () => (
   <>
     <AnimatedContainer>
       <div style={{ paddingRight: "0.5em" }}>
-        <Image quality={25} src={PowercordLogo} height="38" width="38" />
+        <Image quality={25} src={PowercordLogo} height={38} width={38} alt="Powercord Logo" />
       </div>
 
       <ProjectTitle>{title}</ProjectTitle>
@@ -44,7 +44,7 @@ export default function Powercord() {
       <DetailedNavbar />
 
       <ProjectTitleContainer>
-        <Image quality={25} src={PowercordLogo} height="46" width="46" />
+        <Image quality={25} src={PowercordLogo} height={46} width={46} alt="Powercord Logo" />
         <ProjectTitle>{title}</ProjectTitle>
       </ProjectTitleContainer>
       <ProjectSubtitle>{shortDescription}</ProjectSubtitle>
