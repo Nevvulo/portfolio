@@ -1,9 +1,9 @@
 import { m } from "framer-motion";
-import React from "react";
+import type React from "react";
 import styled from "styled-components";
-import { RoleColors, RoleNames, Roles } from "../../constants/roles";
+import { RoleColors, RoleNames, type Roles } from "../../constants/roles";
 import {
-  Technologies,
+  type Technologies,
   TechnologiesColors,
   TechnologiesNames,
 } from "../../constants/technologies";
@@ -13,10 +13,7 @@ interface BadgesProps {
   technologies: Technologies[];
   roles: Roles[];
 }
-export const ProjectBadges: React.FC<BadgesProps> = ({
-  roles,
-  technologies,
-}) => {
+export const ProjectBadges: React.FC<BadgesProps> = ({ roles, technologies }) => {
   return (
     <BadgesContainer direction="row">
       <Container direction="column">

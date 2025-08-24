@@ -1,18 +1,13 @@
-import {
-  faDiscord,
-  faGithub,
-  faLinkedin,
-  faTwitter,
-} from "@fortawesome/free-brands-svg-icons";
+import { faDiscord, faGithub, faLinkedin, faTwitter } from "@fortawesome/free-brands-svg-icons";
 import { faEnvelope } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { m } from "framer-motion";
-import React from "react";
+import type React from "react";
 import styled from "styled-components";
 import Socials from "../../constants/socials";
-import { AnimatedContainer, ContainerProps } from "../container";
+import { AnimatedContainer, type ContainerProps } from "../container";
 
-const IconContainer = styled(m.a).attrs((props) => ({
+const IconContainer = styled(m.a).attrs(() => ({
   target: "_blank",
   rel: "noreferrer",
 }))`

@@ -1,14 +1,11 @@
-import React from "react";
-import styled from "styled-components";
-import { ProjectProps, ProjectStyleProps } from ".";
-import { ProjectContent } from ".";
-import { StrippedLink } from "../generics";
-import FluxBanner from "../../assets/img/projects/banner/flux.png";
 import Image from "next/image";
+import styled from "styled-components";
+import FluxBanner from "../../assets/img/projects/banner/flux.png";
+import { StrippedLink } from "../generics";
+import { ProjectContent, type ProjectProps, type ProjectStyleProps } from ".";
 
 type ProjectPreviewProps = ProjectProps & ProjectStyleProps & { href: string };
 export function FeaturedProjectPreview({
-  projectId,
   preview: Component,
   background,
   href,
@@ -25,10 +22,10 @@ export function FeaturedProjectPreview({
             src={FluxBanner}
             width={650}
             height={350}
-            style={{ 
-              width: '100%', 
-              height: '100%',
-              objectFit: 'cover'
+            style={{
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
             }}
           />
         </ImageWrapper>
@@ -41,9 +38,7 @@ export function FeaturedProjectPreview({
             paddingTop: "2em",
           }}
         >
-          <ProjectPreviewContainer
-            background={background}
-          ></ProjectPreviewContainer>
+          <ProjectPreviewContainer background={background}></ProjectPreviewContainer>
           <ProjectContent>
             <Component />
           </ProjectContent>

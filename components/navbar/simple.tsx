@@ -1,12 +1,11 @@
-import { PropsWithChildren } from "react";
-import type { NavbarProps } from ".";
+import type { PropsWithChildren } from "react";
 import { Container } from "../container";
-import { Header, BackButton, Title, Emoji } from "../generics";
+import { BackButton, Emoji, Header, Title } from "../generics";
+import type { NavbarProps } from ".";
 
-type SimpleNavbarProps = NavbarProps & { id: string; emoji: string };
+type SimpleNavbarProps = NavbarProps & { emoji: string };
 export function SimpleNavbar({
   route = "/",
-  id,
   title,
   emoji,
   children,

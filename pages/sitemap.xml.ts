@@ -1,7 +1,7 @@
-import { GetServerSidePropsContext } from "next";
+import type { GetServerSidePropsContext } from "next";
 import { Projects } from "../constants/projects";
 import getFile from "../modules/getFile";
-import { Blogmap } from "../types/blog";
+import type { Blogmap } from "../types/blog";
 
 const URL = "https://nevulo.xyz";
 

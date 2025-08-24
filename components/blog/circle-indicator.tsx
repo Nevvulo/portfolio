@@ -1,5 +1,5 @@
-import { m, MotionValue, useSpring, useTransform } from "framer-motion";
-import { useState, useEffect } from "react";
+import { type MotionValue, m, useSpring, useTransform } from "framer-motion";
+import { useEffect, useState } from "react";
 import styled from "styled-components";
 
 interface Props {
@@ -22,7 +22,7 @@ export const CircleIndicator = ({ scrollYProgress, onComplete }: Props) => {
       opacity.set(0);
       opacity.clearListeners();
     }, 1e3);
-  }, [isComplete]);
+  }, [isComplete, onComplete, opacity]);
 
   return (
     <Container style={{ opacity }}>

@@ -1,5 +1,4 @@
 import Head from "next/head";
-import React from "react";
 import { Notice, Subtitle } from "../../components/contact/typography";
 import { SocialLinks } from "../../components/generics/social-links";
 import { ContactBox } from "../../components/layout/contact";
@@ -9,20 +8,15 @@ import { SimpleNavbar } from "../../components/navbar/simple";
 export default function Contact() {
   return (
     <MinimalView>
-      <SimpleNavbar id="contact" emoji="📧" title="Contact" />
+      <SimpleNavbar emoji="📧" title="Contact" />
 
       <ContactBox>
         <Subtitle color="white">Socials</Subtitle>
-        <SocialLinks
-          color="white"
-          include={{ linkedIn: true }}
-          direction="row"
-        />
+        <SocialLinks color="white" include={{ linkedIn: true }} direction="row" />
         <Subtitle color="white">Security & Privacy</Subtitle>
         <Notice>
-          Reporting a potential security vulnerability or privacy concern
-          regarding one of my maintained projects? Please shoot me an e-mail by
-          clicking the icon above.
+          Reporting a potential security vulnerability or privacy concern regarding one of my
+          maintained projects? Please shoot me an e-mail by clicking the icon above.
         </Notice>
       </ContactBox>
 

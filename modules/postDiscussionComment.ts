@@ -1,5 +1,4 @@
 import { graphql } from "@octokit/graphql";
-import { GetDiscussionCommentsResponseNode } from "./getDiscussionComments";
 
 export type PostDiscussionCommentResponseNode = {
   discussion: {
@@ -18,7 +17,7 @@ interface PostDiscussionCommentResponse {
 export default async function postDiscussionComment(
   discussionId: string,
   content: string,
-  token: string
+  token: string,
 ) {
   const data = await graphql<PostDiscussionCommentResponse>(
     `
@@ -42,7 +41,7 @@ export default async function postDiscussionComment(
       headers: {
         authorization: `token ${token}`,
       },
-    }
+    },
   );
 
   const { comment } = data.addDiscussionComment;

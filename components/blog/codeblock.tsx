@@ -1,7 +1,8 @@
 // @ts-nocheck
 import { Highlight, themes } from "prism-react-renderer";
+
 const theme = themes.shadesOfPurple;
-import React from "react";
+
 import styled from "styled-components";
 
 // Prism language extensions removed - not needed with prism-react-renderer v2
@@ -40,11 +41,8 @@ const LineContent = styled.span`
   }
 `;
 
-function WithLineNumbers({
-  children,
-}: {
-  children?: { props: { children: string; className: string } };
-}) {
+// biome-ignore lint/suspicious/noExplicitAny: MDX children type
+function WithLineNumbers({ children }: { children?: any }) {
   return (
     <Highlight
       theme={theme}
@@ -54,10 +52,12 @@ function WithLineNumbers({
       {({ className, style, tokens, getLineProps, getTokenProps }) => (
         <Pre className={className} style={style}>
           {tokens.slice(0, -1).map((line, i) => (
+            // biome-ignore lint/suspicious/noArrayIndexKey: Line numbers are stable in code blocks
             <Line key={i} {...getLineProps({ line, key: i })}>
               <LineNo>{i + 1}</LineNo>
               <LineContent>
                 {line.map((token, key) => (
+                  // biome-ignore lint/suspicious/noArrayIndexKey: Token indices are stable within lines
                   <span key={key} {...getTokenProps({ token, key })} />
                 ))}
               </LineContent>

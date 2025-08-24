@@ -1,29 +1,26 @@
 import Head from "next/head";
-import React, { useState } from "react";
+import { useState } from "react";
 import styled from "styled-components";
 import { ProjectView } from "../../components/layout/project";
 import { SimpleNavbar } from "../../components/navbar/simple";
 import { ProjectPreview } from "../../components/project";
 import { FeaturedProjectPreview } from "../../components/project/featured-project";
 import { ProjectFilter } from "../../components/project/filter";
-import { Project, Projects } from "../../constants/projects";
+import { type Project, Projects } from "../../constants/projects";
 
 export default function ProjectsPage() {
   const [selectedTab, setSelectedTab] = useState("all");
   const featuredProject = Projects.find((m) => m.projectId === "flux");
   const projects = Projects.filter((m) => filter(m, selectedTab)).filter(
-    (m) => m.projectId !== featuredProject?.projectId
+    (m) => m.projectId !== featuredProject?.projectId,
   );
 
   return (
     <ProjectView>
       <Background />
 
-      <SimpleNavbar id="projects" emoji="🛠" title="Projects">
-        <ProjectFilter
-          selected={selectedTab}
-          onTabClick={(tab) => setSelectedTab(tab)}
-        />
+      <SimpleNavbar emoji="🛠" title="Projects">
+        <ProjectFilter selected={selectedTab} onTabClick={(tab) => setSelectedTab(tab)} />
       </SimpleNavbar>
 
       <ProjectContainer>
@@ -36,11 +33,7 @@ export default function ProjectsPage() {
         )}
 
         {projects.map((item) => (
-          <ProjectPreview
-            key={item.projectId}
-            href={`/projects/${item.projectId}`}
-            {...item}
-          />
+          <ProjectPreview key={item.projectId} href={`/projects/${item.projectId}`} {...item} />
         ))}
       </ProjectContainer>
 
@@ -82,11 +75,13 @@ const ProjectContainer = styled.div`
   }
 `;
 
-function filter(project: Project, tab: string) {
+function filter(project: Project, tab: string): boolean {
   switch (tab) {
     case "maintained":
-      return project.maintained;
+      return project.maintained ?? false;
     case "all":
       return true;
+    default:
+      return false;
   }
 }

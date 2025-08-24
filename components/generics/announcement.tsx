@@ -1,18 +1,14 @@
 import { faBell } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { PropsWithChildren } from "react";
+import type { PropsWithChildren } from "react";
 import styled from "styled-components";
-import { Link } from ".";
 import { Container } from "../container";
 
 export function Announcement({ children }: PropsWithChildren<unknown>) {
   return (
     <AnnouncementContainer>
       <p style={{ margin: "0.5em 0", fontSize: "16px" }}>
-        <FontAwesomeIcon
-          style={{ marginRight: 8, width: "14px", height: "14px" }}
-          icon={faBell}
-        />
+        <FontAwesomeIcon style={{ marginRight: 8, width: "14px", height: "14px" }} icon={faBell} />
         {children}
       </p>
     </AnnouncementContainer>

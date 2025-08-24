@@ -1,5 +1,4 @@
-import React from "react";
-import { Title, Text, Link } from "../../components/generics";
+import { Link, Text, Title } from "../../components/generics";
 import { ProjectView } from "../../components/layout/project";
 
 export default function ProjectNotFound() {

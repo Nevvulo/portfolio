@@ -1,6 +1,6 @@
 import { faGithub } from "@fortawesome/free-brands-svg-icons";
 import { faGlobe } from "@fortawesome/free-solid-svg-icons";
-import React from "react";
+import type React from "react";
 import styled from "styled-components";
 import { AnimatedContainer } from "../container";
 import { ProjectButton } from "./button";

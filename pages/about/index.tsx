@@ -1,5 +1,4 @@
 import Head from "next/head";
-import React from "react";
 import styled from "styled-components";
 import { Subtitle } from "../../components/about/typography";
 import { Container } from "../../components/container";
@@ -15,27 +14,25 @@ export default function About() {
   return (
     <MinimalView>
       <Background />
-      <SimpleNavbar id="about" emoji="👋" title="About Me" />
+      <SimpleNavbar emoji="👋" title="About Me" />
 
       <AboutBox>
         <TextContainer>
           <Subtitle>Who am I?</Subtitle>
           <Text>
-            I'm Blake - a software engineer based in Melbourne, Australia
-            working at{" "}
+            I'm Blake - a software engineer based in Melbourne, Australia working at{" "}
             <Link color={COLORS.FLUX_GREEN} href={ROUTES.PROJECTS.FLUX}>
               Flux
             </Link>
-            . I'm passionate about giving users the best experiences in
-            applications because that's what they deserve.
+            . I'm passionate about giving users the best experiences in applications because that's
+            what they deserve.
           </Text>
 
           <Subtitle>What do I do?</Subtitle>
           <Text>
-            I primarily work with <b>TypeScript</b> and <b>JavaScript</b>, but I
-            have experience working with lower level languages such as{" "}
-            <b>Java</b> and <b>Swift</b> for native app development. I am
-            proficient with{" "}
+            I primarily work with <b>TypeScript</b> and <b>JavaScript</b>, but I have experience
+            working with lower level languages such as <b>Java</b> and <b>Swift</b> for native app
+            development. I am proficient with{" "}
             <IconLink
               isExternal
               spacing="8px"
@@ -46,15 +43,13 @@ export default function About() {
             >
               React
             </IconLink>
-            for building front-end interfaces with layouts and performance built
-            for the modern web. I also spend just as much time working on the
-            back-end of applications, such as handling business logic, solving
-            problems at scale and server management.
+            for building front-end interfaces with layouts and performance built for the modern web.
+            I also spend just as much time working on the back-end of applications, such as handling
+            business logic, solving problems at scale and server management.
           </Text>
 
           <Text>
-            I'm also well-versed in many other areas such as CSS, Python,
-            Ionic/Capacitor and{" "}
+            I'm also well-versed in many other areas such as CSS, Python, Ionic/Capacitor and{" "}
             <IconLink
               isExternal
               target="_blank"
@@ -72,15 +67,15 @@ export default function About() {
             <Link color={COLORS.TAB_SELECTED} href={ROUTES.BLOG.ROOT}>
               Blog
             </Link>{" "}
-            as a medium to learn new (or solidify existing) concepts while
-            teaching others in a concise, fun and unique way.
+            as a medium to learn new (or solidify existing) concepts while teaching others in a
+            concise, fun and unique way.
           </Text>
         </TextContainer>
 
         <Footer>
           <Text>
-            Wanna get in touch? You can <Link href="/contact">contact me</Link>,
-            or check out some of <Link href="/projects">my projects</Link>
+            Wanna get in touch? You can <Link href="/contact">contact me</Link>, or check out some
+            of <Link href="/projects">my projects</Link>
           </Text>
         </Footer>
       </AboutBox>

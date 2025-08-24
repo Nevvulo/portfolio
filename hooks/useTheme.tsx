@@ -1,17 +1,13 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 export const useTheme = () => {
   const [theme, setTheme] = useState("dark");
   const [componentMounted, setComponentMounted] = useState(false);
-  const systemDarkMode =
-    typeof window !== "undefined" &&
-    window.matchMedia &&
-    window.matchMedia("(prefers-color-scheme: dark)").matches;
 
-  const setMode = (mode: string) => {
+  const setMode = useCallback((mode: string) => {
     if (typeof window === "undefined") return;
     window.localStorage.setItem("theme", mode);
     setTheme(mode);
-  };
+  }, []);
 
   const toggleTheme = () => {
     if (theme === "light") {
@@ -23,6 +19,8 @@ export const useTheme = () => {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
+    const systemDarkMode = window.matchMedia?.("(prefers-color-scheme: dark)").matches;
+
     if (systemDarkMode) {
       setComponentMounted(true);
       setMode("dark");
@@ -30,7 +28,7 @@ export const useTheme = () => {
     }
     setMode("light");
     setComponentMounted(true);
-  }, []);
+  }, [setMode]);
 
   return [theme, toggleTheme, componentMounted];
 };

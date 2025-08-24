@@ -1,11 +1,8 @@
-import { IconProp } from "@fortawesome/fontawesome-svg-core";
+import type { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { faExternalLinkAlt } from "@fortawesome/free-solid-svg-icons";
-import {
-  FontAwesomeIconProps,
-  FontAwesomeIcon,
-} from "@fortawesome/react-fontawesome";
+import { FontAwesomeIcon, type FontAwesomeIconProps } from "@fortawesome/react-fontawesome";
 import NextLink from "next/link";
-import { CSSProperties, PropsWithChildren } from "react";
+import type { CSSProperties, PropsWithChildren } from "react";
 import styled from "styled-components";
 import COLORS from "../../constants/colors";
 
@@ -15,19 +12,11 @@ type LinkProps = {
   color?: string;
   underline?: boolean;
 };
-export function Link({
-  href,
-  color,
-  style,
-  children,
-  underline,
-}: PropsWithChildren<LinkProps>) {
+export function Link({ href, color, style, children, underline }: PropsWithChildren<LinkProps>) {
   if (underline)
     return (
       <NextLink passHref href={href}>
-        <>
-          <LinkText color={color}>{children}</LinkText>
-        </>
+        <LinkText color={color}>{children}</LinkText>
       </NextLink>
     );
 
@@ -62,7 +51,6 @@ export type IconLinkProps = Partial<LinkProps> &
   };
 export const IconLink: React.FC<IconLinkProps> = ({
   href = "/",
-  className,
   color,
   children,
   style,
@@ -103,7 +91,8 @@ export const IconLink: React.FC<IconLinkProps> = ({
 
     {isExternal && (
       <FontAwesomeIcon
-        aria-role="external-link"
+        role="img"
+        aria-label="External link"
         color="#bbbbbb"
         style={{
           width: "10px",

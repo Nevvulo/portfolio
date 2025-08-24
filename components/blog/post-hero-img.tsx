@@ -1,4 +1,4 @@
-import { PropsWithChildren } from "react";
+import type { PropsWithChildren } from "react";
 import styled from "styled-components";
 
 const PostHeroImgContainer = styled.div<{ img?: string }>`
@@ -59,9 +59,7 @@ export function PostHeroImg(props: PropsWithChildren<PostHeroImgProps>) {
       {props.children}
       {props.coverAuthor && (
         <CoverAuthorContainer>
-          <CoverAuthor href={props.coverAuthorUrl}>
-            Cover image by {props.coverAuthor}
-          </CoverAuthor>
+          <CoverAuthor href={props.coverAuthorUrl}>Cover image by {props.coverAuthor}</CoverAuthor>
         </CoverAuthorContainer>
       )}
     </PostHeroImgContainer>
