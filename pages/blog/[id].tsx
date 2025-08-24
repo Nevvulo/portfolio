@@ -59,7 +59,7 @@ function PostBody({ content, properties }: PostProps) {
   return (
     <BlogView>
       <BlogStyle />
-      <DetailedNavbar />
+      <DetailedNavbar style={{ marginTop: "1.5em" }} />
 
       <PostHeroImg
         coverAuthor={properties.coverAuthor}
@@ -69,8 +69,13 @@ function PostBody({ content, properties }: PostProps) {
         <PostHeader>
           <PostSubheader>
             <p>
-              Published on {creationDate.toLocaleDateString()} by <Avatar width="16" height="16" />{" "}
-              <strong>Nevulo</strong>{" "}
+              Published on{" "}
+              {creationDate.toLocaleDateString("en-US", {
+                year: "numeric",
+                month: "2-digit",
+                day: "2-digit",
+              })}{" "}
+              by <Avatar width="16" height="16" /> <strong>Nevulo</strong>{" "}
             </p>
           </PostSubheader>
 
@@ -225,7 +230,7 @@ function PostBody({ content, properties }: PostProps) {
       </PostContainer>
 
       <Head>
-        <title>{properties.title} › Blog - Nevulo</title>
+        <title>{String(properties.title || "")} › Blog - Nevulo</title>
         <meta property="title" content={properties.title} />
         <meta property="description" content={properties.description} />
         <meta property="og:title" content={properties.title} />
@@ -262,7 +267,6 @@ const getPostImage = (src: string) => {
   return isRelative && asset ? `/blog/${slug}/images/${asset}` : src;
 };
 
-// biome-ignore lint/suspicious/noExplicitAny: MDX components require any for compatibility
 const components = {
   // biome-ignore lint/suspicious/noExplicitAny: MDX component props
   pre: (props: any) => <CodeBlock {...props} />,

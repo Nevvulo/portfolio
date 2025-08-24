@@ -1,14 +1,32 @@
 import Head from "next/head";
+import styled from "styled-components";
 import { Notice, Subtitle } from "../../components/contact/typography";
 import { SocialLinks } from "../../components/generics/social-links";
 import { ContactBox } from "../../components/layout/contact";
 import { MinimalView } from "../../components/layout/minimal";
-import { SimpleNavbar } from "../../components/navbar/simple";
+import { DetailedNavbar } from "../../components/navbar/detailed";
+
+const ContactTitle = styled.h1`
+  font-family: "Inter", sans-serif;
+  font-weight: 600;
+  color: ${(props) => props.theme.contrast};
+  font-size: 48px;
+  margin-bottom: 8px;
+  margin-top: 2em;
+  text-align: center;
+  
+  @media (max-width: 768px) {
+    font-size: 36px;
+    margin-top: 1em;
+  }
+`;
 
 export default function Contact() {
   return (
     <MinimalView>
-      <SimpleNavbar emoji="📧" title="Contact" />
+      <DetailedNavbar />
+      
+      <ContactTitle>📧 Contact</ContactTitle>
 
       <ContactBox>
         <Subtitle color="white">Socials</Subtitle>

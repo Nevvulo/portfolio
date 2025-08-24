@@ -27,10 +27,14 @@ export function DetailedNavbar({ style }: NavbarProps) {
           </Link>
 
           <CustomLink href={ROUTES.BLOG.ROOT}>
-            <ButtonLink style={btnStyle}>Blog</ButtonLink>
+            <ButtonLink as="span" style={btnStyle}>
+              Blog
+            </ButtonLink>
           </CustomLink>
           <CustomLink href={ROUTES.PROJECTS.ROOT}>
-            <ButtonLink style={btnStyle}>Projects</ButtonLink>
+            <ButtonLink as="span" style={btnStyle}>
+              Projects
+            </ButtonLink>
           </CustomLink>
           {smallDisplay ? (
             <CollapsibleContent
@@ -41,10 +45,14 @@ export function DetailedNavbar({ style }: NavbarProps) {
           ) : (
             <>
               <CustomLink href={ROUTES.ABOUT}>
-                <ButtonLink style={btnStyle}>About Me</ButtonLink>
+                <ButtonLink as="span" style={btnStyle}>
+                  About Me
+                </ButtonLink>
               </CustomLink>
               <CustomLink href={ROUTES.CONTACT}>
-                <ButtonLink style={btnStyle}>Contact</ButtonLink>
+                <ButtonLink as="span" style={btnStyle}>
+                  Contact
+                </ButtonLink>
               </CustomLink>
             </>
           )}
@@ -53,10 +61,14 @@ export function DetailedNavbar({ style }: NavbarProps) {
       {contextMenuOpen && smallDisplay && (
         <ContextMenu>
           <CustomLink href={ROUTES.ABOUT}>
-            <ButtonLink style={btnStyle}>About Me</ButtonLink>
+            <ButtonLink as="span" style={btnStyle}>
+              About Me
+            </ButtonLink>
           </CustomLink>
           <CustomLink href={ROUTES.CONTACT}>
-            <ButtonLink style={btnStyle}>Contact</ButtonLink>
+            <ButtonLink as="span" style={btnStyle}>
+              Contact
+            </ButtonLink>
           </CustomLink>
         </ContextMenu>
       )}
@@ -65,8 +77,12 @@ export function DetailedNavbar({ style }: NavbarProps) {
 }
 
 const DetailedContainer = styled.div`
-  margin-top: 2em;
+  margin-top: 1em;
   width: 100%;
+  
+  @media (max-width: 768px) {
+    margin-top: 0.5em;
+  }
 `;
 
 const ContextMenu = styled(Container).attrs({ direction: "column" })`
@@ -203,6 +219,11 @@ const NavbarBackground = styled(Container)`
   align-items: center;
   border-radius: 6px;
   padding: 0 0.5em;
+  gap: 0.5em;
+
+  @media (max-width: 550px) {
+    gap: 0.25em;
+  }
 `;
 
 const NavbarContainer = styled(Container)`

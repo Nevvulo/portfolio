@@ -15,4 +15,6 @@ export const MinimalView = styled(Container)`
   justify-content: center;
   flex-direction: column;
   overflow: hidden;
+  min-height: 100vh;
+  width: 100%;
 `;

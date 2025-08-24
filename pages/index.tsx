@@ -32,47 +32,55 @@ export default function Home() {
         direction="row"
       >
         <Container flex="1" direction="column">
-          <FadeUp delay={50}>
+          <FadeUp $delay={50}>
             <Avatar width={52} height={52} />
           </FadeUp>
           <Container direction="row">
             <Border />
             <Title>
-              <FadeUp bounce delay={0}>
+              <FadeUp $bounce $delay={0}>
                 Hi,
               </FadeUp>{" "}
-              <FadeUp bounce delay={200}>
+              <FadeUp $bounce $delay={200}>
                 I'm
               </FadeUp>{" "}
-              <FadeUp bounce delay={310}>
+              <FadeUp $bounce $delay={310}>
                 Blake
               </FadeUp>
             </Title>
           </Container>
 
           <Subtitle>
-            <FadeUp delay={400}>I'm a software engineer based in Melbourne, Australia.</FadeUp>
+            <FadeUp $delay={400}>I'm a software engineer based in Melbourne, Australia.</FadeUp>
           </Subtitle>
 
-          <FadeUp delay={400}>
+          <FadeUp $delay={400}>
             <ButtonContainer direction="column">
               <CustomLink href={ROUTES.BLOG.ROOT}>
-                <ButtonLink key="blog-btn">📖 Blog</ButtonLink>
+                <ButtonLink as="span" key="blog-btn">
+                  📖 Blog
+                </ButtonLink>
               </CustomLink>
               <CustomLink href={ROUTES.PROJECTS.ROOT}>
-                <ButtonLink key="projects-btn">🛠 Projects</ButtonLink>
+                <ButtonLink as="span" key="projects-btn">
+                  🛠 Projects
+                </ButtonLink>
               </CustomLink>
               <CustomLink href={ROUTES.ABOUT}>
-                <ButtonLink key="about-btn">👋 About Me</ButtonLink>
+                <ButtonLink as="span" key="about-btn">
+                  👋 About Me
+                </ButtonLink>
               </CustomLink>
               <CustomLink href={ROUTES.CONTACT}>
-                <ButtonLink key="contact-btn">📧 Contact</ButtonLink>
+                <ButtonLink as="span" key="contact-btn">
+                  📧 Contact
+                </ButtonLink>
               </CustomLink>
             </ButtonContainer>
           </FadeUp>
         </Container>
 
-        <FadeUp delay={545}>
+        <FadeUp $delay={545}>
           <SocialLinks />
         </FadeUp>
       </HomeContainer>

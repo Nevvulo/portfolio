@@ -15,6 +15,7 @@ const nextConfig = {
   experimental: {
     // These features work in stable 15.5.0
     clientSegmentCache: true,
+    swcTraceProfiling: false,
 
     // These require canary version - uncomment if you switch to canary
     // browserDebugInfoInTerminal: true,
@@ -39,6 +40,8 @@ const nextConfig = {
         hostname: "images.unsplash.com",
       },
     ],
+    // Configure valid quality values to prevent warnings
+    qualities: [25, 50, 75, 100],
   },
 
   // Redirects
@@ -54,7 +57,7 @@ const nextConfig = {
     ];
   },
 
-  // Styled components compiler
+  // Styled components compiler with modern JS targeting
   compiler: {
     styledComponents: true,
   },

@@ -1,9 +1,9 @@
 import { faClock } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import Link from "next/link";
 import styled, { type DefaultTheme, useTheme } from "styled-components";
 import useMediaQuery from "../../hooks/useMediaQuery";
 import { Container } from "../container";
-import { StrippedLink } from "../generics/link";
 import { Skeleton } from "../generics/skeleton";
 import { Title } from "../generics/title";
 import { Label, Labels } from "./labels";
@@ -57,7 +57,7 @@ export function PostPreview({
   const difficultyBackground = getDifficultyBackground(difficulty as Difficulty, theme);
 
   return (
-    <StrippedLink scroll={false} passHref href={`/blog/${slug}`}>
+    <Link href={`/blog/${slug}`} scroll={false} style={{ textDecoration: "none" }}>
       <PreviewContainer>
         <Post>
           <PreviewText direction="column">
@@ -100,7 +100,7 @@ export function PostPreview({
           />
         </Post>
       </PreviewContainer>
-    </StrippedLink>
+    </Link>
   );
 }
 
@@ -114,15 +114,18 @@ const Post = styled.div`
   box-shadow: 1px 5px 8px rgba(0, 0, 0, 0.3);
   align-self: center;
   justify-self: center;
+  align-items: stretch;
   text-decoration: none;
   max-width: 650px;
   cursor: pointer;
   margin: 1em 0.5em;
   padding: 0.5em;
+  min-height: 150px;
 
   @media (max-width: 460px) {
     flex-direction: column-reverse;
     min-width: 200px;
+    min-height: auto;
     padding: 0;
   }
 `;
@@ -131,6 +134,8 @@ const PreviewText = styled(Container)`
   margin: 20px 24px 0px 24px;
   max-width: 450px;
   color: ${(props) => props.theme.contrast};
+  flex: 1;
+  justify-content: space-between;
 
   @media (max-width: 460px) {
     margin: 1em;
@@ -160,7 +165,7 @@ const PreviewDescription = styled.p`
   color: ${(props) => props.theme.postDescriptionText};
 `;
 
-const PreviewContainer = styled.a`
+const PreviewContainer = styled.div`
   text-decoration: none;
   overflow: hidden;
   margin: 0 1em;

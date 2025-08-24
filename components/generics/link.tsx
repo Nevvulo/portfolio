@@ -12,33 +12,26 @@ type LinkProps = {
   color?: string;
   underline?: boolean;
 };
-export function Link({ href, color, style, children, underline }: PropsWithChildren<LinkProps>) {
-  if (underline)
-    return (
-      <NextLink passHref href={href}>
-        <LinkText color={color}>{children}</LinkText>
-      </NextLink>
-    );
-
+export function Link({ href, color, style, children }: PropsWithChildren<LinkProps>) {
   return (
-    <StrippedLink passHref href={href}>
-      <LinkText style={style} color={color}>
+    <NextLink href={href} style={{ textDecoration: "none" }}>
+      <LinkTextStyled style={style} color={color} as="span">
         {children}
-      </LinkText>
-    </StrippedLink>
+      </LinkTextStyled>
+    </NextLink>
   );
 }
 
 export function CustomLink({ href, children }: PropsWithChildren<LinkProps>) {
   return (
-    <StrippedLink passHref href={href}>
+    <NextLink href={href} passHref>
       {children}
-    </StrippedLink>
+    </NextLink>
   );
 }
 
-const IconLinkContainer = styled.div`
-  display: inline;
+const IconLinkContainer = styled.span`
+  display: inline-flex;
   align-items: center;
   flex-direction: row;
 `;
@@ -108,12 +101,16 @@ export const IconLink: React.FC<IconLinkProps> = ({
   </IconLinkContainer>
 );
 
-export const LinkText = styled.a<{ color?: string }>`
+const LinkTextStyled = styled.a<{ color?: string }>`
   color: ${(props) => props.color || COLORS.LINK};
   font-family: "Fira Code", monospace;
   font-size: 15px;
   font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
 `;
+
+export const LinkText = LinkTextStyled;
 
 export const StrippedLink = styled(NextLink)`
   text-decoration: none;

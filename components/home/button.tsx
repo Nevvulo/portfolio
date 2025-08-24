@@ -33,6 +33,14 @@ export const ButtonLink = styled.a`
   color: white;
   border-radius: 4px;
 
+  @media (max-width: 600px) {
+    margin: 0;
+    font-size: clamp(0.5vw, 1.2rem, 6vmax);
+    width: calc(50% - 0.125em);
+    text-align: center;
+    flex: 0 0 calc(50% - 0.125em);
+  }
+
   @media (max-width: 500px) {
     font-size: clamp(0.5vw, 1rem, 6vmax);
   }
@@ -45,6 +53,7 @@ export const ButtonContainer = styled(Container)`
   justify-content: flex-start;
   width: 100%;
   margin-top: max(4px, 2vh);
+  gap: 0.5em;
 
   @media (min-height: 768px) and (min-width: 568px) {
     flex-wrap: wrap;
@@ -52,7 +61,15 @@ export const ButtonContainer = styled(Container)`
     font-size: 24px;
   }
 
+  @media (max-width: 600px) {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 0.25em;
+    justify-content: space-between;
+  }
+
   @media (max-width: 468px) {
     margin-top: 0;
+    gap: 0.2em;
   }
 `;

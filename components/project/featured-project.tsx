@@ -1,27 +1,48 @@
 import Image from "next/image";
 import styled from "styled-components";
 import FluxBanner from "../../assets/img/projects/banner/flux.png";
+import UnloanBanner from "../../assets/img/projects/banner/unloan.png";
 import { StrippedLink } from "../generics";
 import { ProjectContent, type ProjectProps, type ProjectStyleProps } from ".";
 
-type ProjectPreviewProps = ProjectProps & ProjectStyleProps & { href: string };
+const projectBanners = {
+  flux: FluxBanner,
+  unloan: UnloanBanner,
+} as const;
+
+function getProjectBanner(projectId: string) {
+  return projectBanners[projectId as keyof typeof projectBanners] || FluxBanner;
+}
+
+function getBannerAlt(projectId: string) {
+  const projectNames = {
+    flux: "Flux",
+    unloan: "Unloan",
+  } as const;
+  return `${projectNames[projectId as keyof typeof projectNames] || "Project"} project banner`;
+}
+
+type ProjectPreviewProps = ProjectProps &
+  ProjectStyleProps & { href: string; projectId: string; isSmaller?: boolean };
 export function FeaturedProjectPreview({
   preview: Component,
   background,
   href,
+  projectId,
+  isSmaller = false,
 }: ProjectPreviewProps) {
   return (
     <StrippedLink passHref href={href}>
-      <Container>
-        <ImageWrapper>
+      <Container isSmaller={isSmaller}>
+        <ImageWrapper isSmaller={isSmaller}>
           <Image
-            alt="Flux project banner"
+            alt={getBannerAlt(projectId)}
             placeholder="blur"
             priority
             quality={50}
-            src={FluxBanner}
+            src={getProjectBanner(projectId)}
             width={650}
-            height={350}
+            height={isSmaller ? 280 : 350}
             style={{
               width: "100%",
               height: "100%",
@@ -48,7 +69,9 @@ export function FeaturedProjectPreview({
   );
 }
 
-const Container = styled.div`
+const Container = styled.div.withConfig({
+  shouldForwardProp: (prop) => !["isSmaller"].includes(prop),
+})<{ isSmaller?: boolean }>`
   position: relative;
   cursor: pointer;
   border-radius: 6px;
@@ -64,10 +87,12 @@ const Container = styled.div`
   }
 `;
 
-const ImageWrapper = styled.div`
+const ImageWrapper = styled.div.withConfig({
+  shouldForwardProp: (prop) => !["isSmaller"].includes(prop),
+})<{ isSmaller?: boolean }>`
   position: relative;
   width: 100%;
-  height: 350px;
+  height: ${(props) => (props.isSmaller ? "280px" : "350px")};
   overflow: hidden;
   
   img {

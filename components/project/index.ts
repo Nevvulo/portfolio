@@ -13,15 +13,32 @@ export const ProjectContainer = styled.div`
   margin-left: auto;
   margin-right: auto;
   flex-direction: column;
+  min-height: 100vh;
+  width: 100%;
+
+  @media (max-width: 768px) {
+    padding: 0 0.5em;
+    max-width: 100%;
+    min-height: calc(100vh - 120px);
+  }
+
+  @media (max-width: 468px) {
+    padding: 0 0.25em;
+  }
 `;
 
 export const ProjectContentContainer = styled(Container)`
   border-radius: 8px;
   padding: 1em 0.25em;
   width: 100%;
+  flex-direction: column !important;
+
+  @media (max-width: 768px) {
+    padding: 0.5em 0.125em;
+  }
 
   @media (max-width: 468px) {
-    padding: 4px;
+    padding: 0.25em 0;
   }
 `;
 
@@ -51,6 +68,14 @@ export const ProjectTitleContainer = styled(AnimatedContainer)`
   align-items: center;
   padding: 0.25em 0;
   margin-top: 2em;
+
+  @media (max-width: 768px) {
+    margin-top: 1em;
+  }
+
+  @media (max-width: 468px) {
+    margin-top: 0.5em;
+  }
 `;
 
 export const ProjectSubtitleContainer = styled(AnimatedContainer)`
@@ -92,6 +117,16 @@ export const ProjectContentHeader = styled(m.h3)`
   font-size: 26px;
   margin-top: 4px;
   margin-bottom: 2px;
+
+  @media (max-width: 768px) {
+    font-size: 22px;
+    margin: 1em 0 0.5em 0;
+  }
+
+  @media (max-width: 468px) {
+    font-size: 20px;
+    margin: 0.75em 0 0.25em 0;
+  }
 `;
 
 export const ProjectContentSubheader = styled(m.p)`
@@ -110,6 +145,17 @@ export const ProjectContentText = styled(m.p)`
   color: ${(props) => props.theme.textColor};
   font-size: 16px;
   margin-top: 4px;
+  line-height: 1.5;
+
+  @media (max-width: 768px) {
+    font-size: 15px;
+    margin: 0.5em 0;
+  }
+
+  @media (max-width: 468px) {
+    font-size: 14px;
+    margin: 0.25em 0;
+  }
 `;
 
 export const ProjectImage = m.img;
