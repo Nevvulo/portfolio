@@ -1,6 +1,5 @@
 import Head from "next/head";
 import Image from "next/image";
-import React from "react";
 import styled from "styled-components";
 import Background from "../assets/img/background.jpg";
 import { Container } from "../components/container";
@@ -17,7 +16,7 @@ export default function Home() {
   const isWideDisplay = useMediaQuery("(min-width: 600px)");
   return (
     <HomeView>
-      <div style={{ position: 'fixed', inset: 0, zIndex: -1, opacity: 0.1 }}>
+      <div style={{ position: "fixed", inset: 0, zIndex: -1, opacity: 0.1 }}>
         <Image
           fill
           style={{ objectFit: "cover" }}
@@ -52,9 +51,7 @@ export default function Home() {
           </Container>
 
           <Subtitle>
-            <FadeUp delay={400}>
-              I'm a software engineer based in Melbourne, Australia.
-            </FadeUp>
+            <FadeUp delay={400}>I'm a software engineer based in Melbourne, Australia.</FadeUp>
           </Subtitle>
 
           <FadeUp delay={400}>
@@ -73,7 +70,6 @@ export default function Home() {
               </CustomLink>
             </ButtonContainer>
           </FadeUp>
-
         </Container>
 
         <FadeUp delay={545}>
@@ -87,15 +83,11 @@ export default function Home() {
           content="I'm a software engineer based in Australia working at Flux. Click this link to learn more about me!"
         />
         <meta property="og:url" content="https://nevulo.xyz" />
-        <meta
-          property="og:image"
-          content="https://nevulo.xyz/images/nevulo.jpg"
-        />
+        <meta property="og:image" content="https://nevulo.xyz/images/nevulo.jpg" />
       </Head>
     </HomeView>
   );
 }
-
 
 const Border = styled.div`
   background: #4f4dc1;

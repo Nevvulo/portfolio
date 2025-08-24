@@ -1,4 +1,4 @@
-import { Title, Text, Link, StrippedLink } from "../components/generics";
+import { Link, Text, Title } from "../components/generics";
 import { MinimalView } from "../components/layout/minimal";
 import { ROUTES } from "../constants/routes";
 

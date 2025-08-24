@@ -1,5 +1,6 @@
 import Link from "next/link";
-import React, { forwardRef, PropsWithChildren, useRef, useState } from "react";
+import type React from "react";
+import { forwardRef, type PropsWithChildren, useRef, useState } from "react";
 import styled from "styled-components";
 import { ROUTES } from "../../constants/routes";
 import useMediaQuery from "../../hooks/useMediaQuery";
@@ -84,7 +85,6 @@ function CollapsibleContent({
   collapsed,
   onExpand,
   onCollapse,
-  children,
 }: PropsWithChildren<{
   collapsed: boolean;
   onExpand: () => void;

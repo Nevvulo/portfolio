@@ -1,4 +1,5 @@
-import React, { PropsWithChildren, useRef, useState } from "react";
+import type React from "react";
+import { type PropsWithChildren, useRef, useState } from "react";
 
 const scale = "1.025";
 const perspective = "1500px";
@@ -18,7 +19,7 @@ export function Perspective({ children }: PropsWithChildren<unknown>) {
     const yRotation = 20 * ((xVal - rect.width / 2) / rect.width);
     const xRotation = -20 * ((yVal - rect.height / 2) / rect.height);
     setStyle(
-      `perspective(${perspective}) rotateX(${xRotation}deg) rotateY(${yRotation}deg) scale3d(${scale}, ${scale}, ${scale})`
+      `perspective(${perspective}) rotateX(${xRotation}deg) rotateY(${yRotation}deg) scale3d(${scale}, ${scale}, ${scale})`,
     );
   };
   const onMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {

@@ -1,9 +1,8 @@
-import React from "react";
+import Image from "next/image";
 import styled from "styled-components";
+import { StrippedLink } from "../generics";
 import type { ProjectProps, ProjectStyleProps } from ".";
 import { ProjectContent } from ".";
-import { StrippedLink } from "../generics";
-import Image from "next/image";
 
 export const ProjectPreviewImage = styled(Image)`
   display: block;
@@ -13,12 +12,7 @@ export const ProjectPreviewImage = styled(Image)`
 `;
 
 type ProjectPreviewProps = ProjectProps & ProjectStyleProps & { href: string };
-export function ProjectPreview({
-  projectId,
-  preview: Component,
-  background,
-  href,
-}: ProjectPreviewProps) {
+export function ProjectPreview({ preview: Component, background, href }: ProjectPreviewProps) {
   return (
     <StrippedLink passHref href={href}>
       <ProjectPreviewContainer background={background}>

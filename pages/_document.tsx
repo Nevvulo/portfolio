@@ -1,15 +1,9 @@
-import { AppPropsType, AppType } from "next/dist/shared/lib/utils";
-import Document, {
-  DocumentContext,
-  Head,
-  Html,
-  Main,
-  NextScript,
-} from "next/document";
+import type { AppPropsType, AppType } from "next/dist/shared/lib/utils";
+import Document, { type DocumentContext, Head, Html, Main, NextScript } from "next/document";
 import { ServerStyleSheet } from "styled-components";
 
 export default class MyDocument extends Document {
-  static async getInitialProps(ctx: DocumentContext) {
+  static override async getInitialProps(ctx: DocumentContext) {
     const sheet = new ServerStyleSheet();
     const originalRenderPage = ctx.renderPage;
 
@@ -35,16 +29,12 @@ export default class MyDocument extends Document {
     }
   }
 
-  render() {
+  override render() {
     return (
       <Html>
         <Head>
           <link rel="preconnect" href="https://fonts.googleapis.com" />
-          <link
-            rel="preconnect"
-            href="https://fonts.gstatic.com"
-            crossOrigin="anonymous"
-          />
+          <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
           <link
             href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500;600;700;800&family=Roboto+Condensed:wght@700&family=Work+Sans:wght@800"
             rel="stylesheet"

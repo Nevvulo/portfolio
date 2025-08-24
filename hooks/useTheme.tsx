@@ -30,7 +30,7 @@ export const useTheme = () => {
     }
     setMode("light");
     setComponentMounted(true);
-  }, []);
+  }, [setMode, systemDarkMode]);
 
   return [theme, toggleTheme, componentMounted];
 };

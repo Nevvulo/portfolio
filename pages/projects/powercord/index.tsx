@@ -1,10 +1,7 @@
 import Image from "next/image";
-import React from "react";
+import type React from "react";
 import PowercordLogo from "../../../assets/svg/projects/logo/powercord.svg";
-import {
-  AnimatedContainer,
-  FadeAnimatedContainer,
-} from "../../../components/container";
+import { AnimatedContainer, FadeAnimatedContainer } from "../../../components/container";
 import { DetailedNavbar } from "../../../components/navbar/detailed";
 import {
   ProjectBadges,
@@ -19,7 +16,6 @@ import Colors from "../../../constants/colors";
 import { Roles } from "../../../constants/roles";
 import { Technologies } from "../../../constants/technologies";
 
-const id = "powercord";
 const title = "Powercord";
 const shortDescription = "Client modification for the Discord desktop client";
 
@@ -63,10 +59,10 @@ export default function Powercord() {
       <ProjectContentContainer direction="column">
         <FadeAnimatedContainer direction="column">
           <ProjectContentText>
-            A client modification made for Discord. I have helped write code for
-            the client injector, as well as multiple plugins that range
-            extensively in skill sets, such as audio visualizers with Electron
-            API's, use of React components, and other plugins as well.
+            A client modification made for Discord. I have helped write code for the client
+            injector, as well as multiple plugins that range extensively in skill sets, such as
+            audio visualizers with Electron API's, use of React components, and other plugins as
+            well.
           </ProjectContentText>
         </FadeAnimatedContainer>
       </ProjectContentContainer>

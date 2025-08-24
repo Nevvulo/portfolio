@@ -1,10 +1,8 @@
 import { faArrowLeft, faHome } from "@fortawesome/free-solid-svg-icons";
-import {
-  FontAwesomeIcon,
-  FontAwesomeIconProps,
-} from "@fortawesome/react-fontawesome";
+import { FontAwesomeIcon, type FontAwesomeIconProps } from "@fortawesome/react-fontawesome";
 import { m } from "framer-motion";
-import React, { HTMLAttributes } from "react";
+import type React from "react";
+import type { HTMLAttributes } from "react";
 import styled from "styled-components";
 import { ROUTES } from "../../constants/routes";
 import { Container } from "../container";
@@ -14,8 +12,7 @@ const ButtonIcon = styled(FontAwesomeIcon)`
   margin-right: 12px;
 `;
 
-export type ButtonProps = HTMLAttributes<HTMLButtonElement> &
-  FontAwesomeIconProps;
+export type ButtonProps = HTMLAttributes<HTMLButtonElement> & FontAwesomeIconProps;
 export const Button: React.FC<ButtonProps> = ({
   icon,
   color,
@@ -24,7 +21,7 @@ export const Button: React.FC<ButtonProps> = ({
   onClick,
   children,
 }) => (
-  <button onClick={onClick} className={className}>
+  <button type="button" onClick={onClick} className={className}>
     <Container alignItems="center" direction="row">
       <ButtonIcon icon={icon} color={color} size={size} />
       {children}
@@ -32,8 +29,7 @@ export const Button: React.FC<ButtonProps> = ({
   </button>
 );
 
-export type AnimatedButtonProps = HTMLAttributes<HTMLAnchorElement> &
-  FontAwesomeIconProps;
+export type AnimatedButtonProps = HTMLAttributes<HTMLAnchorElement> & FontAwesomeIconProps;
 export const AnimatedButton: React.FC<AnimatedButtonProps> = ({
   icon,
   color,

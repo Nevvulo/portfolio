@@ -19,10 +19,7 @@ interface GetDiscussionCommentsResponse {
   };
 }
 
-export default async function getDiscussionComments(
-  discussionId: number,
-  token: string
-) {
+export default async function getDiscussionComments(discussionId: number, token: string) {
   const data = await graphql<GetDiscussionCommentsResponse>(
     `
       {
@@ -47,10 +44,9 @@ export default async function getDiscussionComments(
       headers: {
         authorization: `token ${token}`,
       },
-    }
+    },
   );
 
-  const { totalCount: total, nodes: comments } =
-    data.repository.discussion.comments;
+  const { totalCount: total, nodes: comments } = data.repository.discussion.comments;
   return { total, comments };
 }

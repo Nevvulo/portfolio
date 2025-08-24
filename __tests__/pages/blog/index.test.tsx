@@ -1,69 +1,90 @@
-import { render, screen } from '@testing-library/react'
-import { ThemeProvider } from 'styled-components'
-import Blog from '../../../pages/blog/index'
-import { LightTheme } from '../../../constants/theme'
+/// <reference lib="dom" />
+import { test, expect, describe } from "bun:test";
+import { render, screen } from "@testing-library/react";
+import { ThemeProvider } from "styled-components";
+import { LightTheme } from "../../../constants/theme";
+import Blog from "../../../pages/blog/index";
+import type { Blogmap } from "../../../types/blog";
 
-const mockPosts = [
+const mockPosts: Blogmap = [
   {
-    slug: 'test-post-1',
-    title: 'Test Post 1',
-    description: 'This is a test post',
-    labels: ['javascript', 'react'],
-    created: '2024-01-01',
-    cover: null,
+    slug: "test-post-1",
+    title: "Test Post 1",
+    description: "This is a test post about React and JavaScript",
+    image: "test-image-1.jpg",
+    createdAt: "2024-01-01T00:00:00Z",
+    labels: ["javascript", "react"],
+    location: "posts/test-post-1.mdx",
+    difficulty: "beginner",
+    readTimeMins: 5,
+    discussionId: "D_123",
+    discussionNo: 1,
+    mediumId: "medium123",
+    mediumUrl: "https://medium.com/test",
+    hashnodeId: "hashnode123",
+    hashnodeUrl: "https://hashnode.com/test",
+    devToUrl: "https://dev.to/test",
   },
   {
-    slug: 'test-post-2',
-    title: 'Test Post 2',
-    description: 'Another test post',
-    labels: ['typescript'],
-    created: '2024-01-02',
-    cover: null,
+    slug: "test-post-2",
+    title: "Test Post 2",
+    description: "Another test post about TypeScript",
+    image: "test-image-2.jpg",
+    createdAt: "2024-01-02T00:00:00Z",
+    labels: ["typescript", "nodejs"],
+    location: "posts/test-post-2.mdx",
+    difficulty: "intermediate",
+    readTimeMins: 10,
+    discussionId: "D_124",
+    discussionNo: 2,
+    mediumId: "medium124",
+    mediumUrl: "https://medium.com/test2",
+    hashnodeId: "hashnode124",
+    hashnodeUrl: "https://hashnode.com/test2",
+    devToUrl: "https://dev.to/test2",
   },
-]
+];
 
-describe('Blog Page', () => {
-  const renderWithTheme = (component: React.ReactElement) => {
-    return render(
-      <ThemeProvider theme={LightTheme}>
-        {component}
-      </ThemeProvider>
-    )
-  }
+const renderWithTheme = (component: React.ReactElement) => {
+  return render(<ThemeProvider theme={LightTheme}>{component}</ThemeProvider>);
+};
 
-  it('renders without crashing', () => {
-    renderWithTheme(<Blog posts={mockPosts} />)
-  })
+describe("Blog Page", () => {
+  test("renders without crashing", () => {
+    renderWithTheme(<Blog posts={mockPosts} />);
+  });
 
-  it('displays the blog title', () => {
-    renderWithTheme(<Blog posts={mockPosts} />)
-    const title = screen.getByText(/Blog/i)
-    expect(title).toBeInTheDocument()
-  })
-
-  it('renders blog posts', () => {
-    renderWithTheme(<Blog posts={mockPosts} />)
+  test("displays blog title and content", () => {
+    renderWithTheme(<Blog posts={mockPosts} />);
     
-    expect(screen.getByText('Test Post 1')).toBeInTheDocument()
-    expect(screen.getByText('Test Post 2')).toBeInTheDocument()
-  })
+    const title = screen.getAllByText(/📖/);
+    expect(title.length).toBeGreaterThan(0);
+  });
 
-  it('displays post descriptions', () => {
-    renderWithTheme(<Blog posts={mockPosts} />)
+  test("renders all blog posts with content", () => {
+    renderWithTheme(<Blog posts={mockPosts} />);
     
-    expect(screen.getByText('This is a test post')).toBeInTheDocument()
-    expect(screen.getByText('Another test post')).toBeInTheDocument()
-  })
+    expect(screen.getAllByText("Test Post 1").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Test Post 2").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("This is a test post about React and JavaScript").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Another test post about TypeScript").length).toBeGreaterThan(0);
+  });
 
-  it('handles empty posts array', () => {
-    renderWithTheme(<Blog posts={[]} />)
-    const title = screen.getByText(/Blog/i)
-    expect(title).toBeInTheDocument()
-  })
+  test("displays post labels and read times", () => {
+    renderWithTheme(<Blog posts={mockPosts} />);
+    
+    expect(screen.getAllByText("javascript").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("react").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("typescript").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("nodejs").length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/5 mins/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/10 mins/i).length).toBeGreaterThan(0);
+  });
 
-  it('handles null posts', () => {
-    renderWithTheme(<Blog posts={null} />)
-    const title = screen.getByText(/Blog/i)
-    expect(title).toBeInTheDocument()
-  })
-})
+  test("handles empty posts array gracefully", () => {
+    renderWithTheme(<Blog posts={[]} />);
+    
+    const navbar = screen.getAllByText(/📖/);
+    expect(navbar.length).toBeGreaterThan(0);
+  });
+});

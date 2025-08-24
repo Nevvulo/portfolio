@@ -28,6 +28,6 @@ export default async function getLastDiscussions(token: string) {
       headers: {
         authorization: `token ${token}`,
       },
-    }
+    },
   );
 }

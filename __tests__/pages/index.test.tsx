@@ -1,46 +1,51 @@
-import { render, screen } from '@testing-library/react'
-import { ThemeProvider } from 'styled-components'
-import Home from '../../pages/index'
-import { LightTheme } from '../../constants/theme'
+/// <reference lib="dom" />
+import { test, expect, describe } from "bun:test";
+import { render, screen } from "@testing-library/react";
+import { ThemeProvider } from "styled-components";
+import { LightTheme } from "../../constants/theme";
+import Home from "../../pages/index";
 
-describe('Home Page', () => {
-  const renderWithTheme = (component: React.ReactElement) => {
-    return render(
-      <ThemeProvider theme={LightTheme}>
-        {component}
-      </ThemeProvider>
-    )
-  }
+const renderWithTheme = (component: React.ReactElement) => {
+  return render(<ThemeProvider theme={LightTheme}>{component}</ThemeProvider>);
+};
 
-  it('renders without crashing', () => {
-    renderWithTheme(<Home />)
-  })
+describe("Home Page", () => {
+  test("renders without crashing", () => {
+    renderWithTheme(<Home />);
+  });
 
-  it('displays the main heading', () => {
-    renderWithTheme(<Home />)
-    const heading = screen.getByText(/Blake/i)
-    expect(heading).toBeInTheDocument()
-  })
-
-  it('displays the subtitle', () => {
-    renderWithTheme(<Home />)
-    const subtitle = screen.getByText(/full-stack developer/i)
-    expect(subtitle).toBeInTheDocument()
-  })
-
-  it('has navigation buttons', () => {
-    renderWithTheme(<Home />)
-    const blogButton = screen.getByRole('link', { name: /blog/i })
-    const projectsButton = screen.getByRole('link', { name: /projects/i })
+  test("displays main content with name and location", () => {
+    renderWithTheme(<Home />);
     
-    expect(blogButton).toBeInTheDocument()
-    expect(projectsButton).toBeInTheDocument()
-  })
+    const nameElements = screen.getAllByText(/Blake/i);
+    const subtitles = screen.getAllByText(/software engineer based in Melbourne, Australia/i);
+    
+    expect(nameElements.length).toBeGreaterThan(0);
+    expect(subtitles.length).toBeGreaterThan(0);
+  });
 
-  it('displays social links', () => {
-    renderWithTheme(<Home />)
-    // Check for social links container
-    const socialLinks = screen.getByText(/Connect with me/i)
-    expect(socialLinks).toBeInTheDocument()
-  })
-})
+  test("has all navigation buttons", () => {
+    renderWithTheme(<Home />);
+    
+    expect(screen.getAllByText("📖 Blog").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("🛠 Projects").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("👋 About Me").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("📧 Contact").length).toBeGreaterThan(0);
+  });
+
+  test("displays social links", () => {
+    renderWithTheme(<Home />);
+    
+    const socialLinksContainer = document.querySelector('[href*="github.com"]');
+    
+    expect(socialLinksContainer).toBeTruthy();
+  });
+
+  test("renders avatar image", () => {
+    renderWithTheme(<Home />);
+    
+    const avatarImg = document.querySelector('img[alt*="Avatar"]') || 
+                     document.querySelector('img[src*="nevulo"]');
+    expect(avatarImg).toBeTruthy();
+  });
+});

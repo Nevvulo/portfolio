@@ -1,8 +1,6 @@
 import { faClock } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import Image from "next/image";
-import React from "react";
-import styled, { DefaultTheme, useTheme } from "styled-components";
+import styled, { type DefaultTheme, useTheme } from "styled-components";
 import useMediaQuery from "../../hooks/useMediaQuery";
 import { Container } from "../container";
 import { StrippedLink } from "../generics/link";
@@ -11,10 +9,7 @@ import { Title } from "../generics/title";
 import { Label, Labels } from "./labels";
 import { SkeletonImage } from "./skeleton-image";
 
-function getDifficultyBackground(
-  difficulty: Difficulty | undefined,
-  theme: DefaultTheme
-) {
+function getDifficultyBackground(difficulty: Difficulty | undefined, theme: DefaultTheme) {
   const {
     difficultyAdvancedBackground,
     difficultyIntermediateBackground,
@@ -59,22 +54,14 @@ export function PostPreview({
 }: PreviewProps) {
   const theme = useTheme();
   const isSmallDisplay = useMediaQuery("(max-width: 460px)");
-  const difficultyBackground = getDifficultyBackground(
-    difficulty as Difficulty,
-    theme
-  );
-
+  const difficultyBackground = getDifficultyBackground(difficulty as Difficulty, theme);
 
   return (
     <StrippedLink scroll={false} passHref href={`/blog/${slug}`}>
       <PreviewContainer>
         <Post>
           <PreviewText direction="column">
-            {!loading ? (
-              <Title fontSize="27px">{title}</Title>
-            ) : (
-              <Skeleton height={32} />
-            )}
+            {!loading ? <Title fontSize="27px">{title}</Title> : <Skeleton height={32} />}
             {!loading ? (
               <PreviewDescription>{description}</PreviewDescription>
             ) : (
@@ -85,8 +72,8 @@ export function PostPreview({
                 {labels
                   .map((m) => m.replace(/-/g, " "))
                   .slice(0, 3)
-                  .map((label, i) => (
-                    <Label key={i}>{label}</Label>
+                  .map((label) => (
+                    <Label key={label}>{label}</Label>
                   ))}
               </Labels>
             ) : null}
@@ -98,9 +85,7 @@ export function PostPreview({
                 </ReadTimeContainer>
               )}
               {difficultyBackground && (
-                <DifficultyIndicator color={difficultyBackground}>
-                  {difficulty}
-                </DifficultyIndicator>
+                <DifficultyIndicator color={difficultyBackground}>{difficulty}</DifficultyIndicator>
               )}
             </Container>
           </PreviewText>

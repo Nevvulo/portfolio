@@ -1,0 +1,14 @@
+node_modules
+.next
+out
+coverage
+*.min.js
+public
+*.config.js
+*.config.mjs
+next-env.d.ts
+.github
+package-lock.json
+bun.lockb
+yarn.lock
+tsconfig.tsbuildinfo

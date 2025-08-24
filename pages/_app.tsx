@@ -1,7 +1,7 @@
 import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import { LazyMotion } from "framer-motion";
-import { SessionProvider } from "next-auth/react";
-import { AppProps } from "next/app";
+import type { AppProps } from "next/app";
 import Head from "next/head";
 import Router from "next/router";
 import NProgress from "nprogress";
@@ -18,18 +18,17 @@ export default function MyApp({ Component, router, pageProps }: AppProps) {
 
   return (
     <React.StrictMode>
-      <SessionProvider>
-        <ThemeProvider theme={theme}>
-          <LazyMotion key="app" strict features={loadMotionFeatures}>
-            <GlobalStyle />
-            <MainHead />
-            <AnimatedRoutes currentRoute={router.route}>
-              <Component {...pageProps} />
-            </AnimatedRoutes>
-            <Analytics />
-          </LazyMotion>
-        </ThemeProvider>
-      </SessionProvider>
+      <ThemeProvider theme={theme}>
+        <LazyMotion key="app" strict features={loadMotionFeatures}>
+          <GlobalStyle />
+          <MainHead />
+          <AnimatedRoutes currentRoute={router.route}>
+            <Component {...pageProps} />
+          </AnimatedRoutes>
+          <Analytics />
+          <SpeedInsights />
+        </LazyMotion>
+      </ThemeProvider>
     </React.StrictMode>
   );
 }
@@ -66,5 +65,4 @@ const GlobalStyle = createGlobalStyle`
   }
 `;
 
-const loadMotionFeatures = () =>
-  import("../utils/animation").then((res) => res.animationFeatures);
+const loadMotionFeatures = () => import("../utils/animation").then((res) => res.animationFeatures);

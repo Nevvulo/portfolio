@@ -1,11 +1,11 @@
+import fs from "node:fs";
 import { Feed } from "feed";
 // @ts-expect-error
-import matter from "section-matter";
-// @ts-expect-error
 import { markdown } from "markdown";
+// @ts-expect-error
+import matter from "section-matter";
 import getFile from "../modules/getFile";
-import fs from "fs";
-import { Blogmap } from "../types/blog";
+import type { Blogmap } from "../types/blog";
 
 async function generateRssFeed(posts: Blogmap) {
   if (process.env.NODE_ENV === "development") {

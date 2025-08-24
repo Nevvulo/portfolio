@@ -1,5 +1,5 @@
 import { m } from "framer-motion";
-import React from "react";
+import type React from "react";
 import styled from "styled-components";
 import { AnimatedContainer, Container } from "../container";
 import { Link } from "../generics";

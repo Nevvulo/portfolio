@@ -1,9 +1,9 @@
-import { ProjectProps, ProjectStyleProps } from "../components/project";
+import type { ProjectProps, ProjectStyleProps } from "../components/project";
 import DankMemer, { DankMemerPreview } from "../pages/projects/dankmemer";
+import Flux, { FluxPreview } from "../pages/projects/flux";
 import Poplet, { PopletPreview } from "../pages/projects/poplet";
 import Powercord, { PowercordPreview } from "../pages/projects/powercord";
 import zBot, { zBotPreview } from "../pages/projects/zbot";
-import Flux, { FluxPreview } from "../pages/projects/flux";
 
 export type Project = ProjectProps & ProjectStyleProps;
 export const Projects: Project[] = [

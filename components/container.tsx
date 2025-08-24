@@ -1,5 +1,5 @@
 import { m } from "framer-motion";
-import { HTMLAttributes } from "react";
+import type { HTMLAttributes } from "react";
 import styled from "styled-components";
 
 type FlexDirection = "row" | "column" | "row-reverse" | "column-reverse";
@@ -16,9 +16,7 @@ export interface ContainerProps {
   padding?: string;
 }
 
-const StyledContainer = styled.div<
-  ContainerProps & HTMLAttributes<HTMLDivElement>
->`
+const StyledContainer = styled.div<ContainerProps & HTMLAttributes<HTMLDivElement>>`
   display: flex;
   flex: ${(props) => props.flex};
   flex-direction: ${(props) => props.direction};

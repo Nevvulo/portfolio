@@ -2,26 +2,21 @@ import {
   faDev,
   faFacebook,
   faGithub,
+  faHashnode,
   faMedium,
   faTwitter,
-  faHashnode,
 } from "@fortawesome/free-brands-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useViewportScroll } from "framer-motion";
-import { GetStaticPropsContext } from "next";
-import {
-  MDXRemote as PostContent,
-  MDXRemoteSerializeResult,
-} from "next-mdx-remote";
-import { serialize } from "next-mdx-remote/serialize";
+import type { GetStaticPropsContext } from "next";
 import Head from "next/head";
-import React, { ReactNode, useEffect, useState } from "react";
+import { type MDXRemoteSerializeResult, MDXRemote as PostContent } from "next-mdx-remote";
+import { serialize } from "next-mdx-remote/serialize";
+import { useState } from "react";
 // @ts-expect-error
 import matter from "section-matter";
 import styled, { createGlobalStyle } from "styled-components";
 import { CircleIndicator } from "../../components/blog/circle-indicator";
 import CodeBlock from "../../components/blog/codeblock";
-import Comments from "../../components/blog/comments";
 import { Label, Labels } from "../../components/blog/labels";
 import { PostFooter } from "../../components/blog/post-footer";
 import { PostHeader } from "../../components/blog/post-header";
@@ -33,9 +28,8 @@ import { IconLink } from "../../components/generics";
 import { Avatar } from "../../components/generics/avatar";
 import { BlogView } from "../../components/layout/blog";
 import { DetailedNavbar } from "../../components/navbar/detailed";
-import { useComments } from "../../hooks/useComments";
 import getFile from "../../modules/getFile";
-import { Blogmap } from "../../types/blog";
+import type { Blogmap } from "../../types/blog";
 
 type PostProps = {
   content: MDXRemoteSerializeResult<Record<string, unknown>>;
@@ -43,15 +37,11 @@ type PostProps = {
 };
 export default function Post({ content, properties }: PostProps) {
   const { scrollYProgress } = useViewportScroll();
-  const [completed, setCompleted] = useState(false);
-
+  const [, setCompleted] = useState(false);
 
   return (
     <>
-      <CircleIndicator
-        onComplete={() => setCompleted(true)}
-        scrollYProgress={scrollYProgress}
-      />
+      <CircleIndicator onComplete={() => setCompleted(true)} scrollYProgress={scrollYProgress} />
       <PostBody content={content} properties={properties} />
     </>
   );
@@ -65,10 +55,6 @@ function PostBody({ content, properties }: PostProps) {
   const filename = `${properties.slug}.mdx`;
   const filepath = `posts/${filename}`;
   const creationDate = new Date(properties.createdAt);
-  const { total, comments, postComment } = useComments(
-    properties.discussionNo,
-    properties.discussionId
-  );
 
   return (
     <BlogView>
@@ -83,8 +69,8 @@ function PostBody({ content, properties }: PostProps) {
         <PostHeader>
           <PostSubheader>
             <p>
-              Published on {creationDate.toLocaleDateString()} by{" "}
-              <Avatar width="16" height="16" /> <strong>Nevulo</strong>{" "}
+              Published on {creationDate.toLocaleDateString()} by <Avatar width="16" height="16" />{" "}
+              <strong>Nevulo</strong>{" "}
             </p>
           </PostSubheader>
 
@@ -163,8 +149,8 @@ function PostBody({ content, properties }: PostProps) {
         <PostFooter>
           <h2 style={{ marginTop: 0 }}>Thanks for reading!</h2>
           <p style={{ color: "grey" }}>
-            Feel free to share around, or if you think I've made a mistake,
-            request a change on GitHub!
+            Feel free to share around, or if you think I've made a mistake, request a change on
+            GitHub!
           </p>
 
           <Container direction="column">
@@ -236,13 +222,6 @@ function PostBody({ content, properties }: PostProps) {
             )}
           </Container>
         </PostFooter>
-
-
-        <Comments
-          total={total}
-          comments={comments || []}
-          onCommentSubmitted={postComment}
-        />
       </PostContainer>
 
       <Head>
@@ -261,10 +240,7 @@ function PostBody({ content, properties }: PostProps) {
         <meta property="twitter:site" content="@Nevvulo" />
         <meta property="twitter:creator" content="@Nevvulo" />
         <meta property="creator" content="Nevulo" />
-        <meta
-          property="og:article:published_time"
-          content={creationDate.toISOString()}
-        />
+        <meta property="og:article:published_time" content={creationDate.toISOString()} />
         <meta property="og:article:author:username" content="Nevulo" />
         <meta property="og:article:section" content="Technology" />
         {properties.labels?.map((tag) => (
@@ -448,23 +424,23 @@ export async function getStaticPaths() {
 
 export async function getStaticProps({ params }: GetStaticPropsContext) {
   if (!params) return { notFound: true };
-  
+
   // Skip the problematic blog post for now
-  if (params.id === 'what-are-data-types') {
+  if (params["id"] === "what-are-data-types") {
     return { notFound: true };
   }
-  
+
   const posts = await getFile("blogmap.json");
   if (!posts) return { notFound: true };
-  const post = await getFile(`posts/${params.id}.mdx`, "text");
+  const post = await getFile(`posts/${params["id"]}.mdx`, "text");
   if (!post) return { notFound: true };
   const contents = post.replace(/^#(.+)/g, "");
   const parsed = matter(contents, {
     section_delimiter: `<!--[PROPERTIES]`,
   });
-  const properties = posts.find((post) => post.slug === params.id);
+  const properties = posts.find((post) => post.slug === params["id"]);
   const { content } = parsed;
-  
+
   try {
     const serializedContent = await serialize(content);
     return {
@@ -474,7 +450,7 @@ export async function getStaticProps({ params }: GetStaticPropsContext) {
       },
     };
   } catch (error) {
-    console.error(`Error serializing MDX for ${params.id}:`, error);
+    console.error(`Error serializing MDX for ${params["id"]}:`, error);
     return { notFound: true };
   }
 }

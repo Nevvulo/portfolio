@@ -1,23 +1,14 @@
-import Image, { ImageProps } from "next/image";
+import Image, { type ImageProps } from "next/image";
 import { useState } from "react";
 import styled from "styled-components";
 
-export function SkeletonImage({
-  ...props
-}: ImageProps) {
+export function SkeletonImage({ ...props }: ImageProps) {
   const [isLoaded, setIsLoaded] = useState(false);
 
   return (
-    <PostImageContainer
-      className={isLoaded ? "loaded" : ""}
-      data-loaded={isLoaded}
-    >
+    <PostImageContainer className={isLoaded ? "loaded" : ""} data-loaded={isLoaded}>
       <SkeletonContainer className={!isLoaded ? "skeleton" : ""}>
-        <PostImage
-          quality={90}
-          {...props}
-          onLoad={() => setIsLoaded(true)}
-        />
+        <PostImage quality={90} {...props} onLoad={() => setIsLoaded(true)} />
       </SkeletonContainer>
     </PostImageContainer>
   );

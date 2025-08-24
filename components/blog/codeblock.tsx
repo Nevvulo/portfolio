@@ -1,7 +1,8 @@
 // @ts-nocheck
 import { Highlight, themes } from "prism-react-renderer";
+
 const theme = themes.shadesOfPurple;
-import React from "react";
+
 import styled from "styled-components";
 
 // Prism language extensions removed - not needed with prism-react-renderer v2
