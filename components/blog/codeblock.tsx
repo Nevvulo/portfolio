@@ -55,10 +55,12 @@ function WithLineNumbers({
       {({ className, style, tokens, getLineProps, getTokenProps }) => (
         <Pre className={className} style={style}>
           {tokens.slice(0, -1).map((line, i) => (
+            // biome-ignore lint/suspicious/noArrayIndexKey: Line numbers are stable in code blocks
             <Line key={i} {...getLineProps({ line, key: i })}>
               <LineNo>{i + 1}</LineNo>
               <LineContent>
                 {line.map((token, key) => (
+                  // biome-ignore lint/suspicious/noArrayIndexKey: Token indices are stable within lines
                   <span key={key} {...getTokenProps({ token, key })} />
                 ))}
               </LineContent>

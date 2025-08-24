@@ -12,3 +12,5 @@ package-lock.json
 bun.lockb
 yarn.lock
 tsconfig.tsbuildinfo
+./jest.setup.js
+jest.setup.*

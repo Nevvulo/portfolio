@@ -1,5 +1,5 @@
 /// <reference lib="dom" />
-import { test, expect, describe } from "bun:test";
+import { describe, expect, test } from "bun:test";
 import { render, screen } from "@testing-library/react";
 import { ThemeProvider } from "styled-components";
 import { LightTheme } from "../../constants/theme";
@@ -16,17 +16,17 @@ describe("Home Page", () => {
 
   test("displays main content with name and location", () => {
     renderWithTheme(<Home />);
-    
+
     const nameElements = screen.getAllByText(/Blake/i);
     const subtitles = screen.getAllByText(/software engineer based in Melbourne, Australia/i);
-    
+
     expect(nameElements.length).toBeGreaterThan(0);
     expect(subtitles.length).toBeGreaterThan(0);
   });
 
   test("has all navigation buttons", () => {
     renderWithTheme(<Home />);
-    
+
     expect(screen.getAllByText("📖 Blog").length).toBeGreaterThan(0);
     expect(screen.getAllByText("🛠 Projects").length).toBeGreaterThan(0);
     expect(screen.getAllByText("👋 About Me").length).toBeGreaterThan(0);
@@ -35,17 +35,17 @@ describe("Home Page", () => {
 
   test("displays social links", () => {
     renderWithTheme(<Home />);
-    
+
     const socialLinksContainer = document.querySelector('[href*="github.com"]');
-    
+
     expect(socialLinksContainer).toBeTruthy();
   });
 
   test("renders avatar image", () => {
     renderWithTheme(<Home />);
-    
-    const avatarImg = document.querySelector('img[alt*="Avatar"]') || 
-                     document.querySelector('img[src*="nevulo"]');
+
+    const avatarImg =
+      document.querySelector('img[alt*="Avatar"]') || document.querySelector('img[src*="nevulo"]');
     expect(avatarImg).toBeTruthy();
   });
 });

@@ -29,6 +29,7 @@ export function Perspective({ children }: PropsWithChildren<unknown>) {
   };
 
   return (
+    // biome-ignore lint/a11y/noStaticElementInteractions: This is a visual effect only
     <div
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}

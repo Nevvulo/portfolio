@@ -1,5 +1,5 @@
 /// <reference lib="dom" />
-import { test, expect, describe } from "bun:test";
+import { describe, expect, test } from "bun:test";
 import { render, screen } from "@testing-library/react";
 import { ThemeProvider } from "styled-components";
 import { LightTheme } from "../../../constants/theme";
@@ -56,23 +56,25 @@ describe("Blog Page", () => {
 
   test("displays blog title and content", () => {
     renderWithTheme(<Blog posts={mockPosts} />);
-    
+
     const title = screen.getAllByText(/📖/);
     expect(title.length).toBeGreaterThan(0);
   });
 
   test("renders all blog posts with content", () => {
     renderWithTheme(<Blog posts={mockPosts} />);
-    
+
     expect(screen.getAllByText("Test Post 1").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Test Post 2").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("This is a test post about React and JavaScript").length).toBeGreaterThan(0);
+    expect(
+      screen.getAllByText("This is a test post about React and JavaScript").length,
+    ).toBeGreaterThan(0);
     expect(screen.getAllByText("Another test post about TypeScript").length).toBeGreaterThan(0);
   });
 
   test("displays post labels and read times", () => {
     renderWithTheme(<Blog posts={mockPosts} />);
-    
+
     expect(screen.getAllByText("javascript").length).toBeGreaterThan(0);
     expect(screen.getAllByText("react").length).toBeGreaterThan(0);
     expect(screen.getAllByText("typescript").length).toBeGreaterThan(0);
@@ -83,7 +85,7 @@ describe("Blog Page", () => {
 
   test("handles empty posts array gracefully", () => {
     renderWithTheme(<Blog posts={[]} />);
-    
+
     const navbar = screen.getAllByText(/📖/);
     expect(navbar.length).toBeGreaterThan(0);
   });

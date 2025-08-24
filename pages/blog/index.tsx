@@ -29,7 +29,10 @@ export default function Blog({ posts }: BlogProps) {
       <Head key="blog">
         <title>Blog - Nevulo</title>
         <meta property="og:title" content="Nevulo Blog" />
-        <meta property="og:description" content={`${posts.length} posts ▪ ${latestPost?.title || ""}`} />
+        <meta
+          property="og:description"
+          content={`${posts.length} posts ▪ ${latestPost?.title || ""}`}
+        />
         <meta property="apple-mobile-web-app-title" content="Nevulo Blog" />
         <meta property="department" content="technology" />
         <meta property="audience" content="programmers" />

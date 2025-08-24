@@ -82,8 +82,8 @@ function PostBody({ content, properties }: PostProps) {
               {properties.labels
                 .map((m) => m.replace(/-/g, " "))
                 .slice(0, 3)
-                .map((label, i) => (
-                  <Label key={i}>{label}</Label>
+                .map((label) => (
+                  <Label key={label}>{label}</Label>
                 ))}
             </Labels>
           ) : null}
@@ -262,13 +262,27 @@ const getPostImage = (src: string) => {
   return isRelative && asset ? `/blog/${slug}/images/${asset}` : src;
 };
 
+interface MDXComponentProps {
+  children?: React.ReactNode;
+  [key: string]: unknown;
+}
+
+interface ImgComponentProps extends MDXComponentProps {
+  src?: string;
+  alt?: string;
+}
+
+interface LinkComponentProps extends MDXComponentProps {
+  href?: string;
+}
+
 const components = {
-  pre: (props: any) => <CodeBlock {...props} />,
-  img: (props: any) => {
-    const src = getPostImage(props.src);
+  pre: (props: MDXComponentProps) => <CodeBlock {...props} />,
+  img: (props: ImgComponentProps) => {
+    const src = getPostImage(props.src || "");
     return <PostImg loading="lazy" {...props} src={src} />;
   },
-  a: (props: any) => (
+  a: (props: LinkComponentProps) => (
     <IconLink
       style={{ textDecorationThickness: "0.125em", fontSize: "0.975em" }}
       isExternal={!props.href?.startsWith("https://nevulo.xyz")}
@@ -278,15 +292,15 @@ const components = {
       {props.children}
     </IconLink>
   ),
-  strong: (props: any) => <BoldText {...props} />,
-  h1: (props: any) => <Title {...props} />,
-  h2: (props: any) => <Subtitle {...props} />,
-  h3: (props: any) => <Heading3 {...props} />,
-  h4: (props: any) => <Heading4 {...props} />,
-  p: (props: any) => <Text {...props} />,
-  ol: (props: any) => <DotpointList {...props} />,
-  ul: (props: any) => <NumberedList {...props} />,
-  li: (props: any) => <ListItem {...props} />,
+  strong: (props: MDXComponentProps) => <BoldText {...props} />,
+  h1: (props: MDXComponentProps) => <Title {...props} />,
+  h2: (props: MDXComponentProps) => <Subtitle {...props} />,
+  h3: (props: MDXComponentProps) => <Heading3 {...props} />,
+  h4: (props: MDXComponentProps) => <Heading4 {...props} />,
+  p: (props: MDXComponentProps) => <Text {...props} />,
+  ol: (props: MDXComponentProps) => <DotpointList {...props} />,
+  ul: (props: MDXComponentProps) => <NumberedList {...props} />,
+  li: (props: MDXComponentProps) => <ListItem {...props} />,
 };
 
 const IconContainer = styled(Container).attrs({ direction: "row" })`
@@ -426,19 +440,19 @@ export async function getStaticProps({ params }: GetStaticPropsContext) {
   if (!params) return { notFound: true };
 
   // Skip the problematic blog post for now
-  if (params["id"] === "what-are-data-types") {
+  if (params.id === "what-are-data-types") {
     return { notFound: true };
   }
 
   const posts = await getFile("blogmap.json");
   if (!posts) return { notFound: true };
-  const post = await getFile(`posts/${params["id"]}.mdx`, "text");
+  const post = await getFile(`posts/${params.id}.mdx`, "text");
   if (!post) return { notFound: true };
   const contents = post.replace(/^#(.+)/g, "");
   const parsed = matter(contents, {
     section_delimiter: `<!--[PROPERTIES]`,
   });
-  const properties = posts.find((post) => post.slug === params["id"]);
+  const properties = posts.find((post) => post.slug === params.id);
   const { content } = parsed;
 
   try {
@@ -450,7 +464,7 @@ export async function getStaticProps({ params }: GetStaticPropsContext) {
       },
     };
   } catch (error) {
-    console.error(`Error serializing MDX for ${params["id"]}:`, error);
+    console.error(`Error serializing MDX for ${params.id}:`, error);
     return { notFound: true };
   }
 }

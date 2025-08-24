@@ -31,11 +31,22 @@ mock.module("next/router", () => ({
 }));
 
 // Mock Next.js Image component
+interface ImageProps {
+  src: string | { src: string };
+  loading?: string;
+  blurDataURL?: string;
+  placeholder?: string;
+  quality?: number;
+  priority?: boolean;
+  unoptimized?: boolean;
+  [key: string]: unknown;
+}
+
 mock.module("next/image", () => ({
-  default: (props: any) => {
-    const { blurDataURL, placeholder, quality, priority, loading, unoptimized, ...rest } = props;
-    const src = typeof props.src === "object" ? props.src.src || props.src : props.src;
-    
+  default: (props: ImageProps) => {
+    const { loading, ...rest } = props;
+    const src = typeof props.src === "object" ? props.src.src : props.src;
+
     return React.createElement("img", {
       ...rest,
       src: src,
@@ -45,8 +56,21 @@ mock.module("next/image", () => ({
 }));
 
 // Mock Next.js Link component
+interface LinkProps {
+  children: React.ReactNode;
+  href: string;
+  passHref?: boolean;
+  legacyBehavior?: boolean;
+  scroll?: boolean;
+  shallow?: boolean;
+  replace?: boolean;
+  prefetch?: boolean;
+  locale?: string;
+  [key: string]: unknown;
+}
+
 mock.module("next/link", () => ({
-  default: ({ children, href, passHref, legacyBehavior, scroll, shallow, replace, prefetch, locale, ...props }: any) => {
+  default: ({ children, href, ...props }: LinkProps) => {
     // Remove Next.js specific props that shouldn't be on DOM elements
     return React.createElement("a", { href, ...props }, children);
   },
@@ -55,7 +79,6 @@ mock.module("next/link", () => ({
 // Mock IntersectionObserver
 if (typeof global.IntersectionObserver === "undefined") {
   global.IntersectionObserver = class IntersectionObserver {
-    constructor() {}
     observe() {
       return null;
     }
@@ -65,7 +88,7 @@ if (typeof global.IntersectionObserver === "undefined") {
     disconnect() {
       return null;
     }
-  } as any;
+  } as unknown as typeof IntersectionObserver;
 }
 
 // Mock window.matchMedia

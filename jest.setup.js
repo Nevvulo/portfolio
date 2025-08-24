@@ -20,6 +20,8 @@ jest.mock("next/image", () => ({
   __esModule: true,
   default: (props) => {
     // eslint-disable-next-line jsx-a11y/alt-text
+    // biome-ignore lint/performance/noImgElement: Mock for testing
+    // biome-ignore lint/a11y/useAltText: Mock for testing
     return <img {...props} />;
   },
 }));
