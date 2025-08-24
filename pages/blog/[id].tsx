@@ -262,27 +262,17 @@ const getPostImage = (src: string) => {
   return isRelative && asset ? `/blog/${slug}/images/${asset}` : src;
 };
 
-interface MDXComponentProps {
-  children?: React.ReactNode;
-  [key: string]: unknown;
-}
-
-interface ImgComponentProps extends MDXComponentProps {
-  src?: string;
-  alt?: string;
-}
-
-interface LinkComponentProps extends MDXComponentProps {
-  href?: string;
-}
-
+// biome-ignore lint/suspicious/noExplicitAny: MDX components require any for compatibility
 const components = {
-  pre: (props: MDXComponentProps) => <CodeBlock {...props} />,
-  img: (props: ImgComponentProps) => {
+  // biome-ignore lint/suspicious/noExplicitAny: MDX component props
+  pre: (props: any) => <CodeBlock {...props} />,
+  // biome-ignore lint/suspicious/noExplicitAny: MDX component props
+  img: (props: any) => {
     const src = getPostImage(props.src || "");
     return <PostImg loading="lazy" {...props} src={src} />;
   },
-  a: (props: LinkComponentProps) => (
+  // biome-ignore lint/suspicious/noExplicitAny: MDX component props
+  a: (props: any) => (
     <IconLink
       style={{ textDecorationThickness: "0.125em", fontSize: "0.975em" }}
       isExternal={!props.href?.startsWith("https://nevulo.xyz")}
@@ -292,15 +282,24 @@ const components = {
       {props.children}
     </IconLink>
   ),
-  strong: (props: MDXComponentProps) => <BoldText {...props} />,
-  h1: (props: MDXComponentProps) => <Title {...props} />,
-  h2: (props: MDXComponentProps) => <Subtitle {...props} />,
-  h3: (props: MDXComponentProps) => <Heading3 {...props} />,
-  h4: (props: MDXComponentProps) => <Heading4 {...props} />,
-  p: (props: MDXComponentProps) => <Text {...props} />,
-  ol: (props: MDXComponentProps) => <DotpointList {...props} />,
-  ul: (props: MDXComponentProps) => <NumberedList {...props} />,
-  li: (props: MDXComponentProps) => <ListItem {...props} />,
+  // biome-ignore lint/suspicious/noExplicitAny: MDX component props
+  strong: (props: any) => <BoldText {...props} />,
+  // biome-ignore lint/suspicious/noExplicitAny: MDX component props
+  h1: (props: any) => <Title {...props} />,
+  // biome-ignore lint/suspicious/noExplicitAny: MDX component props
+  h2: (props: any) => <Subtitle {...props} />,
+  // biome-ignore lint/suspicious/noExplicitAny: MDX component props
+  h3: (props: any) => <Heading3 {...props} />,
+  // biome-ignore lint/suspicious/noExplicitAny: MDX component props
+  h4: (props: any) => <Heading4 {...props} />,
+  // biome-ignore lint/suspicious/noExplicitAny: MDX component props
+  p: (props: any) => <Text {...props} />,
+  // biome-ignore lint/suspicious/noExplicitAny: MDX component props
+  ol: (props: any) => <DotpointList {...props} />,
+  // biome-ignore lint/suspicious/noExplicitAny: MDX component props
+  ul: (props: any) => <NumberedList {...props} />,
+  // biome-ignore lint/suspicious/noExplicitAny: MDX component props
+  li: (props: any) => <ListItem {...props} />,
 };
 
 const IconContainer = styled(Container).attrs({ direction: "row" })`

@@ -110,7 +110,7 @@ if (typeof window !== "undefined" && !window.matchMedia) {
 
 // Mock fetch for Next.js Image optimization
 if (typeof global.fetch === "undefined") {
-  global.fetch = () =>
+  const mockFetch = (() =>
     Promise.resolve({
       ok: true,
       status: 200,
@@ -119,5 +119,7 @@ if (typeof global.fetch === "undefined") {
       blob: () => Promise.resolve(new Blob()),
       arrayBuffer: () => Promise.resolve(new ArrayBuffer(0)),
       headers: new Headers(),
-    } as Response);
+    } as Response)) as unknown as typeof fetch;
+
+  global.fetch = mockFetch;
 }

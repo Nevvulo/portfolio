@@ -41,11 +41,8 @@ const LineContent = styled.span`
   }
 `;
 
-function WithLineNumbers({
-  children,
-}: {
-  children?: { props: { children: string; className: string } };
-}) {
+// biome-ignore lint/suspicious/noExplicitAny: MDX children type
+function WithLineNumbers({ children }: { children?: any }) {
   return (
     <Highlight
       theme={theme}

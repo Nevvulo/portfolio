@@ -35,8 +35,11 @@ describe("Projects Page", () => {
     expect(maintainedTabs.length).toBeGreaterThan(0);
 
     // Test tab switching functionality on the first instance
-    const _allTab = allTabs[0];
     const maintainedTab = maintainedTabs[0];
+
+    if (!maintainedTab) {
+      throw new Error("Maintained tab not found");
+    }
 
     // Check initial state - All tab should be selected by default
     const maintainedTabParent = maintainedTab.parentElement;
@@ -58,7 +61,11 @@ describe("Projects Page", () => {
 
     // Test filtering maintains projects
     const maintainedTabs = screen.getAllByText("Maintained");
-    fireEvent.click(maintainedTabs[0]);
+    const firstMaintainedTab = maintainedTabs[0];
+
+    if (firstMaintainedTab) {
+      fireEvent.click(firstMaintainedTab);
+    }
 
     const filteredContainers = document.querySelectorAll('[href*="/projects/"]');
     expect(filteredContainers.length).toBeGreaterThan(0);
@@ -74,7 +81,8 @@ describe("Projects Page", () => {
       document.querySelector('[class*="background"]') ||
       document.querySelector('[style*="position: absolute"]');
     const allTabs = screen.getAllByText("All");
-    const filterContainer = allTabs[0].parentElement?.parentElement;
+    const firstAllTab = allTabs[0];
+    const filterContainer = firstAllTab?.parentElement?.parentElement;
 
     expect(projectWithBackground).toBeTruthy();
     expect(filterContainer).toBeTruthy();
