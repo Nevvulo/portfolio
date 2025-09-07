@@ -16,13 +16,13 @@ export default function Home() {
   const isWideDisplay = useMediaQuery("(min-width: 600px)");
   return (
     <HomeView>
-      <div style={{ position: "fixed", inset: 0, zIndex: -1, opacity: 0.1 }}>
+      <div style={{ position: "fixed", inset: 0, zIndex: -1, opacity: 0.1 }} aria-hidden="true">
         <Image
           fill
           style={{ objectFit: "cover" }}
           priority
           src={Background}
-          alt="Background"
+          alt="Decorative geometric pattern background"
           placeholder="blur"
         />
       </div>
@@ -55,23 +55,23 @@ export default function Home() {
           </Subtitle>
 
           <FadeUp $delay={400}>
-            <ButtonContainer direction="column">
-              <CustomLink href={ROUTES.BLOG.ROOT}>
+            <ButtonContainer as="nav" direction="column" aria-label="Main navigation">
+              <CustomLink href={ROUTES.BLOG.ROOT} aria-label="Read my blog posts">
                 <ButtonLink as="span" key="blog-btn">
                   📖 Blog
                 </ButtonLink>
               </CustomLink>
-              <CustomLink href={ROUTES.PROJECTS.ROOT}>
+              <CustomLink href={ROUTES.PROJECTS.ROOT} aria-label="View my projects">
                 <ButtonLink as="span" key="projects-btn">
                   🛠 Projects
                 </ButtonLink>
               </CustomLink>
-              <CustomLink href={ROUTES.ABOUT}>
+              <CustomLink href={ROUTES.ABOUT} aria-label="Learn more about me">
                 <ButtonLink as="span" key="about-btn">
                   👋 About Me
                 </ButtonLink>
               </CustomLink>
-              <CustomLink href={ROUTES.CONTACT}>
+              <CustomLink href={ROUTES.CONTACT} aria-label="Get in touch with me">
                 <ButtonLink as="span" key="contact-btn">
                   📧 Contact
                 </ButtonLink>
@@ -108,8 +108,12 @@ const Border = styled.div`
 
 const HomeContainer = styled(Container)`
   @media (max-width: 768px) {
-    flex-direction: column !important;
+    flex-direction: column;
   }
 
-  padding: 1em;
+  padding: 1.5rem;
+  
+  @media (max-width: 600px) {
+    padding: 1rem;
+  }
 `;
