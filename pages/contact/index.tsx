@@ -25,7 +25,7 @@ export default function Contact() {
   return (
     <MinimalView>
       <DetailedNavbar />
-      
+
       <ContactTitle>📧 Contact</ContactTitle>
 
       <ContactBox>

@@ -1,4 +1,4 @@
-import { m, type HTMLMotionProps } from "framer-motion";
+import { type HTMLMotionProps, m } from "framer-motion";
 import type React from "react";
 import type { HTMLAttributes } from "react";
 import styled from "styled-components";
@@ -79,7 +79,7 @@ export const FadeAnimatedContainer: React.FC<ContainerProps & Partial<HTMLMotion
     $alignItems={alignItems}
     $padding={padding}
     layoutId={layoutId}
-    {...(props as any)}
+    {...(props as Omit<Partial<HTMLMotionProps<"div">>, "ref">)}
   />
 );
 
@@ -134,6 +134,6 @@ export const AnimatedContainer: React.FC<ContainerProps & Partial<HTMLMotionProp
     $alignItems={alignItems}
     $padding={padding}
     layoutId={layoutId}
-    {...(props as any)}
+    {...(props as Omit<Partial<HTMLMotionProps<"div">>, "ref">)}
   />
 );

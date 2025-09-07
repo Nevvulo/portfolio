@@ -54,7 +54,7 @@ export default function ProjectsPage() {
 
 const Background = styled.div`
   width: 100%;
-  filter: ${(props) => (props.theme.contrast === "#000" ? "invert(1)" : "")}
+  filter: ${(props) => (props.theme.contrast === "#000" ? "invert(1)" : "")};
   background: url("/images/alt-background.png");
   height: 100%;
   opacity: 0.5;

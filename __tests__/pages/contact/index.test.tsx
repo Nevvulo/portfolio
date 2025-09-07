@@ -17,13 +17,11 @@ describe("Contact Page", () => {
   test("displays contact page title and main sections", () => {
     renderWithTheme(<Contact />);
 
-    const emojis = screen.getAllByText("📧");
-    const titles = screen.getAllByText("Contact");
+    const titleWithEmoji = screen.getAllByText("📧 Contact");
     const socialsHeadings = screen.getAllByText("Socials");
     const securityHeadings = screen.getAllByText(/Security & Privacy/i);
 
-    expect(emojis.length).toBeGreaterThan(0);
-    expect(titles.length).toBeGreaterThan(0);
+    expect(titleWithEmoji.length).toBeGreaterThan(0);
     expect(socialsHeadings.length).toBeGreaterThan(0);
     expect(securityHeadings.length).toBeGreaterThan(0);
   });

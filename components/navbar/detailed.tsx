@@ -106,7 +106,7 @@ function CollapsibleContent({
   onExpand: () => void;
   onCollapse: () => void;
 }>) {
-  const ref = useRef<HTMLDivElement>(null);
+  const ref = useRef<HTMLButtonElement>(null);
 
   return (
     <MenuIcon
@@ -121,19 +121,26 @@ function CollapsibleContent({
 }
 
 const MenuIcon = forwardRef<
-  HTMLDivElement,
+  HTMLButtonElement,
   PropsWithChildren<{ onClick: () => void; open: boolean }>
 >((props, ref) => (
-  <MenuIconContainer onClick={props.onClick} ref={ref}>
-    <input type="checkbox" />
-    <div>
+  <MenuIconContainer
+    onClick={props.onClick}
+    ref={ref}
+    aria-label="Toggle navigation menu"
+    aria-expanded={props.open}
+  >
+    <input type="checkbox" checked={props.open} aria-hidden="true" tabIndex={-1} readOnly />
+    <div aria-hidden="true">
       <span></span>
       <span></span>
     </div>
   </MenuIconContainer>
 ));
 
-const MenuIconContainer = styled.div`
+const MenuIconContainer = styled.button`
+  background: none;
+  border: none;
   position: relative;
   width: 50px;
   height: 50px;
