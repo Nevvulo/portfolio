@@ -7,6 +7,8 @@ enum COLORS {
   BLACK = "#000000",
   LIGHT_PURPLE = "#b39ddb",
   FLUX_GREEN = "#6cea9c",
+  UNLOAN_YELLOW = "#F2FF00",
+  UNLOAN_BLACK = "#101010",
   TAB_SELECTED = "#f7be5c",
   TEXT_COLOR = "#f7be5c",
   TAB_UNFOCUSED = "#d6d6d6",

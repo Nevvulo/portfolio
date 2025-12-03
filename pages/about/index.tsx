@@ -6,26 +6,43 @@ import { IconLink, Link, Text } from "../../components/generics";
 import { Footer } from "../../components/generics/footer";
 import { AboutBox } from "../../components/layout/about";
 import { MinimalView } from "../../components/layout/minimal";
-import { SimpleNavbar } from "../../components/navbar/simple";
+import { DetailedNavbar } from "../../components/navbar/detailed";
 import COLORS from "../../constants/colors";
 import { ROUTES } from "../../constants/routes";
+
+const AboutTitle = styled.h1`
+  font-family: "Inter", sans-serif;
+  font-weight: 600;
+  color: ${(props) => props.theme.contrast};
+  font-size: 48px;
+  margin-bottom: 8px;
+  margin-top: 2em;
+  text-align: center;
+  
+  @media (max-width: 768px) {
+    font-size: 36px;
+    margin-top: 1em;
+  }
+`;
 
 export default function About() {
   return (
     <MinimalView>
       <Background />
-      <SimpleNavbar emoji="👋" title="About Me" />
+      <DetailedNavbar />
+
+      <AboutTitle>👋 About Me</AboutTitle>
 
       <AboutBox>
         <TextContainer>
           <Subtitle>Who am I?</Subtitle>
           <Text>
             I'm Blake - a software engineer based in Melbourne, Australia working at{" "}
-            <Link color={COLORS.FLUX_GREEN} href={ROUTES.PROJECTS.FLUX}>
-              Flux
-            </Link>
-            . I'm passionate about giving users the best experiences in applications because that's
-            what they deserve.
+            <Link color={COLORS.UNLOAN_YELLOW} href={ROUTES.PROJECTS.UNLOAN}>
+              Unloan
+            </Link>{" "}
+            for CBA. I'm passionate about giving users the best experiences in applications because
+            that's what they deserve.
           </Text>
 
           <Subtitle>What do I do?</Subtitle>
@@ -94,7 +111,7 @@ export default function About() {
 
 const Background = styled.div`
   width: 100%;
-  filter: ${(props) => (props.theme.contrast === "#000" ? "invert(1)" : "")}
+  filter: ${(props) => (props.theme.contrast === "#000" ? "invert(1)" : "")};
   background: url("/images/alt-background.png");
   height: 100%;
   opacity: 0.5;

@@ -16,13 +16,13 @@ export default function Home() {
   const isWideDisplay = useMediaQuery("(min-width: 600px)");
   return (
     <HomeView>
-      <div style={{ position: "fixed", inset: 0, zIndex: -1, opacity: 0.1 }}>
+      <div style={{ position: "fixed", inset: 0, zIndex: -1, opacity: 0.1 }} aria-hidden="true">
         <Image
           fill
           style={{ objectFit: "cover" }}
           priority
           src={Background}
-          alt="Background"
+          alt="Decorative geometric pattern background"
           placeholder="blur"
         />
       </div>
@@ -32,47 +32,55 @@ export default function Home() {
         direction="row"
       >
         <Container flex="1" direction="column">
-          <FadeUp delay={50}>
+          <FadeUp $delay={50}>
             <Avatar width={52} height={52} />
           </FadeUp>
           <Container direction="row">
             <Border />
             <Title>
-              <FadeUp bounce delay={0}>
+              <FadeUp $bounce $delay={0}>
                 Hi,
               </FadeUp>{" "}
-              <FadeUp bounce delay={200}>
+              <FadeUp $bounce $delay={200}>
                 I'm
               </FadeUp>{" "}
-              <FadeUp bounce delay={310}>
+              <FadeUp $bounce $delay={310}>
                 Blake
               </FadeUp>
             </Title>
           </Container>
 
           <Subtitle>
-            <FadeUp delay={400}>I'm a software engineer based in Melbourne, Australia.</FadeUp>
+            <FadeUp $delay={400}>I'm a software engineer based in Melbourne, Australia.</FadeUp>
           </Subtitle>
 
-          <FadeUp delay={400}>
-            <ButtonContainer direction="column">
-              <CustomLink href={ROUTES.BLOG.ROOT}>
-                <ButtonLink key="blog-btn">📖 Blog</ButtonLink>
+          <FadeUp $delay={400}>
+            <ButtonContainer as="nav" direction="column" aria-label="Main navigation">
+              <CustomLink href={ROUTES.BLOG.ROOT} aria-label="Read my blog posts">
+                <ButtonLink as="span" key="blog-btn">
+                  📖 Blog
+                </ButtonLink>
               </CustomLink>
-              <CustomLink href={ROUTES.PROJECTS.ROOT}>
-                <ButtonLink key="projects-btn">🛠 Projects</ButtonLink>
+              <CustomLink href={ROUTES.PROJECTS.ROOT} aria-label="View my projects">
+                <ButtonLink as="span" key="projects-btn">
+                  🛠 Projects
+                </ButtonLink>
               </CustomLink>
-              <CustomLink href={ROUTES.ABOUT}>
-                <ButtonLink key="about-btn">👋 About Me</ButtonLink>
+              <CustomLink href={ROUTES.ABOUT} aria-label="Learn more about me">
+                <ButtonLink as="span" key="about-btn">
+                  👋 About Me
+                </ButtonLink>
               </CustomLink>
-              <CustomLink href={ROUTES.CONTACT}>
-                <ButtonLink key="contact-btn">📧 Contact</ButtonLink>
+              <CustomLink href={ROUTES.CONTACT} aria-label="Get in touch with me">
+                <ButtonLink as="span" key="contact-btn">
+                  📧 Contact
+                </ButtonLink>
               </CustomLink>
             </ButtonContainer>
           </FadeUp>
         </Container>
 
-        <FadeUp delay={545}>
+        <FadeUp $delay={545}>
           <SocialLinks />
         </FadeUp>
       </HomeContainer>
@@ -100,8 +108,12 @@ const Border = styled.div`
 
 const HomeContainer = styled(Container)`
   @media (max-width: 768px) {
-    flex-direction: column !important;
+    flex-direction: column;
   }
 
-  padding: 1em;
+  padding: 1.5rem;
+  
+  @media (max-width: 600px) {
+    padding: 1rem;
+  }
 `;

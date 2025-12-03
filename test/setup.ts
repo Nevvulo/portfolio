@@ -44,7 +44,17 @@ interface ImageProps {
 
 mock.module("next/image", () => ({
   default: (props: ImageProps) => {
-    const { loading, ...rest } = props;
+    const {
+      loading,
+      priority: _priority,
+      placeholder: _placeholder,
+      blurDataURL: _blurDataURL,
+      quality: _quality,
+      unoptimized: _unoptimized,
+      fill: _fill,
+      sizes: _sizes,
+      ...rest
+    } = props;
     const src = typeof props.src === "object" ? props.src.src : props.src;
 
     return React.createElement("img", {
@@ -70,7 +80,18 @@ interface LinkProps {
 }
 
 mock.module("next/link", () => ({
-  default: ({ children, href, ...props }: LinkProps) => {
+  default: ({
+    children,
+    href,
+    passHref: _passHref,
+    legacyBehavior: _legacyBehavior,
+    scroll: _scroll,
+    shallow: _shallow,
+    replace: _replace,
+    prefetch: _prefetch,
+    locale: _locale,
+    ...props
+  }: LinkProps) => {
     // Remove Next.js specific props that shouldn't be on DOM elements
     return React.createElement("a", { href, ...props }, children);
   },

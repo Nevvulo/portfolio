@@ -18,39 +18,39 @@ export const ProjectBadges: React.FC<BadgesProps> = ({ roles, technologies }) =>
     <BadgesContainer direction="row">
       <Container direction="column">
         <Subtitle>Roles</Subtitle>
-        <Container direction="row">
+        <BadgeRow direction="row">
           {roles.map((role) => (
-            <Badge key={role} background={RoleColors[role]}>
+            <Badge key={role} $background={RoleColors[role]}>
               {RoleNames[role]}
             </Badge>
           ))}
-        </Container>
+        </BadgeRow>
       </Container>
 
       {technologies.length > 0 ? (
         <Container direction="column">
           <Subtitle>Technologies Used</Subtitle>
-          <Container direction="row">
+          <BadgeRow direction="row">
             {technologies?.map((role) => (
-              <Badge key={role} background={TechnologiesColors[role]}>
+              <Badge key={role} $background={TechnologiesColors[role]}>
                 {TechnologiesNames[role]}
               </Badge>
             ))}
-          </Container>
+          </BadgeRow>
         </Container>
       ) : null}
     </BadgesContainer>
   );
 };
 
-type BadgeProps = { background: string };
+type BadgeProps = { $background: string };
 const Badge = styled(m.div)<BadgeProps>`
   padding: 0.35em;
   font-family: "Inter", sans-serif;
   letter-spacing: -0.2px;
   font-weight: 600;
   border-radius: 4px;
-  background: ${(props) => props.background};
+  background: ${(props) => props.$background};
   margin-right: 12px;
   margin-bottom: 6px;
   font-size: 0.75em;
@@ -60,6 +60,19 @@ const Badge = styled(m.div)<BadgeProps>`
   line-height: 12px;
   color: white;
   text-transform: uppercase;
+
+  @media (max-width: 768px) {
+    margin-right: 8px;
+    margin-bottom: 4px;
+    font-size: 0.7em;
+  }
+
+  @media (max-width: 468px) {
+    margin-right: 6px;
+    margin-bottom: 3px;
+    font-size: 0.65em;
+    padding: 0.3em;
+  }
 `;
 
 const BadgesContainer = styled(Container)`
@@ -68,6 +81,25 @@ const BadgesContainer = styled(Container)`
   padding: 1em 12px;
   overflow-x: auto;
   margin: 12px 0;
+
+  @media (max-width: 768px) {
+    flex-direction: column !important;
+    padding: 0.75em 8px;
+  }
+
+  @media (max-width: 468px) {
+    padding: 0.5em 6px;
+    margin: 8px 0;
+  }
+`;
+
+const BadgeRow = styled(Container)`
+  flex-wrap: wrap;
+  gap: 0.25em;
+
+  @media (max-width: 468px) {
+    gap: 0.125em;
+  }
 `;
 
 const Subtitle = styled.p`
@@ -78,4 +110,9 @@ const Subtitle = styled.p`
   margin: 0.4em 0;
   font-weight: 600;
   color: ${(props) => props.theme.textColor};
+
+  @media (max-width: 468px) {
+    font-size: 12px;
+    margin: 0.25em 0;
+  }
 `;

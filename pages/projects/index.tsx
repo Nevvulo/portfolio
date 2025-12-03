@@ -10,9 +10,11 @@ import { type Project, Projects } from "../../constants/projects";
 
 export default function ProjectsPage() {
   const [selectedTab, setSelectedTab] = useState("all");
-  const featuredProject = Projects.find((m) => m.projectId === "flux");
-  const projects = Projects.filter((m) => filter(m, selectedTab)).filter(
-    (m) => m.projectId !== featuredProject?.projectId,
+  const featuredProjects = Projects.filter(
+    (m) => m.projectId === "unloan" || m.projectId === "flux",
+  );
+  const otherProjects = Projects.filter((m) => filter(m, selectedTab)).filter(
+    (m) => m.projectId !== "unloan" && m.projectId !== "flux",
   );
 
   return (
@@ -24,15 +26,16 @@ export default function ProjectsPage() {
       </SimpleNavbar>
 
       <ProjectContainer>
-        {featuredProject && (
+        {featuredProjects.map((project) => (
           <FeaturedProjectPreview
-            key={featuredProject.projectId}
-            href={`/projects/${featuredProject.projectId}`}
-            {...featuredProject}
+            key={project.projectId}
+            href={`/projects/${project.projectId}`}
+            isSmaller={project.projectId === "flux"}
+            {...project}
           />
-        )}
+        ))}
 
-        {projects.map((item) => (
+        {otherProjects.map((item) => (
           <ProjectPreview key={item.projectId} href={`/projects/${item.projectId}`} {...item} />
         ))}
       </ProjectContainer>
@@ -51,7 +54,7 @@ export default function ProjectsPage() {
 
 const Background = styled.div`
   width: 100%;
-  filter: ${(props) => (props.theme.contrast === "#000" ? "invert(1)" : "")}
+  filter: ${(props) => (props.theme.contrast === "#000" ? "invert(1)" : "")};
   background: url("/images/alt-background.png");
   height: 100%;
   opacity: 0.5;

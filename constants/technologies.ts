@@ -12,6 +12,9 @@ export enum Technologies {
   CPP = "CPP", // C++
   RETHINKDB = "RETHINKDB",
   REDIS = "REDIS",
+  CSHARP = "CSHARP",
+  MONGODB = "MONGODB",
+  EFCORE = "EFCORE",
 }
 
 export enum TechnologiesNames {
@@ -28,6 +31,9 @@ export enum TechnologiesNames {
   CPP = "C++",
   RETHINKDB = "RethinkDB",
   REDIS = "Redis",
+  CSHARP = "C#",
+  MONGODB = "MongoDB",
+  EFCORE = "EF Core",
 }
 
 export enum TechnologiesColors {
@@ -44,4 +50,7 @@ export enum TechnologiesColors {
   CPP = "#ec407a",
   RETHINKDB = "#007acc",
   REDIS = "#D82C20",
+  CSHARP = "#239120",
+  MONGODB = "#47A248",
+  EFCORE = "#512BD4",
 }

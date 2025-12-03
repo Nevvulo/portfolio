@@ -17,13 +17,11 @@ describe("About Page", () => {
   test("displays page title and main sections", () => {
     renderWithTheme(<About />);
 
-    const emojis = screen.getAllByText("👋");
-    const titles = screen.getAllByText("About Me");
+    const titleWithEmoji = screen.getAllByText("👋 About Me");
     const whoAmIHeadings = screen.getAllByText("Who am I?");
     const whatIDoHeadings = screen.getAllByText(/What do I do/i);
 
-    expect(emojis.length).toBeGreaterThan(0);
-    expect(titles.length).toBeGreaterThan(0);
+    expect(titleWithEmoji.length).toBeGreaterThan(0);
     expect(whoAmIHeadings.length).toBeGreaterThan(0);
     expect(whatIDoHeadings.length).toBeGreaterThan(0);
   });

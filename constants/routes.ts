@@ -3,6 +3,7 @@ enum PROJECTS {
   MAINTAINED = "/projects/maintained",
   PROJECT = "/projects/:id",
   FLUX = "/projects/flux",
+  UNLOAN = "/projects/unloan",
   POPLET = "/projects/poplet",
   ZBOT = "/projects/zbot",
   DANK_MEMER = "/projects/dankmemer",
