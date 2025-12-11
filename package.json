@@ -2,6 +2,9 @@
   "name": "portfolio",
   "version": "0.2.0",
   "private": true,
+  "engines": {
+    "node": ">=20.9.0"
+  },
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
@@ -41,14 +44,14 @@
     "lucide-react": "^0.556.0",
     "markdown": "^0.5.0",
     "motion": "^12.23.25",
-    "next": "15.5.7",
+    "next": "^16.0.8",
     "next-mdx-remote": "^5.0.0",
     "nprogress": "^0.2.0",
     "postcss": "^8.5.6",
     "prism-react-renderer": "^2.3.1",
     "prismjs": "^1.29.0",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
+    "react": "^19.2.1",
+    "react-dom": "^19.2.1",
     "remark-gfm": "^4.0.1",
     "section-matter": "^1.0.0",
     "sharp": "^0.33.2",
