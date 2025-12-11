@@ -55,9 +55,14 @@ export const ProjectContainerExpanded = styled(AnimatedContainer)`
 `;
 
 export const ProjectContent = styled(m.div)`
-  padding: 1.5em 2em 2.5em 2em;
+  padding: 1.5em 2em 2em 2em;
   overflow: hidden;
-  z-index: 0;
+  z-index: 2;
+  width: 100%;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
 
   h1 {
     color: white;
@@ -103,11 +108,12 @@ export const ProjectTitle = styled(m.h1)`
 `;
 
 export const ProjectSubtitle = styled(m.h2)`
-  font-family: "RobotoCondensed", sans-serif;
+  font-family: "Inter", sans-serif;
   font-weight: 400;
   color: ${(props) => props.color || props.theme.textColor || "#c2c2c2"};
   font-size: 18px;
   margin: 0;
+  line-height: 1.5;
 `;
 
 export const ProjectContentHeader = styled(m.h3)`
@@ -204,7 +210,7 @@ export interface Links {
 export interface ProjectProps extends ProjectStyleProps {
   projectId: string;
   preview: React.FC;
-  component: (...args: unknown[]) => JSX.Element;
+  component: React.FC;
   maintained?: boolean;
   links?: Links;
 }

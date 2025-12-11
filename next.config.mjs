@@ -16,6 +16,7 @@ const nextConfig = {
     // These features work in stable 15.5.0
     clientSegmentCache: true,
     swcTraceProfiling: false,
+    scrollRestoration: true,
 
     // These require canary version - uncomment if you switch to canary
     // browserDebugInfoInTerminal: true,

@@ -10,6 +10,11 @@ export const PostSubheader = styled.div`
   }
 
   p {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: nowrap;
     color: #c4c4c4;
     font-family: ui-serif, Georgia, Cambria, Times New Roman, Times, serif;
     margin: 0.5em 0.5em 0.25em 0;

@@ -1,0 +1,48 @@
+@import "tailwindcss";
+
+/* Ensure full height */
+html,
+body,
+#__next {
+  height: 100%;
+  min-height: 100%;
+}
+
+html {
+  overflow-x: hidden;
+}
+
+#__next {
+  overflow-x: hidden;
+  overflow-y: hidden;
+}
+
+/* When multiple scroll-containers exist, hide scrollbar on all but the last */
+#scroll-container:not(:last-child) {
+  overflow-y: hidden !important;
+}
+
+
+/* Subtle scrollbar for dark mode */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+}

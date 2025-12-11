@@ -2,7 +2,7 @@ import Image from "next/image";
 import type React from "react";
 import PowercordLogo from "../../../assets/svg/projects/logo/powercord.svg";
 import { AnimatedContainer, FadeAnimatedContainer } from "../../../components/container";
-import { DetailedNavbar } from "../../../components/navbar/detailed";
+import { SimpleNavbar } from "../../../components/navbar/simple";
 import {
   ProjectBadges,
   ProjectContainer,
@@ -37,7 +37,7 @@ export const PowercordPreview: React.FC = () => (
 export default function Powercord() {
   return (
     <ProjectContainer>
-      <DetailedNavbar />
+      <SimpleNavbar backRoute="/projects" />
 
       <ProjectTitleContainer>
         <Image quality={25} src={PowercordLogo} height={46} width={46} alt="Powercord Logo" />

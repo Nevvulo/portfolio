@@ -1,4 +1,4 @@
-import { faDiscord, faGithub, faLinkedin, faTwitter } from "@fortawesome/free-brands-svg-icons";
+import { faGithub, faLinkedin, faReddit, faTiktok, faTwitch, faYoutube } from "@fortawesome/free-brands-svg-icons";
 import { faEnvelope } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { m } from "framer-motion";
@@ -27,7 +27,17 @@ const Icon = styled(FontAwesomeIcon).attrs((props) => ({
 `;
 
 const SocialLinksContainer = styled(AnimatedContainer)`
-  padding-left: 32px;
+  width: 100%;
+  display: flex;
+  justify-content: flex-start;
+  padding: 0;
+  margin-top: 1rem;
+
+  /* Remove left margin on first icon */
+  & > a:first-child svg {
+    margin-left: 0;
+  }
+
   @media (max-width: 768px) {
     display: flex;
     flex-direction: row;
@@ -39,29 +49,93 @@ const SocialLinksContainer = styled(AnimatedContainer)`
 `;
 
 interface ExtraSocialLinks {
-  linkedIn: boolean;
+  linkedIn?: boolean;
+  email?: boolean;
+  tiktok?: boolean;
 }
 
 export const SocialLinks: React.FC<
-  ContainerProps & { include?: ExtraSocialLinks } & { color?: string }
-> = ({ direction = "column", include = {}, color }) => (
-  <SocialLinksContainer direction={direction}>
-    <IconContainer aria-label="GitHub" target="_blank" href={Socials.GitHub}>
-      <Icon color={color} icon={faGithub} />
-    </IconContainer>
-    <IconContainer aria-label="Twitter" target="_blank" href={Socials.Twitter}>
-      <Icon color={color} icon={faTwitter} />
-    </IconContainer>
-    <IconContainer aria-label="Discord" target="_blank" href={Socials.Discord}>
-      <Icon color={color} icon={faDiscord} size="2x" />
-    </IconContainer>
-    <IconContainer aria-label="E-mail" href={`mailto:${Socials.Email}`}>
-      <Icon color={color} icon={faEnvelope} />
-    </IconContainer>
-    {include.linkedIn && (
-      <IconContainer aria-label="LinkedIn" href={Socials.LinkedIn}>
-        <Icon color={color} icon={faLinkedin} />
+  ContainerProps & { include?: ExtraSocialLinks } & { color?: string; hideTwitch?: boolean; onHoverChange?: (isHovered: boolean) => void }
+> = ({ direction = "column", include = {}, color, hideTwitch = false, onHoverChange }) => {
+  const handleHover = (isHovered: boolean, platform: string) => {
+    // Don't trigger the extra "v" animation for Reddit
+    if (platform === "reddit") {
+      return;
+    }
+    onHoverChange?.(isHovered);
+  };
+
+  return (
+    <SocialLinksContainer direction={direction}>
+      {!hideTwitch && (
+        <IconContainer
+          aria-label="Twitch"
+          target="_blank"
+          href={Socials.Twitch}
+          onMouseEnter={() => handleHover(true, "twitch")}
+          onMouseLeave={() => handleHover(false, "twitch")}
+        >
+          <Icon color={color} icon={faTwitch} />
+        </IconContainer>
+      )}
+      <IconContainer
+        aria-label="YouTube"
+        target="_blank"
+        href={Socials.YouTube}
+        onMouseEnter={() => handleHover(true, "youtube")}
+        onMouseLeave={() => handleHover(false, "youtube")}
+      >
+        <Icon color={color} icon={faYoutube} />
       </IconContainer>
-    )}
-  </SocialLinksContainer>
-);
+      {include.tiktok && (
+        <IconContainer
+          aria-label="TikTok"
+          target="_blank"
+          href={Socials.TikTok}
+          onMouseEnter={() => handleHover(true, "tiktok")}
+          onMouseLeave={() => handleHover(false, "tiktok")}
+        >
+          <Icon color={color} icon={faTiktok} />
+        </IconContainer>
+      )}
+      <IconContainer
+        aria-label="Reddit"
+        target="_blank"
+        href={Socials.Reddit}
+        onMouseEnter={() => handleHover(true, "reddit")}
+        onMouseLeave={() => handleHover(false, "reddit")}
+      >
+        <Icon color={color} icon={faReddit} />
+      </IconContainer>
+      <IconContainer
+        aria-label="GitHub"
+        target="_blank"
+        href={Socials.GitHub}
+        onMouseEnter={() => handleHover(true, "github")}
+        onMouseLeave={() => handleHover(false, "github")}
+      >
+        <Icon color={color} icon={faGithub} />
+      </IconContainer>
+      {include.email && (
+        <IconContainer
+          aria-label="E-mail"
+          href={`mailto:${Socials.Email}`}
+          onMouseEnter={() => handleHover(true, "email")}
+          onMouseLeave={() => handleHover(false, "email")}
+        >
+          <Icon color={color} icon={faEnvelope} />
+        </IconContainer>
+      )}
+      {include.linkedIn && (
+        <IconContainer
+          aria-label="LinkedIn"
+          href={Socials.LinkedIn}
+          onMouseEnter={() => handleHover(true, "linkedin")}
+          onMouseLeave={() => handleHover(false, "linkedin")}
+        >
+          <Icon color={color} icon={faLinkedin} />
+        </IconContainer>
+      )}
+    </SocialLinksContainer>
+  );
+};

@@ -31,9 +31,8 @@ export function CustomLink({ href, children }: PropsWithChildren<LinkProps>) {
 }
 
 const IconLinkContainer = styled.span`
-  display: inline-flex;
-  align-items: center;
-  flex-direction: row;
+  display: inline;
+  align-items: baseline;
 `;
 
 export type IconLinkProps = Partial<LinkProps> &
@@ -89,11 +88,10 @@ export const IconLink: React.FC<IconLinkProps> = ({
         color="#bbbbbb"
         style={{
           width: "10px",
-          marginLeft: "6px",
+          marginLeft: "4px",
           marginRight: spacing || "2px",
-          alignSelf: "flex-end",
-          position: "relative",
-          top: "2px",
+          display: "inline-block",
+          verticalAlign: "baseline",
         }}
         icon={faExternalLinkAlt}
       />
@@ -114,4 +112,6 @@ export const LinkText = LinkTextStyled;
 
 export const StrippedLink = styled(NextLink)`
   text-decoration: none;
+  display: block;
+  width: 100%;
 `;

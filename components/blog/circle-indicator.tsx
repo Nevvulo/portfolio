@@ -1,31 +1,63 @@
-import { type MotionValue, m, useSpring, useTransform } from "framer-motion";
+import { m, useMotionValue, useSpring, useTransform } from "framer-motion";
 import { useEffect, useState } from "react";
 import styled from "styled-components";
 
 interface Props {
-  scrollYProgress: MotionValue<number>;
   onComplete?: () => void;
 }
-export const CircleIndicator = ({ scrollYProgress, onComplete }: Props) => {
+export const CircleIndicator = ({ onComplete }: Props) => {
   const [isComplete, setIsComplete] = useState(false);
-  const yRange = useTransform(scrollYProgress, [0, 0.95], [0, 1]);
-  const opacity = useTransform(scrollYProgress, [0.05, 0.1], [0, 1]);
+  const scrollProgress = useMotionValue(0);
+  const yRange = useTransform(scrollProgress, [0, 0.95], [0, 1]);
   const pathLength = useSpring(yRange, { stiffness: 400, damping: 90 });
 
-  useEffect(() => yRange.onChange((v) => setIsComplete(v >= 1)), [yRange]);
+  useEffect(() => {
+    const getScrollContainer = () => document.getElementById("scroll-container");
+
+    const calculateProgress = () => {
+      const container = getScrollContainer();
+      if (!container) return;
+
+      const scrollTop = container.scrollTop;
+      const scrollHeight = container.scrollHeight - container.clientHeight;
+      const progress = scrollHeight > 0 ? Math.min(scrollTop / scrollHeight, 1) : 0;
+      scrollProgress.set(progress);
+    };
+
+    // Wait for container to be available
+    const initScroll = () => {
+      const container = getScrollContainer();
+      if (container) {
+        calculateProgress();
+        container.addEventListener("scroll", calculateProgress, { passive: true });
+      }
+    };
+
+    // Try immediately and also after a short delay (for route transitions)
+    initScroll();
+    const timeout = setTimeout(initScroll, 100);
+
+    return () => {
+      clearTimeout(timeout);
+      const container = getScrollContainer();
+      if (container) {
+        container.removeEventListener("scroll", calculateProgress);
+      }
+    };
+  }, [scrollProgress]);
+
+  useEffect(() => {
+    const unsubscribe = yRange.on("change", (v) => setIsComplete(v >= 1));
+    return unsubscribe;
+  }, [yRange]);
 
   useEffect(() => {
     if (!isComplete) return;
     onComplete?.();
-    setTimeout(() => {
-      opacity.stop();
-      opacity.set(0);
-      opacity.clearListeners();
-    }, 1e3);
-  }, [isComplete, onComplete, opacity]);
+  }, [isComplete, onComplete]);
 
   return (
-    <Container style={{ opacity }}>
+    <Container>
       <m.path
         fill="none"
         strokeWidth="5"
@@ -37,7 +69,7 @@ export const CircleIndicator = ({ scrollYProgress, onComplete }: Props) => {
           rotate: 90,
           translateX: 5,
           translateY: 5,
-          scaleX: -1, // Reverse direction of line animation
+          scaleX: -1,
         }}
       />
       <m.path
@@ -54,23 +86,13 @@ export const CircleIndicator = ({ scrollYProgress, onComplete }: Props) => {
 };
 
 const Container = styled(m.svg).attrs({ viewBox: "0 -1 50 54" })`
-  z-index: 3;
-  position: sticky;
+  z-index: 100;
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
   background: rgba(0, 0, 0, 0.75);
   padding: 0.25em;
-  transition: 0.1s opacity;
   border-radius: 8px;
-
-  width: 32px;
-  height: 32px;
-
-  @media (min-width: 850px) {
-    top: 12px;
-    left: 12px;
-  }
-
-  @media (max-width: 850px) {
-    top: calc(100vh - 56px);
-    left: calc(100vw - 56px);
-  }
+  width: 40px;
+  height: 40px;
 `;

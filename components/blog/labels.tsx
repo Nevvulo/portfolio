@@ -2,13 +2,13 @@ import styled from "styled-components";
 
 export const Labels = styled.div`
   border-radius: 8px;
-  padding: 0.2em 0;
-  padding-left: 0;
+  padding: 0.2em 0 0.45em 0;
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
   align-items: flex-start;
   justify-content: flex-start;
+  gap: 0.5em;
 `;
 
 export const Label = styled.div`
@@ -19,10 +19,5 @@ export const Label = styled.div`
   font-family: "Fira Code", monospace;
   font-size: 12px;
   border-radius: 4px;
-  margin: 0.25em;
   color: white;
-
-  :first-child {
-    margin-left: 0;
-  }
 `;

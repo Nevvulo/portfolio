@@ -2,7 +2,7 @@ import Image from "next/image";
 import type React from "react";
 import zBotLogo from "./../../../assets/img/projects/logo/zbot.png";
 import { AnimatedContainer, FadeAnimatedContainer } from "../../../components/container";
-import { DetailedNavbar } from "../../../components/navbar/detailed";
+import { SimpleNavbar } from "../../../components/navbar/simple";
 import {
   ProjectBadges,
   ProjectContainer,
@@ -46,7 +46,7 @@ export const zBotPreview: React.FC = () => (
 export default function zBot() {
   return (
     <>
-      <DetailedNavbar />
+      <SimpleNavbar backRoute="/projects" />
 
       <ProjectContainer>
         <ProjectTitleContainer layoutId={`logo-${id}`}>

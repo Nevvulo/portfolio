@@ -2,7 +2,7 @@ import Image from "next/image";
 import type React from "react";
 import CompassLogo from "../../../assets/img/projects/logo/compass.png";
 import { AnimatedContainer, FadeAnimatedContainer } from "../../../components/container";
-import { DetailedNavbar } from "../../../components/navbar/detailed";
+import { SimpleNavbar } from "../../../components/navbar/simple";
 import {
   ProjectContainer,
   ProjectContentContainer,
@@ -21,44 +21,42 @@ const shortDescription = "School management solution powering thousands of schoo
 
 export const CompassPreview: React.FC = () => {
   return (
-    <>
-      <AnimatedContainer style={{ marginBottom: "0.5em", marginTop: "-2em" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+      <AnimatedContainer>
         <Image
           src={CompassLogo}
-          height={60}
-          width={60}
+          height={150}
+          width={150}
           alt="Compass Education Logo"
           quality={100}
           style={{
-            objectPosition: "center",
+            objectPosition: "left",
             objectFit: "contain",
-            alignSelf: "center",
             filter: "drop-shadow(0px 4px 8px rgba(0,0,0,0.6))",
           }}
         />
       </AnimatedContainer>
-      <AnimatedContainer style={{ marginTop: "0.5em" }}>
+      <AnimatedContainer>
         <ProjectSubtitle
           style={{
             zIndex: 2,
             fontSize: "20px",
             fontWeight: 600,
-            marginTop: 0,
-            textAlign: "center",
+            lineHeight: 1.4,
           }}
           color={Colors.WHITE}
         >
           {shortDescription}
         </ProjectSubtitle>
       </AnimatedContainer>
-    </>
+    </div>
   );
 };
 
 export default function Compass() {
   return (
     <>
-      <DetailedNavbar />
+      <SimpleNavbar backRoute="/projects" />
       <ProjectContainer>
         <ProjectTitleContainer>
           <Image

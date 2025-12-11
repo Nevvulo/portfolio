@@ -2,7 +2,7 @@ import Image from "next/image";
 import type React from "react";
 import PopletLogo from "../../../assets/svg/projects/logo/poplet.svg";
 import { AnimatedContainer, FadeAnimatedContainer } from "../../../components/container";
-import { DetailedNavbar } from "../../../components/navbar/detailed";
+import { SimpleNavbar } from "../../../components/navbar/simple";
 import {
   ProjectBadges,
   ProjectContainer,
@@ -45,7 +45,7 @@ export default function Poplet() {
   const [theme] = useTheme();
   return (
     <ProjectContainer>
-      <DetailedNavbar />
+      <SimpleNavbar backRoute="/projects" />
 
       <ProjectTitleContainer>
         {theme === "light" ? (

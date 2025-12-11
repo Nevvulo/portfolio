@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/npm/@clerk/:path*",
+      "destination": "https://cdn.clerk.io/npm/@clerk/:path*"
+    }
+  ]
+}

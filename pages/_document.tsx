@@ -39,7 +39,7 @@ export default class MyDocument extends Document {
             href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500;600;700;800&family=Roboto+Condensed:wght@700&family=Work+Sans:wght@800&display=swap"
             rel="stylesheet"
           />
-          <link rel="icon" href="./images/nevulo.jpg" />
+          <link rel="icon" href="/nevulo-logo.svg" type="image/svg+xml" />
           <meta httpEquiv="Content-Type" content="text/html; charset=utf-8" />
           <meta charSet="utf-8" />
 

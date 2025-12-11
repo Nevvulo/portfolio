@@ -5,33 +5,16 @@ import { Container } from "../../components/container";
 import { IconLink, Link, Text } from "../../components/generics";
 import { Footer } from "../../components/generics/footer";
 import { AboutBox } from "../../components/layout/about";
-import { MinimalView } from "../../components/layout/minimal";
-import { DetailedNavbar } from "../../components/navbar/detailed";
+import { TopNavView } from "../../components/layout/topnav";
+import { SimpleNavbar } from "../../components/navbar/simple";
 import COLORS from "../../constants/colors";
 import { ROUTES } from "../../constants/routes";
 
-const AboutTitle = styled.h1`
-  font-family: "Inter", sans-serif;
-  font-weight: 600;
-  color: ${(props) => props.theme.contrast};
-  font-size: 48px;
-  margin-bottom: 8px;
-  margin-top: 2em;
-  text-align: center;
-  
-  @media (max-width: 768px) {
-    font-size: 36px;
-    margin-top: 1em;
-  }
-`;
-
 export default function About() {
   return (
-    <MinimalView>
+    <TopNavView>
       <Background />
-      <DetailedNavbar />
-
-      <AboutTitle>👋 About Me</AboutTitle>
+      <SimpleNavbar title="About" />
 
       <AboutBox>
         <TextContainer>
@@ -98,14 +81,33 @@ export default function About() {
       </AboutBox>
 
       <Head key="about">
-        <title>About Me - Nevulo</title>
-        <meta property="og:title" content="Learn more about Nevulo" />
+        <title>About - Nevulo</title>
+        <meta
+          name="description"
+          content="Learn about Blake, a software engineer based in Melbourne, Australia. Passionate about building exceptional digital experiences."
+        />
+        <meta property="og:title" content="About Nevulo" />
         <meta
           property="og:description"
-          content="I'm Blake, a software engineer based in Melbourne, Australia. Click here to learn more about who I am and what I do!"
+          content="Learn about Blake, a software engineer based in Melbourne, Australia. Passionate about building exceptional digital experiences."
+        />
+        <meta property="og:url" content="https://nevulo.xyz/about" />
+        <meta
+          property="og:image"
+          content="https://nevulo.xyz/api/og?title=About%20Blake&subtitle=Software%20Engineer%20%7C%20Melbourne%2C%20Australia"
+        />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="About Nevulo" />
+        <meta
+          name="twitter:description"
+          content="Learn about Blake, a software engineer based in Melbourne, Australia."
+        />
+        <meta
+          name="twitter:image"
+          content="https://nevulo.xyz/api/og?title=About%20Blake&subtitle=Software%20Engineer%20%7C%20Melbourne%2C%20Australia"
         />
       </Head>
-    </MinimalView>
+    </TopNavView>
   );
 }
 

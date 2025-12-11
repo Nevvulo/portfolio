@@ -1,36 +1,18 @@
 import Head from "next/head";
-import styled from "styled-components";
 import { Notice, Subtitle } from "../../components/contact/typography";
 import { SocialLinks } from "../../components/generics/social-links";
 import { ContactBox } from "../../components/layout/contact";
-import { MinimalView } from "../../components/layout/minimal";
-import { DetailedNavbar } from "../../components/navbar/detailed";
-
-const ContactTitle = styled.h1`
-  font-family: "Inter", sans-serif;
-  font-weight: 600;
-  color: ${(props) => props.theme.contrast};
-  font-size: 48px;
-  margin-bottom: 8px;
-  margin-top: 2em;
-  text-align: center;
-  
-  @media (max-width: 768px) {
-    font-size: 36px;
-    margin-top: 1em;
-  }
-`;
+import { TopNavView } from "../../components/layout/topnav";
+import { SimpleNavbar } from "../../components/navbar/simple";
 
 export default function Contact() {
   return (
-    <MinimalView>
-      <DetailedNavbar />
-
-      <ContactTitle>📧 Contact</ContactTitle>
+    <TopNavView>
+      <SimpleNavbar title="Contact" />
 
       <ContactBox>
         <Subtitle color="white">Socials</Subtitle>
-        <SocialLinks color="white" include={{ linkedIn: true }} direction="row" />
+        <SocialLinks color="white" include={{ linkedIn: true, email: true, tiktok: true }} direction="row" />
         <Subtitle color="white">Security & Privacy</Subtitle>
         <Notice>
           Reporting a potential security vulnerability or privacy concern regarding one of my
@@ -40,12 +22,31 @@ export default function Contact() {
 
       <Head key="contact">
         <title>Contact - Nevulo</title>
-        <meta property="og:title" content="Get in touch with Nevulo" />
+        <meta
+          name="description"
+          content="Get in touch with Blake. Connect via email or social media for collaboration opportunities and professional inquiries."
+        />
+        <meta property="og:title" content="Contact Nevulo" />
         <meta
           property="og:description"
-          content="I'm Blake, a software engineer based in Melbourne, Australia. Click here to get in contact with me, or have a look at my social accounts!"
+          content="Get in touch with Blake. Connect via email or social media for collaboration opportunities and professional inquiries."
+        />
+        <meta property="og:url" content="https://nevulo.xyz/contact" />
+        <meta
+          property="og:image"
+          content="https://nevulo.xyz/api/og?title=Get%20in%20Touch&subtitle=Let's%20connect%20and%20collaborate"
+        />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Contact Nevulo" />
+        <meta
+          name="twitter:description"
+          content="Get in touch for collaboration opportunities and professional inquiries."
+        />
+        <meta
+          name="twitter:image"
+          content="https://nevulo.xyz/api/og?title=Get%20in%20Touch&subtitle=Let's%20connect%20and%20collaborate"
         />
       </Head>
-    </MinimalView>
+    </TopNavView>
   );
 }

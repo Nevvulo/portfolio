@@ -21,7 +21,7 @@ export default function ProjectsPage() {
     <ProjectView>
       <Background />
 
-      <SimpleNavbar emoji="🛠" title="Projects">
+      <SimpleNavbar title="Projects">
         <ProjectFilter selected={selectedTab} onTabClick={(tab) => setSelectedTab(tab)} />
       </SimpleNavbar>
 
@@ -42,10 +42,29 @@ export default function ProjectsPage() {
 
       <Head key="projects">
         <title>Projects - Nevulo</title>
-        <meta property="og:title" content="Projects I've worked on" />
+        <meta
+          name="description"
+          content={`Explore ${Projects.length} projects showcasing my work in web development, from production applications to open source contributions.`}
+        />
+        <meta property="og:title" content="Projects by Nevulo" />
         <meta
           property="og:description"
-          content={`${Projects.length} projects ▪ Get more information on projects I'm currently working on and projects I've worked on in the past`}
+          content={`Explore ${Projects.length} projects showcasing my work in web development, from production applications to open source contributions.`}
+        />
+        <meta property="og:url" content="https://nevulo.xyz/projects" />
+        <meta
+          property="og:image"
+          content="https://nevulo.xyz/api/og?title=My%20Projects&subtitle=Web%20Development%20%26%20Software%20Engineering"
+        />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Projects by Nevulo" />
+        <meta
+          name="twitter:description"
+          content={`Explore ${Projects.length} projects showcasing my work in web development.`}
+        />
+        <meta
+          name="twitter:image"
+          content="https://nevulo.xyz/api/og?title=My%20Projects&subtitle=Web%20Development%20%26%20Software%20Engineering"
         />
       </Head>
     </ProjectView>
@@ -55,9 +74,8 @@ export default function ProjectsPage() {
 const Background = styled.div`
   width: 100%;
   filter: ${(props) => (props.theme.contrast === "#000" ? "invert(1)" : "")};
-  background: url("/images/alt-background.png");
+  background: linear-gradient(135deg, rgba(79, 77, 193, 0.03) 0%, rgba(107, 105, 214, 0.05) 100%);
   height: 100%;
-  opacity: 0.5;
   z-index: -1;
   position: fixed;
   top: 0;
@@ -66,15 +84,20 @@ const Background = styled.div`
 const ProjectContainer = styled.div`
   display: flex;
   flex-direction: column;
-  align-items: center;
-  padding: 0 1em;
+  align-items: stretch;
+  padding: 0 1rem;
+  gap: 1.5rem;
   width: 100%;
-  min-width: 300px;
+  max-width: 800px;
+  margin: 2rem auto;
 
   @media (min-width: 1024px) {
-    align-items: center;
-    min-width: 700px;
-    width: 50%;
+    padding: 0 2rem;
+  }
+
+  @media (max-width: 768px) {
+    gap: 1rem;
+    margin: 1rem auto;
   }
 `;
 

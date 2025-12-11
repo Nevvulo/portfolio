@@ -1,13 +1,16 @@
 import Image from "next/image";
 import styled from "styled-components";
+import { m } from "framer-motion";
 import FluxBanner from "../../assets/img/projects/banner/flux.png";
 import UnloanBanner from "../../assets/img/projects/banner/unloan.png";
+import GolfquestBanner from "../../assets/img/games/golfquest.png";
 import { StrippedLink } from "../generics";
-import { ProjectContent, type ProjectProps, type ProjectStyleProps } from ".";
+import type { ProjectProps, ProjectStyleProps } from ".";
 
 const projectBanners = {
   flux: FluxBanner,
   unloan: UnloanBanner,
+  golfquest: GolfquestBanner,
 } as const;
 
 function getProjectBanner(projectId: string) {
@@ -18,6 +21,7 @@ function getBannerAlt(projectId: string) {
   const projectNames = {
     flux: "Flux",
     unloan: "Unloan",
+    golfquest: "Golfquest",
   } as const;
   return `${projectNames[projectId as keyof typeof projectNames] || "Project"} project banner`;
 }
@@ -31,91 +35,96 @@ export function FeaturedProjectPreview({
   projectId,
   isSmaller = false,
 }: ProjectPreviewProps) {
+  const banner = getProjectBanner(projectId);
   return (
-    <StrippedLink passHref href={href}>
+    <LinkWrapper href={href}>
       <Container isSmaller={isSmaller}>
-        <ImageWrapper isSmaller={isSmaller}>
+        <ImageWrapper>
           <Image
+            src={banner}
             alt={getBannerAlt(projectId)}
-            placeholder="blur"
+            fill
+            style={{ objectFit: 'cover' }}
             priority
-            quality={50}
-            src={getProjectBanner(projectId)}
-            width={650}
-            height={isSmaller ? 280 : 350}
-            style={{
-              width: "100%",
-              height: "100%",
-              objectFit: "cover",
-            }}
           />
         </ImageWrapper>
-
-        <div
-          style={{
-            position: "absolute",
-            bottom: 0,
-            width: "100%",
-            paddingTop: "2em",
-          }}
-        >
-          <ProjectPreviewContainer background={background}></ProjectPreviewContainer>
-          <ProjectContent>
-            <Component />
-          </ProjectContent>
-        </div>
+        <ColorGradient $gradient={background} />
+        <ContentWrapper>
+          <Component />
+        </ContentWrapper>
       </Container>
-    </StrippedLink>
+    </LinkWrapper>
   );
 }
+
+const LinkWrapper = styled(StrippedLink)`
+  display: block;
+  width: 100%;
+`;
 
 const Container = styled.div.withConfig({
   shouldForwardProp: (prop) => !["isSmaller"].includes(prop),
 })<{ isSmaller?: boolean }>`
   position: relative;
   cursor: pointer;
-  border-radius: 6px;
-  width: 650px;
-  max-width: 650px;
-  margin: 1em;
-  box-shadow: 1px 2px 3px rgba(0, 0, 0, 0.5);
-  overflow: hidden;
-
-  @media (max-width: 700px) {
-    width: calc(100vw - 3em);
-    max-width: calc(100vw - 3em);
-  }
-`;
-
-const ImageWrapper = styled.div.withConfig({
-  shouldForwardProp: (prop) => !["isSmaller"].includes(prop),
-})<{ isSmaller?: boolean }>`
-  position: relative;
+  border-radius: 12px;
   width: 100%;
   height: ${(props) => (props.isSmaller ? "280px" : "350px")};
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
   overflow: hidden;
-  
-  img {
-    width: 100% !important;
-    height: 100% !important;
-    object-fit: cover !important;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15), 0 2px 6px rgba(0, 0, 0, 0.1);
   }
 `;
 
-const ProjectPreviewContainer = styled.div<ProjectStyleProps>`
+
+const ImageWrapper = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+
+  img {
+    z-index: 0 !important;
+  }
+`;
+
+const ColorGradient = styled.div<{ $gradient?: string }>`
   position: absolute;
   bottom: 0;
-  padding-top: 2em;
+  left: 0;
+  right: 0;
   width: 100%;
   height: 135%;
-  border-end-end-radius: 6px;
-  border-end-start-radius: 6px;
-
   background: rgba(0, 0, 0, 0.3);
-  background-image: ${(props) => props.background};
-  -webkit-mask-image: linear-gradient(
-    180deg,
-    transparent 0%,
-    rgb(0, 0, 0) 100%
-  );
+  background-image: ${props => props.$gradient || 'none'};
+  -webkit-mask-image: linear-gradient(180deg, transparent 0%, rgb(0, 0, 0) 100%);
+  mask-image: linear-gradient(180deg, transparent 0%, rgb(0, 0, 0) 100%);
+  z-index: 1;
+  pointer-events: none;
+`;
+
+const ContentWrapper = styled(m.div)`
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 1.5em 2em 2em 2em;
+  z-index: 2;
+  pointer-events: none;
+
+  h1 {
+    color: white;
+  }
+
+  * {
+    pointer-events: auto;
+  }
 `;

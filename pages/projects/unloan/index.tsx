@@ -3,7 +3,7 @@ import type React from "react";
 import UnloanLogo from "../../../assets/svg/projects/logo/unloan-logo-black.svg";
 import UnloanWhiteLogo from "../../../assets/svg/projects/logo/unloan-white.svg";
 import { AnimatedContainer, FadeAnimatedContainer } from "../../../components/container";
-import { DetailedNavbar } from "../../../components/navbar/detailed";
+import { SimpleNavbar } from "../../../components/navbar/simple";
 import {
   ProjectContainer,
   ProjectContentContainer,
@@ -24,8 +24,8 @@ const shortDescription = "Australia's first digital home loan";
 
 export const UnloanPreview: React.FC = () => {
   return (
-    <>
-      <AnimatedContainer style={{ marginBottom: "0.5em", marginTop: "-2em" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+      <AnimatedContainer>
         <Image
           src={UnloanWhiteLogo}
           height={50}
@@ -33,28 +33,26 @@ export const UnloanPreview: React.FC = () => {
           alt="Unloan Logo White"
           quality={100}
           style={{
-            objectPosition: "center",
+            objectPosition: "left",
             objectFit: "contain",
-            alignSelf: "center",
             filter: "drop-shadow(0px 4px 8px rgba(0,0,0,0.6))",
           }}
         />
       </AnimatedContainer>
-      <AnimatedContainer style={{ marginTop: "0.5em" }}>
+      <AnimatedContainer>
         <ProjectSubtitle
           style={{
             zIndex: 2,
             fontSize: "20px",
             fontWeight: 600,
-            marginTop: 0,
-            textAlign: "center",
+            lineHeight: 1.4,
           }}
           color={Colors.WHITE}
         >
           {shortDescription}
         </ProjectSubtitle>
       </AnimatedContainer>
-    </>
+    </div>
   );
 };
 
@@ -62,7 +60,7 @@ export default function Unloan() {
   const [theme] = useTheme();
   return (
     <>
-      <DetailedNavbar />
+      <SimpleNavbar backRoute="/projects" />
       <ProjectContainer>
         <ProjectTitleContainer>
           {theme === "light" ? (

@@ -6,17 +6,18 @@ import {
   faMedium,
   faTwitter,
 } from "@fortawesome/free-brands-svg-icons";
-import { useViewportScroll } from "framer-motion";
 import type { GetStaticPropsContext } from "next";
 import Head from "next/head";
 import { type MDXRemoteSerializeResult, MDXRemote as PostContent } from "next-mdx-remote";
 import { serialize } from "next-mdx-remote/serialize";
-import { useState } from "react";
+import remarkGfm from "remark-gfm";
+import { createContext, useContext, useState } from "react";
 // @ts-expect-error
 import matter from "section-matter";
 import styled, { createGlobalStyle } from "styled-components";
 import { CircleIndicator } from "../../components/blog/circle-indicator";
 import CodeBlock from "../../components/blog/codeblock";
+import { DiscordInviteLink, isDiscordInvite } from "../../components/blog/discord-invite-link";
 import { Label, Labels } from "../../components/blog/labels";
 import { PostFooter } from "../../components/blog/post-footer";
 import { PostHeader } from "../../components/blog/post-header";
@@ -27,27 +28,38 @@ import { Container } from "../../components/container";
 import { IconLink } from "../../components/generics";
 import { Avatar } from "../../components/generics/avatar";
 import { BlogView } from "../../components/layout/blog";
-import { DetailedNavbar } from "../../components/navbar/detailed";
+import { SimpleNavbar } from "../../components/navbar/simple";
 import getFile from "../../modules/getFile";
 import type { Blogmap } from "../../types/blog";
+import type { DiscordWidget } from "../../types/discord";
+import { fetchDiscordWidget } from "../../utils/discord-widget";
+
+// Context for Discord widget data
+const DiscordWidgetContext = createContext<DiscordWidget | null>(null);
+
+// Component that uses the context
+function DiscordLink({ href }: { href: string }) {
+  const widget = useContext(DiscordWidgetContext);
+  return <DiscordInviteLink href={href} widget={widget} />;
+}
 
 type PostProps = {
   content: MDXRemoteSerializeResult<Record<string, unknown>>;
   properties: Blogmap[number];
+  discordWidget: DiscordWidget | null;
 };
-export default function Post({ content, properties }: PostProps) {
-  const { scrollYProgress } = useViewportScroll();
+export default function Post({ content, properties, discordWidget }: PostProps) {
   const [, setCompleted] = useState(false);
 
   return (
-    <>
-      <CircleIndicator onComplete={() => setCompleted(true)} scrollYProgress={scrollYProgress} />
+    <DiscordWidgetContext.Provider value={discordWidget}>
+      <CircleIndicator onComplete={() => setCompleted(true)} />
       <PostBody content={content} properties={properties} />
-    </>
+    </DiscordWidgetContext.Provider>
   );
 }
 
-function PostBody({ content, properties }: PostProps) {
+function PostBody({ content, properties }: Omit<PostProps, "discordWidget">) {
   const location = `https://nevulo.xyz/blog/${properties.slug}`;
   const ogImage = `${
     "window" in global ? window.location.origin : "https://nevulo.xyz"
@@ -59,7 +71,8 @@ function PostBody({ content, properties }: PostProps) {
   return (
     <BlogView>
       <BlogStyle />
-      <DetailedNavbar style={{ marginTop: "1.5em" }} />
+      <ReadingFocusOverlay />
+      <SimpleNavbar backRoute="/blog" />
 
       <PostHeroImg
         coverAuthor={properties.coverAuthor}
@@ -276,16 +289,25 @@ const components = {
     return <PostImg loading="lazy" {...props} src={src} />;
   },
   // biome-ignore lint/suspicious/noExplicitAny: MDX component props
-  a: (props: any) => (
-    <IconLink
-      style={{ textDecorationThickness: "0.125em", fontSize: "0.975em" }}
-      isExternal={!props.href?.startsWith("https://nevulo.xyz")}
-      {...props}
-      href={props.href}
-    >
-      {props.children}
-    </IconLink>
-  ),
+  a: (props: any) => {
+    const href = props.href || "";
+
+    // Check if it's a Discord invite link
+    if (isDiscordInvite(href)) {
+      return <DiscordLink href={href} />;
+    }
+
+    return (
+      <IconLink
+        style={{ textDecorationThickness: "0.125em", fontSize: "0.975em" }}
+        isExternal={!href.startsWith("https://nevulo.xyz")}
+        {...props}
+        href={href}
+      >
+        {props.children}
+      </IconLink>
+    );
+  },
   // biome-ignore lint/suspicious/noExplicitAny: MDX component props
   strong: (props: any) => <BoldText {...props} />,
   // biome-ignore lint/suspicious/noExplicitAny: MDX component props
@@ -316,52 +338,246 @@ const IconContainer = styled(Container).attrs({ direction: "row" })`
   }
 `;
 
+// iOS timer-style reading focus overlay
+const ReadingFocusOverlay = styled.div`
+  pointer-events: none;
+  position: fixed;
+  left: 0;
+  right: 0;
+  z-index: 10;
+
+  &::before,
+  &::after {
+    content: '';
+    position: fixed;
+    left: 0;
+    right: 0;
+    height: 15vh;
+    pointer-events: none;
+  }
+
+  &::before {
+    top: 0;
+    background: linear-gradient(
+      to bottom,
+      ${(props) => props.theme.background} 0%,
+      ${(props) => props.theme.background}ee 25%,
+      ${(props) => props.theme.background}99 50%,
+      ${(props) => props.theme.background}44 75%,
+      transparent 100%
+    );
+    backdrop-filter: blur(1px);
+    -webkit-backdrop-filter: blur(1px);
+    mask-image: linear-gradient(to bottom, black 0%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, black 0%, transparent 100%);
+  }
+
+  &::after {
+    bottom: 0;
+    height: 12vh;
+    background: linear-gradient(
+      to top,
+      ${(props) => props.theme.background} 0%,
+      ${(props) => props.theme.background}cc 30%,
+      ${(props) => props.theme.background}66 60%,
+      transparent 100%
+    );
+    backdrop-filter: blur(0.5px);
+    -webkit-backdrop-filter: blur(0.5px);
+    mask-image: linear-gradient(to top, black 0%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to top, black 0%, transparent 100%);
+  }
+`;
+
 const BlogStyle = createGlobalStyle`
+  /* Page-level counter for ordered lists that may be interrupted by other content */
+  body {
+    counter-reset: page-list-counter;
+  }
+
   pre {
-    font-size: 1.25em;
+    font-size: 1.1em;
+    margin: 1.5em 0;
+    border-radius: 8px;
   }
 
   h1, h2, h3, h4, h5, h6, p, span, li, ul {
     code {
-      background: rgba(150, 150, 150, 0.3);
-      padding: 0.1em 0.35em;
-      border-radius: 3px;
-      font-weight: 600;
+      background: rgba(150, 150, 150, 0.25);
+      padding: 0.15em 0.4em;
+      border-radius: 4px;
+      font-weight: 500;
       color: ${(props) => props.theme.contrast};
     }
   }
 
   p, span, li, ul {
     code {
-      font-size: 1.2em;
+      font-size: 0.9em;
     }
   }
 
   a > code {
     text-decoration-thickness: 0.1em;
   }
+
+  a {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+
+  blockquote {
+    border-left: 3px solid rgba(255, 255, 255, 0.3);
+    margin: 1.5em 0;
+    padding: 0.5em 0 0.5em 1.5em;
+    font-style: italic;
+    opacity: 0.9;
+  }
 `;
 
 const ListItem = styled.li`
   color: ${(props) => props.theme.textColor};
-  font-size: 1.05em;
+  font-size: 1em;
+  line-height: 1.75;
+  margin-bottom: 0.35em;
+
+  h1, h2, h3, h4, h5, h6 {
+    font-size: 1em;
+    margin: 0.5em 0 0.25em 0;
+    font-weight: 600;
+  }
+
+  p {
+    font-size: 1em;
+    margin: 0.25em 0;
+  }
 `;
 
 const NumberedList = styled.ul`
   color: ${(props) => props.theme.textColor};
-  line-height: 1.55;
-  font-size: 1em;
+  line-height: 1.75;
+  font-size: 1.25em;
+  margin: 0 0 1em 0;
+  padding-left: 0;
+  list-style: none;
+
+  & > li {
+    position: relative;
+    padding-left: 1.5em;
+    margin-bottom: 0.5em;
+  }
+
+  & > li::before {
+    content: "•";
+    position: absolute;
+    left: 0;
+    color: #a5a3f5;
+    font-weight: bold;
+    font-size: 1.2em;
+  }
+
+  /* Nested lists */
+  ul, ol {
+    font-size: 1em;
+    margin: 0.5em 0;
+    padding-left: 1.5em;
+    list-style: none;
+  }
+
+  ul li, ol li {
+    position: relative;
+    padding-left: 1.25em;
+    margin-bottom: 0.35em;
+  }
+
+  ul li::before {
+    content: "◦";
+    position: absolute;
+    left: 0;
+    color: #a5a3f5;
+    font-size: 1em;
+  }
 `;
 
 const DotpointList = styled.ol`
   color: ${(props) => props.theme.textColor};
-  line-height: 1.55;
-  font-size: 1em;
+  line-height: 1.75;
+  font-size: 1.25em;
+  margin: 1.5em 0;
+  padding-left: 0;
+  list-style: none;
+
+  & > li {
+    counter-increment: page-list-counter;
+    position: relative;
+    padding-left: 2.5em;
+    margin-bottom: 1.5em;
+  }
+
+  & > li::before {
+    content: counter(page-list-counter);
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 1.6em;
+    height: 1.6em;
+    background: linear-gradient(135deg, rgba(79, 77, 193, 0.3), rgba(79, 77, 193, 0.15));
+    border: 1px solid rgba(79, 77, 193, 0.5);
+    border-radius: 50%;
+    font-size: 0.85em;
+    font-weight: 600;
+    color: #a5a3f5;
+    font-family: "Fira Code", monospace;
+    text-align: center;
+    line-height: 1.6em;
+  }
+
+  /* Nested lists - reset to normal styling */
+  ul, ol {
+    font-size: 1em;
+    margin: 0.75em 0;
+    padding-left: 1.5em;
+    list-style: none;
+  }
+
+  ul li, ol li {
+    padding-left: 1.25em;
+    margin-bottom: 0.35em;
+    position: relative;
+  }
+
+  ul li::before {
+    content: "•";
+    position: absolute;
+    left: 0;
+    color: #a5a3f5;
+    font-weight: bold;
+  }
+
+  /* Nested ordered lists - use their own counter */
+  ol {
+    counter-reset: nested-list-counter;
+    padding-left: 2em;
+  }
+
+  ol li {
+    counter-increment: nested-list-counter;
+    padding-left: 0.5em;
+  }
+
+  ol li::before {
+    content: counter(nested-list-counter) ".";
+    position: absolute;
+    left: -1.5em;
+    color: #a5a3f5;
+    font-weight: 600;
+    font-family: "Fira Code", monospace;
+  }
 `;
 
 const BoldText = styled.span`
   color: ${(props) => props.theme.contrast};
-  line-height: 1.55;
+  line-height: 1.8;
   font-size: 1em;
   font-weight: 600;
   margin: initial;
@@ -371,56 +587,114 @@ const BoldText = styled.span`
 
 const Text = styled.p`
   color: ${(props) => props.theme.textColor};
-  line-height: 1.55;
-  font-size: 1.1em;
+  line-height: 1.85;
+  font-size: 1.4em;
   font-weight: 400;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.2px;
+  margin: 1.25em 0;
   font-family: -apple-system, BlinkMacSystemFont, "Inter", "Roboto", sans-serif;
 `;
 
 const Title = styled.h1`
-  margin-top: 0.75em;
+  margin-top: 1.5em;
   letter-spacing: -1.25px;
-  margin-bottom: 0px;
-  font-size: 32px;
+  margin-bottom: 0.5em;
+  font-size: 2.5em;
 `;
 
-const Subtitle = styled.h2`
-  margin-top: 1.35em;
-  margin-bottom: 0px;
+const SubtitleBase = styled.h2`
+  margin-top: 2em;
+  margin-bottom: 0.75em;
   font-family: "Fira Code", sans-serif;
   letter-spacing: -1.55px;
-  font-size: 28px;
+  font-size: 2em;
   font-weight: 600;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5em;
 
   + p {
-    margin-top: 0.35em;
+    margin-top: 0.5em;
   }
 `;
 
-const Heading3 = styled.h3`
-  margin-top: 1.2em;
-  margin-bottom: 0px;
+const NumberBadge = styled.span`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.4em;
+  height: 1.4em;
+  padding: 0.1em;
+  margin-top: 1.15em;
+  background: linear-gradient(135deg, rgba(79, 77, 193, 0.3), rgba(79, 77, 193, 0.15));
+  border: 1px solid rgba(79, 77, 193, 0.5);
+  border-radius: 50%;
+  font-size: 0.5em;
+  font-weight: 600;
+  color: #a5a3f5;
+  font-family: "Fira Code", monospace;
+`;
+
+// biome-ignore lint/suspicious/noExplicitAny: styled component
+const Subtitle = (props: any) => {
+  const text = String(props.children || "");
+  const match = text.match(/^(\d+)\.\s*(.*)$/);
+
+  if (match) {
+    return (
+      <SubtitleBase {...props}>
+        <NumberBadge>{match[1]}</NumberBadge>
+        {match[2]}
+      </SubtitleBase>
+    );
+  }
+
+  return <SubtitleBase {...props} />;
+};
+
+const Heading3Base = styled.h3`
+  margin-top: 1.75em;
+  margin-bottom: 0.5em;
   font-family: "Fira Code", sans-serif;
   letter-spacing: -1.5px;
   font-weight: 500;
-  font-size: 24px;
+  font-size: 1.65em;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5em;
 
   + p {
-    margin-top: 0.25em;
+    margin-top: 0.5em;
   }
 `;
 
+// biome-ignore lint/suspicious/noExplicitAny: styled component
+const Heading3 = (props: any) => {
+  const text = String(props.children || "");
+  const match = text.match(/^(\d+)\.\s*(.*)$/);
+
+  if (match) {
+    return (
+      <Heading3Base {...props}>
+        <NumberBadge>{match[1]}</NumberBadge>
+        {match[2]}
+      </Heading3Base>
+    );
+  }
+
+  return <Heading3Base {...props} />;
+};
+
 const Heading4 = styled.h4`
-  margin-top: 2em;
-  margin-bottom: 0px;
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
   font-family: "Fira Code", sans-serif;
   letter-spacing: -0.45px;
   font-weight: 500;
-  font-size: 18px;
+  font-size: 1.35em;
 
   + p {
-    margin-top: 0.25em;
+    margin-top: 0.5em;
   }
 `;
 
@@ -429,8 +703,9 @@ const PostContainer = styled.div`
   font-family: "Inter", sans-serif;
   border-radius: 4px;
   margin: 0.5em;
-  max-width: 700px;
+  max-width: 750px;
   width: 90%;
+  padding: 0 1em;
 `;
 
 export async function getStaticPaths() {
@@ -458,13 +733,22 @@ export async function getStaticProps({ params }: GetStaticPropsContext) {
   const properties = posts.find((post) => post.slug === params.id);
   const { content } = parsed;
 
+  // Fetch Discord widget data for inline invite links
+  const discordWidget = await fetchDiscordWidget();
+
   try {
-    const serializedContent = await serialize(content);
+    const serializedContent = await serialize(content, {
+      mdxOptions: {
+        remarkPlugins: [remarkGfm],
+      },
+    });
     return {
       props: {
         content: serializedContent,
         properties,
+        discordWidget,
       },
+      revalidate: 3600, // Revalidate Discord data every hour
     };
   } catch (error) {
     console.error(`Error serializing MDX for ${params.id}:`, error);

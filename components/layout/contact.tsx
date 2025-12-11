@@ -10,11 +10,11 @@ export const ContactBox = styled.div`
   max-width: 650px;
   padding: 1em;
   box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.4);
-  margin: 1em 5%;
-  width: 100%;
+  margin: 1em auto;
   
   @media (max-width: 768px) {
-    margin: 1em 2%;
+    margin: 1em auto;
     padding: 1.5em;
+    width: 90%;
   }
 `;

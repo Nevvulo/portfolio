@@ -11,11 +11,11 @@ const renderWithTheme = (component: React.ReactElement) => {
 
 describe("Home Page", () => {
   test("renders without crashing", () => {
-    renderWithTheme(<Home />);
+    renderWithTheme(<Home discordWidget={null} isLive={false} />);
   });
 
   test("displays main content with name and location", () => {
-    renderWithTheme(<Home />);
+    renderWithTheme(<Home discordWidget={null} isLive={false} />);
 
     const nameElements = screen.getAllByText(/Blake/i);
     const subtitles = screen.getAllByText(/software engineer based in Melbourne, Australia/i);
@@ -25,7 +25,7 @@ describe("Home Page", () => {
   });
 
   test("has all navigation buttons", () => {
-    renderWithTheme(<Home />);
+    renderWithTheme(<Home discordWidget={null} isLive={false} />);
 
     expect(screen.getAllByText("📖 Blog").length).toBeGreaterThan(0);
     expect(screen.getAllByText("🛠 Projects").length).toBeGreaterThan(0);
@@ -34,7 +34,7 @@ describe("Home Page", () => {
   });
 
   test("displays social links", () => {
-    renderWithTheme(<Home />);
+    renderWithTheme(<Home discordWidget={null} isLive={false} />);
 
     const socialLinksContainer = document.querySelector('[href*="github.com"]');
 
@@ -42,7 +42,7 @@ describe("Home Page", () => {
   });
 
   test("renders avatar image", () => {
-    renderWithTheme(<Home />);
+    renderWithTheme(<Home discordWidget={null} isLive={false} />);
 
     const avatarImg =
       document.querySelector('img[alt*="Avatar"]') || document.querySelector('img[src*="nevulo"]');

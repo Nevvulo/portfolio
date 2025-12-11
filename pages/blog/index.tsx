@@ -13,12 +13,10 @@ import generateRssFeed from "../../utils/rss";
 
 type BlogProps = { posts: Blogmap };
 export default function Blog({ posts }: BlogProps) {
-  const latestPost = posts[0];
-
   return (
     <BlogView>
       {/* <BackgroundImg /> */}
-      <SimpleNavbar emoji="📖" title="Blog" />
+      <SimpleNavbar title="Blog" />
 
       <PostContainer>
         {posts.map((properties, i) => (
@@ -28,12 +26,31 @@ export default function Blog({ posts }: BlogProps) {
 
       <Head key="blog">
         <title>Blog - Nevulo</title>
-        <meta property="og:title" content="Nevulo Blog" />
+        <meta
+          name="description"
+          content={`Read my latest thoughts on software engineering, web development, and technology. ${posts.length} articles and counting.`}
+        />
+        <meta property="og:title" content="Nevulo's Blog - Software Engineering Insights" />
         <meta
           property="og:description"
-          content={`${posts.length} posts ▪ ${latestPost?.title || ""}`}
+          content={`Read my latest thoughts on software engineering, web development, and technology. ${posts.length} articles and counting.`}
         />
-        <meta property="apple-mobile-web-app-title" content="Nevulo Blog" />
+        <meta property="og:url" content="https://nevulo.xyz/blog" />
+        <meta
+          property="og:image"
+          content="https://nevulo.xyz/api/og?title=Blake's%20Blog&subtitle=Software%20Engineering%20Insights"
+        />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Nevulo's Blog - Software Engineering" />
+        <meta
+          name="twitter:description"
+          content={`${posts.length} articles on software engineering and web development.`}
+        />
+        <meta
+          name="twitter:image"
+          content="https://nevulo.xyz/api/og?title=Blake's%20Blog&subtitle=Software%20Engineering%20Insights"
+        />
+        <meta property="apple-mobile-web-app-title" content="Nevulo's Blog" />
         <meta property="department" content="technology" />
         <meta property="audience" content="programmers" />
       </Head>

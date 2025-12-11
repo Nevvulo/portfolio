@@ -45,33 +45,34 @@ export const ProjectBadges: React.FC<BadgesProps> = ({ roles, technologies }) =>
 
 type BadgeProps = { $background: string };
 const Badge = styled(m.div)<BadgeProps>`
-  padding: 0.35em;
+  padding: 0.6em 0.75em;
   font-family: "Inter", sans-serif;
   letter-spacing: -0.2px;
   font-weight: 600;
-  border-radius: 4px;
+  border-radius: 6px;
   background: ${(props) => props.$background};
   margin-right: 12px;
   margin-bottom: 6px;
-  font-size: 0.75em;
+  font-size: 0.875em;
   white-space: nowrap;
-  overflow: hidden;
-  height: 10px;
-  line-height: 12px;
   color: white;
   text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  line-height: 1.2;
 
   @media (max-width: 768px) {
     margin-right: 8px;
     margin-bottom: 4px;
-    font-size: 0.7em;
+    font-size: 0.8em;
+    padding: 0.55em 0.7em;
   }
 
   @media (max-width: 468px) {
     margin-right: 6px;
     margin-bottom: 3px;
-    font-size: 0.65em;
-    padding: 0.3em;
+    font-size: 0.7em;
+    padding: 0.5em 0.65em;
   }
 `;
 
@@ -107,12 +108,12 @@ const Subtitle = styled.p`
   font-size: 14px;
   font-family: "Inter", sans-serif;
   letter-spacing: -0.25px;
-  margin: 0.4em 0;
+  margin: 0.5em 0 0.4em 0;
   font-weight: 600;
   color: ${(props) => props.theme.textColor};
 
   @media (max-width: 468px) {
     font-size: 12px;
-    margin: 0.25em 0;
+    margin: 0.35em 0 0.25em 0;
   }
 `;

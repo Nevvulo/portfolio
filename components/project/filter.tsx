@@ -21,7 +21,7 @@ export const Tab = styled.div<TabProps & HTMLAttributes<HTMLDivElement>>`
 `;
 
 const ProjectFilterContainer = styled(Container)`
-  margin-left: 48px;
+  margin-left: 0;
 `;
 
 interface FilterProps {

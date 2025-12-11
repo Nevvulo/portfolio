@@ -17,6 +17,8 @@ export function SkeletonImage({ ...props }: ImageProps) {
 const SkeletonContainer = styled.div`
   position: relative;
   overflow: hidden;
+  width: 100%;
+  height: 100%;
 
   @keyframes shimmer {
     from {
@@ -55,18 +57,7 @@ const SkeletonContainer = styled.div`
     }
   }
 
-  margin: 1em;
-
-  @media (min-width: 460px) {
-    width: 150px;
-    height: 150px;
-  }
-
   @media (max-width: 460px) {
-    max-width: 100% !important;
-    width: 100% !important;
-    margin: 0;
-
     &.skeleton {
       border-radius: 10px;
       border-end-end-radius: 0px;
@@ -81,7 +72,8 @@ const SkeletonContainer = styled.div`
 
 const PostImageContainer = styled.div`
   position: relative;
-  max-height: 150px;
+  width: 100%;
+  height: 100%;
   transition: opacity 200ms ease;
   opacity: 1;
 

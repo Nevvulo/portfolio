@@ -77,27 +77,29 @@ export function PostPreview({
                   ))}
               </Labels>
             ) : null}
-            <Container alignItems="center" direction="row">
+            <MetaContainer>
               {readTimeMins && (
-                <ReadTimeContainer direction="row">
+                <ReadTimeContainer>
                   <FontAwesomeIcon icon={faClock} />
-                  <p>{readTimeMins} mins</p>
+                  <span>{readTimeMins} mins</span>
                 </ReadTimeContainer>
               )}
               {difficultyBackground && (
                 <DifficultyIndicator color={difficultyBackground}>{difficulty}</DifficultyIndicator>
               )}
-            </Container>
+            </MetaContainer>
           </PreviewText>
-          <SkeletonImage
-            alt={title || "Blog post image"}
-            width={!isSmallDisplay ? 150 : 350}
-            height={!isSmallDisplay ? 150 : 125}
-            quality={75}
-            priority={prioritizeImage}
-            style={{ objectFit: "cover", width: !isSmallDisplay ? "150px" : "100%" }}
-            src={`https://raw.githubusercontent.com/Nevvulo/blog/main/posts/assets/${slug}/${image}`}
-          />
+          <ImageWrapper>
+            <SkeletonImage
+              alt={title || "Blog post image"}
+              width={!isSmallDisplay ? 150 : 400}
+              height={!isSmallDisplay ? 150 : 200}
+              quality={75}
+              priority={prioritizeImage}
+              style={{ objectFit: "cover", width: "100%", height: "100%" }}
+              src={`https://raw.githubusercontent.com/Nevvulo/blog/main/posts/assets/${slug}/${image}`}
+            />
+          </ImageWrapper>
         </Post>
       </PreviewContainer>
     </Link>
@@ -112,13 +114,11 @@ const Post = styled.div`
   color: black;
   border-radius: 8px;
   box-shadow: 1px 5px 8px rgba(0, 0, 0, 0.3);
-  align-self: center;
-  justify-self: center;
   align-items: stretch;
   text-decoration: none;
-  max-width: 650px;
+  width: 100%;
   cursor: pointer;
-  margin: 1em 0.5em;
+  margin: 1em 0;
   padding: 0.5em;
   min-height: 150px;
 
@@ -131,30 +131,33 @@ const Post = styled.div`
 `;
 
 const PreviewText = styled(Container)`
-  margin: 20px 24px 0px 24px;
-  max-width: 450px;
+  margin: 20px 24px 20px 24px;
   color: ${(props) => props.theme.contrast};
   flex: 1;
-  justify-content: space-between;
+  justify-content: flex-start;
+  gap: 0.25em;
 
   @media (max-width: 460px) {
     margin: 1em;
   }
 `;
 
-const ReadTimeContainer = styled(Container)`
-  font-size: 14px;
+const MetaContainer = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: auto;
+  padding-top: 8px;
+`;
+
+const ReadTimeContainer = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
   font-weight: 500;
   font-family: "Inter", sans-serif;
-  align-items: center;
-  margin: 0;
-  font-size: 12px;
   color: ${(props) => props.theme.textColor};
-
-  p {
-    margin: 0.5em;
-    margin-left: 8px;
-  }
 `;
 
 const PreviewDescription = styled.p`
@@ -168,7 +171,24 @@ const PreviewDescription = styled.p`
 const PreviewContainer = styled.div`
   text-decoration: none;
   overflow: hidden;
-  margin: 0 1em;
+  width: 100%;
+`;
+
+const ImageWrapper = styled.div`
+  width: 200px;
+  height: 180px;
+  flex-shrink: 0;
+  overflow: hidden;
+  border-radius: 8px;
+  margin: 0.75em;
+  margin-left: 0;
+
+  @media (max-width: 460px) {
+    width: 100%;
+    height: 200px;
+    margin: 0;
+    border-radius: 8px 8px 0 0;
+  }
 `;
 
 const DifficultyIndicator = styled.div<{ color: string }>`

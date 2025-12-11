@@ -16,6 +16,7 @@ export const Title = styled(m.h1)<{
   padding: ${(props) => props.padding ?? "0px"};
   margin: 0px;
   letter-spacing: -1.25px;
+  line-height: 1.2;
 
   > * {
     margin-right: 12px;

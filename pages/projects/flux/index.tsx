@@ -4,7 +4,7 @@ import FluxColoredLogo from "../../../assets/svg/projects/logo/flux.svg";
 import FluxBlackLogo from "../../../assets/svg/projects/logo/flux-dark.svg";
 import FluxWhiteLogo from "../../../assets/svg/projects/logo/flux-white.svg";
 import { AnimatedContainer, FadeAnimatedContainer } from "../../../components/container";
-import { DetailedNavbar } from "../../../components/navbar/detailed";
+import { SimpleNavbar } from "../../../components/navbar/simple";
 import {
   ProjectContainer,
   ProjectContentContainer,
@@ -25,8 +25,8 @@ const shortDescription = "Helping 200,000 Aussies win at money";
 
 export const FluxPreview: React.FC = () => {
   return (
-    <>
-      <AnimatedContainer style={{ marginBottom: "-3em" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+      <AnimatedContainer>
         <Image
           src={FluxWhiteLogo}
           height={180}
@@ -41,15 +41,15 @@ export const FluxPreview: React.FC = () => {
           }}
         />
       </AnimatedContainer>
-      <AnimatedContainer style={{ marginTop: 0 }}>
+      <AnimatedContainer>
         <ProjectSubtitle
-          style={{ zIndex: 2, fontSize: "20px", fontWeight: 600, marginTop: 0 }}
+          style={{ zIndex: 2, fontSize: "20px", fontWeight: 600, lineHeight: 1.4 }}
           color={Colors.WHITE}
         >
           {shortDescription}
         </ProjectSubtitle>
       </AnimatedContainer>
-    </>
+    </div>
   );
 };
 
@@ -57,7 +57,7 @@ export default function Flux() {
   const [theme] = useTheme();
   return (
     <>
-      <DetailedNavbar />
+      <SimpleNavbar backRoute="/projects" />
       <ProjectContainer>
         <ProjectTitleContainer>
           {theme === "light" ? (

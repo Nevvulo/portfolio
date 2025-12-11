@@ -19,10 +19,17 @@ enum BLOG {
   POST = "/blog/:id",
 }
 
+enum AUTH {
+  SIGN_IN = "/sign-in",
+  SIGN_UP = "/sign-up",
+  ACCOUNT = "/account",
+}
+
 export const ROUTES = {
   ROOT,
   ABOUT,
   CONTACT,
   PROJECTS,
   BLOG,
+  AUTH,
 };

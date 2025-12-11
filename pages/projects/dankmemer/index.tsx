@@ -2,7 +2,7 @@ import Image from "next/image";
 import type React from "react";
 import DankMemerLogo from "./../../../assets/img/projects/logo/dank-memer.png";
 import { AnimatedContainer, FadeAnimatedContainer } from "../../../components/container";
-import { DetailedNavbar } from "../../../components/navbar/detailed";
+import { SimpleNavbar } from "../../../components/navbar/simple";
 import {
   ProjectBadges,
   ProjectContainer,
@@ -46,7 +46,7 @@ export const DankMemerPreview: React.FC = () => (
 export default function DankMemer() {
   return (
     <ProjectContainer>
-      <DetailedNavbar />
+      <SimpleNavbar backRoute="/projects" />
 
       <ProjectTitleContainer>
         <Image

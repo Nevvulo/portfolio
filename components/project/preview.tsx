@@ -1,8 +1,8 @@
 import Image from "next/image";
 import styled from "styled-components";
+import { m } from "framer-motion";
 import { StrippedLink } from "../generics";
 import type { ProjectProps, ProjectStyleProps } from ".";
-import { ProjectContent } from ".";
 
 export const ProjectPreviewImage = styled(Image)`
   display: block;
@@ -16,25 +16,35 @@ export function ProjectPreview({ preview: Component, background, href }: Project
   return (
     <StrippedLink passHref href={href}>
       <ProjectPreviewContainer background={background}>
-        <ProjectContent>
+        <PreviewContent>
           <Component />
-        </ProjectContent>
+        </PreviewContent>
       </ProjectPreviewContainer>
     </StrippedLink>
   );
 }
 
 const ProjectPreviewContainer = styled.div<ProjectStyleProps>`
+  position: relative;
   background: ${(props) => props.background};
   cursor: pointer;
-  border-radius: 6px;
-  width: 650px;
-  max-width: 650px;
-  margin: 1em;
-  box-shadow: 1px 2px 3px rgba(0, 0, 0, 0.5);
+  border-radius: 12px;
+  width: 100%;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 
-  @media (max-width: 700px) {
-    width: calc(100vw - 3em);
-    max-width: calc(100vw - 3em);
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15), 0 2px 6px rgba(0, 0, 0, 0.1);
+  }
+`;
+
+const PreviewContent = styled(m.div)`
+  padding: 1.5em 2em 2em 2em;
+  width: 100%;
+  z-index: 2;
+
+  h1 {
+    color: white;
   }
 `;

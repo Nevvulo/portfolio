@@ -4,14 +4,17 @@ import styled from "styled-components";
 const PostHeroImgContainer = styled.div<{ img?: string }>`
   display: flex;
   position: relative;
-  height: 100%;
-  width: 100%;
+  min-height: 320px;
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
 
-  margin-top: 24px;
+  margin-top: 1rem;
   margin-bottom: 12px;
 
   transition: border 0.3s;
   align-items: center;
+  justify-content: flex-start;
   border: 2.5px solid #212121;
   background: #131313;
 
@@ -24,12 +27,22 @@ const PostHeroImgContainer = styled.div<{ img?: string }>`
     ),
     url("${(props) => props.img}");
   background-size: cover;
+  background-position: center;
 
-  padding-top: 24px;
+  padding-top: 48px;
   padding-bottom: 24px;
 
   @media (max-width: 675px) {
     border-radius: 0px;
+    min-height: 260px;
+  }
+
+  @media (min-width: 676px) {
+    min-height: 360px;
+  }
+
+  @media (min-width: 1024px) {
+    min-height: 400px;
   }
 `;
 

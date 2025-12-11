@@ -77,11 +77,20 @@ export function DetailedNavbar({ style }: NavbarProps) {
 }
 
 const DetailedContainer = styled.div`
-  margin-top: 1em;
+  margin-top: 0;
+  padding-top: 1rem;
+  margin-bottom: 1rem;
   width: 100%;
+  display: flex;
+  justify-content: center;
+  padding-left: 1rem;
+  padding-right: 1rem;
   
   @media (max-width: 768px) {
-    margin-top: 0.5em;
+    padding-top: 0.75rem;
+    margin-bottom: 0.75rem;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
   }
 `;
 
@@ -239,6 +248,5 @@ const NavbarContainer = styled(Container)`
   width: 100%;
   max-width: 700px;
   z-index: 9;
-  margin-left: auto;
-  margin-right: auto;
+  margin: 0 auto;
 `;
