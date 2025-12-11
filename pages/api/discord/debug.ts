@@ -16,8 +16,8 @@ export default async function handler(
 
   const accounts = user.externalAccounts.map((a) => ({
     provider: a.provider,
-    providerUserId: a.providerUserId,
-    externalId: (a as any).externalId,
+    providerUserId: (a as unknown as { providerUserId?: string }).providerUserId,
+    externalId: (a as unknown as { externalId?: string }).externalId,
     id: a.id,
     username: a.username,
     emailAddress: a.emailAddress,

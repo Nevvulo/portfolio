@@ -1,9 +1,16 @@
 import { Redis } from "@upstash/redis";
-import type { SupporterStatus } from "../types/supporter";
+import type { SupporterStatus, DiscordRole } from "../types/supporter";
+
+const redisUrl = process.env.UPSTASH_REDIS_REST_URL;
+const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN;
+
+if (!redisUrl || !redisToken) {
+	console.warn("[redis] Missing UPSTASH_REDIS_REST_URL or UPSTASH_REDIS_REST_TOKEN");
+}
 
 export const redis = new Redis({
-	url: process.env.UPSTASH_REDIS_REST_URL!,
-	token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+	url: redisUrl || "",
+	token: redisToken || "",
 });
 
 const SUPPORTER_KEY_PREFIX = "user:status:";
@@ -17,24 +24,60 @@ export async function getSupporterStatus(
 	clerkUserId: string,
 ): Promise<SupporterStatus | null> {
 	const key = getSupporterKey(clerkUserId);
-	const data = await redis.hgetall<Record<string, string>>(key);
+	const data = await redis.hgetall(key);
+
+	console.log("[redis] Raw data from hgetall:", JSON.stringify(data));
 
 	if (!data || Object.keys(data).length === 0) {
 		return null;
 	}
 
+	// Upstash returns values as-is (not always strings), handle both cases
+	const getString = (val: unknown): string => {
+		if (val === null || val === undefined) return "";
+		if (typeof val === "string") return val;
+		if (typeof val === "object") return JSON.stringify(val);
+		return String(val);
+	};
+
+	const rawDiscordBooster = data.discordBooster;
+	const rawDiscordHighestRole = data.discordHighestRole;
+
+	console.log("[redis] discordBooster raw:", rawDiscordBooster, typeof rawDiscordBooster);
+	console.log("[redis] discordHighestRole raw:", rawDiscordHighestRole, typeof rawDiscordHighestRole);
+
+	// Parse discordHighestRole
+	let discordHighestRole: DiscordRole | null = null;
+	if (rawDiscordHighestRole) {
+		if (typeof rawDiscordHighestRole === "object") {
+			discordHighestRole = rawDiscordHighestRole as DiscordRole;
+		} else if (typeof rawDiscordHighestRole === "string" && rawDiscordHighestRole) {
+			try {
+				discordHighestRole = JSON.parse(rawDiscordHighestRole);
+			} catch {
+				discordHighestRole = null;
+			}
+		}
+	}
+
+	// Parse discordBooster - handle boolean or string
+	const discordBooster = rawDiscordBooster === true || rawDiscordBooster === "true";
+
+	const twitchSubTierRaw = getString(data.twitchSubTier);
+
 	return {
-		twitchSubTier: data.twitchSubTier
-			? (Number.parseInt(data.twitchSubTier, 10) as 1 | 2 | 3)
+		twitchSubTier: twitchSubTierRaw
+			? (Number.parseInt(twitchSubTierRaw, 10) as 1 | 2 | 3)
 			: null,
-		discordBooster: data.discordBooster === "true",
-		twitchUserId: data.twitchUserId || undefined,
-		discordUserId: data.discordUserId || undefined,
+		discordBooster,
+		discordHighestRole,
+		twitchUserId: getString(data.twitchUserId) || undefined,
+		discordUserId: getString(data.discordUserId) || undefined,
 		clerkPlan:
-			(data.clerkPlan as "super_legend" | "super_legend_2") || null,
+			(getString(data.clerkPlan) as "super_legend" | "super_legend_2") || null,
 		clerkPlanStatus:
-			(data.clerkPlanStatus as "active" | "past_due" | "canceled") || null,
-		lastSyncedAt: data.lastSyncedAt || new Date().toISOString(),
+			(getString(data.clerkPlanStatus) as "active" | "past_due" | "canceled") || null,
+		lastSyncedAt: getString(data.lastSyncedAt) || new Date().toISOString(),
 	};
 }
 
@@ -47,6 +90,9 @@ export async function setSupporterStatus(
 	const hashData: Record<string, string> = {
 		twitchSubTier: status.twitchSubTier?.toString() ?? "",
 		discordBooster: status.discordBooster.toString(),
+		discordHighestRole: status.discordHighestRole
+			? JSON.stringify(status.discordHighestRole)
+			: "",
 		twitchUserId: status.twitchUserId ?? "",
 		discordUserId: status.discordUserId ?? "",
 		clerkPlan: status.clerkPlan ?? "",

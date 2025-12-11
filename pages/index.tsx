@@ -106,7 +106,7 @@ export default function Home({ discordWidget, isLive: serverIsLive, posts }: Hom
                 </SignInButton>
               </SignedOut>
               <SignedIn>
-                <SupporterBadges size="small" />
+                <SupporterBadges size="small" expandOnHover />
                 <UserButton
                   afterSignOutUrl="/"
                   appearance={{
@@ -520,10 +520,6 @@ const Badge = styled.div`
   letter-spacing: 1.2px;
   white-space: nowrap;
   box-shadow: 0 2px 8px rgba(79, 77, 193, 0.15);
-`;
-
-const NavSpacer = styled.div`
-  width: 16px;
 `;
 
 const NavButton = styled(Link)`

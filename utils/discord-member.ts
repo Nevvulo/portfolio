@@ -66,3 +66,73 @@ export async function checkBoosterStatus(
 		boostingSince: member.premium_since,
 	};
 }
+
+export interface GuildRole {
+	id: string;
+	name: string;
+	color: number;
+	position: number;
+	permissions: string;
+	managed: boolean;
+}
+
+export async function getGuildRoles(): Promise<GuildRole[]> {
+	if (!BOT_TOKEN || !GUILD_ID) {
+		throw new Error("Discord bot token or guild ID not configured");
+	}
+
+	const response = await fetch(`${DISCORD_API}/guilds/${GUILD_ID}/roles`, {
+		headers: {
+			Authorization: `Bot ${BOT_TOKEN}`,
+		},
+	});
+
+	if (!response.ok) {
+		const errorText = await response.text();
+		throw new Error(
+			`Discord API error: ${response.statusText} - ${errorText}`,
+		);
+	}
+
+	return response.json();
+}
+
+export interface MemberHighestRole {
+	id: string;
+	name: string;
+	color: number;
+	position: number;
+}
+
+export async function getMemberHighestRole(
+	userId: string,
+): Promise<MemberHighestRole | null> {
+	const member = await getGuildMember(userId);
+
+	if (!member) {
+		return null;
+	}
+
+	const guildRoles = await getGuildRoles();
+
+	// Filter to only roles the member has
+	const memberRoles = guildRoles.filter(
+		(role) => member.roles.includes(role.id) && role.name !== "@everyone",
+	);
+
+	if (memberRoles.length === 0) {
+		return null;
+	}
+
+	// Find highest positioned role
+	const highestRole = memberRoles.reduce((prev, current) =>
+		current.position > prev.position ? current : prev,
+	);
+
+	return {
+		id: highestRole.id,
+		name: highestRole.name,
+		color: highestRole.color,
+		position: highestRole.position,
+	};
+}

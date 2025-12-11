@@ -3,6 +3,7 @@ import "@fortawesome/fontawesome-svg-core/styles.css";
 config.autoAddCss = false; // Prevent FA from adding CSS (we import it above)
 
 import { ClerkProvider } from "@clerk/nextjs";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { LazyMotion } from "framer-motion";
@@ -10,7 +11,7 @@ import type { AppProps } from "next/app";
 import Head from "next/head";
 import Router from "next/router";
 import NProgress from "nprogress";
-import React from "react";
+import React, { useState } from "react";
 import { createGlobalStyle, ThemeProvider } from "styled-components";
 import { AnimatedRoutes } from "../components/routing/animated-routes";
 import { DarkTheme, LightTheme } from "../constants/theme";
@@ -101,22 +102,32 @@ export default function MyApp({ Component, router, pageProps }: AppProps) {
   const [userTheme] = useTheme();
   const theme = userTheme === "light" ? LightTheme : DarkTheme;
   const isBackForwardNav = useNavigationType();
+  const [queryClient] = useState(() => new QueryClient({
+    defaultOptions: {
+      queries: {
+        staleTime: 60 * 1000,
+        refetchOnWindowFocus: false,
+      },
+    },
+  }));
 
   return (
     <React.StrictMode>
-      <ClerkProvider appearance={clerkAppearance}>
-        <ThemeProvider theme={theme}>
-          <LazyMotion key="app" strict features={loadMotionFeatures}>
-            <GlobalStyle />
-            <MainHead />
-            <AnimatedRoutes currentRoute={router.route} skipAnimation={isBackForwardNav}>
-              <Component {...pageProps} />
-            </AnimatedRoutes>
-            <Analytics />
-            <SpeedInsights />
-          </LazyMotion>
-        </ThemeProvider>
-      </ClerkProvider>
+      <QueryClientProvider client={queryClient}>
+        <ClerkProvider appearance={clerkAppearance}>
+          <ThemeProvider theme={theme}>
+            <LazyMotion key="app" strict features={loadMotionFeatures}>
+              <GlobalStyle />
+              <MainHead />
+              <AnimatedRoutes currentRoute={router.route} skipAnimation={isBackForwardNav}>
+                <Component {...pageProps} />
+              </AnimatedRoutes>
+              <Analytics />
+              <SpeedInsights />
+            </LazyMotion>
+          </ThemeProvider>
+        </ClerkProvider>
+      </QueryClientProvider>
     </React.StrictMode>
   );
 }

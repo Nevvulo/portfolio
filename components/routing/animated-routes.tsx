@@ -10,7 +10,7 @@ interface AnimatedRoutesProps {
 
 export function AnimatedRoutes({
   children,
-  exitBeforeEnter = true,
+  exitBeforeEnter: _exitBeforeEnter = true,
   currentRoute,
   skipAnimation = false,
 }: PropsWithChildren<AnimatedRoutesProps>) {
