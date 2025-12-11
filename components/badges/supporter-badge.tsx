@@ -16,6 +16,9 @@ interface SupporterBadgeProps {
 	type: BadgeType;
 	size?: "small" | "medium";
 	showLabel?: boolean;
+	expandOnHover?: boolean;
+	customColor?: string;
+	customLabel?: string;
 }
 
 function getBadgeIcon(type: BadgeType) {
@@ -25,6 +28,7 @@ function getBadgeIcon(type: BadgeType) {
 		case BadgeType.TWITCH_SUB_T3:
 			return faTwitch;
 		case BadgeType.DISCORD_BOOSTER:
+		case BadgeType.DISCORD_ROLE:
 			return faDiscord;
 		case BadgeType.SUPER_LEGEND:
 			return faStar;
@@ -39,26 +43,33 @@ export function SupporterBadge({
 	type,
 	size = "small",
 	showLabel = false,
+	expandOnHover = false,
+	customColor,
+	customLabel,
 }: SupporterBadgeProps) {
-	const color = BadgeColors[type];
+	const color = customColor || BadgeColors[type];
 	const icon = getBadgeIcon(type);
+	const label = customLabel || BadgeNames[type];
 
 	return (
 		<BadgeContainer
 			$color={color}
 			$size={size}
-			title={BadgeDescriptions[type]}
+			$expandOnHover={expandOnHover}
+			title={!expandOnHover ? (customLabel || BadgeDescriptions[type]) : undefined}
 		>
 			<FontAwesomeIcon
 				icon={icon}
-				style={{ width: size === "small" ? 12 : 14 }}
+				style={{ width: size === "small" ? 12 : 14, flexShrink: 0 }}
 			/>
-			{showLabel && <BadgeLabel>{BadgeNames[type]}</BadgeLabel>}
+			{(showLabel || expandOnHover) && (
+				<BadgeLabel $expandOnHover={expandOnHover}>{label}</BadgeLabel>
+			)}
 		</BadgeContainer>
 	);
 }
 
-const BadgeContainer = styled.div<{ $color: string; $size: string }>`
+const BadgeContainer = styled.div<{ $color: string; $size: string; $expandOnHover: boolean }>`
 	display: inline-flex;
 	align-items: center;
 	gap: 4px;
@@ -68,7 +79,9 @@ const BadgeContainer = styled.div<{ $color: string; $size: string }>`
 	border-radius: 4px;
 	font-size: ${(p) => (p.$size === "small" ? "10px" : "12px")};
 	color: ${(p) => p.$color};
-	transition: all 0.2s ease;
+	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+	cursor: ${(p) => (p.$expandOnHover ? "pointer" : "default")};
+	overflow: hidden;
 
 	&:hover {
 		background: ${(p) => p.$color}33;
@@ -76,9 +89,25 @@ const BadgeContainer = styled.div<{ $color: string; $size: string }>`
 	}
 `;
 
-const BadgeLabel = styled.span`
+const BadgeLabel = styled.span<{ $expandOnHover: boolean }>`
 	font-family: "SF Mono", "Monaco", "Inconsolata", monospace;
 	font-weight: 600;
 	text-transform: uppercase;
 	letter-spacing: 0.5px;
+	white-space: nowrap;
+
+	${(p) => p.$expandOnHover && `
+		max-width: 0;
+		opacity: 0;
+		transition: max-width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+		            opacity 0.2s ease,
+		            margin-left 0.3s ease;
+		margin-left: -4px;
+
+		${BadgeContainer}:hover & {
+			max-width: 200px;
+			opacity: 1;
+			margin-left: 0;
+		}
+	`}
 `;

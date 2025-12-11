@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { Webhook } from "svix";
 import { syncDiscordRoles } from "../discord/roles";
 import { PLANS } from "../../../lib/clerk";
+import { getSupporterKey, redis } from "../../../lib/redis";
 
 // Disable body parsing - we need the raw body for signature verification
 export const config = {
@@ -84,10 +85,25 @@ export default async function handler(
       }
 
       console.log(`Subscription active for user ${userId}, plan: ${planId}`);
+
+      // Sync Discord roles
       const result = await syncDiscordRoles(userId, planId ?? null);
       if (!result.success) {
         console.error(`Failed to sync Discord role: ${result.error}`);
       }
+
+      // Update Redis cache with subscription status
+      const key = getSupporterKey(userId);
+      const clerkPlan = planId === PLANS.SUPER_LEGEND ? "super_legend"
+        : planId === PLANS.SUPER_LEGEND_2 ? "super_legend_2"
+        : null;
+
+      await redis.hset(key, {
+        clerkPlan: clerkPlan ?? "",
+        clerkPlanStatus: "active",
+        lastSyncedAt: new Date().toISOString(),
+      });
+      console.log(`Updated Redis cache for user ${userId} with plan ${clerkPlan}`);
       break;
     }
 
@@ -106,6 +122,16 @@ export default async function handler(
       if (!result.success) {
         console.error(`Failed to remove Discord roles: ${result.error}`);
       }
+
+      // Update Redis cache with canceled status
+      const key = getSupporterKey(userId);
+      const status = event.type === "subscriptionItem.canceled" ? "canceled" : "canceled";
+      await redis.hset(key, {
+        clerkPlan: "",
+        clerkPlanStatus: status,
+        lastSyncedAt: new Date().toISOString(),
+      });
+      console.log(`Updated Redis cache for user ${userId} - subscription ${event.type}`);
       break;
     }
 

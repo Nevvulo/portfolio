@@ -26,6 +26,7 @@
     "@mdx-js/react": "^3.0.0",
     "@octokit/graphql": "^7.0.2",
     "@tailwindcss/postcss": "^4.1.17",
+    "@tanstack/react-query": "^5.90.12",
     "@upstash/redis": "^1.35.7",
     "@vercel/analytics": "^1.1.1",
     "@vercel/og": "^0.8.5",

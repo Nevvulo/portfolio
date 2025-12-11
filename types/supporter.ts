@@ -1,7 +1,15 @@
+export interface DiscordRole {
+	id: string;
+	name: string;
+	color: number;
+	position: number;
+}
+
 export interface SupporterStatus {
 	// External platform badges
 	twitchSubTier: 1 | 2 | 3 | null;
 	discordBooster: boolean;
+	discordHighestRole: DiscordRole | null;
 	twitchUserId?: string;
 	discordUserId?: string;
 

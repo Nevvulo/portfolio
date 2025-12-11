@@ -701,3 +701,65 @@ const SparklesIcon = () => (
     <path d="M19 10l1 2 1-2 2-1-2-1-1-2-1 2-2 1 2 1z" />
   </svg>
 );
+
+const TwitchIcon = () => (
+  <svg width="32" height="32" viewBox="0 0 24 24" fill="#9147ff">
+    <path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714Z" />
+  </svg>
+);
+
+// Badges section styled components
+const BadgesCard = styled.div`
+  background: ${(props) => props.theme.postBackground};
+  border: 1.5px solid rgba(79, 77, 193, 0.2);
+  border-radius: 12px;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+`;
+
+const NoBadgesMessage = styled.p`
+  font-family: "Inter", sans-serif;
+  font-size: 14px;
+  color: ${(props) => props.theme.contrast};
+  opacity: 0.7;
+  margin: 0;
+`;
+
+const BadgesActions = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+`;
+
+const SyncBadgesButton = styled.button`
+  background: rgba(79, 77, 193, 0.2);
+  border: 1.5px solid rgba(79, 77, 193, 0.4);
+  color: ${(props) => props.theme.contrast};
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-family: "SF Mono", monospace;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover:not(:disabled) {
+    background: rgba(79, 77, 193, 0.3);
+    border-color: rgba(79, 77, 193, 0.6);
+  }
+
+  &:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+`;
+
+const LastSynced = styled.span`
+  font-family: "Inter", sans-serif;
+  font-size: 12px;
+  color: ${(props) => props.theme.contrast};
+  opacity: 0.6;
+`;

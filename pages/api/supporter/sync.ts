@@ -3,8 +3,8 @@ import { getAuth } from "@clerk/nextjs/server";
 import { clerkClient } from "@clerk/nextjs/server";
 import { setSupporterStatus } from "../../../lib/redis";
 import { checkUserSubscription } from "../../../utils/twitch";
-import { checkBoosterStatus } from "../../../utils/discord-member";
-import type { SupporterStatus } from "../../../types/supporter";
+import { checkBoosterStatus, getMemberHighestRole } from "../../../utils/discord-member";
+import type { SupporterStatus, DiscordRole } from "../../../types/supporter";
 
 export default async function handler(
 	req: NextApiRequest,
@@ -31,26 +31,52 @@ export default async function handler(
 			(a) => a.provider === "oauth_discord",
 		);
 
-		// Get Clerk subscription status
+		// Get Clerk subscription status via Clerk Billing API
 		let clerkPlan: SupporterStatus["clerkPlan"] = null;
 		let clerkPlanStatus: SupporterStatus["clerkPlanStatus"] = null;
 
-		// Check for active subscription in user metadata or billing
-		const publicMetadata = user.publicMetadata as {
-			subscriptionPlan?: string;
-			subscriptionStatus?: string;
-		};
-		if (publicMetadata.subscriptionPlan) {
-			clerkPlan = publicMetadata.subscriptionPlan as typeof clerkPlan;
-			clerkPlanStatus =
-				(publicMetadata.subscriptionStatus as typeof clerkPlanStatus) ||
-				"active";
+		try {
+			// Fetch user's billing subscription from Clerk
+			const billingRes = await fetch(
+				`https://api.clerk.com/v1/users/${userId}/billing/subscription`,
+				{
+					headers: {
+						Authorization: `Bearer ${process.env.CLERK_SECRET_KEY}`,
+					},
+				}
+			);
+
+			if (billingRes.ok) {
+				const billingData = await billingRes.json();
+
+				// Extract plan from subscription_items array (Clerk Billing structure)
+				const item = billingData.subscription_items?.[0];
+				const planSlug = item?.plan?.slug;
+				const planName = item?.plan?.name?.toLowerCase().replace(/\s+/g, "_");
+				const status = billingData.status;
+
+				// Match against our plan identifiers
+				if (planSlug === "super_legend" || planName === "super_legend") {
+					clerkPlan = "super_legend";
+				} else if (planSlug === "super_legend_2" || planName === "super_legend_ii" || planName === "super_legend_2") {
+					clerkPlan = "super_legend_2";
+				}
+
+				if (status === "active" || status === "past_due" || status === "canceled") {
+					clerkPlanStatus = status;
+				} else if (clerkPlan) {
+					clerkPlanStatus = "active";
+				}
+			}
+		} catch (error) {
+			console.error("Error fetching Clerk subscription:", error);
 		}
 
 		let twitchSubTier: SupporterStatus["twitchSubTier"] = null;
 		let twitchUserId: string | undefined;
 		let discordBooster = false;
 		let discordUserId: string | undefined;
+		let discordHighestRole: DiscordRole | null = null;
 
 		// Check Twitch subscription
 		if (twitchAccount) {
@@ -67,7 +93,7 @@ export default async function handler(
 			}
 		}
 
-		// Check Discord booster status
+		// Check Discord booster status and highest role
 		if (discordAccount) {
 			try {
 				discordUserId =
@@ -76,9 +102,20 @@ export default async function handler(
 				if (discordUserId) {
 					const boost = await checkBoosterStatus(discordUserId);
 					discordBooster = boost.isBooster;
+
+					// Fetch highest role
+					const highestRole = await getMemberHighestRole(discordUserId);
+					if (highestRole) {
+						discordHighestRole = {
+							id: highestRole.id,
+							name: highestRole.name,
+							color: highestRole.color,
+							position: highestRole.position,
+						};
+					}
 				}
 			} catch (error) {
-				console.error("Failed to check Discord booster status:", error);
+				console.error("Failed to check Discord status:", error);
 			}
 		}
 
@@ -87,6 +124,7 @@ export default async function handler(
 		const supporterStatus: SupporterStatus = {
 			twitchSubTier,
 			discordBooster,
+			discordHighestRole,
 			twitchUserId,
 			discordUserId,
 			clerkPlan,
@@ -94,15 +132,19 @@ export default async function handler(
 			lastSyncedAt: now,
 		};
 
+		console.log("[supporter/sync] Built status:", JSON.stringify(supporterStatus, null, 2));
+
 		// Store in Redis
+		console.log("[supporter/sync] Storing in Redis...");
 		await setSupporterStatus(userId, supporterStatus);
+		console.log("[supporter/sync] Stored successfully");
 
 		return res.status(200).json({
 			success: true,
 			status: supporterStatus,
 		});
 	} catch (error) {
-		console.error("Failed to sync supporter status:", error);
+		console.error("[supporter/sync] Failed to sync:", error);
 		return res.status(500).json({
 			error:
 				error instanceof Error

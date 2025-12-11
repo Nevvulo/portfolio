@@ -166,11 +166,11 @@ export async function checkUserSubscription(
   }
 
   const data: TwitchSubscriptionResponse = await response.json();
-  if (!data.data || data.data.length === 0) {
+  const sub = data.data?.[0];
+  if (!sub) {
     return { tier: null, isGift: false };
   }
 
-  const sub = data.data[0];
   const tierMap: Record<string, 1 | 2 | 3> = {
     "1000": 1,
     "2000": 2,

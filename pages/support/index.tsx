@@ -107,12 +107,11 @@ export default function Support() {
                 </TierCard>
               </TierGrid>
               <SubscribeButton
-                href="https://www.twitch.tv/subs/nevulo"
-                target="_blank"
-                rel="noopener noreferrer"
+                as="div"
                 $color="#9146FF"
+                $disabled
               >
-                Subscribe on Twitch
+                Coming Soon
               </SubscribeButton>
             </SupportCategory>
 
@@ -143,7 +142,7 @@ export default function Support() {
                 </BoostPerks>
               </BoostCard>
               <SubscribeButton
-                href="https://discord.com/servers/nevulo"
+                href="https://discord.com/channels/363516708062756886/boosts"
                 target="_blank"
                 rel="noopener noreferrer"
                 $color="#5865F2"
@@ -479,23 +478,25 @@ const BoostPerks = styled.ul`
   }
 `;
 
-const SubscribeButton = styled.a<{ $color: string }>`
+const SubscribeButton = styled.a<{ $color: string; $disabled?: boolean }>`
   display: block;
   text-align: center;
   font-family: "Inter", sans-serif;
   font-weight: 600;
   font-size: 14px;
   padding: 0.875rem 1.5rem;
-  background: ${(props) => props.$color};
-  color: white;
+  background: ${(props) => props.$disabled ? "#666" : props.$color};
+  color: ${(props) => props.$disabled ? "#999" : "white"};
   text-decoration: none;
   border-radius: 8px;
   transition: all 0.2s ease;
   margin-top: auto;
+  cursor: ${(props) => props.$disabled ? "not-allowed" : "pointer"};
+  opacity: ${(props) => props.$disabled ? 0.6 : 1};
 
   &:hover {
-    opacity: 0.9;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px ${(props) => props.$color}44;
+    opacity: ${(props) => props.$disabled ? 0.6 : 0.9};
+    transform: ${(props) => props.$disabled ? "none" : "translateY(-1px)"};
+    box-shadow: ${(props) => props.$disabled ? "none" : `0 4px 12px ${props.$color}44`};
   }
 `;
