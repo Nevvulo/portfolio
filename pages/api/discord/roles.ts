@@ -13,7 +13,7 @@ const PLAN_TO_ROLE: Record<string, string> = {
   [PLANS.SUPER_LEGEND_2]: process.env.DISCORD_ROLE_SUPER_LEGEND_2!,
   // Clerk internal plan IDs (dev)
   "cplan_36glMpITSsfy0ftlNNL2FYvKnGL": process.env.DISCORD_ROLE_SUPER_LEGEND!,
-  // Add production plan IDs here when you have them
+  "cplan_36gqZlOflmAmtcH5nGrMShDMO17": process.env.DISCORD_ROLE_SUPER_LEGEND_2!,
 };
 
 // All supporter roles (for removal when subscription ends)

@@ -126,7 +126,7 @@ export default function AccountPage() {
       <SimpleNavbar backRoute="/" />
 
       <ContentContainer>
-        <PageTitle>Your Account</PageTitle>
+        <PageTitle>account</PageTitle>
 
         <Section>
           <SectionTitle>Profile</SectionTitle>

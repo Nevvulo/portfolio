@@ -399,6 +399,14 @@ const BlogStyle = createGlobalStyle`
     font-size: 1.1em;
     margin: 1.5em 0;
     border-radius: 8px;
+
+    @media (max-width: 768px) {
+      font-size: 0.95em;
+    }
+
+    @media (max-width: 480px) {
+      font-size: 0.85em;
+    }
   }
 
   h1, h2, h3, h4, h5, h6, p, span, li, ul {
@@ -432,6 +440,10 @@ const BlogStyle = createGlobalStyle`
     padding: 0.5em 0 0.5em 1.5em;
     font-style: italic;
     opacity: 0.9;
+
+    @media (max-width: 768px) {
+      font-size: 0.95em;
+    }
   }
 `;
 
@@ -495,6 +507,14 @@ const NumberedList = styled.ul`
     position: absolute;
     left: 0;
     color: #a5a3f5;
+    font-size: 1em;
+  }
+
+  @media (max-width: 768px) {
+    font-size: 1.05em;
+  }
+
+  @media (max-width: 480px) {
     font-size: 1em;
   }
 `;
@@ -573,6 +593,14 @@ const DotpointList = styled.ol`
     font-weight: 600;
     font-family: "Fira Code", monospace;
   }
+
+  @media (max-width: 768px) {
+    font-size: 1.05em;
+  }
+
+  @media (max-width: 480px) {
+    font-size: 1em;
+  }
 `;
 
 const BoldText = styled.span`
@@ -593,6 +621,16 @@ const Text = styled.p`
   letter-spacing: 0.2px;
   margin: 1.25em 0;
   font-family: -apple-system, BlinkMacSystemFont, "Inter", "Roboto", sans-serif;
+
+  @media (max-width: 768px) {
+    font-size: 1.1em;
+    line-height: 1.75;
+  }
+
+  @media (max-width: 480px) {
+    font-size: 1em;
+    line-height: 1.7;
+  }
 `;
 
 const Title = styled.h1`
@@ -600,6 +638,14 @@ const Title = styled.h1`
   letter-spacing: -1.25px;
   margin-bottom: 0.5em;
   font-size: 2.5em;
+
+  @media (max-width: 768px) {
+    font-size: 2em;
+  }
+
+  @media (max-width: 480px) {
+    font-size: 1.75em;
+  }
 `;
 
 const SubtitleBase = styled.h2`
@@ -615,6 +661,16 @@ const SubtitleBase = styled.h2`
 
   + p {
     margin-top: 0.5em;
+  }
+
+  @media (max-width: 768px) {
+    font-size: 1.6em;
+    letter-spacing: -1px;
+  }
+
+  @media (max-width: 480px) {
+    font-size: 1.4em;
+    letter-spacing: -0.5px;
   }
 `;
 
@@ -666,6 +722,16 @@ const Heading3Base = styled.h3`
   + p {
     margin-top: 0.5em;
   }
+
+  @media (max-width: 768px) {
+    font-size: 1.35em;
+    letter-spacing: -0.75px;
+  }
+
+  @media (max-width: 480px) {
+    font-size: 1.2em;
+    letter-spacing: -0.5px;
+  }
 `;
 
 // biome-ignore lint/suspicious/noExplicitAny: styled component
@@ -695,6 +761,14 @@ const Heading4 = styled.h4`
 
   + p {
     margin-top: 0.5em;
+  }
+
+  @media (max-width: 768px) {
+    font-size: 1.15em;
+  }
+
+  @media (max-width: 480px) {
+    font-size: 1.1em;
   }
 `;
 

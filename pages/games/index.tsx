@@ -71,7 +71,7 @@ export default function GamesPage() {
 const Background = styled.div`
   width: 100%;
   filter: ${(props) => (props.theme.contrast === "#000" ? "invert(1)" : "")};
-  background: linear-gradient(135deg, rgba(34, 197, 94, 0.03) 0%, rgba(22, 163, 74, 0.05) 100%);
+  background: linear-gradient(135deg, rgba(79, 77, 193, 0.03) 0%, rgba(107, 105, 214, 0.05) 100%);
   height: 100%;
   z-index: -1;
   position: fixed;

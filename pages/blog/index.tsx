@@ -78,6 +78,11 @@ const PostContainer = styled(Container)`
   margin-top: 16px;
   border-radius: 8px;
   justify-content: center;
+  padding: 0 1rem;
+
+  @media (max-width: 480px) {
+    padding: 0 0.75rem;
+  }
 `;
 
 export async function getStaticProps() {

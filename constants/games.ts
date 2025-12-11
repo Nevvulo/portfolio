@@ -5,7 +5,7 @@ export type Game = ProjectProps & ProjectStyleProps;
 export const Games: Game[] = [
   {
     projectId: "golfquest",
-    background: "linear-gradient(135deg, #22c55e, #16a34a, #15803d)",
+    background: "linear-gradient(135deg, #065f46, #047857, #059669, #10b981)",
     preview: GolfquestPreview,
     component: Golfquest,
     maintained: true,
