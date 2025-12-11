@@ -99,7 +99,7 @@ export default function Home({ discordWidget, isLive: serverIsLive, posts }: Hom
             <NavLink href="/live">Live</NavLink>
             <NavLink href="/support">Support</NavLink>
 
-            <AuthContainer>
+            <DesktopAuthContainer>
               <SignedOut>
                 <SignInButton mode="modal">
                   <LoginButton>Sign In</LoginButton>
@@ -119,8 +119,37 @@ export default function Home({ discordWidget, isLive: serverIsLive, posts }: Hom
                   }}
                 />
               </SignedIn>
-            </AuthContainer>
+            </DesktopAuthContainer>
           </TopNavBar>
+
+          {/* Mobile sign in - directly under navbar */}
+          <MobileSignInBar>
+            <SignedOut>
+              <SignInButton mode="modal">
+                <MobileSignInButton>Sign In</MobileSignInButton>
+              </SignInButton>
+            </SignedOut>
+          </MobileSignInBar>
+
+          {/* Mobile bottom bar - only for signed in users */}
+          <MobileBottomBar>
+            <SignedIn>
+              <MobileBadgesContainer>
+                <SupporterBadges size="small" />
+              </MobileBadgesContainer>
+              <UserButton
+                afterSignOutUrl="/"
+                appearance={{
+                  elements: {
+                    avatarBox: {
+                      width: "32px",
+                      height: "32px",
+                    },
+                  },
+                }}
+              />
+            </SignedIn>
+          </MobileBottomBar>
 
           <BackgroundImage aria-hidden="true" />
 
@@ -238,10 +267,6 @@ export default function Home({ discordWidget, isLive: serverIsLive, posts }: Hom
           </Section>
 
       <Head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Sixtyfour[BLED,SCAN]&display=swap" rel="stylesheet" />
-
         <title>Nevulo - Software Engineer | Portfolio</title>
         <meta
           name="description"
@@ -306,6 +331,7 @@ const TopNavBar = styled.nav`
   justify-content: center;
   gap: 2rem;
   padding: 0.5rem;
+  padding-top: calc(0.5rem + env(safe-area-inset-top, 0px));
   background: rgba(17, 17, 17, 0.8);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid rgba(79, 77, 193, 0.1);
@@ -314,6 +340,13 @@ const TopNavBar = styled.nav`
   @media (max-width: 768px) {
     gap: 1rem;
     padding: 0.5rem;
+    padding-top: calc(0.5rem + env(safe-area-inset-top, 0px));
+  }
+
+  @media (max-width: 650px) {
+    gap: 0.6rem;
+    padding: 0.4rem 0.5rem;
+    padding-top: calc(0.4rem + env(safe-area-inset-top, 0px));
   }
 `;
 
@@ -331,14 +364,82 @@ const NavLink = styled(Link)`
   &:hover {
     opacity: 1;
   }
+
+  @media (max-width: 650px) {
+    font-size: 10px;
+    letter-spacing: 0.8px;
+  }
 `;
 
-const AuthContainer = styled.div`
+const DesktopAuthContainer = styled.div`
   position: absolute;
   right: 1rem;
   display: flex;
   align-items: center;
   gap: 8px;
+
+  @media (max-width: 650px) {
+    display: none;
+  }
+`;
+
+const MobileSignInBar = styled.div`
+  display: none;
+
+  @media (max-width: 650px) {
+    display: flex;
+    position: fixed;
+    top: calc(32px + env(safe-area-inset-top, 0px));
+    left: 0;
+    right: 0;
+    justify-content: flex-end;
+    padding: 0.5rem 1rem;
+    z-index: 998;
+  }
+`;
+
+const MobileBottomBar = styled.div`
+  display: none;
+
+  @media (max-width: 650px) {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 0.75rem 1rem;
+    padding-bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
+    background: transparent;
+    z-index: 999;
+    justify-content: space-between;
+    align-items: center;
+  }
+`;
+
+const MobileBadgesContainer = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+`;
+
+const MobileSignInButton = styled.button`
+  font-family: "SF Mono", "Monaco", "Inconsolata", "Roboto Mono", "Courier New", monospace;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: ${(props) => props.theme.contrast};
+  background: transparent;
+  border: none;
+  padding: 8px 0;
+  cursor: pointer;
+  opacity: 0.8;
+  transition: opacity 0.2s ease;
+  margin: 0 auto;
+
+  &:hover {
+    opacity: 1;
+  }
 `;
 
 const LoginButton = styled.button`
