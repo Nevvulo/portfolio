@@ -13,24 +13,16 @@ const nextConfig = {
 
   // Experimental features for maximum performance
   experimental: {
-    // These features work in stable 15.5.0
-    clientSegmentCache: true,
     swcTraceProfiling: false,
     scrollRestoration: true,
-
-    // These require canary version - uncomment if you switch to canary
-    // browserDebugInfoInTerminal: true,
-    // devtoolSegmentExplorer: true,
-    // globalNotFound: true,
-    // turbopackPersistentCaching: true,
-    // cacheComponents: true,
   },
 
-  // Strict mode for better React 18 compatibility
+  // Strict mode for better React 19 compatibility
   reactStrictMode: true,
 
-  // Optimize images
+  // Optimize images - use modern formats
   images: {
+    formats: ["image/avif", "image/webp"],
     remotePatterns: [
       {
         protocol: "https",
@@ -43,6 +35,8 @@ const nextConfig = {
     ],
     // Configure valid quality values to prevent warnings
     qualities: [25, 50, 75, 100],
+    // Minimize image sizes
+    minimumCacheTTL: 31536000, // 1 year cache
   },
 
   // Redirects
