@@ -31,10 +31,10 @@ export default function Contact() {
           property="og:description"
           content="Get in touch with Blake. Connect via email or social media for collaboration opportunities and professional inquiries."
         />
-        <meta property="og:url" content="https://nevulo.xyz/contact" />
+        <meta property="og:url" content="https://nev.so/contact" />
         <meta
           property="og:image"
-          content="https://nevulo.xyz/api/og?title=Get%20in%20Touch&subtitle=Let's%20connect%20and%20collaborate"
+          content="https://nev.so/api/og?title=Get%20in%20Touch&subtitle=Let's%20connect%20and%20collaborate"
         />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="Contact Nevulo" />
@@ -44,7 +44,7 @@ export default function Contact() {
         />
         <meta
           name="twitter:image"
-          content="https://nevulo.xyz/api/og?title=Get%20in%20Touch&subtitle=Let's%20connect%20and%20collaborate"
+          content="https://nev.so/api/og?title=Get%20in%20Touch&subtitle=Let's%20connect%20and%20collaborate"
         />
       </Head>
     </TopNavView>

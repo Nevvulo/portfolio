@@ -1,5 +1,31 @@
 @import "tailwindcss";
 
+/* FOUC Prevention - hide until fonts loaded */
+html {
+  visibility: hidden;
+}
+
+html.fonts-loaded {
+  visibility: visible;
+}
+
+/* Fallback: show content after 3s even if fonts fail */
+@supports (animation: none) {
+  html {
+    animation: show-content 0s 3s forwards;
+  }
+
+  @keyframes show-content {
+    to {
+      visibility: visible;
+    }
+  }
+
+  html.fonts-loaded {
+    animation: none;
+  }
+}
+
 /* Ensure full height */
 html,
 body,

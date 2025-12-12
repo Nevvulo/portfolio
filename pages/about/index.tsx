@@ -91,10 +91,10 @@ export default function About() {
           property="og:description"
           content="Learn about Blake, a software engineer based in Melbourne, Australia. Passionate about building exceptional digital experiences."
         />
-        <meta property="og:url" content="https://nevulo.xyz/about" />
+        <meta property="og:url" content="https://nev.so/about" />
         <meta
           property="og:image"
-          content="https://nevulo.xyz/api/og?title=About%20Blake&subtitle=Software%20Engineer%20%7C%20Melbourne%2C%20Australia"
+          content="https://nev.so/api/og?title=About%20Blake&subtitle=Software%20Engineer%20%7C%20Melbourne%2C%20Australia"
         />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="About Nevulo" />
@@ -104,7 +104,7 @@ export default function About() {
         />
         <meta
           name="twitter:image"
-          content="https://nevulo.xyz/api/og?title=About%20Blake&subtitle=Software%20Engineer%20%7C%20Melbourne%2C%20Australia"
+          content="https://nev.so/api/og?title=About%20Blake&subtitle=Software%20Engineer%20%7C%20Melbourne%2C%20Australia"
         />
       </Head>
     </TopNavView>

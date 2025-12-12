@@ -289,11 +289,11 @@ export default function Home({ discordWidget, isLive: serverIsLive, posts }: Hom
           content="Software engineer based in Melbourne, Australia. Building exceptional digital experiences with modern web technologies."
         />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://nevulo.xyz" />
+        <meta property="og:url" content="https://nev.so" />
         <meta property="og:site_name" content="Blake's Portfolio" />
         <meta
           property="og:image"
-          content="https://nevulo.xyz/api/og?title=Blake%20-%20Software%20Engineer&subtitle=Building%20exceptional%20digital%20experiences%20in%20Melbourne"
+          content="https://nev.so/api/og?title=Blake%20-%20Software%20Engineer&subtitle=Building%20exceptional%20digital%20experiences%20in%20Melbourne"
         />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
@@ -307,7 +307,7 @@ export default function Home({ discordWidget, isLive: serverIsLive, posts }: Hom
         />
         <meta
           name="twitter:image"
-          content="https://nevulo.xyz/api/og?title=Blake%20-%20Software%20Engineer&subtitle=Building%20exceptional%20digital%20experiences%20in%20Melbourne"
+          content="https://nev.so/api/og?title=Blake%20-%20Software%20Engineer&subtitle=Building%20exceptional%20digital%20experiences%20in%20Melbourne"
         />
       </Head>
         </>

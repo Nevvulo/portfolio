@@ -11,12 +11,13 @@ import type { AppProps } from "next/app";
 import Head from "next/head";
 import Router from "next/router";
 import NProgress from "nprogress";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { createGlobalStyle, ThemeProvider } from "styled-components";
 import { AnimatedRoutes } from "../components/routing/animated-routes";
 import { DarkTheme, LightTheme } from "../constants/theme";
 import { useNavigationType } from "../hooks/useNavigationType";
 import { useTheme } from "../hooks/useTheme";
+import { ConvexClientProvider } from "../lib/convex";
 import "../styles/globals.css"; // Tailwind CSS
 import "./nprogress.css"; //styles for nprogress
 
@@ -111,21 +112,37 @@ export default function MyApp({ Component, router, pageProps }: AppProps) {
     },
   }));
 
+  // FOUC prevention - mark fonts as loaded
+  useEffect(() => {
+    if (typeof document !== "undefined") {
+      // Check if fonts are already loaded (cached)
+      if (document.fonts.status === "loaded") {
+        document.documentElement.classList.add("fonts-loaded");
+      } else {
+        document.fonts.ready.then(() => {
+          document.documentElement.classList.add("fonts-loaded");
+        });
+      }
+    }
+  }, []);
+
   return (
     <React.StrictMode>
       <QueryClientProvider client={queryClient}>
         <ClerkProvider appearance={clerkAppearance}>
-          <ThemeProvider theme={theme}>
-            <LazyMotion key="app" strict features={loadMotionFeatures}>
-              <GlobalStyle />
-              <MainHead />
-              <AnimatedRoutes currentRoute={router.route} skipAnimation={isBackForwardNav}>
-                <Component {...pageProps} />
-              </AnimatedRoutes>
-              <Analytics />
-              <SpeedInsights />
-            </LazyMotion>
-          </ThemeProvider>
+          <ConvexClientProvider>
+            <ThemeProvider theme={theme}>
+              <LazyMotion key="app" strict features={loadMotionFeatures}>
+                <GlobalStyle />
+                <MainHead />
+                <AnimatedRoutes currentRoute={router.route} skipAnimation={isBackForwardNav}>
+                  <Component {...pageProps} />
+                </AnimatedRoutes>
+                <Analytics />
+                <SpeedInsights />
+              </LazyMotion>
+            </ThemeProvider>
+          </ConvexClientProvider>
         </ClerkProvider>
       </QueryClientProvider>
     </React.StrictMode>
@@ -139,7 +156,7 @@ function MainHead() {
       <meta name="viewport" content="width=device-width, initial-scale=1" />
       <meta name="author" content="Blake" />
       <meta name="robots" content="index, follow" />
-      <link rel="canonical" href="https://nevulo.xyz" />
+      <link rel="canonical" href="https://nev.so" />
     </Head>
   );
 }

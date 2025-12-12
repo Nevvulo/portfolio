@@ -2,12 +2,23 @@ import styled from "styled-components";
 import { SupporterBadge } from "./supporter-badge";
 import { BadgeType } from "../../constants/badges";
 import { useSupporterStatus } from "../../hooks/useSupporterStatus";
+import type { DiscordRole } from "../../types/supporter";
+
+interface SupporterStatusData {
+	discordHighestRole?: DiscordRole | null;
+	twitchSubTier?: 1 | 2 | 3 | null;
+	discordBooster?: boolean | null;
+	clerkPlan?: string | null;
+	clerkPlanStatus?: string | null;
+}
 
 interface SupporterBadgesProps {
 	direction?: "row" | "column";
 	showLabels?: boolean;
 	expandOnHover?: boolean;
 	size?: "small" | "medium";
+	/** Pass supporter data directly instead of using hook (for viewing other users) */
+	supporterData?: SupporterStatusData | null;
 }
 
 // Convert Discord's integer color to hex string
@@ -27,10 +38,17 @@ export function SupporterBadges({
 	showLabels = false,
 	expandOnHover = false,
 	size = "small",
+	supporterData,
 }: SupporterBadgesProps) {
-	const { status, isLoading } = useSupporterStatus();
+	// Use hook for current user's data if no supporterData prop provided
+	const { status: hookStatus, isLoading } = useSupporterStatus();
 
-	if (isLoading || !status) return null;
+	// Use passed data if provided, otherwise fall back to hook data
+	const status = supporterData !== undefined ? supporterData : hookStatus;
+
+	// Only show loading state when using hook (not when data is passed)
+	if (supporterData === undefined && isLoading) return null;
+	if (!status) return null;
 
 	const badges: BadgeConfig[] = [];
 

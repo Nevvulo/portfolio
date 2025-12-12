@@ -51,10 +51,10 @@ export default function ProjectsPage() {
           property="og:description"
           content={`Explore ${Projects.length} projects showcasing my work in web development, from production applications to open source contributions.`}
         />
-        <meta property="og:url" content="https://nevulo.xyz/projects" />
+        <meta property="og:url" content="https://nev.so/projects" />
         <meta
           property="og:image"
-          content="https://nevulo.xyz/api/og?title=My%20Projects&subtitle=Web%20Development%20%26%20Software%20Engineering"
+          content="https://nev.so/api/og?title=My%20Projects&subtitle=Web%20Development%20%26%20Software%20Engineering"
         />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="Projects by Nevulo" />
@@ -64,7 +64,7 @@ export default function ProjectsPage() {
         />
         <meta
           name="twitter:image"
-          content="https://nevulo.xyz/api/og?title=My%20Projects&subtitle=Web%20Development%20%26%20Software%20Engineering"
+          content="https://nev.so/api/og?title=My%20Projects&subtitle=Web%20Development%20%26%20Software%20Engineering"
         />
       </Head>
     </ProjectView>

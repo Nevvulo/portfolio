@@ -1,7 +1,10 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
-// Only /account routes require authentication
-const isProtectedRoute = createRouteMatcher(["/account(.*)"]);
+// Routes that require authentication
+const isProtectedRoute = createRouteMatcher([
+  "/account(.*)",
+  "/lounge(.*)",  // nevulounge requires authentication
+]);
 
 // Auth routes should never be protected
 const isAuthRoute = createRouteMatcher(["/sign-in(.*)", "/sign-up(.*)"]);

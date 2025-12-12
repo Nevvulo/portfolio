@@ -204,10 +204,10 @@ export default function LivePage() {
           property="og:description"
           content="Watch Nevulo live on Twitch. Streaming software development, gaming, and more."
         />
-        <meta property="og:url" content="https://nevulo.xyz/live" />
+        <meta property="og:url" content="https://nev.so/live" />
         <meta
           property="og:image"
-          content="https://nevulo.xyz/api/og?title=Live%20Stream&subtitle=Watch%20me%20live%20on%20Twitch"
+          content="https://nev.so/api/og?title=Live%20Stream&subtitle=Watch%20me%20live%20on%20Twitch"
         />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="Nevulo Live on Twitch" />
@@ -217,7 +217,7 @@ export default function LivePage() {
         />
         <meta
           name="twitter:image"
-          content="https://nevulo.xyz/api/og?title=Live%20Stream&subtitle=Watch%20me%20live%20on%20Twitch"
+          content="https://nev.so/api/og?title=Live%20Stream&subtitle=Watch%20me%20live%20on%20Twitch"
         />
       </Head>
     </TopNavView>

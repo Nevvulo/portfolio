@@ -48,10 +48,10 @@ export default function GamesPage() {
           property="og:description"
           content={`Explore ${Games.length} games I'm working on, including Roblox experiences and other game projects.`}
         />
-        <meta property="og:url" content="https://nevulo.xyz/games" />
+        <meta property="og:url" content="https://nev.so/games" />
         <meta
           property="og:image"
-          content="https://nevulo.xyz/api/og?title=My%20Games&subtitle=Roblox%20%26%20Game%20Development"
+          content="https://nev.so/api/og?title=My%20Games&subtitle=Roblox%20%26%20Game%20Development"
         />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="Games by Nevulo" />
@@ -61,7 +61,7 @@ export default function GamesPage() {
         />
         <meta
           name="twitter:image"
-          content="https://nevulo.xyz/api/og?title=My%20Games&subtitle=Roblox%20%26%20Game%20Development"
+          content="https://nev.so/api/og?title=My%20Games&subtitle=Roblox%20%26%20Game%20Development"
         />
       </Head>
     </ProjectView>

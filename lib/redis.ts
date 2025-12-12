@@ -14,6 +14,7 @@ export const redis = new Redis({
 });
 
 const SUPPORTER_KEY_PREFIX = "user:status:";
+const DISCORD_TO_CLERK_PREFIX = "discord:clerk:";
 const SUPPORTER_TTL_SECONDS = 7 * 24 * 60 * 60; // 7 days
 
 export function getSupporterKey(clerkUserId: string): string {
@@ -102,6 +103,11 @@ export async function setSupporterStatus(
 
 	await redis.hset(key, hashData);
 	await redis.expire(key, SUPPORTER_TTL_SECONDS);
+
+	// Also set the reverse index: Discord ID → Clerk ID
+	if (status.discordUserId) {
+		await setDiscordToClerkMapping(status.discordUserId, clerkUserId);
+	}
 }
 
 export async function updateSupporterField(
@@ -122,4 +128,26 @@ export async function deleteSupporterStatus(
 ): Promise<void> {
 	const key = getSupporterKey(clerkUserId);
 	await redis.del(key);
+}
+
+/**
+ * Get Clerk user ID from Discord user ID using reverse index
+ */
+export async function getClerkIdByDiscordId(
+	discordUserId: string,
+): Promise<string | null> {
+	const key = `${DISCORD_TO_CLERK_PREFIX}${discordUserId}`;
+	const clerkId = await redis.get<string>(key);
+	return clerkId || null;
+}
+
+/**
+ * Set reverse index: Discord ID → Clerk ID
+ */
+export async function setDiscordToClerkMapping(
+	discordUserId: string,
+	clerkUserId: string,
+): Promise<void> {
+	const key = `${DISCORD_TO_CLERK_PREFIX}${discordUserId}`;
+	await redis.set(key, clerkUserId, { ex: SUPPORTER_TTL_SECONDS });
 }

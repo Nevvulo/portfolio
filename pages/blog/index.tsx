@@ -35,10 +35,10 @@ export default function Blog({ posts }: BlogProps) {
           property="og:description"
           content={`Read my latest thoughts on software engineering, web development, and technology. ${posts.length} articles and counting.`}
         />
-        <meta property="og:url" content="https://nevulo.xyz/blog" />
+        <meta property="og:url" content="https://nev.so/blog" />
         <meta
           property="og:image"
-          content="https://nevulo.xyz/api/og?title=Blake's%20Blog&subtitle=Software%20Engineering%20Insights"
+          content="https://nev.so/api/og?title=Blake's%20Blog&subtitle=Software%20Engineering%20Insights"
         />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="Nevulo's Blog - Software Engineering" />
@@ -48,7 +48,7 @@ export default function Blog({ posts }: BlogProps) {
         />
         <meta
           name="twitter:image"
-          content="https://nevulo.xyz/api/og?title=Blake's%20Blog&subtitle=Software%20Engineering%20Insights"
+          content="https://nev.so/api/og?title=Blake's%20Blog&subtitle=Software%20Engineering%20Insights"
         />
         <meta property="apple-mobile-web-app-title" content="Nevulo's Blog" />
         <meta property="department" content="technology" />

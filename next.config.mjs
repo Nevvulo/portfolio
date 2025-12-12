@@ -32,11 +32,41 @@ const nextConfig = {
         protocol: "https",
         hostname: "images.unsplash.com",
       },
+      {
+        // Vercel Blob storage for user uploads
+        protocol: "https",
+        hostname: "*.public.blob.vercel-storage.com",
+      },
+      {
+        // YouTube thumbnails for embeds
+        protocol: "https",
+        hostname: "i.ytimg.com",
+      },
+      {
+        // Discord CDN for emojis and attachments
+        protocol: "https",
+        hostname: "cdn.discordapp.com",
+      },
+      {
+        // Discord media proxy for attachments
+        protocol: "https",
+        hostname: "media.discordapp.net",
+      },
     ],
     // Configure valid quality values to prevent warnings
     qualities: [25, 50, 75, 100],
     // Minimize image sizes
     minimumCacheTTL: 31536000, // 1 year cache
+  },
+
+  // Rewrites - map /@username to /u/username
+  async rewrites() {
+    return [
+      {
+        source: "/@:username",
+        destination: "/u/:username",
+      },
+    ];
   },
 
   // Redirects

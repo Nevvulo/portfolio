@@ -12,12 +12,12 @@ async function generateRssFeed(posts: Blogmap) {
     return;
   }
 
-  const baseUrl = "https://nevulo.xyz";
+  const baseUrl = "https://nev.so";
   const date = new Date();
   const author = {
     name: "Blake Ward",
-    email: "hello@nevulo.xyz",
-    link: "https://nevulo.xyz",
+    email: "hello@nev.so",
+    link: "https://nev.so",
   };
 
   const feed = new Feed({

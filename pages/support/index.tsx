@@ -165,7 +165,7 @@ export default function Support() {
           property="og:description"
           content="Support my work and become a Super Legend! Help me create more content and open source projects."
         />
-        <meta property="og:url" content="https://nevulo.xyz/support" />
+        <meta property="og:url" content="https://nev.so/support" />
       </Head>
     </SupportView>
   );

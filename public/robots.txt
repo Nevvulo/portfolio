@@ -1,2 +1,2 @@
 User-agent: *
-Sitemap: https://nevulo.xyz/sitemap.xml
+Sitemap: https://nev.so/sitemap.xml

@@ -60,9 +60,9 @@ export default function Post({ content, properties, discordWidget }: PostProps) 
 }
 
 function PostBody({ content, properties }: Omit<PostProps, "discordWidget">) {
-  const location = `https://nevulo.xyz/blog/${properties.slug}`;
+  const location = `https://nev.so/blog/${properties.slug}`;
   const ogImage = `${
-    "window" in global ? window.location.origin : "https://nevulo.xyz"
+    "window" in global ? window.location.origin : "https://nev.so"
   }/blog/${properties.slug}/images/${properties.image}`;
   const filename = `${properties.slug}.mdx`;
   const filepath = `posts/${filename}`;
@@ -300,7 +300,7 @@ const components = {
     return (
       <IconLink
         style={{ textDecorationThickness: "0.125em", fontSize: "0.975em" }}
-        isExternal={!href.startsWith("https://nevulo.xyz")}
+        isExternal={!href.startsWith("https://nev.so")}
         {...props}
         href={href}
       >

@@ -1,10 +1,14 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { getAuth } from "@clerk/nextjs/server";
 import { clerkClient } from "@clerk/nextjs/server";
+import { ConvexHttpClient } from "convex/browser";
+import { api } from "../../../convex/_generated/api";
 import { setSupporterStatus } from "../../../lib/redis";
 import { checkUserSubscription } from "../../../utils/twitch";
 import { checkBoosterStatus, getMemberHighestRole } from "../../../utils/discord-member";
 import type { SupporterStatus, DiscordRole } from "../../../types/supporter";
+
+const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
 export default async function handler(
 	req: NextApiRequest,
@@ -138,6 +142,42 @@ export default async function handler(
 		console.log("[supporter/sync] Storing in Redis...");
 		await setSupporterStatus(userId, supporterStatus);
 		console.log("[supporter/sync] Stored successfully");
+
+		// Update supporter status in Convex for UserPopout display
+		try {
+			// Get usernames from Clerk accounts
+			const discordUsername = discordAccount?.username || undefined;
+			const twitchUsername = twitchAccount?.username || undefined;
+
+			await convex.mutation(api.users.updateSupporterStatus, {
+				clerkId: userId,
+				discordHighestRole: discordHighestRole || undefined,
+				twitchSubTier: twitchSubTier || undefined,
+				discordBooster: discordBooster || undefined,
+				clerkPlan: clerkPlan || undefined,
+				clerkPlanStatus: clerkPlanStatus || undefined,
+				discordUsername,
+				twitchUsername,
+			});
+			console.log("[supporter/sync] Updated supporter status in Convex");
+		} catch (error) {
+			console.error("[supporter/sync] Failed to update Convex supporter status:", error);
+			// Don't fail the whole sync for this
+		}
+
+		// Also update Discord → Clerk mapping in Convex for wormhole linking
+		if (discordUserId) {
+			try {
+				await convex.mutation(api.discord.upsertDiscordClerkMapping, {
+					discordId: discordUserId,
+					clerkId: userId,
+				});
+				console.log("[supporter/sync] Updated Discord→Clerk mapping in Convex");
+			} catch (error) {
+				console.error("[supporter/sync] Failed to update Convex mapping:", error);
+				// Don't fail the whole sync for this
+			}
+		}
 
 		return res.status(200).json({
 			success: true,
