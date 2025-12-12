@@ -542,7 +542,7 @@ function UsersTab() {
             <UserInfo>
               <UserName>
                 {u.displayName}
-                {u.isCreator && <CreatorBadge>Creator</CreatorBadge>}
+                {u.isCreator && <StaffBadge>staff</StaffBadge>}
                 {u.isBanned && <BannedBadge>Banned</BannedBadge>}
               </UserName>
               <UserMeta>
@@ -1986,12 +1986,14 @@ const UserName = styled.div`
   color: #fff;
 `;
 
-const CreatorBadge = styled.span`
-  font-size: 0.65rem;
-  padding: 2px 6px;
-  background: ${LOUNGE_COLORS.tier2};
-  border-radius: 4px;
-  color: #fff;
+const StaffBadge = styled.span`
+  margin-left: auto;
+  font-size: 0.55rem;
+  font-family: "Sixtyfour", monospace;
+  background: linear-gradient(135deg, ${LOUNGE_COLORS.tier1}, ${LOUNGE_COLORS.tier2});
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 `;
 
 const BannedBadge = styled.span`

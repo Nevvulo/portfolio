@@ -177,11 +177,13 @@ export function Sidebar({
             <TreePalm size={16} />
           </QuickActionButton>
         </Tooltip>
+{/* Events - hidden for now
         <Tooltip content="Events" position="top">
           <QuickActionButton href="/lounge/events">
             <Calendar1Icon size={16} />
           </QuickActionButton>
         </Tooltip>
+*/}
         {isCreator && (
           <Tooltip content="Admin" position="top">
             <QuickActionButton href="/lounge/admin">

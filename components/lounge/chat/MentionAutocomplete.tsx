@@ -134,9 +134,23 @@ export const MentionAutocomplete = memo(function MentionAutocomplete({
     }
   }, [type, onSelect]);
 
+  // Listen for Enter/Tab selection from parent
+  useEffect(() => {
+    const handleSelectCurrent = () => {
+      if (items && items.length > 0) {
+        const item = items[selectedIndex];
+        if (item) {
+          handleSelect(item);
+        }
+      }
+    };
+    document.addEventListener("mention-select-current", handleSelectCurrent);
+    return () => document.removeEventListener("mention-select-current", handleSelectCurrent);
+  }, [items, selectedIndex, handleSelect]);
+
   if (!items || items.length === 0) {
     return (
-      <Container ref={containerRef} style={{ top: position.top, left: position.left }}>
+      <Container ref={containerRef} style={{ bottom: position.top, left: position.left }}>
         <EmptyState>
           {type === "user" ? "No users found" : "No channels found"}
         </EmptyState>
@@ -145,7 +159,7 @@ export const MentionAutocomplete = memo(function MentionAutocomplete({
   }
 
   return (
-    <Container ref={containerRef} style={{ top: position.top, left: position.left }}>
+    <Container ref={containerRef} style={{ bottom: position.top, left: position.left }}>
       <Header>{type === "user" ? "Users" : "Channels"}</Header>
       <List>
         {type === "user"
@@ -160,7 +174,7 @@ export const MentionAutocomplete = memo(function MentionAutocomplete({
                 <UserInfo>
                   <UserName $tier={user.tier}>
                     {user.displayName}
-                    {user.isCreator && <CreatorBadge>Creator</CreatorBadge>}
+                    {user.isCreator && <StaffBadge>staff</StaffBadge>}
                   </UserName>
                 </UserInfo>
               </UserItem>
@@ -263,14 +277,14 @@ const UserName = styled.div<{ $tier: "tier1" | "tier2" }>`
   text-overflow: ellipsis;
 `;
 
-const CreatorBadge = styled.span`
-  font-size: 0.6rem;
-  font-weight: 700;
-  padding: 0.15rem 0.35rem;
+const StaffBadge = styled.span`
+  margin-left: auto;
+  font-size: 0.5rem;
+  font-family: "Sixtyfour", monospace;
   background: linear-gradient(135deg, ${LOUNGE_COLORS.tier1}, ${LOUNGE_COLORS.tier2});
-  border-radius: 3px;
-  color: #fff;
-  text-transform: uppercase;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 `;
 
 const ChannelItem = styled(ItemBase)``;

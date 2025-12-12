@@ -17,8 +17,15 @@ interface MessageInputProps {
   onSend: (content: string, embeds?: MessageEmbed[]) => void;
 }
 
+// Track inserted mentions for conversion on send
+interface InsertedMention {
+  displayText: string; // @Username or #channel
+  insertText: string;  // <@id> or <#c:id>
+}
+
 export function MessageInput({ channelId, channelName, disabled, onSend }: MessageInputProps) {
   const [content, setContent] = useState("");
+  const [mentions, setMentions] = useState<InsertedMention[]>([]);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -124,10 +131,10 @@ export function MessageInput({ channelId, channelName, disabled, onSend }: Messa
     const wrapper = inputWrapperRef.current;
     if (!wrapper) return { top: 0, left: 0 };
 
-    // Position above the input
+    // Position above the input (using bottom positioning)
     return {
-      top: -8, // Will be positioned from bottom of container
-      left: 0,
+      top: 70, // This is actually used as 'bottom' value - distance from bottom of wrapper
+      left: 8,
     };
   }, []);
 
@@ -146,20 +153,26 @@ export function MessageInput({ channelId, channelName, disabled, onSend }: Messa
     const textarea = textareaRef.current;
     if (!textarea) return;
 
-    // Replace the @query or #query with the mention text
+    // Replace the @query or #query with the display text
     const beforeTrigger = content.slice(0, mentionState.triggerIndex);
     const afterCursor = content.slice(textarea.selectionStart);
 
-    // Insert the mention format followed by a space
-    const newContent = beforeTrigger + selection.insertText + " " + afterCursor;
+    // Insert display text (e.g., @Username) - we'll convert on send
+    const newContent = beforeTrigger + selection.displayText + " " + afterCursor;
     setContent(newContent);
+
+    // Track the mention for conversion on send
+    setMentions(prev => [...prev, {
+      displayText: selection.displayText,
+      insertText: selection.insertText,
+    }]);
 
     // Close autocomplete
     setMentionState(null);
 
     // Focus and set cursor position after the inserted mention
     setTimeout(() => {
-      const newCursorPos = beforeTrigger.length + selection.insertText.length + 1;
+      const newCursorPos = beforeTrigger.length + selection.displayText.length + 1;
       textarea.selectionStart = textarea.selectionEnd = newCursorPos;
       textarea.focus();
     }, 0);
@@ -184,18 +197,26 @@ export function MessageInput({ channelId, channelName, disabled, onSend }: Messa
         embeds = await uploadAll();
       }
 
+      // Convert display mentions to raw format before sending
+      let finalContent = trimmedContent;
+      for (const mention of mentions) {
+        // Replace all occurrences of this display text with the raw format
+        finalContent = finalContent.split(mention.displayText).join(mention.insertText);
+      }
+
       // Clear input immediately for snappy feel
       setContent("");
+      setMentions([]);
       clearAll();
 
       // Call parent's optimistic send handler
-      onSend(trimmedContent, embeds);
+      onSend(finalContent, embeds);
 
       textareaRef.current?.focus();
     } catch (err) {
       console.error("Failed to send message:", err);
     }
-  }, [content, attachments.length, disabled, isUploading, uploadAll, clearAll, onSend]);
+  }, [content, mentions, attachments.length, disabled, isUploading, uploadAll, clearAll, onSend]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     // Handle mention autocomplete navigation

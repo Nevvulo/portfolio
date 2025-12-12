@@ -18,7 +18,7 @@ export function UserName({ displayName, tier, isCreator, customColor }: UserName
       <Name $tier={tier} $isCreator={isCreator} $customColor={customColor}>
         {displayName}
       </Name>
-      {isCreator && <CreatorBadge>Creator</CreatorBadge>}
+      {isCreator && <StaffBadge>staff</StaffBadge>}
     </NameContainer>
   );
 }
@@ -98,18 +98,14 @@ const Name = styled.h3<{ $tier: Tier; $isCreator?: boolean; $customColor?: strin
   }}
 `;
 
-const CreatorBadge = styled.span`
-  display: inline-flex;
-  align-items: center;
-  padding: 2px 8px;
-  font-size: 0.65rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: ${LOUNGE_COLORS.tier2};
-  background: ${LOUNGE_COLORS.tier2Background};
-  border: 1px solid ${LOUNGE_COLORS.tier2};
-  border-radius: 4px;
+const StaffBadge = styled.span`
+  margin-left: auto;
+  font-size: 0.6rem;
+  font-family: "Sixtyfour", monospace;
+  background: linear-gradient(135deg, ${LOUNGE_COLORS.tier1}, ${LOUNGE_COLORS.tier2});
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 `;
 
 export default UserName;

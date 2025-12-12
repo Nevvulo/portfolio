@@ -99,7 +99,7 @@ export default function ProfilePage() {
           <ProfileInfo>
             <NameRow>
               <DisplayName $color={nameColor}>{user.displayName}</DisplayName>
-              {user.isCreator && <CreatorBadge>Creator</CreatorBadge>}
+              {user.isCreator && <StaffBadge>staff</StaffBadge>}
             </NameRow>
             <Username>@{user.username}</Username>
 
@@ -256,15 +256,15 @@ const DisplayName = styled.h1<{ $color: string }>`
   margin: 0;
 `;
 
-const CreatorBadge = styled.span`
+const StaffBadge = styled.span`
+  margin-left: auto;
   padding: 2px 8px;
-  font-size: 0.65rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  color: ${LOUNGE_COLORS.tier2};
-  background: ${LOUNGE_COLORS.tier2Background};
-  border: 1px solid ${LOUNGE_COLORS.tier2};
-  border-radius: 4px;
+  font-size: 0.6rem;
+  font-family: "Sixtyfour", monospace;
+  background: linear-gradient(135deg, ${LOUNGE_COLORS.tier1}, ${LOUNGE_COLORS.tier2});
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 `;
 
 const Username = styled.p`
