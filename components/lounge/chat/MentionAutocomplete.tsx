@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, memo } from "react";
+import { useEffect, useRef, useCallback, memo } from "react";
 import styled from "styled-components";
 import { Hash, Megaphone, MessageCircle, Sparkles, Crown, Star } from "lucide-react";
 import { useQuery } from "convex/react";

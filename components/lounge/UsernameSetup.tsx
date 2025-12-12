@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import styled from "styled-components";
 import { useQuery, useMutation } from "convex/react";
 import { Check, X, Loader2, AtSign } from "lucide-react";

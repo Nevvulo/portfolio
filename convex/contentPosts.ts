@@ -102,7 +102,7 @@ export const create = mutation({
     type: contentTypeValidator,
     title: v.string(),
     content: v.string(),
-    requiredTier: v.union(v.literal("tier1"), v.literal("tier2")),
+    requiredTier: v.union(v.literal("free"), v.literal("tier1"), v.literal("tier2")),
     // Media attachment
     media: v.optional(
       v.object({

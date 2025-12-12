@@ -9,13 +9,16 @@ const renderWithTheme = (component: React.ReactElement) => {
   return render(<ThemeProvider theme={LightTheme}>{component}</ThemeProvider>);
 };
 
+// Mock empty posts array for testing
+const mockPosts: never[] = [];
+
 describe("Home Page", () => {
   test("renders without crashing", () => {
-    renderWithTheme(<Home discordWidget={null} isLive={false} />);
+    renderWithTheme(<Home discordWidget={null} isLive={false} posts={mockPosts} />);
   });
 
   test("displays main content with name and location", () => {
-    renderWithTheme(<Home discordWidget={null} isLive={false} />);
+    renderWithTheme(<Home discordWidget={null} isLive={false} posts={mockPosts} />);
 
     const nameElements = screen.getAllByText(/Blake/i);
     const subtitles = screen.getAllByText(/software engineer based in Melbourne, Australia/i);
@@ -25,7 +28,7 @@ describe("Home Page", () => {
   });
 
   test("has all navigation buttons", () => {
-    renderWithTheme(<Home discordWidget={null} isLive={false} />);
+    renderWithTheme(<Home discordWidget={null} isLive={false} posts={mockPosts} />);
 
     expect(screen.getAllByText("📖 Blog").length).toBeGreaterThan(0);
     expect(screen.getAllByText("🛠 Projects").length).toBeGreaterThan(0);
@@ -34,7 +37,7 @@ describe("Home Page", () => {
   });
 
   test("displays social links", () => {
-    renderWithTheme(<Home discordWidget={null} isLive={false} />);
+    renderWithTheme(<Home discordWidget={null} isLive={false} posts={mockPosts} />);
 
     const socialLinksContainer = document.querySelector('[href*="github.com"]');
 
@@ -42,7 +45,7 @@ describe("Home Page", () => {
   });
 
   test("renders avatar image", () => {
-    renderWithTheme(<Home discordWidget={null} isLive={false} />);
+    renderWithTheme(<Home discordWidget={null} isLive={false} posts={mockPosts} />);
 
     const avatarImg =
       document.querySelector('img[alt*="Avatar"]') || document.querySelector('img[src*="nevulo"]');

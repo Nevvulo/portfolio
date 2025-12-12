@@ -470,22 +470,6 @@ const Timestamp = styled.span`
   color: rgba(255, 255, 255, 0.4);
 `;
 
-const PinnedBadge = styled.span`
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 0.65rem;
-  padding: 2px 6px;
-  background: rgba(250, 168, 26, 0.15);
-  color: ${LOUNGE_COLORS.goldPrimary};
-  border-radius: 4px;
-  font-weight: 500;
-
-  svg {
-    font-size: 0.55rem;
-  }
-`;
-
 const ContentCard = styled.div<{ $gradient: string; $borderColor: string }>`
   margin-left: calc(40px + 0.75rem);
   padding: 1rem;

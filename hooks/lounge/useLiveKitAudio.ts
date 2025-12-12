@@ -37,7 +37,7 @@ export function useLiveKitAudio(options?: UseLiveKitAudioOptions) {
   const [error, setError] = useState<string | null>(null);
 
   // Session time tracking
-  const [sessionStartTime, setSessionStartTime] = useState<number | null>(null);
+  const [_sessionStartTime, setSessionStartTime] = useState<number | null>(null);
   const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
   const [cooldownUntil, setCooldownUntil] = useState<number | null>(null);
   const sessionTimerRef = useRef<NodeJS.Timeout | null>(null);

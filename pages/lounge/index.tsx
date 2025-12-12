@@ -90,10 +90,6 @@ const WelcomeContainer = styled.div`
   text-align: center;
 `;
 
-const WelcomeIcon = styled.div`
-  font-size: 4rem;
-  margin-bottom: 1.5rem;
-`;
 
 const WelcomeTitle = styled.h1`
   font-size: 1.75rem;
@@ -103,9 +99,3 @@ const WelcomeTitle = styled.h1`
   font-family: "Sixtyfour", monospace;
 `;
 
-const WelcomeText = styled.p`
-  font-size: 1rem;
-  color: rgba(255, 255, 255, 0.6);
-  margin: 0;
-  max-width: 400px;
-`;

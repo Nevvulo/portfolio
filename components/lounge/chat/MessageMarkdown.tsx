@@ -438,16 +438,16 @@ const AudioPlayer = memo(function AudioPlayer({ url, soundcloudUrl }: AudioPlaye
 
   // Close menu when clicking outside
   useEffect(() => {
+    if (!showDownloadMenu) return;
+
     const handleClickOutside = (e: MouseEvent) => {
       if (downloadMenuRef.current && !downloadMenuRef.current.contains(e.target as Node)) {
         setShowDownloadMenu(false);
       }
     };
 
-    if (showDownloadMenu) {
-      document.addEventListener("mousedown", handleClickOutside);
-      return () => document.removeEventListener("mousedown", handleClickOutside);
-    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [showDownloadMenu]);
 
   const formatTime = (time: number) => {

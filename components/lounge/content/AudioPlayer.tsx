@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import styled from "styled-components";
-import { Play, Pause, Volume2, VolumeX, SkipBack, SkipForward, Download, ExternalLink } from "lucide-react";
+import { Play, Pause, Volume2, VolumeX, SkipBack, SkipForward, Download } from "lucide-react";
 import { LOUNGE_COLORS } from "../../../constants/lounge";
 
 interface AudioPlayerProps {

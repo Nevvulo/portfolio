@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import styled from "styled-components";
-import { Crown, Star, Edit2, Trash2, Pin, Reply } from "lucide-react";
+import { Edit2, Trash2, Pin, Reply } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
 // Remove "about" prefix from relative time (e.g., "about 2 hours ago" -> "2 hours ago")
@@ -52,7 +52,7 @@ export function Message({
   isOwnMessage,
   isCreator,
   isGrouped = false,
-  showTimestamp = true,
+  showTimestamp: _showTimestamp = true,
   onEdit,
   onDelete,
   onPin,
@@ -354,18 +354,6 @@ const Timestamp = styled.span`
 const EditedTag = styled.span`
   font-size: 0.65rem;
   color: rgba(255, 255, 255, 0.3);
-`;
-
-const PinnedTag = styled.span`
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 0.65rem;
-  padding: 2px 6px;
-  background: rgba(250, 168, 26, 0.15);
-  color: ${LOUNGE_COLORS.goldPrimary};
-  border-radius: 4px;
-  font-weight: 500;
 `;
 
 const MessageTextWrapper = styled.div`

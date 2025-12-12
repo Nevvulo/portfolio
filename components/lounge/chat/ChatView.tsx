@@ -11,7 +11,6 @@ import { EmbeddedContentPost } from "./EmbeddedContentPost";
 import { getCachedMessages, setCachedMessages, hasChannelBeenFetched } from "../../../lib/lounge/messageCache";
 import type { Id } from "../../../convex/_generated/dataModel";
 import type { Tier, MessageEmbed, ContentPostType } from "../../../types/lounge";
-import { Icon } from "lucide-react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faMessage } from "@fortawesome/free-solid-svg-icons";
 
@@ -121,6 +120,8 @@ interface MessageData {
   discordAuthor?: { username: string; avatarUrl?: string };
   messageType?: "default" | "system" | "emoji_blast" | "join" | "leave" | "boost" | "giveaway" | "poll" | "content";
   contentPost?: ContentPostData | null;
+  replyTo?: { _id: Id<"messages">; content: string; author: MessageAuthor | null } | null;
+  reactions?: { emoji: string; count: number; userIds: Id<"users">[] }[];
 }
 
 export function ChatView({ channelId, channelName, currentUserId, currentUserName, currentUserAvatar, currentUserTier, isCreator }: ChatViewProps) {
@@ -388,7 +389,7 @@ export function ChatView({ channelId, channelName, currentUserId, currentUserNam
           const isFromDiscord = message.author?.isDiscord === true;
           // For linked Discord users, we have author._id; for unlinked, we don't
           const linkedUserId = isFromDiscord ? message.author?._id : undefined;
-          const prevMessage = index > 0 ? sortedMessages[index - 1] : null;
+          const prevMessage: MessageData | null = index > 0 ? (sortedMessages[index - 1] ?? null) : null;
           const isGrouped = shouldGroupMessages(message, prevMessage);
 
           // Render system messages (emoji_blast, join, leave, boost) as single-line
@@ -519,11 +520,6 @@ const EmptyState = styled.div`
   flex: 1;
   padding: 2rem;
   text-align: center;
-`;
-
-const EmptyIcon = styled.div`
-  font-size: 3rem;
-  margin-bottom: 1rem;
 `;
 
 const EmptyTitle = styled.h3`

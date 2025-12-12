@@ -81,7 +81,7 @@ export function MessageInput({ channelId, channelName, disabled, onSend }: Messa
     const atMatch = textBeforeCursor.match(/(^|[\s])@([^\s]*)$/);
     const hashMatch = textBeforeCursor.match(/(^|[\s])#([^\s]*)$/);
 
-    if (atMatch) {
+    if (atMatch && atMatch[2] !== undefined) {
       const query = atMatch[2];
       const triggerIndex = cursorPos - query.length - 1; // -1 for the @
 
@@ -96,7 +96,7 @@ export function MessageInput({ channelId, channelName, disabled, onSend }: Messa
         position,
       });
       setMentionSelectedIndex(0);
-    } else if (hashMatch) {
+    } else if (hashMatch && hashMatch[2] !== undefined) {
       const query = hashMatch[2];
       const triggerIndex = cursorPos - query.length - 1; // -1 for the #
 

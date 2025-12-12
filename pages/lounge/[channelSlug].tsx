@@ -229,11 +229,6 @@ const ErrorContainer = styled.div`
   text-align: center;
 `;
 
-const ErrorIcon = styled.div`
-  font-size: 3rem;
-  margin-bottom: 1rem;
-`;
-
 const ErrorTitle = styled.h2`
   font-size: 1.5rem;
   font-family: "Sixtyfour", monospace;

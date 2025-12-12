@@ -8,19 +8,13 @@ import {
   Crown,
   Star,
   Hash,
-  Lock,
   Settings,
   Gift,
   BellIcon,
   HelpCircle,
-  DoorOpen,
-  Music2Icon,
   Calendar1Icon,
-  Gamepad,
-  Gamepad2Icon,
   TreePalm,
   ChevronDown,
-  ChevronRight,
 } from "lucide-react";
 import { useQuery } from "convex/react";
 import { useClerk } from "@clerk/nextjs";
@@ -366,10 +360,6 @@ const MentionBadge = styled.span`
   font-weight: 700;
   color: #fff;
   margin-left: auto;
-`;
-
-const LockIcon = styled(Lock)`
-  color: ${LOUNGE_COLORS.tier2};
 `;
 
 const TierBadge = styled.div<{ $tier: string }>`

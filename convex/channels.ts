@@ -211,7 +211,10 @@ export const reorder = mutation({
 
     // Update each channel's order based on its position in the array
     for (let i = 0; i < args.channelIds.length; i++) {
-      await ctx.db.patch(args.channelIds[i], { order: i + 1 });
+      const channelId = args.channelIds[i];
+      if (channelId) {
+        await ctx.db.patch(channelId, { order: i + 1 });
+      }
     }
   },
 });

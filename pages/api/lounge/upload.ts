@@ -94,7 +94,8 @@ export default async function handler(
     const config = FILE_CONFIGS[category];
 
     // Parse base64 file - handle various MIME type formats
-    const matches = file.match(/^data:([A-Za-z0-9\-+\/\.]+);base64,(.+)$/s);
+    // Use [\s\S]* instead of .* with 's' flag for cross-line matching
+    const matches = file.match(/^data:([A-Za-z0-9\-+\/\.]+);base64,([\s\S]+)$/);
     if (!matches || matches.length !== 3) {
       return res.status(400).json({ error: "Invalid file format. Expected base64 data URL." });
     }
