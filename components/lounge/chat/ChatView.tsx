@@ -596,8 +596,8 @@ const MessagesContainer = styled.div`
 `;
 
 const InputSection = styled.div`
-  border-top: 1px solid ${LOUNGE_COLORS.glassBorder};
-  background: ${LOUNGE_COLORS.glassBackground};
+  border-top: 1px solid ${(props) => props.theme.background === "#fff" ? "rgba(0,0,0,0.08)" : LOUNGE_COLORS.glassBorder};
+  background: ${(props) => props.theme.background === "#fff" ? "#f5f3fa" : LOUNGE_COLORS.glassBackground};
   position: relative;
 `;
 
@@ -651,13 +651,13 @@ const EmptyTitle = styled.h3`
   font-size: 1.25rem;
   font-family: "Sixtyfour", monospace;
   font-weight: 600;
-  color: #fff;
+  color: ${(props) => props.theme.foreground};
   margin: 0 0 0.5rem;
 `;
 
 const EmptyText = styled.p`
   font-size: 0.9rem;
-  color: rgba(255, 255, 255, 0.5);
+  color: ${(props) => props.theme.background === "#fff" ? "rgba(0,0,0,0.5)" : "rgba(255, 255, 255, 0.5)"};
   margin: 0;
 `;
 
@@ -668,7 +668,7 @@ const LoadingState = styled.div`
   justify-content: center;
   flex: 1;
   gap: 1rem;
-  color: rgba(255, 255, 255, 0.5);
+  color: ${(props) => props.theme.background === "#fff" ? "rgba(0,0,0,0.5)" : "rgba(255, 255, 255, 0.5)"};
   font-size: 0.9rem;
 `;
 

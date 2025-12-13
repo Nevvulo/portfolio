@@ -216,7 +216,7 @@ const MessageContainer = styled.div<{ $isPinned?: boolean; $isGrouped?: boolean 
   position: relative;
 
   &:hover {
-    background: rgba(255, 255, 255, 0.02);
+    background: ${(props) => props.theme.background === "#fff" ? "rgba(0, 0, 0, 0.02)" : "rgba(255, 255, 255, 0.02)"};
   }
 
   &:hover .grouped-timestamp {
@@ -255,7 +255,7 @@ const GroupedTimestampWrapper = styled.div`
 
 const GroupedTimestamp = styled.span`
   font-size: 0.55rem;
-  color: rgba(255, 255, 255, 0.35);
+  color: ${(props) => props.theme.background === "#fff" ? "rgba(0,0,0,0.35)" : "rgba(255, 255, 255, 0.35)"};
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
   text-align: center;
@@ -264,7 +264,7 @@ const GroupedTimestamp = styled.span`
 
 const InlineEditedTag = styled.span`
   font-size: 0.65rem;
-  color: rgba(255, 255, 255, 0.3);
+  color: ${(props) => props.theme.background === "#fff" ? "rgba(0,0,0,0.3)" : "rgba(255, 255, 255, 0.3)"};
   margin-left: 4px;
 `;
 
@@ -376,18 +376,18 @@ const DiscordTag = styled.span`
 
 const Timestamp = styled.span`
   font-size: 0.7rem;
-  color: rgba(255, 255, 255, 0.4);
+  color: ${(props) => props.theme.background === "#fff" ? "rgba(0,0,0,0.45)" : "rgba(255, 255, 255, 0.4)"};
 `;
 
 const EditedTag = styled.span`
   font-size: 0.65rem;
-  color: rgba(255, 255, 255, 0.3);
+  color: ${(props) => props.theme.background === "#fff" ? "rgba(0,0,0,0.35)" : "rgba(255, 255, 255, 0.3)"};
 `;
 
 const MessageTextWrapper = styled.div`
   font-size: 0.95rem;
   line-height: 1.4;
-  color: rgba(255, 255, 255, 0.9);
+  color: ${(props) => props.theme.background === "#fff" ? "rgba(0,0,0,0.85)" : "rgba(255, 255, 255, 0.9)"};
   word-break: break-word;
   /* Prevent text reflow CLS */
   overflow-wrap: break-word;
@@ -400,10 +400,10 @@ const MessageTextWrapper = styled.div`
 const EditInput = styled.textarea`
   width: 100%;
   padding: 0.5rem;
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid ${LOUNGE_COLORS.glassBorder};
+  background: ${(props) => props.theme.background === "#fff" ? "rgba(0,0,0,0.04)" : "rgba(0, 0, 0, 0.3)"};
+  border: 1px solid ${(props) => props.theme.background === "#fff" ? "rgba(0,0,0,0.12)" : LOUNGE_COLORS.glassBorder};
   border-radius: 6px;
-  color: #fff;
+  color: ${(props) => props.theme.foreground};
   font-size: 0.95rem;
   font-family: inherit;
   resize: none;
@@ -422,9 +422,10 @@ const ActionMenu = styled.div`
   display: flex;
   gap: 2px;
   padding: 4px;
-  background: ${LOUNGE_COLORS.glassBackground};
-  border: 1px solid ${LOUNGE_COLORS.glassBorder};
+  background: ${(props) => props.theme.background === "#fff" ? "#fff" : LOUNGE_COLORS.glassBackground};
+  border: 1px solid ${(props) => props.theme.background === "#fff" ? "rgba(0,0,0,0.12)" : LOUNGE_COLORS.glassBorder};
   border-radius: 6px;
+  box-shadow: ${(props) => props.theme.background === "#fff" ? "0 2px 8px rgba(0,0,0,0.1)" : "none"};
 `;
 
 const ActionButton = styled.button<{ $danger?: boolean }>`
@@ -435,13 +436,13 @@ const ActionButton = styled.button<{ $danger?: boolean }>`
   background: transparent;
   border: none;
   border-radius: 4px;
-  color: ${(props) => (props.$danger ? "#ed4245" : "rgba(255, 255, 255, 0.7)")};
+  color: ${(props) => (props.$danger ? "#ed4245" : (props.theme.background === "#fff" ? "rgba(0,0,0,0.6)" : "rgba(255, 255, 255, 0.7)"))};
   cursor: pointer;
   transition: all 0.15s ease;
 
   &:hover {
     background: ${(props) =>
-      props.$danger ? "rgba(237, 66, 69, 0.2)" : "rgba(255, 255, 255, 0.1)"};
-    color: ${(props) => (props.$danger ? "#ed4245" : "#fff")};
+      props.$danger ? "rgba(237, 66, 69, 0.2)" : (props.theme.background === "#fff" ? "rgba(0,0,0,0.08)" : "rgba(255, 255, 255, 0.1)")};
+    color: ${(props) => (props.$danger ? "#ed4245" : props.theme.foreground)};
   }
 `;

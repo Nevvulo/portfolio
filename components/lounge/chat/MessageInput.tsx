@@ -484,8 +484,8 @@ const AttachmentPreviewArea = styled.div`
   gap: 0.5rem;
   padding: 0.5rem;
   margin-bottom: 0.5rem;
-  background: rgba(0, 0, 0, 0.2);
-  border: 1px solid ${LOUNGE_COLORS.glassBorder};
+  background: ${(props) => props.theme.background === "#fff" ? "rgba(0,0,0,0.04)" : "rgba(0, 0, 0, 0.2)"};
+  border: 1px solid ${(props) => props.theme.background === "#fff" ? "rgba(0,0,0,0.1)" : LOUNGE_COLORS.glassBorder};
   border-radius: 8px;
 `;
 
@@ -631,8 +631,8 @@ const InputWrapper = styled.div<{ $isDragging?: boolean }>`
   align-items: flex-end;
   gap: 0.5rem;
   padding: 0.5rem;
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid ${(p) => (p.$isDragging ? LOUNGE_COLORS.tier1 : LOUNGE_COLORS.glassBorder)};
+  background: ${(props) => props.theme.background === "#fff" ? "rgba(0,0,0,0.04)" : "rgba(0, 0, 0, 0.3)"};
+  border: 1px solid ${(p) => (p.$isDragging ? LOUNGE_COLORS.tier1 : p.theme.background === "#fff" ? "rgba(0,0,0,0.12)" : LOUNGE_COLORS.glassBorder)};
   border-radius: 12px;
   transition: border-color 0.2s ease;
   position: relative;
@@ -671,7 +671,7 @@ const TextInput = styled.textarea`
   padding: 0.5rem 0;
   background: transparent;
   border: none;
-  color: #fff;
+  color: ${(props) => props.theme.foreground};
   font-size: 0.95rem;
   font-family: inherit;
   line-height: 1.4;
@@ -679,7 +679,7 @@ const TextInput = styled.textarea`
   overflow-y: auto;
 
   &::placeholder {
-    color: rgba(255, 255, 255, 0.4);
+    color: ${(props) => props.theme.background === "#fff" ? "rgba(0,0,0,0.4)" : "rgba(255, 255, 255, 0.4)"};
   }
 
   &:focus {
@@ -704,14 +704,14 @@ const IconButton = styled.button`
   background: transparent;
   border: none;
   border-radius: 6px;
-  color: rgba(255, 255, 255, 0.5);
+  color: ${(props) => props.theme.background === "#fff" ? "rgba(0,0,0,0.5)" : "rgba(255, 255, 255, 0.5)"};
   cursor: pointer;
   transition: all 0.15s ease;
   flex-shrink: 0;
 
   &:hover:not(:disabled) {
-    background: rgba(255, 255, 255, 0.1);
-    color: #fff;
+    background: ${(props) => props.theme.background === "#fff" ? "rgba(0,0,0,0.08)" : "rgba(255, 255, 255, 0.1)"};
+    color: ${(props) => props.theme.foreground};
   }
 
   &:disabled {
@@ -738,7 +738,7 @@ const IconButton = styled.button`
 `;
 
 const AttachButton = styled(IconButton)`
-  color: rgba(255, 255, 255, 0.6);
+  color: ${(props) => props.theme.background === "#fff" ? "rgba(0,0,0,0.5)" : "rgba(255, 255, 255, 0.6)"};
 
   &:hover:not(:disabled) {
     color: ${LOUNGE_COLORS.tier1};
@@ -752,7 +752,7 @@ const EmojiWrapper = styled.div`
 
 const EmojiButton = styled(IconButton)<{ $isActive?: boolean }>`
   color: ${(props) =>
-    props.$isActive ? LOUNGE_COLORS.tier1 : "rgba(255, 255, 255, 0.6)"};
+    props.$isActive ? LOUNGE_COLORS.tier1 : props.theme.background === "#fff" ? "rgba(0,0,0,0.5)" : "rgba(255, 255, 255, 0.6)"};
   background: ${(props) =>
     props.$isActive ? LOUNGE_COLORS.tier1Background : "transparent"};
 
@@ -760,19 +760,19 @@ const EmojiButton = styled(IconButton)<{ $isActive?: boolean }>`
     background: ${(props) =>
       props.$isActive
         ? LOUNGE_COLORS.tier1Background
-        : "rgba(255, 255, 255, 0.1)"};
-    color: ${(props) => (props.$isActive ? LOUNGE_COLORS.tier1 : "#fff")};
+        : props.theme.background === "#fff" ? "rgba(0,0,0,0.08)" : "rgba(255, 255, 255, 0.1)"};
+    color: ${(props) => (props.$isActive ? LOUNGE_COLORS.tier1 : props.theme.foreground)};
   }
 `;
 
 const SendButton = styled(IconButton)<{ $hasContent: boolean }>`
   color: ${(props) =>
-    props.$hasContent ? LOUNGE_COLORS.tier1 : "rgba(255, 255, 255, 0.4)"};
+    props.$hasContent ? LOUNGE_COLORS.tier1 : props.theme.background === "#fff" ? "rgba(0,0,0,0.3)" : "rgba(255, 255, 255, 0.4)"};
 
   &:hover:not(:disabled) {
     background: ${(props) =>
-      props.$hasContent ? "rgba(144, 116, 242, 0.2)" : "rgba(255, 255, 255, 0.05)"};
-    color: ${(props) => (props.$hasContent ? LOUNGE_COLORS.tier1 : "rgba(255, 255, 255, 0.5)")};
+      props.$hasContent ? "rgba(144, 116, 242, 0.2)" : props.theme.background === "#fff" ? "rgba(0,0,0,0.04)" : "rgba(255, 255, 255, 0.05)"};
+    color: ${(props) => (props.$hasContent ? LOUNGE_COLORS.tier1 : props.theme.background === "#fff" ? "rgba(0,0,0,0.5)" : "rgba(255, 255, 255, 0.5)")};
   }
 
   &:disabled {

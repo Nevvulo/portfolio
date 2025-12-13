@@ -163,8 +163,8 @@ const PanelHeader = styled.div`
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: rgba(255, 255, 255, 0.6);
-  border-bottom: 1px solid ${LOUNGE_COLORS.glassBorder};
+  color: ${(props) => props.theme.background === "#fff" ? "rgba(0,0,0,0.6)" : "rgba(255, 255, 255, 0.6)"};
+  border-bottom: 1px solid ${(props) => props.theme.background === "#fff" ? "rgba(0,0,0,0.08)" : LOUNGE_COLORS.glassBorder};
 `;
 
 const MemberGroup = styled.div`
@@ -180,7 +180,7 @@ const GroupHeader = styled.div`
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: rgba(255, 255, 255, 0.5);
+  color: ${(props) => props.theme.background === "#fff" ? "rgba(0,0,0,0.5)" : "rgba(255, 255, 255, 0.5)"};
 `;
 
 const MemberItem = styled.div`
@@ -193,7 +193,7 @@ const MemberItem = styled.div`
   transition: background 0.15s ease;
 
   &:hover {
-    background: ${LOUNGE_COLORS.channelHover};
+    background: ${(props) => props.theme.background === "#fff" ? "rgba(0,0,0,0.04)" : LOUNGE_COLORS.channelHover};
   }
 `;
 
@@ -229,7 +229,7 @@ const StatusIndicator = styled.div<{ $status: "online" | "offline" | "away" }>`
         return LOUNGE_COLORS.offline;
     }
   }};
-  border: 2px solid ${LOUNGE_COLORS.glassBackground};
+  border: 2px solid ${(props) => props.theme.background === "#fff" ? "#f5f3fa" : LOUNGE_COLORS.glassBackground};
 `;
 
 const MemberInfo = styled.div`
@@ -256,7 +256,7 @@ const EmptyState = styled.div`
   justify-content: center;
   gap: 0.75rem;
   padding: 2rem;
-  color: rgba(255, 255, 255, 0.4);
+  color: ${(props) => props.theme.background === "#fff" ? "rgba(0,0,0,0.4)" : "rgba(255, 255, 255, 0.4)"};
   font-size: 0.85rem;
 `;
 

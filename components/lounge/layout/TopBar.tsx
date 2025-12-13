@@ -53,8 +53,8 @@ const TopBarContainer = styled.div`
   height: ${LOUNGE_LAYOUT.headerHeight};
   min-height: ${LOUNGE_LAYOUT.headerHeight};
   padding: 0 1rem;
-  background: ${LOUNGE_COLORS.glassBackground};
-  border-bottom: 1px solid ${LOUNGE_COLORS.glassBorder};
+  background: ${(props) => props.theme.background === "#fff" ? "#f5f3fa" : LOUNGE_COLORS.glassBackground};
+  border-bottom: 1px solid ${(props) => props.theme.background === "#fff" ? "rgba(0,0,0,0.08)" : LOUNGE_COLORS.glassBorder};
   flex-shrink: 0;
 
   @media (max-width: ${LOUNGE_LAYOUT.mobileBreakpoint}px) {
@@ -69,7 +69,7 @@ const ChannelInfo = styled.div`
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  color: #fff;
+  color: ${(props) => props.theme.foreground};
   min-width: 0; /* Allow text truncation */
   flex: 1;
 `;
@@ -101,16 +101,16 @@ const TopBarButton = styled.button<{ $isActive?: boolean }>`
   justify-content: center;
   padding: 0.5rem;
   background: ${(props) =>
-    props.$isActive ? LOUNGE_COLORS.channelActive : "transparent"};
+    props.$isActive ? (props.theme.background === "#fff" ? "rgba(144, 116, 242, 0.12)" : LOUNGE_COLORS.channelActive) : "transparent"};
   border: none;
   border-radius: 6px;
   color: ${(props) =>
-    props.$isActive ? LOUNGE_COLORS.tier1 : "rgba(255, 255, 255, 0.6)"};
+    props.$isActive ? LOUNGE_COLORS.tier1 : (props.theme.background === "#fff" ? "rgba(0,0,0,0.5)" : "rgba(255, 255, 255, 0.6)")};
   cursor: pointer;
   transition: all 0.15s ease;
 
   &:hover {
-    background: ${LOUNGE_COLORS.channelHover};
-    color: #fff;
+    background: ${(props) => props.theme.background === "#fff" ? "rgba(0,0,0,0.06)" : LOUNGE_COLORS.channelHover};
+    color: ${(props) => props.theme.foreground};
   }
 `;

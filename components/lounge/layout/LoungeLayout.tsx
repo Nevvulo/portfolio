@@ -150,8 +150,8 @@ const LayoutContainer = styled.div`
   display: flex;
   height: 100vh;
   width: 100%;
-  background: #100d1b; /* Force dark background for lounge */
-  color: #fff; /* Force light text for lounge */
+  background: ${(props) => props.theme.background};
+  color: ${(props) => props.theme.foreground};
   overflow: hidden;
 `;
 
@@ -159,8 +159,8 @@ const SidebarWrapper = styled(m.div)`
   width: ${LOUNGE_LAYOUT.sidebarWidth};
   min-width: ${LOUNGE_LAYOUT.sidebarWidth};
   height: 100%;
-  background: ${LOUNGE_COLORS.glassBackground};
-  border-right: 1px solid ${LOUNGE_COLORS.glassBorder};
+  background: ${(props) => props.theme.background === "#fff" ? "#f5f3fa" : LOUNGE_COLORS.glassBackground};
+  border-right: 1px solid ${(props) => props.theme.background === "#fff" ? "rgba(0,0,0,0.08)" : LOUNGE_COLORS.glassBorder};
   z-index: 100;
 
   @media (max-width: ${LOUNGE_LAYOUT.mobileBreakpoint}px) {
@@ -199,8 +199,8 @@ const ContentArea = styled.div`
 
 const MembersPanelWrapper = styled(m.div)`
   height: 100%;
-  background: ${LOUNGE_COLORS.glassBackground};
-  border-left: 1px solid ${LOUNGE_COLORS.glassBorder};
+  background: ${(props) => props.theme.background === "#fff" ? "#f5f3fa" : LOUNGE_COLORS.glassBackground};
+  border-left: 1px solid ${(props) => props.theme.background === "#fff" ? "rgba(0,0,0,0.08)" : LOUNGE_COLORS.glassBorder};
   overflow: hidden;
 
   @media (max-width: ${LOUNGE_LAYOUT.mobileBreakpoint}px) {
@@ -215,15 +215,15 @@ const MobileMenuButton = styled.button`
   left: 12px;
   z-index: 150;
   padding: 8px;
-  background: ${LOUNGE_COLORS.glassBackground};
-  border: 1px solid ${LOUNGE_COLORS.glassBorder};
+  background: ${(props) => props.theme.background === "#fff" ? "rgba(255,255,255,0.9)" : LOUNGE_COLORS.glassBackground};
+  border: 1px solid ${(props) => props.theme.background === "#fff" ? "rgba(0,0,0,0.1)" : LOUNGE_COLORS.glassBorder};
   border-radius: 8px;
-  color: #fff;
+  color: ${(props) => props.theme.foreground};
   cursor: pointer;
   transition: all 0.2s ease;
 
   &:hover {
-    background: rgba(144, 116, 242, 0.2);
+    background: ${(props) => props.theme.background === "#fff" ? "rgba(144, 116, 242, 0.1)" : "rgba(144, 116, 242, 0.2)"};
   }
 
   @media (max-width: ${LOUNGE_LAYOUT.mobileBreakpoint}px) {
@@ -252,8 +252,8 @@ const LoadingContainer = styled.div`
   align-items: center;
   justify-content: center;
   height: 100vh;
-  background: #100d1b; /* Force dark background for lounge */
-  color: #fff;
+  background: ${(props) => props.theme.background};
+  color: ${(props) => props.theme.foreground};
   gap: 1rem;
 `;
 
@@ -273,7 +273,7 @@ const LoadingSpinner = styled.div`
 `;
 
 const LoadingText = styled.p`
-  color: rgba(255, 255, 255, 0.7);
+  color: ${(props) => props.theme.textColor};
   font-size: 0.9rem;
 `;
 
@@ -283,7 +283,7 @@ const UsernameSetupContainer = styled.div`
   align-items: center;
   justify-content: center;
   min-height: 100vh;
-  background: #100d1b; /* Force dark background for lounge */
-  color: #fff;
+  background: ${(props) => props.theme.background};
+  color: ${(props) => props.theme.foreground};
   padding: 2rem;
 `;

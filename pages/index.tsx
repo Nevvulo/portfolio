@@ -566,6 +566,7 @@ const LogoWrapper = styled.div`
   height: 48px;
   flex-shrink: 0;
   margin-right: 26px;
+  filter: ${(props) => props.theme.background === "#fff" ? "invert(1)" : "none"};
 `;
 
 const NevuloTitle = styled.h1`

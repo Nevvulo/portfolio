@@ -15,7 +15,7 @@ export const LOUNGE_LAYOUT = {
   mobileBreakpoint: 768,
 } as const;
 
-// Color system for the lounge
+// Color system for the lounge - theme agnostic accents
 export const LOUNGE_COLORS = {
   // VIP Gold accents
   goldPrimary: "#f7be5c",
@@ -37,7 +37,7 @@ export const LOUNGE_COLORS = {
   offline: "#6b7280",
   dnd: "#ef4444",
 
-  // Glassmorphic
+  // Glassmorphic (dark theme defaults - use LOUNGE_THEME for theme-aware)
   glassBackground: "rgba(16, 13, 27, 0.85)",
   glassBorder: "rgba(144, 116, 242, 0.2)",
   glassHighlight: "rgba(255, 255, 255, 0.05)",
@@ -52,6 +52,34 @@ export const LOUNGE_COLORS = {
   channelActive: "rgba(144, 116, 242, 0.15)",
   channelHover: "rgba(255, 255, 255, 0.05)",
   channelLocked: "rgba(107, 114, 128, 0.3)",
+} as const;
+
+// Theme-aware lounge colors
+export const LOUNGE_THEME = {
+  dark: {
+    background: "#100d1b",
+    backgroundSecondary: "rgba(16, 13, 27, 0.95)",
+    text: "#fff",
+    textSecondary: "rgba(255, 255, 255, 0.7)",
+    textMuted: "rgba(255, 255, 255, 0.5)",
+    border: "rgba(255, 255, 255, 0.08)",
+    borderAccent: "rgba(144, 116, 242, 0.2)",
+    cardBackground: "rgba(255, 255, 255, 0.03)",
+    cardHover: "rgba(255, 255, 255, 0.05)",
+    inputBackground: "rgba(0, 0, 0, 0.3)",
+  },
+  light: {
+    background: "#f8f7fc",
+    backgroundSecondary: "#ffffff",
+    text: "#1a1625",
+    textSecondary: "rgba(26, 22, 37, 0.75)",
+    textMuted: "rgba(26, 22, 37, 0.5)",
+    border: "rgba(0, 0, 0, 0.08)",
+    borderAccent: "rgba(144, 116, 242, 0.25)",
+    cardBackground: "rgba(144, 116, 242, 0.04)",
+    cardHover: "rgba(144, 116, 242, 0.08)",
+    inputBackground: "rgba(0, 0, 0, 0.04)",
+  },
 } as const;
 
 // Default channels configuration
