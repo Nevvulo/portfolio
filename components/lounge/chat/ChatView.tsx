@@ -13,10 +13,13 @@ import type { Id } from "../../../convex/_generated/dataModel";
 import type { Tier, MessageEmbed, ContentPostType } from "../../../types/lounge";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faMessage } from "@fortawesome/free-solid-svg-icons";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, ChevronUp, Loader2 } from "lucide-react";
 
 // Threshold for "near bottom" detection (pixels from bottom)
 const SCROLL_THRESHOLD = 150;
+
+// Threshold for "near top" detection to trigger loading older messages
+const LOAD_MORE_THRESHOLD = 200;
 
 // Pending message for optimistic updates
 interface PendingMessage {
@@ -219,14 +222,61 @@ export function ChatView({ channelId, channelName, currentUserId, currentUserNam
     }
   }, [channelId]);
 
-  // Messages query
+  // Pagination state for older messages
+  const [olderMessages, setOlderMessages] = useState<MessageData[]>([]);
+  const [cursor, setCursor] = useState<Id<"messages"> | null>(null);
+  const [hasMore, setHasMore] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+
+  // Messages query - gets the latest messages (real-time updates)
   const messagesResult = useQuery(api.messages.list, { channelId }) as {
     messages: MessageData[];
     hasMore: boolean;
     nextCursor: string | null;
   } | undefined;
 
+  // Query for older messages when cursor is set
+  const olderMessagesResult = useQuery(
+    api.messages.list,
+    cursor ? { channelId, cursor } : "skip"
+  ) as {
+    messages: MessageData[];
+    hasMore: boolean;
+    nextCursor: string | null;
+  } | undefined;
+
   const serverMessages = messagesResult?.messages;
+
+  // Update hasMore from initial query result
+  useEffect(() => {
+    if (messagesResult !== undefined) {
+      setHasMore(messagesResult.hasMore);
+    }
+  }, [messagesResult]);
+
+  // Handle older messages when they arrive
+  useEffect(() => {
+    if (olderMessagesResult !== undefined && cursor !== null) {
+      setOlderMessages((prev) => {
+        // Merge older messages, avoiding duplicates
+        const existingIds = new Set(prev.map((m) => m._id));
+        const newMessages = olderMessagesResult.messages.filter(
+          (m) => !existingIds.has(m._id)
+        );
+        return [...newMessages, ...prev];
+      });
+      setHasMore(olderMessagesResult.hasMore);
+      setIsLoadingMore(false);
+    }
+  }, [olderMessagesResult, cursor]);
+
+  // Reset pagination state when channel changes
+  useEffect(() => {
+    setOlderMessages([]);
+    setCursor(null);
+    setHasMore(true);
+    setIsLoadingMore(false);
+  }, [channelId]);
 
   // Update cache when server messages arrive (even if 0 messages)
   useEffect(() => {
@@ -251,8 +301,11 @@ export function ChatView({ channelId, channelName, currentUserId, currentUserNam
     }
   }, [channelId, serverMessages]);
 
-  // Use server messages if available, otherwise show cached
-  const messages = serverMessages ?? cachedMessages;
+  // Combine older messages with current messages (deduplicated)
+  const currentMessages = serverMessages ?? cachedMessages;
+  const messages = [...olderMessages, ...currentMessages].filter(
+    (msg, index, self) => self.findIndex((m) => m._id === msg._id) === index
+  ).sort((a, b) => a.createdAt - b.createdAt);
 
   // Mutations
   const sendMessage = useMutation(api.messages.send);
@@ -305,7 +358,26 @@ export function ChatView({ channelId, channelName, currentUserId, currentUserNam
     return scrollHeight - scrollTop - clientHeight < SCROLL_THRESHOLD;
   }, []);
 
-  // Handle scroll events to track position
+  // Check if user is near the top (for loading older messages)
+  const checkIfNearTop = useCallback(() => {
+    const container = containerRef.current;
+    if (!container) return false;
+    return container.scrollTop < LOAD_MORE_THRESHOLD;
+  }, []);
+
+  // Load more (older) messages
+  const loadMoreMessages = useCallback(() => {
+    if (isLoadingMore || !hasMore || !messages || messages.length === 0) return;
+
+    // Get the oldest message ID to use as cursor
+    const oldestMessage = messages[0];
+    if (oldestMessage) {
+      setIsLoadingMore(true);
+      setCursor(oldestMessage._id);
+    }
+  }, [isLoadingMore, hasMore, messages]);
+
+  // Handle scroll events to track position and trigger load more
   const handleScroll = useCallback(() => {
     const nearBottom = checkIfNearBottom();
     setIsNearBottom(nearBottom);
@@ -313,7 +385,13 @@ export function ChatView({ channelId, channelName, currentUserId, currentUserNam
     if (nearBottom) {
       setUnreadCount(0);
     }
-  }, [checkIfNearBottom]);
+
+    // Load more when near top
+    const nearTop = checkIfNearTop();
+    if (nearTop && hasMore && !isLoadingMore) {
+      loadMoreMessages();
+    }
+  }, [checkIfNearBottom, checkIfNearTop, hasMore, isLoadingMore, loadMoreMessages]);
 
   // Attach scroll listener
   useEffect(() => {
@@ -459,6 +537,25 @@ export function ChatView({ channelId, channelName, currentUserId, currentUserNam
             <LoadingSpinner />
             <span>Loading messages...</span>
           </LoadingState>
+        )}
+
+        {/* Load more indicator at top */}
+        {!isLoading && sortedMessages.length > 0 && (
+          <LoadMoreSection>
+            {isLoadingMore ? (
+              <LoadMoreSpinner>
+                <Loader2 size={16} className="spin" />
+                <span>Loading older messages...</span>
+              </LoadMoreSpinner>
+            ) : hasMore ? (
+              <LoadMoreButton onClick={loadMoreMessages}>
+                <ChevronUp size={14} />
+                <span>Load older messages</span>
+              </LoadMoreButton>
+            ) : (
+              <EndOfMessages>Beginning of conversation</EndOfMessages>
+            )}
+          </LoadMoreSection>
         )}
 
         {sortedMessages.map((message: MessageData, index: number) => {
@@ -749,4 +846,58 @@ const PendingDismissButton = styled.button`
   &:hover {
     color: rgba(255, 255, 255, 0.8);
   }
+`;
+
+// Load more styles (infinite scroll)
+const LoadMoreSection = styled.div`
+  display: flex;
+  justify-content: center;
+  padding: 1rem;
+  margin-bottom: 0.5rem;
+`;
+
+const LoadMoreButton = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: ${(props) => props.theme.background === "#fff" ? "rgba(0,0,0,0.04)" : "rgba(255, 255, 255, 0.05)"};
+  border: 1px solid ${(props) => props.theme.background === "#fff" ? "rgba(0,0,0,0.1)" : "rgba(255, 255, 255, 0.1)"};
+  border-radius: 20px;
+  color: ${(props) => props.theme.background === "#fff" ? "rgba(0,0,0,0.6)" : "rgba(255, 255, 255, 0.6)"};
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover {
+    background: ${(props) => props.theme.background === "#fff" ? "rgba(0,0,0,0.08)" : "rgba(255, 255, 255, 0.1)"};
+    color: ${(props) => props.theme.foreground};
+  }
+`;
+
+const LoadMoreSpinner = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: ${(props) => props.theme.background === "#fff" ? "rgba(0,0,0,0.5)" : "rgba(255, 255, 255, 0.5)"};
+  font-size: 0.8rem;
+
+  .spin {
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+`;
+
+const EndOfMessages = styled.div`
+  color: ${(props) => props.theme.background === "#fff" ? "rgba(0,0,0,0.4)" : "rgba(255, 255, 255, 0.4)"};
+  font-size: 0.75rem;
+  font-style: italic;
 `;
