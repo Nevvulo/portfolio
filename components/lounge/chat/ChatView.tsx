@@ -13,6 +13,10 @@ import type { Id } from "../../../convex/_generated/dataModel";
 import type { Tier, MessageEmbed, ContentPostType } from "../../../types/lounge";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faMessage } from "@fortawesome/free-solid-svg-icons";
+import { ChevronDown } from "lucide-react";
+
+// Threshold for "near bottom" detection (pixels from bottom)
+const SCROLL_THRESHOLD = 150;
 
 // Pending message for optimistic updates
 interface PendingMessage {
@@ -21,6 +25,28 @@ interface PendingMessage {
   embeds?: MessageEmbed[];
   createdAt: number;
   status: "sending" | "error";
+  errorMessage?: string;
+}
+
+// Helper to get user-friendly error message
+function getFriendlyErrorMessage(error: unknown): string {
+  const errorStr = String(error);
+
+  // Content moderation errors from Convex
+  if (errorStr.includes("content") || errorStr.includes("moderat") || errorStr.includes("policy")) {
+    return "Message couldn't be sent";
+  }
+  if (errorStr.includes("too long") || errorStr.includes("4000")) {
+    return "Message too long";
+  }
+  if (errorStr.includes("empty")) {
+    return "Message is empty";
+  }
+  if (errorStr.includes("network") || errorStr.includes("fetch")) {
+    return "Connection issue";
+  }
+
+  return "Couldn't send";
 }
 
 // Message grouping threshold (5 minutes in milliseconds)
@@ -39,9 +65,12 @@ function shouldGroupMessages(
     return false;
   }
 
-  // Must be same author
-  const currentAuthorId = currentMsg.author?.clerkId || currentMsg.authorId;
-  const prevAuthorId = prevMsg.author?.clerkId || prevMsg.authorId;
+  // Must be same author - compare using Convex user ID (authorId) as primary key
+  // authorId is always the Convex document ID, which is the reliable identifier
+  const currentAuthorId = String(currentMsg.authorId);
+  const prevAuthorId = String(prevMsg.authorId);
+
+  // Different authors - don't group
   if (currentAuthorId !== prevAuthorId) return false;
 
   // Must be within time threshold
@@ -265,6 +294,34 @@ export function ChatView({ channelId, channelName, currentUserId, currentUserNam
   const prevChannelId = useRef<string | null>(null);
   const hasScrolledForChannel = useRef(false);
   const prevMessageCount = useRef(0);
+  const [isNearBottom, setIsNearBottom] = useState(true);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  // Check if user is near the bottom of the scroll container
+  const checkIfNearBottom = useCallback(() => {
+    const container = containerRef.current;
+    if (!container) return true;
+    const { scrollTop, scrollHeight, clientHeight } = container;
+    return scrollHeight - scrollTop - clientHeight < SCROLL_THRESHOLD;
+  }, []);
+
+  // Handle scroll events to track position
+  const handleScroll = useCallback(() => {
+    const nearBottom = checkIfNearBottom();
+    setIsNearBottom(nearBottom);
+    // Clear unread count when user scrolls to bottom
+    if (nearBottom) {
+      setUnreadCount(0);
+    }
+  }, [checkIfNearBottom]);
+
+  // Attach scroll listener
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+    container.addEventListener("scroll", handleScroll, { passive: true });
+    return () => container.removeEventListener("scroll", handleScroll);
+  }, [handleScroll]);
 
   // Reset scroll state when channel changes
   useEffect(() => {
@@ -272,6 +329,8 @@ export function ChatView({ channelId, channelName, currentUserId, currentUserNam
       hasScrolledForChannel.current = false;
       prevMessageCount.current = 0;
       prevChannelId.current = channelId;
+      setIsNearBottom(true);
+      setUnreadCount(0);
     }
   }, [channelId]);
 
@@ -284,21 +343,37 @@ export function ChatView({ channelId, channelName, currentUserId, currentUserNam
           messagesEndRef.current?.scrollIntoView({ behavior: "instant" });
           hasScrolledForChannel.current = true;
           prevMessageCount.current = messages.length + pendingMessages.length;
+          setIsNearBottom(true);
         });
       });
     }
   }, [messages, pendingMessages.length]);
 
-  // Scroll to bottom for NEW messages only (after initial scroll)
+  // Discord-like scroll behavior for NEW messages
   useEffect(() => {
     if (!hasScrolledForChannel.current) return;
 
     const totalMessages = (messages?.length ?? 0) + pendingMessages.length;
-    if (totalMessages > prevMessageCount.current) {
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    const newMessageCount = totalMessages - prevMessageCount.current;
+
+    if (newMessageCount > 0) {
+      // If user is near bottom, auto-scroll to new messages
+      if (isNearBottom) {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      } else {
+        // User is scrolled up - show unread indicator instead
+        setUnreadCount((prev) => prev + newMessageCount);
+      }
     }
     prevMessageCount.current = totalMessages;
-  }, [messages?.length, pendingMessages.length]);
+  }, [messages?.length, pendingMessages.length, isNearBottom]);
+
+  // Function to scroll to bottom (for the unread button)
+  const scrollToBottom = useCallback(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    setUnreadCount(0);
+    setIsNearBottom(true);
+  }, []);
 
   // Optimistic send handler
   const handleSend = useCallback(async (content: string, embeds?: MessageEmbed[]) => {
@@ -316,10 +391,11 @@ export function ChatView({ channelId, channelName, currentUserId, currentUserNam
       // Message will be removed from pending when it appears in server response
     } catch (error) {
       console.error("Failed to send message:", error);
-      // Mark as error
+      // Mark as error with friendly message
+      const errorMessage = getFriendlyErrorMessage(error);
       setPendingMessages((prev) =>
         prev.map((msg) =>
-          msg.tempId === tempId ? { ...msg, status: "error" } : msg
+          msg.tempId === tempId ? { ...msg, status: "error", errorMessage } : msg
         )
       );
     }
@@ -468,14 +544,17 @@ export function ChatView({ channelId, channelName, currentUserId, currentUserNam
               isCreator={isCreator}
             />
             {pending.status === "error" && (
-              <PendingErrorActions>
-                <PendingRetryButton onClick={() => handleRetry(pending.tempId)}>
-                  Retry
-                </PendingRetryButton>
-                <PendingDismissButton onClick={() => handleDismiss(pending.tempId)}>
-                  ×
-                </PendingDismissButton>
-              </PendingErrorActions>
+              <PendingErrorBar>
+                <PendingErrorText>{pending.errorMessage || "Couldn't send"}</PendingErrorText>
+                <PendingErrorActions>
+                  <PendingRetryButton onClick={() => handleRetry(pending.tempId)}>
+                    Retry
+                  </PendingRetryButton>
+                  <PendingDismissButton onClick={() => handleDismiss(pending.tempId)}>
+                    Dismiss
+                  </PendingDismissButton>
+                </PendingErrorActions>
+              </PendingErrorBar>
             )}
           </PendingWrapper>
         ))}
@@ -484,6 +563,13 @@ export function ChatView({ channelId, channelName, currentUserId, currentUserNam
       </MessagesContainer>
 
       <InputSection>
+        {/* Unread messages indicator - Discord style */}
+        {unreadCount > 0 && !isNearBottom && (
+          <NewMessagesBar onClick={scrollToBottom}>
+            <ChevronDown size={16} />
+            <span>{unreadCount} new {unreadCount === 1 ? "message" : "messages"}</span>
+          </NewMessagesBar>
+        )}
         <TypingIndicator channelId={channelId} />
         <MessageInput channelId={channelId} channelName={channelName} onSend={handleSend} />
       </InputSection>
@@ -505,11 +591,50 @@ const MessagesContainer = styled.div`
   padding: 1rem 0;
   display: flex;
   flex-direction: column;
+  /* Prevent CLS by containing layout */
+  contain: layout style;
 `;
 
 const InputSection = styled.div`
   border-top: 1px solid ${LOUNGE_COLORS.glassBorder};
   background: ${LOUNGE_COLORS.glassBackground};
+  position: relative;
+`;
+
+const NewMessagesBar = styled.button`
+  position: absolute;
+  top: -36px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: ${LOUNGE_COLORS.tier1};
+  border: none;
+  border-radius: 20px;
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  transition: all 0.15s ease;
+  z-index: 10;
+
+  &:hover {
+    background: #7c5ce7;
+    transform: translateX(-50%) translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  }
+
+  svg {
+    animation: bounce 1s ease-in-out infinite;
+  }
+
+  @keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(2px); }
+  }
 `;
 
 const EmptyState = styled.div`
@@ -565,42 +690,63 @@ const LoadingSpinner = styled.div`
 // Pending message styles (optimistic updates)
 const PendingWrapper = styled.div<{ $isError: boolean }>`
   position: relative;
-  opacity: ${(props) => (props.$isError ? 1 : 0.6)};
-  background: ${(props) =>
-    props.$isError ? "rgba(237, 66, 69, 0.1)" : "transparent"};
+  opacity: ${(props) => (props.$isError ? 0.85 : 0.6)};
+`;
+
+const PendingErrorBar = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 1rem 6px 3.5rem;
+  margin-top: 4px;
+  background: rgba(255, 180, 60, 0.08);
+  border-left: 2px solid rgba(255, 180, 60, 0.4);
+  font-size: 0.75rem;
+
+  @media (max-width: 768px) {
+    padding-left: 2.5rem;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+`;
+
+const PendingErrorText = styled.span`
+  color: rgba(255, 200, 100, 0.9);
+  font-size: 0.75rem;
 `;
 
 const PendingErrorActions = styled.div`
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0 1rem 0.25rem 3.5rem;
-  font-size: 0.75rem;
+  gap: 8px;
 `;
 
 const PendingRetryButton = styled.button`
-  background: rgba(237, 66, 69, 0.2);
-  border: none;
-  color: #ed4245;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.8);
   font-size: 0.7rem;
-  padding: 2px 8px;
+  padding: 3px 10px;
   border-radius: 4px;
   cursor: pointer;
+  transition: all 0.15s ease;
 
   &:hover {
-    background: rgba(237, 66, 69, 0.3);
+    background: rgba(255, 255, 255, 0.15);
+    color: #fff;
   }
 `;
 
 const PendingDismissButton = styled.button`
   background: none;
   border: none;
-  color: rgba(255, 255, 255, 0.4);
-  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.7rem;
   cursor: pointer;
-  padding: 0 4px;
+  padding: 3px 6px;
+  transition: color 0.15s ease;
 
   &:hover {
-    color: #fff;
+    color: rgba(255, 255, 255, 0.8);
   }
 `;

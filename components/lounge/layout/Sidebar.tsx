@@ -12,7 +12,6 @@ import {
   Gift,
   BellIcon,
   HelpCircle,
-  Calendar1Icon,
   TreePalm,
   ChevronDown,
 } from "lucide-react";
@@ -138,15 +137,13 @@ export function Sidebar({
                       </TierBadge>
                     </LockedChannelContent>
                   ) : (
-                    <Link href={`/lounge/${channel.slug}`}>
-                      <ChannelLink as="span" $isLocked={false}>
-                        <ChannelIcon channel={channel} />
-                        <ChannelName $hasUnread={hasUnread}>{channel.name}</ChannelName>
-                        {hasMentions && (
-                          <MentionBadge>{unread.mentions}</MentionBadge>
-                        )}
-                      </ChannelLink>
-                    </Link>
+                    <ChannelLinkWrapper href={`/lounge/${channel.slug}`}>
+                      <ChannelIcon channel={channel} />
+                      <ChannelName $hasUnread={hasUnread}>{channel.name}</ChannelName>
+                      {hasMentions && (
+                        <MentionBadge>{unread.mentions}</MentionBadge>
+                      )}
+                    </ChannelLinkWrapper>
                   )}
                 </ChannelItem>
               );
@@ -318,14 +315,13 @@ const UnreadPill = styled.div`
   border-radius: 0 4px 4px 0;
 `;
 
-const ChannelLink = styled.a<{ $isLocked: boolean }>`
+const ChannelLinkWrapper = styled(Link)`
   display: flex;
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 0.75rem;
   color: rgba(255, 255, 255, 0.8);
   text-decoration: none;
-  pointer-events: ${(props) => (props.$isLocked ? "none" : "auto")};
 
   &:hover {
     color: #fff;

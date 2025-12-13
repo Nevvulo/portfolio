@@ -55,9 +55,13 @@ const TopBarContainer = styled.div`
   padding: 0 1rem;
   background: ${LOUNGE_COLORS.glassBackground};
   border-bottom: 1px solid ${LOUNGE_COLORS.glassBorder};
+  flex-shrink: 0;
 
   @media (max-width: ${LOUNGE_LAYOUT.mobileBreakpoint}px) {
     padding-left: 3.5rem; /* Make room for mobile menu button */
+    position: sticky;
+    top: 0;
+    z-index: 50;
   }
 `;
 
@@ -66,6 +70,8 @@ const ChannelInfo = styled.div`
   align-items: center;
   gap: 0.5rem;
   color: #fff;
+  min-width: 0; /* Allow text truncation */
+  flex: 1;
 `;
 
 const ChannelName = styled.h1`
@@ -74,6 +80,13 @@ const ChannelName = styled.h1`
   font-weight: 600;
   letter-spacing: -0.05em;
   margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  @media (max-width: 768px) {
+    font-size: 0.9rem;
+  }
 `;
 
 const TopBarActions = styled.div`

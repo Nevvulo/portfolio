@@ -39,7 +39,7 @@ const Name = styled.h3<{ $tier: Tier; $isCreator?: boolean; $customColor?: strin
   /* Gradient text for Super Legend tiers */
   ${(p) => {
     if (p.$isCreator) {
-      // Special rainbow gradient for creator
+      // Special rainbow gradient for staff
       return `
         background: linear-gradient(
           90deg,

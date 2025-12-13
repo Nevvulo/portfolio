@@ -130,7 +130,7 @@ export function Message({
             $clickable={!!authorId}
             disabled={!authorId}
           >
-            <Avatar src={displayAvatar} alt={displayName} />
+            <Avatar src={displayAvatar} alt={displayName} loading="lazy" decoding="async" />
           </AvatarButton>
           {isFromDiscord && !hasLinkedUser && <DiscordBadge>D</DiscordBadge>}
         </AvatarWrapper>
@@ -222,12 +222,21 @@ const MessageContainer = styled.div<{ $isPinned?: boolean; $isGrouped?: boolean 
   &:hover .grouped-timestamp {
     opacity: 1;
   }
+
+  @media (max-width: 768px) {
+    gap: 0.5rem;
+    padding: ${(props) => (props.$isGrouped ? "0.125rem 0.75rem" : "0.375rem 0.75rem")};
+  }
 `;
 
 const AvatarWrapper = styled.div`
   position: relative;
   flex-shrink: 0;
   width: 40px;
+
+  @media (max-width: 768px) {
+    width: 32px;
+  }
 `;
 
 const GroupedTimestampWrapper = styled.div`
@@ -238,6 +247,10 @@ const GroupedTimestampWrapper = styled.div`
   justify-content: center;
   opacity: 0;
   transition: opacity 0.15s ease;
+
+  @media (max-width: 768px) {
+    width: 32px;
+  }
 `;
 
 const GroupedTimestamp = styled.span`
@@ -277,10 +290,21 @@ const AvatarButton = styled.button<{ $clickable?: boolean }>`
 const Avatar = styled.img`
   width: 40px;
   height: 40px;
+  min-width: 40px;
+  min-height: 40px;
   border-radius: 50%;
   object-fit: cover;
   background: ${LOUNGE_COLORS.glassBorder};
   display: block;
+  /* Prevent CLS during image load */
+  aspect-ratio: 1 / 1;
+
+  @media (max-width: 768px) {
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    min-height: 32px;
+  }
 `;
 
 const DiscordBadge = styled.div`
@@ -335,6 +359,10 @@ const AuthorName = styled.span<{ $tier: Tier; $clickable?: boolean; $customColor
     opacity: ${(props) => (props.$clickable ? 0.8 : 1)};
     text-decoration: ${(props) => (props.$clickable ? "underline" : "none")};
   }
+
+  @media (max-width: 768px) {
+    font-size: 0.85rem;
+  }
 `;
 
 const DiscordTag = styled.span`
@@ -361,6 +389,12 @@ const MessageTextWrapper = styled.div`
   line-height: 1.4;
   color: rgba(255, 255, 255, 0.9);
   word-break: break-word;
+  /* Prevent text reflow CLS */
+  overflow-wrap: break-word;
+
+  @media (max-width: 768px) {
+    font-size: 0.9rem;
+  }
 `;
 
 const EditInput = styled.textarea`

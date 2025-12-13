@@ -128,10 +128,14 @@ export function InventoryItem({ item, onClaim }: InventoryItemProps) {
   );
 }
 
-// Keyframes
+// Keyframes - Subtle shimmer sweep
 const shimmer = keyframes`
-  0% { transform: translateX(-100%) rotate(45deg); }
-  100% { transform: translateX(100%) rotate(45deg); }
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
 `;
 
 // Styled Components
@@ -341,16 +345,17 @@ const LegendaryShimmer = styled.div`
   &::after {
     content: "";
     position: absolute;
-    top: -50%;
-    left: -50%;
+    top: 0;
+    left: -100%;
     width: 50%;
-    height: 200%;
+    height: 100%;
     background: linear-gradient(
       90deg,
       transparent,
-      rgba(251, 191, 36, 0.15),
+      rgba(255, 255, 255, 0.08),
       transparent
     );
-    animation: ${shimmer} 4s ease-in-out infinite;
+    animation: ${shimmer} 3s ease-in-out infinite;
+    animation-delay: 1s;
   }
 `;

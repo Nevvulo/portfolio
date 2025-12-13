@@ -640,6 +640,11 @@ const InputWrapper = styled.div<{ $isDragging?: boolean }>`
   &:focus-within {
     border-color: ${LOUNGE_COLORS.tier1};
   }
+
+  @media (max-width: 768px) {
+    gap: 0.25rem;
+    padding: 0.375rem;
+  }
 `;
 
 const DragOverlay = styled.div`
@@ -684,6 +689,11 @@ const TextInput = styled.textarea`
   &:disabled {
     opacity: 0.5;
   }
+
+  @media (max-width: 768px) {
+    font-size: 16px; /* Prevent iOS zoom on focus */
+    min-height: 20px;
+  }
 `;
 
 const IconButton = styled.button`
@@ -697,6 +707,7 @@ const IconButton = styled.button`
   color: rgba(255, 255, 255, 0.5);
   cursor: pointer;
   transition: all 0.15s ease;
+  flex-shrink: 0;
 
   &:hover:not(:disabled) {
     background: rgba(255, 255, 255, 0.1);
@@ -719,6 +730,10 @@ const IconButton = styled.button`
     to {
       transform: rotate(360deg);
     }
+  }
+
+  @media (max-width: 768px) {
+    padding: 0.375rem;
   }
 `;
 

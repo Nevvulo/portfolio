@@ -167,11 +167,18 @@ function parseMarkdown(text: string): Token[] {
       continue;
     }
 
-    // Links [text](url)
+    // Links [text](url) - only allow http/https URLs for security
     const linkMatch = remaining.match(/^\[([^\]]+)\]\(([^)]+)\)/);
     if (linkMatch && linkMatch[1] && linkMatch[2]) {
-      const token: LinkToken = { type: "link", content: linkMatch[1], url: linkMatch[2] };
-      tokens.push(token);
+      const linkUrl = linkMatch[2];
+      // Security: Only allow http/https URLs to prevent javascript: injection
+      if (/^https?:\/\//i.test(linkUrl)) {
+        const token: LinkToken = { type: "link", content: linkMatch[1], url: linkUrl };
+        tokens.push(token);
+      } else {
+        // Treat as plain text if URL is not http/https
+        tokens.push({ type: "text", content: linkMatch[0] });
+      }
       remaining = remaining.slice(linkMatch[0].length);
       matched = true;
       continue;
@@ -591,11 +598,12 @@ export const MessageMarkdown = memo(function MessageMarkdown({ content }: Markdo
 
 // Styled Components
 const MessageText = styled.span<{ $mega?: boolean }>`
-  font-size: ${(props) => (props.$mega ? "3rem" : "inherit")};
-  line-height: ${(props) => (props.$mega ? "0.2" : "inherit")};
+  font-size: ${(props) => (props.$mega ? "2.5rem" : "inherit")};
+  line-height: ${(props) => (props.$mega ? "1.2" : "inherit")};
   display: ${(props) => (props.$mega ? "flex" : "inline")};
   align-items: center;
   gap: ${(props) => (props.$mega ? "0.25rem" : "0")};
+  min-height: ${(props) => (props.$mega ? "3rem" : "auto")};
 `;
 
 const Bold = styled.strong`

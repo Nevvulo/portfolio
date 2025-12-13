@@ -135,7 +135,9 @@ export default function RewardsPage() {
     return (
       <LoungeLayout channelName="Rewards" customIcon={Gift}>
         <Container>
-          <LoadingText>Loading rewards...</LoadingText>
+          <LoadingContainer>
+            <LoadingText>Loading rewards...</LoadingText>
+          </LoadingContainer>
         </Container>
       </LoungeLayout>
     );
@@ -151,6 +153,7 @@ export default function RewardsPage() {
       </Head>
       <LoungeLayout channelName="Rewards" customIcon={Gift}>
         <Container>
+          <ContentWrapper>
           {/* Unopened Boxes Section */}
           <Section>
             <SectionHeader>
@@ -274,6 +277,7 @@ export default function RewardsPage() {
               </>
             )}
           </Section>
+          </ContentWrapper>
         </Container>
 
         {/* Mystery Box Animation Overlay */}
@@ -303,21 +307,35 @@ export default function RewardsPage() {
 
 // Styled Components
 const Container = styled.div`
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+`;
+
+const ContentWrapper = styled.div`
   padding: 1.5rem;
   max-width: 1200px;
   margin: 0 auto;
-  height: 100%;
-  overflow-y: auto;
+  width: 100%;
+  box-sizing: border-box;
 
   @media (max-width: 768px) {
     padding: 1rem;
   }
 `;
 
+const LoadingContainer = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  min-height: 400px;
+`;
+
 const LoadingText = styled.p`
   color: rgba(255, 255, 255, 0.5);
   text-align: center;
-  padding: 2rem;
 `;
 
 const Section = styled.section`

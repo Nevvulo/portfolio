@@ -141,7 +141,9 @@ export default function NotificationsPage() {
     return (
       <LoungeLayout channelName="Notifications" customIcon={Bell}>
         <Container>
-          <LoadingText>Loading notifications...</LoadingText>
+          <LoadingContainer>
+            <LoadingText>Loading notifications...</LoadingText>
+          </LoadingContainer>
         </Container>
       </LoungeLayout>
     );
@@ -158,6 +160,7 @@ export default function NotificationsPage() {
       </Head>
       <LoungeLayout channelName="Notifications" customIcon={Bell}>
         <Container>
+          <ContentWrapper>
           <Header>
             <HeaderTitle>
               <Bell size={24} />
@@ -223,6 +226,7 @@ export default function NotificationsPage() {
               </EmptyText>
             </EmptyState>
           )}
+          </ContentWrapper>
         </Container>
       </LoungeLayout>
     </>
@@ -280,24 +284,46 @@ function NotificationItem({
 
 // Styled Components
 const Container = styled.div`
-  padding: 1.5rem;
-  max-width: 700px;
-  margin: 0 auto;
+  width: 100%;
   height: 100%;
   overflow-y: auto;
 `;
 
+const ContentWrapper = styled.div`
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem 2.5rem;
+  box-sizing: border-box;
+
+  @media (max-width: 768px) {
+    padding: 1.5rem 1rem;
+  }
+`;
+
+const LoadingContainer = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  min-height: 300px;
+`;
+
 const LoadingText = styled.p`
   color: rgba(255, 255, 255, 0.5);
-  text-align: center;
-  padding: 2rem;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 0.9rem;
+  letter-spacing: -0.01em;
 `;
 
 const Header = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 1.5rem;
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   flex-wrap: wrap;
   gap: 1rem;
 `;
@@ -306,83 +332,102 @@ const HeaderTitle = styled.h1`
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  font-size: 1.25rem;
-  font-weight: 700;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
   color: #fff;
   margin: 0;
 `;
 
 const UnreadBadge = styled.span`
-  padding: 2px 8px;
-  background: #ed4245;
+  padding: 3px 10px;
+  background: ${LOUNGE_COLORS.tier1};
   color: #fff;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: 0.75rem;
-  font-weight: 700;
-  border-radius: 10px;
+  font-weight: 600;
+  border-radius: 12px;
 `;
 
 const HeaderActions = styled.div`
   display: flex;
-  gap: 0.5rem;
+  gap: 0.75rem;
 `;
 
 const ActionButton = styled.button<{ $danger?: boolean }>`
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.5rem 0.75rem;
-  background: ${(props) => (props.$danger ? "rgba(239, 68, 68, 0.1)" : "rgba(255, 255, 255, 0.05)")};
-  border: 1px solid ${(props) => (props.$danger ? "rgba(239, 68, 68, 0.3)" : "rgba(255, 255, 255, 0.1)")};
-  border-radius: 6px;
-  color: ${(props) => (props.$danger ? "#ef4444" : "rgba(255, 255, 255, 0.7)")};
+  padding: 0.625rem 1rem;
+  background: ${(props) => (props.$danger ? "rgba(239, 68, 68, 0.08)" : "rgba(255, 255, 255, 0.04)")};
+  border: 1px solid ${(props) => (props.$danger ? "rgba(239, 68, 68, 0.2)" : "rgba(255, 255, 255, 0.08)")};
+  border-radius: 8px;
+  color: ${(props) => (props.$danger ? "#f87171" : "rgba(255, 255, 255, 0.7)")};
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: 0.8rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all 0.2s ease;
 
   &:hover {
-    background: ${(props) => (props.$danger ? "rgba(239, 68, 68, 0.2)" : "rgba(255, 255, 255, 0.1)")};
+    background: ${(props) => (props.$danger ? "rgba(239, 68, 68, 0.15)" : "rgba(255, 255, 255, 0.08)")};
+    border-color: ${(props) => (props.$danger ? "rgba(239, 68, 68, 0.3)" : "rgba(255, 255, 255, 0.12)")};
   }
 `;
 
 const NotificationList = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 2rem;
 `;
 
-const Section = styled.div``;
+const Section = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+`;
 
 const SectionHeader = styled.h2`
-  font-size: 0.75rem;
-  font-weight: 700;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 0.7rem;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: rgba(255, 255, 255, 0.5);
-  margin: 0 0 0.75rem;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.4);
+  margin: 0 0 0.5rem;
+  padding-left: 0.25rem;
 `;
 
 const NotificationCard = styled.div<{ $isRead: boolean }>`
   display: flex;
-  gap: 0.75rem;
-  padding: 1rem;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1.25rem;
   background: ${(props) =>
-    props.$isRead ? "rgba(255, 255, 255, 0.02)" : "rgba(144, 116, 242, 0.05)"};
+    props.$isRead ? "rgba(255, 255, 255, 0.02)" : "rgba(144, 116, 242, 0.04)"};
   border: 1px solid ${(props) =>
-    props.$isRead ? "rgba(255, 255, 255, 0.05)" : "rgba(144, 116, 242, 0.15)"};
-  border-radius: 10px;
-  transition: all 0.15s;
+    props.$isRead ? "rgba(255, 255, 255, 0.04)" : "rgba(144, 116, 242, 0.12)"};
+  border-radius: 12px;
+  transition: all 0.2s ease;
 
   &:hover {
     background: ${(props) =>
-      props.$isRead ? "rgba(255, 255, 255, 0.04)" : "rgba(144, 116, 242, 0.08)"};
+      props.$isRead ? "rgba(255, 255, 255, 0.04)" : "rgba(144, 116, 242, 0.06)"};
+    transform: translateY(-1px);
+  }
+
+  @media (max-width: 768px) {
+    padding: 1rem;
   }
 `;
 
 const IconWrapper = styled.div<{ $color: string }>`
-  width: 36px;
-  height: 36px;
-  background: ${(props) => props.$color}22;
-  border-radius: 8px;
+  width: 40px;
+  height: 40px;
+  background: ${(props) => props.$color}15;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -403,49 +448,59 @@ const LinkWrapper = styled(Link)`
 `;
 
 const Title = styled.h3<{ $isRead: boolean }>`
-  font-size: 0.9rem;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 0.95rem;
   font-weight: ${(props) => (props.$isRead ? 500 : 600)};
-  color: ${(props) => (props.$isRead ? "rgba(255, 255, 255, 0.7)" : "#fff")};
-  margin: 0 0 0.25rem;
+  letter-spacing: -0.01em;
+  color: ${(props) => (props.$isRead ? "rgba(255, 255, 255, 0.6)" : "#fff")};
+  margin: 0 0 0.375rem;
 `;
 
 const Body = styled.p`
-  font-size: 0.85rem;
-  color: rgba(255, 255, 255, 0.6);
-  margin: 0 0 0.25rem;
-  line-height: 1.4;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.5);
+  margin: 0 0 0.5rem;
+  line-height: 1.5;
+  letter-spacing: -0.01em;
 `;
 
 const Time = styled.span`
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: 0.75rem;
-  color: rgba(255, 255, 255, 0.4);
+  color: rgba(255, 255, 255, 0.35);
+  letter-spacing: -0.01em;
 `;
 
 const Actions = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.375rem;
   opacity: 0;
-  transition: opacity 0.15s;
+  transition: opacity 0.2s ease;
 
   ${NotificationCard}:hover & {
+    opacity: 1;
+  }
+
+  @media (max-width: 768px) {
     opacity: 1;
   }
 `;
 
 const SmallButton = styled.button<{ $danger?: boolean }>`
-  padding: 6px;
+  padding: 8px;
   background: transparent;
   border: none;
-  border-radius: 4px;
-  color: ${(props) => (props.$danger ? "#ef4444" : "rgba(255, 255, 255, 0.5)")};
+  border-radius: 6px;
+  color: ${(props) => (props.$danger ? "rgba(248, 113, 113, 0.8)" : "rgba(255, 255, 255, 0.4)")};
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all 0.15s ease;
 
   &:hover {
     background: ${(props) =>
-      props.$danger ? "rgba(239, 68, 68, 0.2)" : "rgba(255, 255, 255, 0.1)"};
-    color: ${(props) => (props.$danger ? "#ef4444" : "#fff")};
+      props.$danger ? "rgba(239, 68, 68, 0.15)" : "rgba(255, 255, 255, 0.08)"};
+    color: ${(props) => (props.$danger ? "#f87171" : "#fff")};
   }
 `;
 
@@ -453,21 +508,26 @@ const EmptyState = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 4rem 2rem;
+  padding: 5rem 2rem;
   text-align: center;
-  color: rgba(255, 255, 255, 0.3);
+  color: rgba(255, 255, 255, 0.25);
 `;
 
 const EmptyTitle = styled.h2`
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: 1.1rem;
   font-weight: 600;
+  letter-spacing: -0.02em;
   color: rgba(255, 255, 255, 0.5);
-  margin: 1rem 0 0.5rem;
+  margin: 1.25rem 0 0.5rem;
 `;
 
 const EmptyText = styled.p`
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: 0.9rem;
-  color: rgba(255, 255, 255, 0.4);
+  color: rgba(255, 255, 255, 0.35);
   margin: 0;
-  max-width: 300px;
+  max-width: 320px;
+  line-height: 1.5;
+  letter-spacing: -0.01em;
 `;

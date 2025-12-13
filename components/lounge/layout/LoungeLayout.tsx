@@ -27,7 +27,7 @@ export function LoungeLayout({
   channelType,
   customIcon,
 }: LoungeLayoutProps) {
-  const { isLoading, isSupporter, tier, isCreator, displayName, avatarUrl } = useTierAccess();
+  const { isLoading, tier, isCreator, displayName, avatarUrl } = useTierAccess();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMembersPanelOpen, setIsMembersPanelOpen] = useState(true);
   const [usernameSkipped, setUsernameSkipped] = useState(false);
@@ -55,25 +55,8 @@ export function LoungeLayout({
     );
   }
 
-  // Not a supporter - show upgrade prompt
-  if (!isSupporter) {
-    return (
-      <AccessDeniedContainer>
-        <AccessDeniedContent>
-          <AccessDeniedIcon>🔒</AccessDeniedIcon>
-          <AccessDeniedTitle>nevulounge</AccessDeniedTitle>
-          <AccessDeniedText>
-            The nevulounge is an exclusive space for Super Legends.
-            <br />
-            Become a Super Legend to unlock access!
-          </AccessDeniedText>
-          <UpgradeButton href="/support">
-            Get access now
-          </UpgradeButton>
-        </AccessDeniedContent>
-      </AccessDeniedContainer>
-    );
-  }
+  // Lounge is now open to everyone - keeping code for reference
+  // The tier system still determines which channels users can access
 
   // Show username setup if user doesn't have a username yet
   if (currentUser && !currentUser.username && !usernameSkipped) {
@@ -167,7 +150,8 @@ const LayoutContainer = styled.div`
   display: flex;
   height: 100vh;
   width: 100%;
-  background: ${(props) => props.theme.background};
+  background: #100d1b; /* Force dark background for lounge */
+  color: #fff; /* Force light text for lounge */
   overflow: hidden;
 `;
 
@@ -193,6 +177,11 @@ const MainContent = styled.div`
   flex-direction: column;
   min-width: 0; /* Allow flex shrinking */
   overflow: hidden;
+
+  @media (max-width: ${LOUNGE_LAYOUT.mobileBreakpoint}px) {
+    /* On mobile, make this a scroll container so TopBar can be sticky */
+    overflow-y: auto;
+  }
 `;
 
 const ContentArea = styled.div`
@@ -200,6 +189,12 @@ const ContentArea = styled.div`
   overflow: hidden;
   display: flex;
   flex-direction: column;
+
+  @media (max-width: ${LOUNGE_LAYOUT.mobileBreakpoint}px) {
+    /* On mobile, content scrolls within MainContent */
+    overflow: visible;
+    flex-shrink: 0;
+  }
 `;
 
 const MembersPanelWrapper = styled(m.div)`
@@ -257,7 +252,8 @@ const LoadingContainer = styled.div`
   align-items: center;
   justify-content: center;
   height: 100vh;
-  background: ${(props) => props.theme.background};
+  background: #100d1b; /* Force dark background for lounge */
+  color: #fff;
   gap: 1rem;
 `;
 
@@ -277,64 +273,8 @@ const LoadingSpinner = styled.div`
 `;
 
 const LoadingText = styled.p`
-  color: ${(props) => props.theme.textColor};
+  color: rgba(255, 255, 255, 0.7);
   font-size: 0.9rem;
-  opacity: 0.7;
-`;
-
-// Access denied state
-const AccessDeniedContainer = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100vh;
-  background: ${(props) => props.theme.background};
-  padding: 2rem;
-`;
-
-const AccessDeniedContent = styled.div`
-  text-align: center;
-  max-width: 400px;
-  padding: 2rem;
-  background: ${LOUNGE_COLORS.glassBackground};
-  border: 1px solid ${LOUNGE_COLORS.glassBorder};
-  border-radius: 16px;
-  backdrop-filter: blur(10px);
-`;
-
-const AccessDeniedIcon = styled.div`
-  font-size: 3rem;
-  margin-bottom: 1rem;
-`;
-
-const AccessDeniedTitle = styled.h1`
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #fff;
-  margin-bottom: 0.5rem;
-`;
-
-const AccessDeniedText = styled.p`
-  color: ${(props) => props.theme.textColor};
-  font-size: 0.95rem;
-  line-height: 1.6;
-  margin-bottom: 1.5rem;
-`;
-
-const UpgradeButton = styled.a`
-  display: inline-block;
-  padding: 0.75rem 1.5rem;
-  background: linear-gradient(135deg, ${LOUNGE_COLORS.tier1}, ${LOUNGE_COLORS.tier2});
-  color: #fff;
-  font-weight: 600;
-  border-radius: 8px;
-  text-decoration: none;
-  transition: all 0.2s ease;
-
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 20px rgba(144, 116, 242, 0.4);
-  }
 `;
 
 // Username setup container
@@ -343,6 +283,7 @@ const UsernameSetupContainer = styled.div`
   align-items: center;
   justify-content: center;
   min-height: 100vh;
-  background: ${(props) => props.theme.background};
+  background: #100d1b; /* Force dark background for lounge */
+  color: #fff;
   padding: 2rem;
 `;
