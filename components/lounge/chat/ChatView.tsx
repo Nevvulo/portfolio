@@ -660,11 +660,11 @@ export function ChatView({ channelId, channelName, currentUserId, currentUserNam
       </MessagesContainer>
 
       <InputSection>
-        {/* Unread messages indicator - Discord style */}
-        {unreadCount > 0 && !isNearBottom && (
+        {/* Jump to latest button */}
+        {!isNearBottom && (
           <NewMessagesBar onClick={scrollToBottom}>
-            <ChevronDown size={16} />
-            <span>{unreadCount} new {unreadCount === 1 ? "message" : "messages"}</span>
+            <span>see latest</span>
+            <ChevronDown size={14} />
           </NewMessagesBar>
         )}
         <TypingIndicator channelId={channelId} />
@@ -700,37 +700,31 @@ const InputSection = styled.div`
 
 const NewMessagesBar = styled.button`
   position: absolute;
-  top: -36px;
+  top: -32px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 14px;
-  background: ${LOUNGE_COLORS.tier1};
+  padding: 5px 12px;
+  background: ${(props) => props.theme.background === "#fff" ? "rgba(0,0,0,0.6)" : "rgba(255, 255, 255, 0.15)"};
   border: none;
-  border-radius: 20px;
-  color: #fff;
-  font-size: 0.8rem;
-  font-weight: 500;
+  border-radius: 16px;
+  color: ${(props) => props.theme.background === "#fff" ? "#fff" : "rgba(255, 255, 255, 0.8)"};
+  font-family: "Sixtyfour", monospace;
+  font-size: 0.55rem;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(8px);
   transition: all 0.15s ease;
   z-index: 10;
 
   &:hover {
-    background: #7c5ce7;
-    transform: translateX(-50%) translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    background: ${(props) => props.theme.background === "#fff" ? "rgba(0,0,0,0.75)" : "rgba(255, 255, 255, 0.25)"};
+    transform: translateX(-50%) translateY(-1px);
   }
 
   svg {
-    animation: bounce 1s ease-in-out infinite;
-  }
-
-  @keyframes bounce {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(2px); }
+    opacity: 0.7;
   }
 `;
 
