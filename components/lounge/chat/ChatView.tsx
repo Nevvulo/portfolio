@@ -13,7 +13,7 @@ import type { Id } from "../../../convex/_generated/dataModel";
 import type { Tier, MessageEmbed, ContentPostType } from "../../../types/lounge";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faMessage } from "@fortawesome/free-solid-svg-icons";
-import { ChevronDown, ChevronUp, Loader2 } from "lucide-react";
+import { ChevronDown, Loader2 } from "lucide-react";
 
 // Threshold for "near bottom" detection (pixels from bottom)
 const SCROLL_THRESHOLD = 150;
@@ -225,7 +225,7 @@ export function ChatView({ channelId, channelName, currentUserId, currentUserNam
   // Pagination state for older messages
   const [olderMessages, setOlderMessages] = useState<MessageData[]>([]);
   const [cursor, setCursor] = useState<Id<"messages"> | null>(null);
-  const [hasMore, setHasMore] = useState(true);
+  const [hasMore, setHasMore] = useState<boolean | null>(null); // null = unknown yet
   const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   // Messages query - gets the latest messages (real-time updates)
@@ -274,7 +274,7 @@ export function ChatView({ channelId, channelName, currentUserId, currentUserNam
   useEffect(() => {
     setOlderMessages([]);
     setCursor(null);
-    setHasMore(true);
+    setHasMore(null); // Reset to unknown until we get the first query result
     setIsLoadingMore(false);
   }, [channelId]);
 
@@ -348,7 +348,6 @@ export function ChatView({ channelId, channelName, currentUserId, currentUserNam
   const hasScrolledForChannel = useRef(false);
   const prevMessageCount = useRef(0);
   const [isNearBottom, setIsNearBottom] = useState(true);
-  const [unreadCount, setUnreadCount] = useState(0);
 
   // Check if user is near the bottom of the scroll container
   const checkIfNearBottom = useCallback(() => {
@@ -367,7 +366,8 @@ export function ChatView({ channelId, channelName, currentUserId, currentUserNam
 
   // Load more (older) messages
   const loadMoreMessages = useCallback(() => {
-    if (isLoadingMore || !hasMore || !messages || messages.length === 0) return;
+    // Don't load if: already loading, no more messages, hasMore unknown, or no messages yet
+    if (isLoadingMore || hasMore !== true || !messages || messages.length === 0) return;
 
     // Get the oldest message ID to use as cursor
     const oldestMessage = messages[0];
@@ -381,14 +381,10 @@ export function ChatView({ channelId, channelName, currentUserId, currentUserNam
   const handleScroll = useCallback(() => {
     const nearBottom = checkIfNearBottom();
     setIsNearBottom(nearBottom);
-    // Clear unread count when user scrolls to bottom
-    if (nearBottom) {
-      setUnreadCount(0);
-    }
 
-    // Load more when near top
+    // Load more when near top (only if we know there are more messages)
     const nearTop = checkIfNearTop();
-    if (nearTop && hasMore && !isLoadingMore) {
+    if (nearTop && hasMore === true && !isLoadingMore) {
       loadMoreMessages();
     }
   }, [checkIfNearBottom, checkIfNearTop, hasMore, isLoadingMore, loadMoreMessages]);
@@ -408,7 +404,6 @@ export function ChatView({ channelId, channelName, currentUserId, currentUserNam
       prevMessageCount.current = 0;
       prevChannelId.current = channelId;
       setIsNearBottom(true);
-      setUnreadCount(0);
     }
   }, [channelId]);
 
@@ -438,18 +433,15 @@ export function ChatView({ channelId, channelName, currentUserId, currentUserNam
       // If user is near bottom, auto-scroll to new messages
       if (isNearBottom) {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-      } else {
-        // User is scrolled up - show unread indicator instead
-        setUnreadCount((prev) => prev + newMessageCount);
       }
+      // User is scrolled up - they'll see the "see latest" bar
     }
     prevMessageCount.current = totalMessages;
   }, [messages?.length, pendingMessages.length, isNearBottom]);
 
-  // Function to scroll to bottom (for the unread button)
+  // Function to scroll to bottom (for the "see latest" button)
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    setUnreadCount(0);
     setIsNearBottom(true);
   }, []);
 
@@ -539,23 +531,25 @@ export function ChatView({ channelId, channelName, currentUserId, currentUserNam
           </LoadingState>
         )}
 
-        {/* Load more indicator at top */}
+        {/* Load more indicator at top - only show when we know the hasMore state */}
+        {/* Only show load more UI when actively loading OR when we've confirmed no more messages exist */}
         {!isLoading && sortedMessages.length > 0 && (
-          <LoadMoreSection>
-            {isLoadingMore ? (
-              <LoadMoreSpinner>
-                <Loader2 size={16} className="spin" />
-                <span>Loading older messages...</span>
-              </LoadMoreSpinner>
-            ) : hasMore ? (
-              <LoadMoreButton onClick={loadMoreMessages}>
-                <ChevronUp size={14} />
-                <span>Load older messages</span>
-              </LoadMoreButton>
-            ) : (
-              <EndOfMessages>the beginning</EndOfMessages>
+          <>
+            {isLoadingMore && (
+              <LoadMoreSection>
+                <LoadMoreSpinner>
+                  <Loader2 size={16} className="spin" />
+                  <span>Loading older messages...</span>
+                </LoadMoreSpinner>
+              </LoadMoreSection>
             )}
-          </LoadMoreSection>
+            {/* Only show "the beginning" after user has scrolled up and we've confirmed no more messages */}
+            {hasMore === false && olderMessages.length > 0 && (
+              <LoadMoreSection>
+                <EndOfMessages>the beginning</EndOfMessages>
+              </LoadMoreSection>
+            )}
+          </>
         )}
 
         {sortedMessages.map((message: MessageData, index: number) => {
@@ -848,25 +842,6 @@ const LoadMoreSection = styled.div`
   justify-content: flex-start;
   padding: 1rem;
   margin-bottom: 0.5rem;
-`;
-
-const LoadMoreButton = styled.button`
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
-  background: ${(props) => props.theme.background === "#fff" ? "rgba(0,0,0,0.04)" : "rgba(255, 255, 255, 0.05)"};
-  border: 1px solid ${(props) => props.theme.background === "#fff" ? "rgba(0,0,0,0.1)" : "rgba(255, 255, 255, 0.1)"};
-  border-radius: 20px;
-  color: ${(props) => props.theme.background === "#fff" ? "rgba(0,0,0,0.6)" : "rgba(255, 255, 255, 0.6)"};
-  font-size: 0.8rem;
-  cursor: pointer;
-  transition: all 0.15s ease;
-
-  &:hover {
-    background: ${(props) => props.theme.background === "#fff" ? "rgba(0,0,0,0.08)" : "rgba(255, 255, 255, 0.1)"};
-    color: ${(props) => props.theme.foreground};
-  }
 `;
 
 const LoadMoreSpinner = styled.div`
