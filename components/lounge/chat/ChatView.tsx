@@ -553,7 +553,7 @@ export function ChatView({ channelId, channelName, currentUserId, currentUserNam
                 <span>Load older messages</span>
               </LoadMoreButton>
             ) : (
-              <EndOfMessages>Beginning of conversation</EndOfMessages>
+              <EndOfMessages>the beginning</EndOfMessages>
             )}
           </LoadMoreSection>
         )}
@@ -851,7 +851,7 @@ const PendingDismissButton = styled.button`
 // Load more styles (infinite scroll)
 const LoadMoreSection = styled.div`
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
   padding: 1rem;
   margin-bottom: 0.5rem;
 `;
@@ -897,7 +897,7 @@ const LoadMoreSpinner = styled.div`
 `;
 
 const EndOfMessages = styled.div`
-  color: ${(props) => props.theme.background === "#fff" ? "rgba(0,0,0,0.4)" : "rgba(255, 255, 255, 0.4)"};
-  font-size: 0.75rem;
-  font-style: italic;
+  color: ${(props) => props.theme.background === "#fff" ? "rgba(0,0,0,0.35)" : "rgba(255, 255, 255, 0.35)"};
+  font-family: "Sixtyfour", monospace;
+  font-size: 0.65rem;
 `;
