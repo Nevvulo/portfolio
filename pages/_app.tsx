@@ -13,11 +13,11 @@ import Router from "next/router";
 import NProgress from "nprogress";
 import React, { useState, useEffect } from "react";
 import { createGlobalStyle, ThemeProvider } from "styled-components";
-import { AnimatedRoutes } from "../components/routing/animated-routes";
 import { DarkTheme, LightTheme } from "../constants/theme";
-import { useNavigationType } from "../hooks/useNavigationType";
 import { useTheme } from "../hooks/useTheme";
 import { ConvexClientProvider } from "../lib/convex";
+import { LiveKitProvider } from "../lib/lounge/LiveKitContext";
+import { JungleMiniPlayer } from "../components/lounge/JungleMiniPlayer";
 import "../styles/globals.css"; // Tailwind CSS
 import "./nprogress.css"; //styles for nprogress
 
@@ -102,7 +102,6 @@ const clerkAppearance = {
 export default function MyApp({ Component, router, pageProps }: AppProps) {
   const [userTheme] = useTheme();
   const theme = userTheme === "light" ? LightTheme : DarkTheme;
-  const isBackForwardNav = useNavigationType();
   const [queryClient] = useState(() => new QueryClient({
     defaultOptions: {
       queries: {
@@ -126,22 +125,37 @@ export default function MyApp({ Component, router, pageProps }: AppProps) {
     }
   }, []);
 
+  // Prevent html from scrolling on homepage (scroll happens in #scroll-container)
+  useEffect(() => {
+    if (typeof document !== "undefined") {
+      const isHomepage = router.route === "/" || router.route === "";
+      if (isHomepage) {
+        document.documentElement.classList.add("page-homepage");
+      } else {
+        document.documentElement.classList.remove("page-homepage");
+      }
+    }
+  }, [router.route]);
+
   return (
     <React.StrictMode>
       <QueryClientProvider client={queryClient}>
         <ClerkProvider appearance={clerkAppearance}>
           <ConvexClientProvider>
-            <ThemeProvider theme={theme}>
-              <LazyMotion key="app" strict features={loadMotionFeatures}>
-                <GlobalStyle />
-                <MainHead />
-                <AnimatedRoutes currentRoute={router.route} skipAnimation={isBackForwardNav}>
-                  <Component {...pageProps} />
-                </AnimatedRoutes>
-                <Analytics />
-                <SpeedInsights />
-              </LazyMotion>
-            </ThemeProvider>
+            <LiveKitProvider>
+              <ThemeProvider theme={theme}>
+                <LazyMotion key="app" strict features={loadMotionFeatures}>
+                  <GlobalStyle />
+                  <MainHead />
+                  <div id="scroll-container">
+                    <Component {...pageProps} />
+                  </div>
+                  <JungleMiniPlayer />
+                  <Analytics />
+                  <SpeedInsights />
+                </LazyMotion>
+              </ThemeProvider>
+            </LiveKitProvider>
           </ConvexClientProvider>
         </ClerkProvider>
       </QueryClientProvider>
@@ -163,10 +177,7 @@ function MainHead() {
 
 // Progress bar binding events
 Router.events.on("routeChangeStart", () => NProgress.start());
-Router.events.on("routeChangeComplete", (url) => {
-  if (url.startsWith("/blog/")) window.scroll({ top: 0 });
-  NProgress.done();
-});
+Router.events.on("routeChangeComplete", () => NProgress.done());
 Router.events.on("routeChangeError", () => NProgress.done());
 
 const GlobalStyle = createGlobalStyle`

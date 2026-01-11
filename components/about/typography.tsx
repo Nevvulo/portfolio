@@ -4,7 +4,7 @@ export const Subtitle = styled.h2`
   display: flex;
   flex-direction: row;
   align-items: center;
-  font-family: "Inter", sans-serif;
+  font-family: var(--font-sans);
   font-weight: 600;
   color: ${(props) => props.theme.contrast};
   font-size: 22px;

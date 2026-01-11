@@ -11,7 +11,7 @@ import Head from "next/head";
 import { type MDXRemoteSerializeResult, MDXRemote as PostContent } from "next-mdx-remote";
 import { serialize } from "next-mdx-remote/serialize";
 import remarkGfm from "remark-gfm";
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 // @ts-expect-error
 import matter from "section-matter";
 import styled, { createGlobalStyle } from "styled-components";
@@ -19,6 +19,12 @@ import { CircleIndicator } from "../../components/blog/circle-indicator";
 import CodeBlock from "../../components/blog/codeblock";
 import { DiscordInviteLink, isDiscordInvite } from "../../components/blog/discord-invite-link";
 import { Label, Labels } from "../../components/blog/labels";
+import {
+  BlogPostPreview,
+  YouTube,
+  Callout,
+  CodePlayground,
+} from "../../components/blog/mdx-components";
 import { PostFooter } from "../../components/blog/post-footer";
 import { PostHeader } from "../../components/blog/post-header";
 import { PostHeroImg } from "../../components/blog/post-hero-img";
@@ -27,6 +33,7 @@ import { PostSubheader } from "../../components/blog/post-sub-header";
 import { Container } from "../../components/container";
 import { IconLink } from "../../components/generics";
 import { Avatar } from "../../components/generics/avatar";
+import { AIDisclosureBadge, getEffectiveAIStatus } from "../../components/badges/ai-disclosure-badge";
 import { BlogView } from "../../components/layout/blog";
 import { SimpleNavbar } from "../../components/navbar/simple";
 import getFile from "../../modules/getFile";
@@ -89,6 +96,10 @@ function PostBody({ content, properties }: Omit<PostProps, "discordWidget">) {
                 day: "2-digit",
               })}{" "}
               by <Avatar width="16" height="16" /> <strong>Nevulo</strong>{" "}
+              <AIDisclosureBadge
+                status={properties.aiDisclosureStatus}
+                publishedAt={properties.publishedAt ?? creationDate.getTime()}
+              />
             </p>
           </PostSubheader>
 
@@ -239,6 +250,27 @@ function PostBody({ content, properties }: Omit<PostProps, "discordWidget">) {
               </IconLink>
             )}
           </Container>
+
+          <AIDisclosureSection>
+            <AIDisclosureLabel>
+              {(() => {
+                const status = getEffectiveAIStatus(
+                  properties.aiDisclosureStatus,
+                  properties.publishedAt ?? creationDate.getTime()
+                );
+                if (status === "none") {
+                  return "This article was written without AI assistance.";
+                } else if (status === "llm-reviewed") {
+                  return "AI tools helped review this content for clarity and formatting.";
+                } else {
+                  return "Less than 10% of this content was influenced by AI tools.";
+                }
+              })()}
+            </AIDisclosureLabel>
+            <AIDisclosureLink href="/ai-disclosure">
+              Learn more about my AI disclosure policy
+            </AIDisclosureLink>
+          </AIDisclosureSection>
         </PostFooter>
       </PostContainer>
 
@@ -297,10 +329,14 @@ const components = {
       return <DiscordLink href={href} />;
     }
 
+    // External links start with http:// or https://
+    const isExternal =
+      href.startsWith("http://") || href.startsWith("https://");
+
     return (
       <IconLink
         style={{ textDecorationThickness: "0.125em", fontSize: "0.975em" }}
-        isExternal={!href.startsWith("https://nev.so")}
+        isExternal={isExternal}
         {...props}
         href={href}
       >
@@ -326,6 +362,11 @@ const components = {
   ul: (props: any) => <NumberedList {...props} />,
   // biome-ignore lint/suspicious/noExplicitAny: MDX component props
   li: (props: any) => <ListItem {...props} />,
+  // Custom MDX components
+  BlogPostPreview,
+  YouTube,
+  Callout,
+  CodePlayground,
 };
 
 const IconContainer = styled(Container).attrs({ direction: "row" })`
@@ -338,8 +379,26 @@ const IconContainer = styled(Container).attrs({ direction: "row" })`
   }
 `;
 
+// Scroll-aware reading focus overlay component
+function ReadingFocusOverlay() {
+  const [showTopShadow, setShowTopShadow] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowTopShadow(window.scrollY > 64);
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll(); // Check initial scroll position
+
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  return <ReadingFocusOverlayStyled $showTopShadow={showTopShadow} />;
+}
+
 // iOS timer-style reading focus overlay
-const ReadingFocusOverlay = styled.div`
+const ReadingFocusOverlayStyled = styled.div<{ $showTopShadow: boolean }>`
   pointer-events: none;
   position: fixed;
   left: 0;
@@ -370,6 +429,8 @@ const ReadingFocusOverlay = styled.div`
     -webkit-backdrop-filter: blur(1px);
     mask-image: linear-gradient(to bottom, black 0%, transparent 100%);
     -webkit-mask-image: linear-gradient(to bottom, black 0%, transparent 100%);
+    opacity: ${(props) => (props.$showTopShadow ? 1 : 0)};
+    transition: opacity 0.2s ease;
   }
 
   &::after {
@@ -396,16 +457,16 @@ const BlogStyle = createGlobalStyle`
   }
 
   pre {
-    font-size: 1.1em;
+    font-size: 0.9em;
     margin: 1.5em 0;
     border-radius: 8px;
 
     @media (max-width: 768px) {
-      font-size: 0.95em;
+      font-size: 0.85em;
     }
 
     @media (max-width: 480px) {
-      font-size: 0.85em;
+      font-size: 0.8em;
     }
   }
 
@@ -421,7 +482,7 @@ const BlogStyle = createGlobalStyle`
 
   p, span, li, ul {
     code {
-      font-size: 0.9em;
+      font-size: 0.85em;
     }
   }
 
@@ -439,10 +500,15 @@ const BlogStyle = createGlobalStyle`
     margin: 1.5em 0;
     padding: 0.5em 0 0.5em 1.5em;
     font-style: italic;
+    font-size: 1em;
     opacity: 0.9;
 
     @media (max-width: 768px) {
       font-size: 0.95em;
+    }
+
+    @media (max-width: 480px) {
+      font-size: 0.9em;
     }
   }
 `;
@@ -468,7 +534,7 @@ const ListItem = styled.li`
 const NumberedList = styled.ul`
   color: ${(props) => props.theme.textColor};
   line-height: 1.75;
-  font-size: 1.25em;
+  font-size: 1em;
   margin: 0 0 1em 0;
   padding-left: 0;
   list-style: none;
@@ -511,18 +577,18 @@ const NumberedList = styled.ul`
   }
 
   @media (max-width: 768px) {
-    font-size: 1.05em;
+    font-size: 0.95em;
   }
 
   @media (max-width: 480px) {
-    font-size: 1em;
+    font-size: 0.9em;
   }
 `;
 
 const DotpointList = styled.ol`
   color: ${(props) => props.theme.textColor};
   line-height: 1.75;
-  font-size: 1.25em;
+  font-size: 1em;
   margin: 1.5em 0;
   padding-left: 0;
   list-style: none;
@@ -547,7 +613,7 @@ const DotpointList = styled.ol`
     font-size: 0.85em;
     font-weight: 600;
     color: #a5a3f5;
-    font-family: "Fira Code", monospace;
+    font-family: var(--font-mono);
     text-align: center;
     line-height: 1.6em;
   }
@@ -591,15 +657,15 @@ const DotpointList = styled.ol`
     left: -1.5em;
     color: #a5a3f5;
     font-weight: 600;
-    font-family: "Fira Code", monospace;
+    font-family: var(--font-mono);
   }
 
   @media (max-width: 768px) {
-    font-size: 1.05em;
+    font-size: 0.95em;
   }
 
   @media (max-width: 480px) {
-    font-size: 1em;
+    font-size: 0.9em;
   }
 `;
 
@@ -610,25 +676,25 @@ const BoldText = styled.span`
   font-weight: 600;
   margin: initial;
   letter-spacing: 0.3px;
-  font-family: -apple-system, BlinkMacSystemFont, "Inter", "Roboto", sans-serif;
+  font-family: var(--font-sans);
 `;
 
 const Text = styled.p`
   color: ${(props) => props.theme.textColor};
   line-height: 1.85;
-  font-size: 1.4em;
+  font-size: 1.1em;
   font-weight: 400;
   letter-spacing: 0.2px;
   margin: 1.25em 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Inter", "Roboto", sans-serif;
+  font-family: var(--font-sans);
 
   @media (max-width: 768px) {
-    font-size: 1.1em;
+    font-size: 1em;
     line-height: 1.75;
   }
 
   @media (max-width: 480px) {
-    font-size: 1em;
+    font-size: 0.95em;
     line-height: 1.7;
   }
 `;
@@ -637,23 +703,23 @@ const Title = styled.h1`
   margin-top: 1.5em;
   letter-spacing: -1.25px;
   margin-bottom: 0.5em;
-  font-size: 2.5em;
+  font-size: 1.9em;
 
   @media (max-width: 768px) {
-    font-size: 2em;
+    font-size: 1.5em;
   }
 
   @media (max-width: 480px) {
-    font-size: 1.75em;
+    font-size: 1.35em;
   }
 `;
 
 const SubtitleBase = styled.h2`
   margin-top: 2em;
   margin-bottom: 0.75em;
-  font-family: "Fira Code", sans-serif;
-  letter-spacing: -1.55px;
-  font-size: 2em;
+  font-family: var(--font-mono);
+  letter-spacing: -1.25px;
+  font-size: 1.5em;
   font-weight: 600;
   display: flex;
   align-items: flex-start;
@@ -664,12 +730,12 @@ const SubtitleBase = styled.h2`
   }
 
   @media (max-width: 768px) {
-    font-size: 1.6em;
-    letter-spacing: -1px;
+    font-size: 1.25em;
+    letter-spacing: -0.75px;
   }
 
   @media (max-width: 480px) {
-    font-size: 1.4em;
+    font-size: 1.1em;
     letter-spacing: -0.5px;
   }
 `;
@@ -688,7 +754,7 @@ const NumberBadge = styled.span`
   font-size: 0.5em;
   font-weight: 600;
   color: #a5a3f5;
-  font-family: "Fira Code", monospace;
+  font-family: var(--font-mono);
 `;
 
 // biome-ignore lint/suspicious/noExplicitAny: styled component
@@ -711,10 +777,10 @@ const Subtitle = (props: any) => {
 const Heading3Base = styled.h3`
   margin-top: 1.75em;
   margin-bottom: 0.5em;
-  font-family: "Fira Code", sans-serif;
-  letter-spacing: -1.5px;
+  font-family: var(--font-mono);
+  letter-spacing: -1px;
   font-weight: 500;
-  font-size: 1.65em;
+  font-size: 1.25em;
   display: flex;
   align-items: flex-start;
   gap: 0.5em;
@@ -724,13 +790,13 @@ const Heading3Base = styled.h3`
   }
 
   @media (max-width: 768px) {
-    font-size: 1.35em;
-    letter-spacing: -0.75px;
+    font-size: 1.1em;
+    letter-spacing: -0.5px;
   }
 
   @media (max-width: 480px) {
-    font-size: 1.2em;
-    letter-spacing: -0.5px;
+    font-size: 1em;
+    letter-spacing: -0.35px;
   }
 `;
 
@@ -754,32 +820,55 @@ const Heading3 = (props: any) => {
 const Heading4 = styled.h4`
   margin-top: 1.5em;
   margin-bottom: 0.5em;
-  font-family: "Fira Code", sans-serif;
-  letter-spacing: -0.45px;
+  font-family: var(--font-mono);
+  letter-spacing: -0.35px;
   font-weight: 500;
-  font-size: 1.35em;
+  font-size: 1.05em;
 
   + p {
     margin-top: 0.5em;
   }
 
   @media (max-width: 768px) {
-    font-size: 1.15em;
+    font-size: 1em;
   }
 
   @media (max-width: 480px) {
-    font-size: 1.1em;
+    font-size: 0.95em;
   }
 `;
 
 const PostContainer = styled.div`
-  @import url("https://fonts.googleapis.com/css2?family=Fira+Code&display=swap");
-  font-family: "Inter", sans-serif;
+  font-family: var(--font-sans);
   border-radius: 4px;
   margin: 0.5em;
   max-width: 750px;
   width: 90%;
   padding: 0 1em;
+`;
+
+const AIDisclosureSection = styled.div`
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  text-align: center;
+`;
+
+const AIDisclosureLabel = styled.p`
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.6);
+  margin: 0 0 0.5rem 0;
+`;
+
+const AIDisclosureLink = styled.a`
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.4);
+  text-decoration: none;
+
+  &:hover {
+    color: rgba(255, 255, 255, 0.6);
+    text-decoration: underline;
+  }
 `;
 
 export async function getStaticPaths() {

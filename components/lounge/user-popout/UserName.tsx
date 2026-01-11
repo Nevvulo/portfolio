@@ -39,24 +39,17 @@ const Name = styled.h3<{ $tier: Tier; $isCreator?: boolean; $customColor?: strin
   /* Gradient text for Super Legend tiers */
   ${(p) => {
     if (p.$isCreator) {
-      // Special rainbow gradient for staff
+      // Special gradient for staff (no animation - causes Chrome rendering bugs)
       return `
         background: linear-gradient(
-          90deg,
+          135deg,
           ${LOUNGE_COLORS.tier2} 0%,
           ${LOUNGE_COLORS.tier1} 50%,
           ${LOUNGE_COLORS.tier2} 100%
         );
-        background-size: 200% auto;
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
-        animation: shimmer 3s linear infinite;
-
-        @keyframes shimmer {
-          0% { background-position: 0% center; }
-          100% { background-position: 200% center; }
-        }
       `;
     }
 
@@ -101,7 +94,7 @@ const Name = styled.h3<{ $tier: Tier; $isCreator?: boolean; $customColor?: strin
 const StaffBadge = styled.span`
   margin-left: auto;
   font-size: 0.6rem;
-  font-family: "Sixtyfour", monospace;
+  font-family: var(--font-display);
   background: linear-gradient(135deg, ${LOUNGE_COLORS.tier1}, ${LOUNGE_COLORS.tier2});
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;

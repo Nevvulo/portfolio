@@ -28,6 +28,6 @@ export const AnnouncementContainer = styled(Container)`
   border: 0.25px solid rgba(25, 25, 25, 0.25);
   border-radius: 8px;
   color: white;
-  font-family: "Inter", sans-serif;
+  font-family: var(--font-sans);
   letter-spacing: -0.5px;
 `;

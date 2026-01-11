@@ -160,9 +160,10 @@ export function ClaimModal({ item, isOpen, onClose, onClaim }: ClaimModalProps) 
         onClick={onClose}
       >
         <Modal
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0.9, opacity: 0 }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.15 }}
           onClick={(e) => e.stopPropagation()}
         >
           <CloseButton onClick={onClose}>

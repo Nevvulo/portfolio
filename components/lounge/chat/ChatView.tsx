@@ -705,7 +705,7 @@ const NewMessagesBar = styled.button`
   border: none;
   border-radius: 16px;
   color: ${(props) => props.theme.background === "#fff" ? "#fff" : "rgba(255, 255, 255, 0.8)"};
-  font-family: "Sixtyfour", monospace;
+  font-family: var(--font-display);
   font-size: 0.55rem;
   cursor: pointer;
   backdrop-filter: blur(8px);
@@ -734,7 +734,7 @@ const EmptyState = styled.div`
 
 const EmptyTitle = styled.h3`
   font-size: 1.25rem;
-  font-family: "Sixtyfour", monospace;
+  font-family: var(--font-display);
   font-weight: 600;
   color: ${(props) => props.theme.foreground};
   margin: 0 0 0.5rem;
@@ -867,6 +867,6 @@ const LoadMoreSpinner = styled.div`
 
 const EndOfMessages = styled.div`
   color: ${(props) => props.theme.background === "#fff" ? "rgba(0,0,0,0.35)" : "rgba(255, 255, 255, 0.35)"};
-  font-family: "Sixtyfour", monospace;
+  font-family: var(--font-display);
   font-size: 0.65rem;
 `;

@@ -14,15 +14,17 @@ export const PostSubheader = styled.div`
     flex-direction: row;
     align-items: center;
     gap: 6px;
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
     color: #c4c4c4;
     font-family: ui-serif, Georgia, Cambria, Times New Roman, Times, serif;
+    font-size: 16px;
     margin: 0.5em 0.5em 0.25em 0;
+    line-height: 1.5;
   }
 
   strong {
     color: #eeeeee;
-    font-family: "Inter", sans-serif;
+    font-family: var(--font-sans);
     letter-spacing: -0.2px;
   }
 `;

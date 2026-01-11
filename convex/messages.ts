@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
-import { requireUser, requireChannelAccess, isCreator } from "./auth";
+import { requireUser, requireChannelAccess, isCreator, requireNotBanned, hasAccessToTier } from "./auth";
 import { Id } from "./_generated/dataModel";
 import { internal } from "./_generated/api";
 
@@ -242,6 +242,8 @@ export const send = mutation({
     }))),
   },
   handler: async (ctx, args) => {
+    // Check if user is banned before allowing message send
+    await requireNotBanned(ctx);
     const { user } = await requireChannelAccess(ctx, args.channelId);
 
     // Validate content length
@@ -330,7 +332,7 @@ export const edit = mutation({
     content: v.string(),
   },
   handler: async (ctx, args) => {
-    const user = await requireUser(ctx);
+    const user = await requireNotBanned(ctx);
     const message = await ctx.db.get(args.messageId);
 
     if (!message) {
@@ -609,11 +611,7 @@ export const getUnreadCounts = query({
       if (channel.isArchived) continue;
       if (visitedChannelIds.has(channel._id.toString())) continue;
 
-      // Check if user has access to this channel based on tier
-      const userTier = user.tier;
-      const channelTier = channel.requiredTier;
-      const hasAccess = userTier === "tier2" || channelTier === "tier1";
-      if (!hasAccess) continue;
+      if (!hasAccessToTier(user.tier, channel.requiredTier)) continue;
 
       // Count all messages in this channel (user has never visited)
       const allMessages = await ctx.db
@@ -785,3 +783,87 @@ async function createMentionNotifications(
     });
   }
 }
+
+/**
+ * Share a learn post to a lounge channel
+ */
+export const shareLearnPost = mutation({
+  args: {
+    channelId: v.id("channels"),
+    postId: v.id("blogPosts"),
+    comment: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const { user } = await requireChannelAccess(ctx, args.channelId);
+
+    const post = await ctx.db.get(args.postId);
+    if (!post) {
+      throw new Error("Post not found");
+    }
+
+    // Create message with link embed
+    const messageId = await ctx.db.insert("messages", {
+      channelId: args.channelId,
+      authorId: user._id,
+      content: args.comment || `Check out this article: ${post.title}`,
+      embeds: [
+        {
+          type: "link" as const,
+          url: `https://nev.so/learn/${post.slug}`,
+          title: post.title,
+          description: post.description,
+          thumbnail: post.coverImage,
+        },
+      ],
+      isPinned: false,
+      isEdited: false,
+      isDeleted: false,
+      createdAt: Date.now(),
+    });
+
+    // Update read state
+    const existingReadState = await ctx.db
+      .query("readStates")
+      .withIndex("by_user_channel", (q) =>
+        q.eq("userId", user._id).eq("channelId", args.channelId)
+      )
+      .unique();
+
+    if (existingReadState) {
+      await ctx.db.patch(existingReadState._id, {
+        lastReadMessageId: messageId,
+        lastReadAt: Date.now(),
+      });
+    } else {
+      await ctx.db.insert("readStates", {
+        userId: user._id,
+        channelId: args.channelId,
+        lastReadMessageId: messageId,
+        lastReadAt: Date.now(),
+      });
+    }
+
+    // Send to Discord if channel has wormhole configured
+    const channel = await ctx.db.get(args.channelId);
+    if (channel?.discordWebhookUrl) {
+      await ctx.scheduler.runAfter(0, internal.discord.sendToDiscord, {
+        messageId,
+        channelId: args.channelId,
+        content: args.comment || `Check out this article: ${post.title}`,
+        embeds: [
+          {
+            type: "link" as const,
+            url: `https://nev.so/learn/${post.slug}`,
+            title: post.title,
+            description: post.description,
+            thumbnail: post.coverImage,
+          },
+        ],
+        authorName: user.displayName,
+        authorAvatarUrl: user.avatarUrl,
+      });
+    }
+
+    return messageId;
+  },
+});

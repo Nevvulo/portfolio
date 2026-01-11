@@ -1,6 +1,6 @@
 import Head from "next/head";
 import styled from "styled-components";
-import { useQuery, useMutation } from "convex/react";
+import { useQuery, useMutation, useAction } from "convex/react";
 import { useEffect, useState, useMemo } from "react";
 import { AnimatePresence } from "framer-motion";
 import { Gift, Package, Lock } from "lucide-react";
@@ -31,7 +31,7 @@ export default function RewardsPage() {
 
   const { isLoading, user, tier, displayName, avatarUrl, isFreeUser, isSupporter } = useTierAccess();
 
-  const getOrCreateUser = useMutation(api.users.getOrCreateUser);
+  const getOrCreateUser = useAction(api.users.getOrCreateUser);
   const revealReward = useMutation(api.rewards.revealReward);
   const claimItem = useMutation(api.rewards.claimItem);
 
@@ -50,22 +50,13 @@ export default function RewardsPage() {
     setMounted(true);
   }, []);
 
+  // SECURITY: Server fetches verified discordId and tier from Clerk
   useEffect(() => {
-    if (!mounted || isLoading || !user || !tier || userReady) return;
-
-    const discordAccount = user.externalAccounts?.find(
-      (account) => account.provider === "discord"
-    );
-    // Clerk stores Discord user ID in providerUserId (preferred) or externalId
-    const discordId =
-      (discordAccount as any)?.providerUserId ||
-      (discordAccount as any)?.externalId;
+    if (!mounted || isLoading || !user || userReady) return;
 
     getOrCreateUser({
       displayName: displayName || "Anonymous",
       avatarUrl: avatarUrl,
-      tier: tier,
-      discordId: discordId,
     })
       .then(() => {
         setUserReady(true);
@@ -73,7 +64,7 @@ export default function RewardsPage() {
       .catch(() => {
         setUserReady(true);
       });
-  }, [mounted, isLoading, user, tier, displayName, avatarUrl, userReady, getOrCreateUser]);
+  }, [mounted, isLoading, user, displayName, avatarUrl, userReady, getOrCreateUser]);
 
   // Filter and sort inventory
   const filteredInventory = useMemo(() => {

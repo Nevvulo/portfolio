@@ -50,7 +50,7 @@ const MainContent = styled.div`
   justify-content: center;
   gap: 0.5rem;
   color: white;
-  font-family: "Inter", sans-serif;
+  font-family: var(--font-sans);
   font-weight: 500;
   font-size: 0.875rem;
   line-height: 1;
@@ -101,7 +101,7 @@ const StatValue = styled.div`
   color: #5865f2;
   font-weight: 600;
   font-size: 0.875rem;
-  font-family: "Inter", sans-serif;
+  font-family: var(--font-sans);
   display: flex;
   align-items: center;
 `;
@@ -111,7 +111,7 @@ const StatLabel = styled.div`
   font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  font-family: "Inter", sans-serif;
+  font-family: var(--font-sans);
 `;
 
 const OnlineDot = styled.span`

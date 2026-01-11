@@ -5,6 +5,6 @@ const GitHub = "https://github.com/Nevvulo";
 const LinkedIn = "https://www.linkedin.com/in/blake-ward-171230205/";
 const Twitch = "https://twitch.tv/Nevvulo";
 const TikTok = "https://www.tiktok.com/@nevulo";
-const Email = "hello@nev.so";
+const Email = "nevulo.dev@gmail.com";
 
 export default { Discord, Reddit, YouTube, GitHub, Twitch, TikTok, Email, LinkedIn };

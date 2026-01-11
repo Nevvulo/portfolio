@@ -1,0 +1,811 @@
+import Link from "next/link";
+import { useState } from "react";
+import styled from "styled-components";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faClock, faPlay, faTimes } from "@fortawesome/free-solid-svg-icons";
+import { SkeletonImage } from "../blog/skeleton-image";
+import { Label } from "../blog/labels";
+import { Id } from "../../convex/_generated/dataModel";
+
+// Types
+type BentoSize = "small" | "medium" | "large" | "banner" | "featured";
+type ContentType = "article" | "video" | "news";
+type Difficulty = "beginner" | "intermediate" | "advanced";
+
+export interface BentoCardProps {
+  _id: Id<"blogPosts">;
+  slug: string;
+  title: string;
+  description: string;
+  contentType: ContentType;
+  coverImage?: string;
+  youtubeId?: string;
+  labels: string[];
+  difficulty?: Difficulty;
+  readTimeMins?: number;
+  bentoSize: BentoSize;
+  viewCount: number;
+  publishedAt?: number;
+  author?: {
+    displayName: string;
+    avatarUrl?: string;
+  } | null;
+}
+
+export function BentoCard(props: BentoCardProps) {
+  const { bentoSize, slug, title, description, coverImage, contentType, youtubeId, labels, readTimeMins, difficulty, publishedAt } = props;
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  const isVideo = contentType === "video";
+  const isNews = contentType === "news";
+  const thumbnail = isVideo && youtubeId
+    ? `https://img.youtube.com/vi/${youtubeId}/maxresdefault.jpg`
+    : coverImage;
+
+  const handleVideoClick = (e: React.MouseEvent) => {
+    if (isVideo && youtubeId) {
+      e.preventDefault();
+      setIsPlaying(true);
+    }
+  };
+
+  const handleCloseVideo = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsPlaying(false);
+  };
+
+  // News posts always use compact news card style
+  if (isNews) {
+    const newsDate = publishedAt ? new Date(publishedAt) : null;
+    const isFeatured = bentoSize === "featured";
+    return (
+      <NewsWrapper href={`/learn/${slug}`} $size={bentoSize}>
+        <NewsCard $featured={isFeatured}>
+          {thumbnail && (
+            <NewsImage $size={bentoSize}>
+              <SkeletonImage alt={title} fill style={{ objectFit: "cover" }} src={thumbnail} />
+            </NewsImage>
+          )}
+          <NewsContent $hasImage={!!thumbnail}>
+            <NewsTitle $size={bentoSize}>{title}</NewsTitle>
+            <NewsDesc $size={bentoSize}>{description}</NewsDesc>
+            {newsDate && (
+              <NewsDate>{newsDate.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</NewsDate>
+            )}
+          </NewsContent>
+        </NewsCard>
+      </NewsWrapper>
+    );
+  }
+
+  // Render based on size
+  if (bentoSize === "featured") {
+    return (
+      <FeaturedWrapper href={`/learn/${slug}`} onClick={handleVideoClick}>
+        <FeaturedCard>
+          <FeaturedImage>
+            {isPlaying && youtubeId ? (
+              <>
+                <VideoEmbed
+                  src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1`}
+                  title={title}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+                <CloseButton onClick={handleCloseVideo}>
+                  <FontAwesomeIcon icon={faTimes} />
+                </CloseButton>
+              </>
+            ) : (
+              <>
+                {thumbnail && <SkeletonImage alt={title} fill style={{ objectFit: "cover" }} src={thumbnail} priority />}
+                {isVideo && <PlayButton $large><FontAwesomeIcon icon={faPlay} size="2x" /></PlayButton>}
+                <FeaturedGradient />
+              </>
+            )}
+          </FeaturedImage>
+          {!isPlaying && (
+            <FeaturedContent>
+              <FeaturedLabel>Featured</FeaturedLabel>
+              <FeaturedTitle>{title}</FeaturedTitle>
+              <FeaturedDesc>{description}</FeaturedDesc>
+              <CardMeta>
+                {labels[0] && <Label>{labels[0].replace(/-/g, " ")}</Label>}
+                {readTimeMins && <ReadTime><FontAwesomeIcon icon={faClock} size="xs" /> {readTimeMins} min</ReadTime>}
+              </CardMeta>
+            </FeaturedContent>
+          )}
+        </FeaturedCard>
+      </FeaturedWrapper>
+    );
+  }
+
+  if (bentoSize === "large") {
+    return (
+      <LargeWrapper href={`/learn/${slug}`} onClick={handleVideoClick}>
+        <LargeCard>
+          {isPlaying && youtubeId ? (
+            <>
+              <VideoEmbed
+                src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1`}
+                title={title}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+              <CloseButton onClick={handleCloseVideo}>
+                <FontAwesomeIcon icon={faTimes} />
+              </CloseButton>
+            </>
+          ) : (
+            <>
+              <LargeImage>
+                {thumbnail && <SkeletonImage alt={title} fill style={{ objectFit: "cover" }} src={thumbnail} />}
+                {isVideo && <PlayButton><FontAwesomeIcon icon={faPlay} /></PlayButton>}
+              </LargeImage>
+              <LargeContent>
+                <CardTitle>{title}</CardTitle>
+                <CardDesc>{description}</CardDesc>
+                <CardMeta>
+                  {labels[0] && <Label>{labels[0].replace(/-/g, " ")}</Label>}
+                  {readTimeMins && <ReadTime><FontAwesomeIcon icon={faClock} size="xs" /> {readTimeMins} min</ReadTime>}
+                </CardMeta>
+              </LargeContent>
+            </>
+          )}
+        </LargeCard>
+      </LargeWrapper>
+    );
+  }
+
+  if (bentoSize === "banner") {
+    return (
+      <BannerWrapper href={`/learn/${slug}`} onClick={handleVideoClick}>
+        <BannerCard>
+          {isPlaying && youtubeId ? (
+            <>
+              <VideoEmbed
+                src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1`}
+                title={title}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+              <CloseButton onClick={handleCloseVideo}>
+                <FontAwesomeIcon icon={faTimes} />
+              </CloseButton>
+            </>
+          ) : (
+            <>
+              <BannerImage>
+                {thumbnail && <SkeletonImage alt={title} fill style={{ objectFit: "cover" }} src={thumbnail} />}
+                {isVideo && <PlayButton><FontAwesomeIcon icon={faPlay} /></PlayButton>}
+              </BannerImage>
+              <BannerContent>
+                <CardTitle>{title}</CardTitle>
+                <CardDesc>{description}</CardDesc>
+                <CardMeta>
+                  {labels[0] && <Label>{labels[0].replace(/-/g, " ")}</Label>}
+                  {readTimeMins && <ReadTime><FontAwesomeIcon icon={faClock} size="xs" /> {readTimeMins} min</ReadTime>}
+                </CardMeta>
+              </BannerContent>
+            </>
+          )}
+        </BannerCard>
+      </BannerWrapper>
+    );
+  }
+
+  if (bentoSize === "small") {
+    return (
+      <SmallWrapper href={`/learn/${slug}`} onClick={handleVideoClick}>
+        <SmallCard $isPlaying={isPlaying}>
+          {isPlaying && youtubeId ? (
+            <>
+              <VideoEmbed
+                src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1`}
+                title={title}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+              <CloseButton onClick={handleCloseVideo}>
+                <FontAwesomeIcon icon={faTimes} />
+              </CloseButton>
+            </>
+          ) : (
+            <>
+              <SmallImage>
+                {thumbnail && <SkeletonImage alt={title} fill style={{ objectFit: "cover" }} src={thumbnail} />}
+                {isVideo && <PlayButton $small><FontAwesomeIcon icon={faPlay} /></PlayButton>}
+              </SmallImage>
+              <SmallOverlay>
+                <SmallTitle>{title}</SmallTitle>
+              </SmallOverlay>
+            </>
+          )}
+        </SmallCard>
+      </SmallWrapper>
+    );
+  }
+
+  // Default: Medium card
+  return (
+    <MediumWrapper href={`/learn/${slug}`} onClick={handleVideoClick}>
+      <MediumCard>
+        {isPlaying && youtubeId ? (
+          <>
+            <VideoEmbed
+              src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1`}
+              title={title}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            />
+            <CloseButton onClick={handleCloseVideo}>
+              <FontAwesomeIcon icon={faTimes} />
+            </CloseButton>
+          </>
+        ) : (
+          <>
+            <MediumImage>
+              {thumbnail && <SkeletonImage alt={title} fill style={{ objectFit: "cover" }} src={thumbnail} />}
+              {isVideo && <PlayButton><FontAwesomeIcon icon={faPlay} /></PlayButton>}
+            </MediumImage>
+            <MediumContent>
+              <CardTitle $small>{title}</CardTitle>
+              <CardDesc $clamp={2}>{description}</CardDesc>
+              <CardMeta>
+                {labels[0] && <Label>{labels[0].replace(/-/g, " ")}</Label>}
+                {readTimeMins && <ReadTime><FontAwesomeIcon icon={faClock} size="xs" /> {readTimeMins} min</ReadTime>}
+              </CardMeta>
+            </MediumContent>
+          </>
+        )}
+      </MediumCard>
+    </MediumWrapper>
+  );
+}
+
+// ========== VIDEO EMBED STYLES ==========
+const VideoEmbed = styled.iframe`
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+  z-index: 2;
+`;
+
+const CloseButton = styled.button`
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.7);
+  border: none;
+  color: white;
+  cursor: pointer;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.9);
+  }
+`;
+
+// ========== BASE STYLES ==========
+const CardBase = styled.div`
+  position: relative;
+  border-radius: 16px;
+  overflow: hidden;
+  background: ${(props) => props.theme.postBackground};
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  cursor: pointer;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  height: 100%;
+  min-height: 0;
+
+  &:hover {
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+    border-color: rgba(144, 116, 242, 0.4);
+  }
+`;
+
+// ========== GRID WRAPPERS (these are the grid items) ==========
+const FeaturedWrapper = styled(Link)`
+  text-decoration: none;
+  display: block;
+  grid-column: span 3;
+  grid-row: span 2;
+
+  @media (max-width: 1200px) {
+    grid-column: span 2;
+  }
+
+  @media (max-width: 600px) {
+    grid-column: span 1;
+  }
+`;
+
+const LargeWrapper = styled(Link)`
+  text-decoration: none;
+  display: block;
+  grid-column: span 2;
+  grid-row: span 2;
+
+  @media (max-width: 600px) {
+    grid-column: span 1;
+  }
+`;
+
+const BannerWrapper = styled(Link)`
+  text-decoration: none;
+  display: block;
+  grid-column: span 3;
+  grid-row: span 1;
+
+  @media (max-width: 900px) {
+    grid-column: span 2;
+  }
+
+  @media (max-width: 600px) {
+    grid-column: span 1;
+  }
+`;
+
+const MediumWrapper = styled(Link)`
+  text-decoration: none;
+  display: block;
+  grid-column: span 2;
+  grid-row: span 1;
+
+  @media (max-width: 600px) {
+    grid-column: span 1;
+  }
+`;
+
+const SmallWrapper = styled(Link)`
+  text-decoration: none;
+  display: block;
+  grid-column: span 1;
+  grid-row: span 1;
+`;
+
+// ========== NEWS (COMPACT - SIZE RESPONSIVE) ==========
+const NewsWrapper = styled(Link)<{ $size: BentoSize }>`
+  text-decoration: none;
+  display: block;
+  flex-shrink: 0;
+
+  ${(p) => {
+    switch (p.$size) {
+      case "small":
+        return "width: 280px; height: 90px;";
+      case "medium":
+        return "width: 340px; height: 100px;";
+      case "large":
+        return "width: 420px; height: 110px;";
+      case "banner":
+        return "width: 520px; height: 110px;";
+      case "featured":
+        return "width: 460px; height: 120px;";
+      default:
+        return "width: 320px; height: 95px;";
+    }
+  }}
+
+  @media (max-width: 600px) {
+    width: 100%;
+    height: auto;
+    min-height: 80px;
+  }
+`;
+
+const NewsCard = styled(CardBase)<{ $featured?: boolean }>`
+  display: flex;
+  flex-direction: row;
+  height: 100%;
+  border-radius: 10px;
+
+  ${(p) => p.$featured && `
+    background: linear-gradient(135deg, rgba(231, 76, 60, 0.15) 0%, rgba(192, 57, 43, 0.08) 100%);
+    border: 1px solid rgba(231, 76, 60, 0.4);
+    box-shadow: 0 4px 20px rgba(231, 76, 60, 0.15);
+
+    &:hover {
+      border-color: rgba(231, 76, 60, 0.6);
+      box-shadow: 0 8px 30px rgba(231, 76, 60, 0.25);
+    }
+  `}
+`;
+
+const NewsImage = styled.div<{ $size: BentoSize }>`
+  position: relative;
+  flex-shrink: 0;
+
+  ${(p) => {
+    switch (p.$size) {
+      case "small":
+        return "width: 60px;";
+      case "medium":
+        return "width: 70px;";
+      case "large":
+      case "banner":
+      case "featured":
+        return "width: 90px;";
+      default:
+        return "width: 70px;";
+    }
+  }}
+
+  @media (max-width: 600px) {
+    width: 60px;
+  }
+`;
+
+const NewsContent = styled.div<{ $hasImage: boolean }>`
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+`;
+
+const NewsBadge = styled.span`
+  display: inline-block;
+  width: fit-content;
+  font-size: 8px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: #fff;
+  background: linear-gradient(135deg, #e74c3c, #c0392b);
+  padding: 2px 6px;
+  border-radius: 3px;
+  margin-bottom: 4px;
+`;
+
+const FeaturedNewsBadge = styled.span`
+  display: inline-block;
+  width: fit-content;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #fff;
+  background: linear-gradient(135deg, #f39c12, #e74c3c);
+  padding: 3px 8px;
+  border-radius: 4px;
+  margin-bottom: 6px;
+  box-shadow: 0 2px 8px rgba(243, 156, 18, 0.3);
+`;
+
+const NewsTitle = styled.h3<{ $size: BentoSize }>`
+  margin: 0;
+  color: ${(props) => props.theme.contrast};
+  line-height: 1.3;
+  font-family: var(--font-sans);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  ${(p) => {
+    switch (p.$size) {
+      case "small":
+        return "font-size: 14px; font-weight: 600;";
+      case "medium":
+        return "font-size: 15px; font-weight: 600;";
+      case "large":
+        return "font-size: 17px; font-weight: 600;";
+      case "banner":
+        return "font-size: 18px; font-weight: 700;";
+      case "featured":
+        return "font-size: 20px; font-weight: 700;";
+      default:
+        return "font-size: 14px; font-weight: 600;";
+    }
+  }}
+`;
+
+const NewsDesc = styled.p<{ $size: BentoSize }>`
+  margin: 4px 0 0;
+  color: ${(props) => props.theme.postDescriptionText};
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  ${(p) => {
+    switch (p.$size) {
+      case "small":
+        return "font-size: 12px;";
+      case "medium":
+        return "font-size: 13px;";
+      case "large":
+        return "font-size: 14px;";
+      case "banner":
+        return "font-size: 15px;";
+      case "featured":
+        return "font-size: 17px;";
+      default:
+        return "font-size: 12px;";
+    }
+  }}
+`;
+
+const NewsDate = styled.span`
+  margin-top: auto;
+  padding-top: 4px;
+  font-size: 10px;
+  color: ${(props) => props.theme.textColor};
+  opacity: 0.6;
+`;
+
+// ========== FEATURED ==========
+const FeaturedCard = styled(CardBase)`
+  display: flex;
+  flex-direction: column;
+
+  @media (max-width: 600px) {
+    min-height: 400px;
+  }
+`;
+
+const FeaturedImage = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+`;
+
+const FeaturedGradient = styled.div`
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.6) 40%, rgba(0,0,0,0) 70%);
+`;
+
+const FeaturedContent = styled.div`
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 24px;
+  z-index: 1;
+`;
+
+const FeaturedLabel = styled.span`
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: #9074f2;
+  margin-bottom: 8px;
+  display: block;
+`;
+
+const FeaturedTitle = styled.h2`
+  margin: 0 0 10px;
+  font-size: 32px;
+  font-weight: 700;
+  color: white;
+  line-height: 1.2;
+  font-family: var(--font-sans);
+`;
+
+const FeaturedDesc = styled.p`
+  margin: 0 0 14px;
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.85);
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+`;
+
+// ========== LARGE ==========
+const LargeCard = styled(CardBase)`
+  display: flex;
+  flex-direction: column;
+
+  @media (max-width: 600px) {
+    min-height: 350px;
+  }
+`;
+
+const LargeImage = styled.div`
+  position: relative;
+  width: 100%;
+  height: 60%;
+  flex-shrink: 0;
+
+  @media (max-width: 600px) {
+    height: 180px;
+  }
+`;
+
+const LargeContent = styled.div`
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  flex: 1;
+`;
+
+// ========== BANNER ==========
+const BannerCard = styled(CardBase)`
+  display: flex;
+  flex-direction: row;
+
+  @media (max-width: 600px) {
+    flex-direction: column;
+    min-height: 320px;
+  }
+`;
+
+const BannerImage = styled.div`
+  position: relative;
+  width: 35%;
+  flex-shrink: 0;
+
+  @media (max-width: 600px) {
+    width: 100%;
+    height: 160px;
+  }
+`;
+
+const BannerContent = styled.div`
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+  flex: 1;
+`;
+
+// ========== MEDIUM ==========
+const MediumCard = styled(CardBase)`
+  display: flex;
+  flex-direction: row;
+
+  @media (max-width: 600px) {
+    flex-direction: column;
+    min-height: 320px;
+  }
+`;
+
+const MediumImage = styled.div`
+  position: relative;
+  width: 35%;
+  flex-shrink: 0;
+
+  @media (max-width: 600px) {
+    width: 100%;
+    height: 160px;
+  }
+`;
+
+const MediumContent = styled.div`
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  flex: 1;
+  overflow: hidden;
+`;
+
+// ========== SMALL ==========
+const SmallCard = styled(CardBase)<{ $isPlaying?: boolean }>`
+  position: relative;
+
+  @media (max-width: 600px) {
+    min-height: 200px;
+  }
+`;
+
+const SmallImage = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+`;
+
+const SmallOverlay = styled.div`
+  position: absolute;
+  inset: 0;
+  padding: 12px;
+  display: flex;
+  align-items: flex-end;
+  background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.7) 30%, rgba(0,0,0,0) 60%);
+  z-index: 1;
+`;
+
+const SmallTitle = styled.h3`
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: white;
+  line-height: 1.25;
+  font-family: var(--font-sans);
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+`;
+
+// ========== SHARED COMPONENTS ==========
+const CardTitle = styled.h3<{ $small?: boolean }>`
+  margin: 0 0 8px;
+  font-size: ${(props) => (props.$small ? "20px" : "24px")};
+  font-weight: 700;
+  color: ${(props) => props.theme.contrast};
+  line-height: 1.25;
+  font-family: var(--font-sans);
+`;
+
+const CardDesc = styled.p<{ $clamp?: number }>`
+  margin: 0;
+  font-size: 15px;
+  color: ${(props) => props.theme.postDescriptionText};
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: ${(props) => props.$clamp || 2};
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-break: break-word;
+`;
+
+const CardMeta = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: auto;
+  padding-top: 10px;
+`;
+
+const ReadTime = styled.span`
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: ${(props) => props.theme.textColor};
+  opacity: 0.7;
+`;
+
+const PlayButton = styled.div<{ $large?: boolean; $small?: boolean }>`
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: ${(props) => (props.$large ? "70px" : props.$small ? "40px" : "50px")};
+  height: ${(props) => (props.$large ? "70px" : props.$small ? "40px" : "50px")};
+  background: rgba(0, 0, 0, 0.7);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  z-index: 2;
+  transition: all 0.2s ease;
+
+  ${CardBase}:hover & {
+    background: rgba(144, 116, 242, 0.9);
+    transform: translate(-50%, -50%) scale(1.1);
+  }
+`;
+
+export default BentoCard;

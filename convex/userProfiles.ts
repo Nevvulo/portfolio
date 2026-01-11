@@ -6,8 +6,8 @@ import { getCurrentUser } from "./auth";
 const MAX_BIO_LENGTH = 200;
 
 /**
- * Get a user's profile by ID (for popout display)
- * Returns public profile data, respecting privacy settings
+ * Get a user's profile by ID (for popout display).
+ * Returns public data; sensitive fields only returned for own profile.
  */
 export const getUserProfile = query({
   args: { userId: v.id("users") },
@@ -19,11 +19,11 @@ export const getUserProfile = query({
 
     // Get current user to check if this is their own profile
     const currentUser = await getCurrentUser(ctx);
-    const isOwnProfile = currentUser?._id === args.userId;
+    const isOwnProfile = currentUser?._id.toString() === args.userId.toString();
 
-    return {
+    // Base public profile data
+    const publicProfile = {
       _id: user._id,
-      clerkId: user.clerkId,
       displayName: user.displayName,
       avatarUrl: user.avatarUrl,
       bannerUrl: user.bannerUrl,
@@ -34,18 +34,26 @@ export const getUserProfile = query({
       lastSeenAt: user.lastSeenAt,
       isCreator: user.isCreator,
       createdAt: user.createdAt,
-      discordId: user.discordId,
       isOwnProfile,
-      // Supporter status fields
+      // Public supporter status (for displaying badges)
       discordHighestRole: user.discordHighestRole,
       twitchSubTier: user.twitchSubTier,
       discordBooster: user.discordBooster,
-      clerkPlan: user.clerkPlan,
-      clerkPlanStatus: user.clerkPlanStatus,
-      // Connection usernames
-      discordUsername: user.discordUsername,
-      twitchUsername: user.twitchUsername,
     };
+
+    if (isOwnProfile) {
+      return {
+        ...publicProfile,
+        clerkId: user.clerkId,
+        discordId: user.discordId,
+        clerkPlan: user.clerkPlan,
+        clerkPlanStatus: user.clerkPlanStatus,
+        discordUsername: user.discordUsername,
+        twitchUsername: user.twitchUsername,
+      };
+    }
+
+    return publicProfile;
   },
 });
 

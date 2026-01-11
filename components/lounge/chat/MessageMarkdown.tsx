@@ -624,7 +624,7 @@ const InlineCode = styled.code`
   background: rgba(0, 0, 0, 0.4);
   padding: 0.15em 0.4em;
   border-radius: 4px;
-  font-family: "JetBrains Mono", "Fira Code", monospace;
+  font-family: var(--font-mono);
   font-size: 0.85em;
   color: #e9a6ff;
 `;
@@ -751,7 +751,7 @@ const ProgressFill = styled.div`
 const AudioTime = styled.div`
   font-size: 0.7rem;
   color: rgba(255, 255, 255, 0.5);
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-mono);
 `;
 
 // Video Player styles

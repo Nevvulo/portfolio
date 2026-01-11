@@ -4,7 +4,7 @@ export const Subtitle = styled.h2`
   display: flex;
   flex-direction: row;
   align-items: center;
-  font-family: "Inter", sans-serif;
+  font-family: var(--font-sans);
   font-weight: 600;
   color: ${(props) => props.color};
   font-size: 22px;
@@ -15,7 +15,7 @@ export const Subtitle = styled.h2`
 `;
 
 export const Notice = styled.p`
-  font-family: "Inter", sans-serif;
+  font-family: var(--font-sans);
   font-weight: 400;
   color: #eeeeee;
   font-size: 16px;

@@ -75,7 +75,7 @@ const ChannelInfo = styled.div`
 `;
 
 const ChannelName = styled.h1`
-  font-family: 'Fira Code', monospace;
+  font-family: var(--font-mono);
   font-size: 1rem;
   font-weight: 600;
   letter-spacing: -0.05em;

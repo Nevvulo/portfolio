@@ -112,33 +112,35 @@ const Post = styled.div`
   flex-direction: row;
   background: ${(props) => props.theme.postBackground};
   color: black;
-  border-radius: 8px;
+  border-radius: 8px 0 0 8px;
   box-shadow: 1px 5px 8px rgba(0, 0, 0, 0.3);
   align-items: stretch;
   text-decoration: none;
   width: 100%;
   cursor: pointer;
   margin: 1em 0;
-  padding: 0.5em;
+  padding: 0;
   min-height: 150px;
+  overflow: hidden;
 
   @media (max-width: 460px) {
     flex-direction: column-reverse;
     min-width: 200px;
     min-height: auto;
-    padding: 0;
+    border-radius: 0 0 8px 8px;
   }
 `;
 
 const PreviewText = styled(Container)`
-  margin: 20px 24px 20px 24px;
+  margin: 0;
+  padding: 1.5rem 1.5rem 1rem 1.5rem;
   color: ${(props) => props.theme.contrast};
   flex: 1;
   justify-content: flex-start;
   gap: 0.25em;
 
   @media (max-width: 460px) {
-    margin: 1em;
+    padding: 1.25rem 1.25rem 0.75rem 1.25rem;
   }
 `;
 
@@ -147,23 +149,24 @@ const MetaContainer = styled.div`
   align-items: center;
   gap: 16px;
   margin-top: auto;
-  padding-top: 8px;
+  padding-top: 4px;
 `;
 
 const ReadTimeContainer = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
+  margin-left: 4px;
   font-size: 12px;
   font-weight: 500;
-  font-family: "Inter", sans-serif;
+  font-family: var(--font-sans);
   color: ${(props) => props.theme.textColor};
 `;
 
 const PreviewDescription = styled.p`
   font-size: 14px;
   font-weight: 500;
-  font-family: "Inter", sans-serif;
+  font-family: var(--font-sans);
   letter-spacing: -0.5px;
   color: ${(props) => props.theme.postDescriptionText};
 `;
@@ -176,34 +179,26 @@ const PreviewContainer = styled.div`
 
 const ImageWrapper = styled.div`
   width: 200px;
-  height: 180px;
   flex-shrink: 0;
   overflow: hidden;
-  border-radius: 8px;
-  margin: 0.75em;
-  margin-left: 0;
+  margin: 0;
 
   @media (max-width: 460px) {
     width: 100%;
     height: 200px;
-    margin: 0;
-    border-radius: 8px 8px 0 0;
   }
 `;
 
 const DifficultyIndicator = styled.div<{ color: string }>`
-  position: relative;
   background: ${(props) => props.color};
-  padding: 0.07em 0.5em;
+  padding: 0 0.6em;
   font-weight: 600;
-  top: 0px;
-  line-height: 14px;
-  border: 0.1px solid #212121;
-  box-shadow: 2px 2px 0px black;
-  font-family: "Fira Code", monospace;
-  font-size: 11.8px;
-  height: 14px;
+  line-height: 1.4;
+  border: 1px solid rgba(0, 0, 0, 0.3);
+  box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.4);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: -0.3px;
   border-radius: 4px;
-  margin: 0em;
   color: white;
 `;

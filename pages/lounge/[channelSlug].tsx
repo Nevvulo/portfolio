@@ -1,7 +1,7 @@
 import { useRouter } from "next/router";
 import Head from "next/head";
 import styled from "styled-components";
-import { useQuery, useMutation } from "convex/react";
+import { useQuery, useMutation, useAction } from "convex/react";
 import { useEffect, useState, useMemo } from "react";
 import { api } from "../../convex/_generated/api";
 import { LoungeLayout } from "../../components/lounge/layout/LoungeLayout";
@@ -23,8 +23,8 @@ export default function ChannelPage() {
   const { channelSlug } = router.query;
   const { isLoading, isCreator, user, tier, displayName, avatarUrl } = useTierAccess();
 
-  // Mutations
-  const getOrCreateUser = useMutation(api.users.getOrCreateUser);
+  // Actions and mutations
+  const getOrCreateUser = useAction(api.users.getOrCreateUser);
   const heartbeat = useMutation(api.users.heartbeat);
 
   useEffect(() => {
@@ -32,27 +32,20 @@ export default function ChannelPage() {
   }, []);
 
   // Ensure user exists in Convex before making queries
+  // SECURITY: Server fetches verified discordId and tier from Clerk
   useEffect(() => {
-    if (!mounted || isLoading || !user || !tier || userReady) return;
-
-    const discordAccount = user.externalAccounts?.find(
-      (account) => account.provider === "discord"
-    );
-    // Clerk stores Discord user ID in providerUserId (preferred) or externalId
-    const discordId = (discordAccount as any)?.providerUserId || (discordAccount as any)?.externalId;
+    if (!mounted || isLoading || !user || userReady) return;
 
     getOrCreateUser({
       displayName: displayName || "Anonymous",
       avatarUrl: avatarUrl,
-      tier: tier,
-      discordId: discordId,
     }).then(() => {
       setUserReady(true);
     }).catch((err) => {
       console.error("Failed to create user:", err);
       setUserReady(true); // Continue anyway
     });
-  }, [mounted, isLoading, user, tier, displayName, avatarUrl, userReady, getOrCreateUser]);
+  }, [mounted, isLoading, user, displayName, avatarUrl, userReady, getOrCreateUser]);
 
   // Get channel details - only query after user is ready
   const serverChannel = useQuery(
@@ -93,10 +86,10 @@ export default function ChannelPage() {
     // Initial heartbeat
     heartbeat({});
 
-    // Regular heartbeat every 30 seconds
+    // Regular heartbeat every 60 seconds (reduced from 30s to save function calls)
     const interval = setInterval(() => {
       heartbeat({});
-    }, 30000);
+    }, 60000);
 
     return () => clearInterval(interval);
   }, [user, heartbeat]);
@@ -231,7 +224,7 @@ const ErrorContainer = styled.div`
 
 const ErrorTitle = styled.h2`
   font-size: 1.5rem;
-  font-family: "Sixtyfour", monospace;
+  font-family: var(--font-display);
   font-weight: 700;
   color: #fff;
   margin: 0 0 0.5rem;

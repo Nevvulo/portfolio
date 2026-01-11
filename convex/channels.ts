@@ -164,11 +164,11 @@ export const archive = mutation({
   },
 });
 
-/**
- * Seed default channels (can run from dashboard for initial setup)
- */
+/** Seed default channels (can run from dashboard for initial setup). Creator only. */
 export const seedDefaultChannels = mutation({
   handler: async (ctx) => {
+    await requireCreator(ctx);
+
     // Check if channels already exist
     const existingChannels = await ctx.db.query("channels").collect();
     if (existingChannels.length > 0) {

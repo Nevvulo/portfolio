@@ -280,7 +280,7 @@ const UserName = styled.div<{ $tier: "tier1" | "tier2" }>`
 const StaffBadge = styled.span`
   margin-left: auto;
   font-size: 0.5rem;
-  font-family: "Sixtyfour", monospace;
+  font-family: var(--font-display);
   background: linear-gradient(135deg, ${LOUNGE_COLORS.tier1}, ${LOUNGE_COLORS.tier2});
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;

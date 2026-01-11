@@ -20,12 +20,21 @@ export function AnimatedRoutes({
 
   const isHomepage = currentRoute === "/" || currentRoute === "";
 
+  // Homepage uses custom scroll snap in #scroll-container
+  // Other pages use native html scroll (overflow handled in globals.css)
+  const scrollStyle = isHomepage
+    ? {
+        height: "100vh",
+        scrollSnapType: "y mandatory",
+        scrollBehavior: "smooth" as const,
+      }
+    : {
+        minHeight: "100%",
+      };
+
   if (skipAnimation) {
     return (
-      <div
-        id="scroll-container"
-        style={{ height: "100%", overflowX: "clip", overflowY: isHomepage ? "hidden" : "auto" }}
-      >
+      <div id="scroll-container" style={scrollStyle} className={isHomepage ? "homepage-scroll" : ""}>
         {children}
       </div>
     );
@@ -36,6 +45,7 @@ export function AnimatedRoutes({
       <m.div
         key={currentRoute}
         id="scroll-container"
+        className={isHomepage ? "homepage-scroll" : ""}
         initial={shouldSkipInitial ? false : { opacity: 0, y: 8 }}
         animate={{
           opacity: 1,
@@ -53,7 +63,7 @@ export function AnimatedRoutes({
             ease: [0.6, 0.04, 0.98, 0.34],
           },
         }}
-        style={{ height: "100%", overflowX: "clip", overflowY: isHomepage ? "hidden" : "auto" }}
+        style={scrollStyle}
       >
         {children}
       </m.div>

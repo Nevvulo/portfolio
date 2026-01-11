@@ -4,6 +4,7 @@ export interface BlogPost {
   description: string;
   image: string;
   createdAt: string;
+  publishedAt?: number;
   labels?: string[];
   location: string;
   difficulty?: string;
@@ -13,6 +14,7 @@ export interface BlogPost {
   coverAuthor?: string;
   coverAuthorUrl?: string;
   readTimeMins?: number;
+  aiDisclosureStatus?: "none" | "llm-assisted" | "llm-reviewed";
 }
 
 export type Blogmap = (BlogPost & {

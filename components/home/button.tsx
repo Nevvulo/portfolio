@@ -8,7 +8,7 @@ export const Button = styled(m.button)`
   cursor: pointer;
   background: linear-gradient(to bottom, #212121, #171717);
   padding: 0.75em 1.5em;
-  font-family: "Inter", sans-serif;
+  font-family: var(--font-sans);
   font-weight: 600;
   font-size: clamp(1rem, 1.4rem, 2rem);
   margin: 0;
@@ -35,7 +35,7 @@ export const ButtonLink = styled.a`
   cursor: pointer;
   background: linear-gradient(to bottom, #212121, #171717);
   padding: 0.6em 1.2em;
-  font-family: "Inter", sans-serif;
+  font-family: var(--font-sans);
   font-weight: 600;
   font-size: clamp(1rem, 1.2rem, 1.4rem);
   margin: 0;

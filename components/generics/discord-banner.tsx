@@ -7,7 +7,6 @@ import { useState } from "react";
 import styled from "styled-components";
 import Socials from "../../constants/socials";
 import type { DiscordWidget } from "../../types/discord";
-import { Button as MovingBorderButton } from "../ui/moving-border";
 
 const BannerWrapper = styled.div`
   margin-top: 2rem;
@@ -19,7 +18,7 @@ const BannerWrapper = styled.div`
   }
 `;
 
-const BannerContent = styled.div`
+const GlassyBanner = styled.a`
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -27,12 +26,25 @@ const BannerContent = styled.div`
   gap: 0.75rem;
   padding: 0 1.5rem;
   text-decoration: none;
-  height: 32px;
-  min-height: 32px;
-  max-height: 32px;
+  height: 36px;
+  background: rgba(88, 101, 242, 0.15);
+  border: 1px solid rgba(88, 101, 242, 0.25);
+  border-radius: 20px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: all 0.2s ease;
+  cursor: pointer;
+
+  &:hover {
+    background: rgba(88, 101, 242, 0.25);
+    border-color: rgba(88, 101, 242, 0.4);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 20px rgba(88, 101, 242, 0.2);
+  }
 
   @media (max-width: 768px) {
     padding: 0 1rem;
+    height: 34px;
   }
 `;
 
@@ -41,10 +53,10 @@ const MainContent = styled.div`
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  color: white;
-  font-family: "Inter", sans-serif;
+  color: rgba(255, 255, 255, 0.9);
+  font-family: var(--font-sans);
   font-weight: 500;
-  font-size: 0.875rem;
+  font-size: 0.85rem;
 
   @media (max-width: 768px) {
     font-size: 0.8rem;
@@ -53,6 +65,7 @@ const MainContent = styled.div`
 
 const DiscordIcon = styled(FontAwesomeIcon)`
   font-size: 1rem;
+  color: #5865f2;
 `;
 
 const ExternalIcon = styled(FontAwesomeIcon)`
@@ -67,8 +80,8 @@ const StatsContainer = styled(m.div)`
   justify-content: center;
   gap: 0.75rem;
   padding-left: 0.75rem;
-  margin-left: 0.75rem;
-  border-left: 1px solid rgba(88, 101, 242, 0.4);
+  margin-left: 0.5rem;
+  border-left: 1px solid rgba(255, 255, 255, 0.2);
   overflow: hidden;
 
   @media (max-width: 768px) {
@@ -84,10 +97,10 @@ const Stat = styled.div`
 `;
 
 const StatValue = styled.div`
-  color: #5865f2;
+  color: rgba(255, 255, 255, 0.95);
   font-weight: 600;
-  font-size: 0.875rem;
-  font-family: "Inter", sans-serif;
+  font-size: 0.85rem;
+  font-family: var(--font-sans);
   display: flex;
   align-items: center;
 `;
@@ -97,7 +110,7 @@ const StatLabel = styled.div`
   font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  font-family: "Inter", sans-serif;
+  font-family: var(--font-sans);
 `;
 
 const OnlineDot = styled.span`
@@ -119,40 +132,34 @@ export const DiscordBanner: React.FC<DiscordBannerProps> = ({ widget }) => {
 
   return (
     <BannerWrapper>
-      <MovingBorderButton
-        as="a"
+      <GlassyBanner
         href={Socials.Discord}
         target="_blank"
         rel="noreferrer"
-        borderRadius="0.5rem"
-        containerClassName="w-full !h-[34px] !min-h-[34px] !max-h-[34px]"
-        className="dark:bg-[#000000]/100 border-[#5865f2]/20 dark:border-[#5865f2]/20 hover:bg-[#3a3a3a]/20 transition-all duration-300 !p-0 !h-[32px] !min-h-[32px] !max-h-[32px]"
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         aria-label="Join us on Discord"
       >
-        <BannerContent>
-          <MainContent>
-            <DiscordIcon icon={faDiscord} />
-            Join us on Discord!
-            <ExternalIcon icon={faExternalLinkAlt} />
-          </MainContent>
+        <MainContent>
+          <DiscordIcon icon={faDiscord} />
+          Join us on Discord!
+          <ExternalIcon icon={faExternalLinkAlt} />
+        </MainContent>
 
-          {widget && (
-            <StatsContainer
-              initial={false}
-              animate={{ opacity: isHovered ? 1 : 0 }}
-              transition={{ duration: 0.2 }}
-            >
-              <Stat>
-                <OnlineDot />
-                <StatValue>{onlineCount}</StatValue>
-                <StatLabel>Online</StatLabel>
-              </Stat>
-            </StatsContainer>
-          )}
-        </BannerContent>
-      </MovingBorderButton>
+        {widget && (
+          <StatsContainer
+            initial={false}
+            animate={{ opacity: isHovered ? 1 : 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <Stat>
+              <OnlineDot />
+              <StatValue>{onlineCount}</StatValue>
+              <StatLabel>Online</StatLabel>
+            </Stat>
+          </StatsContainer>
+        )}
+      </GlassyBanner>
     </BannerWrapper>
   );
 };

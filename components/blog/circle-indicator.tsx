@@ -12,37 +12,18 @@ export const CircleIndicator = ({ onComplete }: Props) => {
   const pathLength = useSpring(yRange, { stiffness: 400, damping: 90 });
 
   useEffect(() => {
-    const getScrollContainer = () => document.getElementById("scroll-container");
-
     const calculateProgress = () => {
-      const container = getScrollContainer();
-      if (!container) return;
-
-      const scrollTop = container.scrollTop;
-      const scrollHeight = container.scrollHeight - container.clientHeight;
+      const scrollTop = window.scrollY;
+      const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
       const progress = scrollHeight > 0 ? Math.min(scrollTop / scrollHeight, 1) : 0;
       scrollProgress.set(progress);
     };
 
-    // Wait for container to be available
-    const initScroll = () => {
-      const container = getScrollContainer();
-      if (container) {
-        calculateProgress();
-        container.addEventListener("scroll", calculateProgress, { passive: true });
-      }
-    };
-
-    // Try immediately and also after a short delay (for route transitions)
-    initScroll();
-    const timeout = setTimeout(initScroll, 100);
+    calculateProgress();
+    window.addEventListener("scroll", calculateProgress, { passive: true });
 
     return () => {
-      clearTimeout(timeout);
-      const container = getScrollContainer();
-      if (container) {
-        container.removeEventListener("scroll", calculateProgress);
-      }
+      window.removeEventListener("scroll", calculateProgress);
     };
   }, [scrollProgress]);
 

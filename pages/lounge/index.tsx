@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import Head from "next/head";
-import { useQuery, useMutation } from "convex/react";
+import { useQuery, useMutation, useAction } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { LoungeLayout } from "../../components/lounge/layout/LoungeLayout";
 import { useTierAccess } from "../../hooks/lounge/useTierAccess";
@@ -16,34 +16,27 @@ export default function LoungePage() {
   const router = useRouter();
   const { isLoading, user, tier, displayName, avatarUrl } = useTierAccess();
 
-  const getOrCreateUser = useMutation(api.users.getOrCreateUser);
+  const getOrCreateUser = useAction(api.users.getOrCreateUser);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
   // Ensure user exists in Convex before making queries
+  // SECURITY: Server fetches verified discordId and tier from Clerk
   useEffect(() => {
-    if (!mounted || isLoading || !user || !tier || userReady) return;
-
-    const discordAccount = user.externalAccounts?.find(
-      (account) => account.provider === "discord"
-    );
-    // Clerk stores Discord user ID in providerUserId (preferred) or externalId
-    const discordId = (discordAccount as any)?.providerUserId || (discordAccount as any)?.externalId;
+    if (!mounted || isLoading || !user || userReady) return;
 
     getOrCreateUser({
       displayName: displayName || "Anonymous",
       avatarUrl: avatarUrl,
-      tier: tier,
-      discordId: discordId,
     }).then(() => {
       setUserReady(true);
     }).catch((err) => {
       console.error("Failed to create user:", err);
       setUserReady(true);
     });
-  }, [mounted, isLoading, user, tier, displayName, avatarUrl, userReady, getOrCreateUser]);
+  }, [mounted, isLoading, user, displayName, avatarUrl, userReady, getOrCreateUser]);
 
   // Only query after user is ready
   const channels = useQuery(
@@ -96,6 +89,6 @@ const WelcomeTitle = styled.h1`
   font-weight: 700;
   color: #fff;
   margin: 0 0 0.75rem;
-  font-family: "Sixtyfour", monospace;
+  font-family: var(--font-display);
 `;
 

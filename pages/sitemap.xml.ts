@@ -1,5 +1,4 @@
 import type { GetServerSidePropsContext } from "next";
-import { Projects } from "../constants/projects";
 import getFile from "../modules/getFile";
 import type { Blogmap } from "../types/blog";
 
@@ -32,13 +31,6 @@ function generateSiteMap(posts: Blogmap) {
      `;
        })
        .join("")}
-       ${Projects.map(({ projectId }) => {
-         return `
-        <url>
-            <loc>${`${URL}/projects/${projectId}`}</loc>
-        </url>
-      `;
-       }).join("")}
    </urlset>
  `;
 }

@@ -238,7 +238,7 @@ const LogoImage = styled.div`
 `;
 
 const LogoText = styled.h2`
-  font-family: "Sixtyfour", monospace;
+  font-family: var(--font-display);
   font-size: 0.75rem;
   font-weight: 400;
   color: ${(props) => props.theme.background === "#fff" ? "rgba(0,0,0,0.6)" : "rgba(255, 255, 255, 0.6)"};
@@ -345,7 +345,7 @@ const LockedChannelContent = styled.div`
 `;
 
 const ChannelName = styled.span<{ $hasUnread?: boolean }>`
-  font-family: 'Fira Code', monospace;
+  font-family: var(--font-mono);
   font-size: 0.85rem;
   font-weight: ${(props) => (props.$hasUnread ? 600 : 300)};
   letter-spacing: -0.065em;

@@ -8,6 +8,6 @@ export const Footer = styled(Container)`
   border: 0.25px solid rgba(50, 25, 50, 0.5);
   border-radius: 8px;
   color: ${(props) => props.theme.pure};
-  font-family: "Inter", sans-serif;
+  font-family: var(--font-sans);
   letter-spacing: -0.5px;
 `;

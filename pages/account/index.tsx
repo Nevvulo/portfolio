@@ -339,7 +339,7 @@ const LoadingContainer = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: "Inter", sans-serif;
+  font-family: var(--font-sans);
   color: ${(props) => props.theme.contrast};
 `;
 
@@ -351,7 +351,7 @@ const ContentContainer = styled.div`
 `;
 
 const PageTitle = styled.h1`
-  font-family: "Sixtyfour", monospace;
+  font-family: var(--font-display);
   font-weight: 400;
   font-size: clamp(32px, 5vw, 48px);
   color: ${(props) => props.theme.contrast};
@@ -364,7 +364,7 @@ const Section = styled.section`
 `;
 
 const SectionTitle = styled.h2`
-  font-family: "Inter", sans-serif;
+  font-family: var(--font-sans);
   font-weight: 600;
   font-size: 20px;
   color: ${(props) => props.theme.contrast};
@@ -372,7 +372,7 @@ const SectionTitle = styled.h2`
 `;
 
 const SectionDescription = styled.p`
-  font-family: "Inter", sans-serif;
+  font-family: var(--font-sans);
   font-size: 14px;
   color: ${(props) => props.theme.contrast};
   opacity: 0.7;
@@ -402,14 +402,14 @@ const Avatar = styled.img`
 const ProfileDetails = styled.div``;
 
 const ProfileName = styled.div`
-  font-family: "Inter", sans-serif;
+  font-family: var(--font-sans);
   font-weight: 600;
   font-size: 18px;
   color: ${(props) => props.theme.contrast};
 `;
 
 const ProfileEmail = styled.div`
-  font-family: "Inter", sans-serif;
+  font-family: var(--font-sans);
   font-size: 14px;
   color: ${(props) => props.theme.contrast};
   opacity: 0.8;
@@ -453,14 +453,14 @@ const ConnectionInfo = styled.div`
 `;
 
 const ConnectionName = styled.div`
-  font-family: "Inter", sans-serif;
+  font-family: var(--font-sans);
   font-weight: 600;
   font-size: 16px;
   color: ${(props) => props.theme.contrast};
 `;
 
 const ConnectionStatus = styled.div<{ $connected?: boolean }>`
-  font-family: "Inter", sans-serif;
+  font-family: var(--font-sans);
   font-size: 13px;
   color: ${(props) =>
     props.$connected ? "#4f4dc1" : props.theme.contrast};
@@ -473,7 +473,7 @@ const ConnectButton = styled.button`
   color: ${(props) => props.theme.contrast};
   padding: 8px 16px;
   border-radius: 8px;
-  font-family: "SF Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
@@ -507,7 +507,7 @@ const SyncButton = styled.button<{ $status?: string }>`
         : "#5865F2"};
   padding: 8px 16px;
   border-radius: 8px;
-  font-family: "SF Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
@@ -525,7 +525,7 @@ const SyncButton = styled.button<{ $status?: string }>`
 `;
 
 const SyncError = styled.div`
-  font-family: "Inter", sans-serif;
+  font-family: var(--font-sans);
   font-size: 11px;
   color: #ef4444;
   margin-top: 4px;
@@ -563,14 +563,14 @@ const SupporterInfo = styled.div`
 `;
 
 const SupporterTitle = styled.div`
-  font-family: "Inter", sans-serif;
+  font-family: var(--font-sans);
   font-weight: 600;
   font-size: 16px;
   color: ${(props) => props.theme.contrast};
 `;
 
 const SupporterDescription = styled.div`
-  font-family: "Inter", sans-serif;
+  font-family: var(--font-sans);
   font-size: 14px;
   color: ${(props) => props.theme.contrast};
   opacity: 0.8;
@@ -586,7 +586,7 @@ const SubscriptionMeta = styled.div`
 `;
 
 const SubscriptionStatus = styled.span<{ $status?: string }>`
-  font-family: "SF Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 1px;
@@ -607,7 +607,7 @@ const SubscriptionStatus = styled.span<{ $status?: string }>`
 `;
 
 const NextPayment = styled.span`
-  font-family: "Inter", sans-serif;
+  font-family: var(--font-sans);
   font-size: 12px;
   color: ${(props) => props.theme.contrast};
   opacity: 0.6;
@@ -619,7 +619,7 @@ const SupporterLink = styled(Link)`
   color: ${(props) => props.theme.contrast};
   padding: 10px 20px;
   border-radius: 8px;
-  font-family: "SF Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 13px;
   font-weight: 600;
   text-decoration: none;
@@ -638,7 +638,7 @@ const SignOutButton = styled.button`
   color: #ff6b6b;
   padding: 12px 24px;
   border-radius: 8px;
-  font-family: "Inter", sans-serif;
+  font-family: var(--font-sans);
   font-weight: 600;
   font-size: 14px;
   cursor: pointer;
@@ -720,7 +720,7 @@ const BadgesCard = styled.div`
 `;
 
 const NoBadgesMessage = styled.p`
-  font-family: "Inter", sans-serif;
+  font-family: var(--font-sans);
   font-size: 14px;
   color: ${(props) => props.theme.contrast};
   opacity: 0.7;
@@ -740,7 +740,7 @@ const SyncBadgesButton = styled.button`
   color: ${(props) => props.theme.contrast};
   padding: 8px 16px;
   border-radius: 8px;
-  font-family: "SF Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
@@ -758,7 +758,7 @@ const SyncBadgesButton = styled.button`
 `;
 
 const LastSynced = styled.span`
-  font-family: "Inter", sans-serif;
+  font-family: var(--font-sans);
   font-size: 12px;
   color: ${(props) => props.theme.contrast};
   opacity: 0.6;

@@ -1,5 +1,47 @@
 @import "tailwindcss";
 
+/* ===========================================
+   FONT CONFIGURATION
+   =========================================== */
+
+/* Define consistent font stacks as CSS custom properties */
+:root {
+  /* Primary monospace - Fira Code loaded from Google Fonts, with cross-platform fallbacks */
+  --font-mono: "Fira Code", "Cascadia Code", "JetBrains Mono", "SF Mono", "Monaco",
+               "Inconsolata", "Roboto Mono", "Source Code Pro", "Consolas",
+               "DejaVu Sans Mono", "Courier New", monospace;
+
+  /* Display font - Sixtyfour for headings */
+  --font-display: "Sixtyfour", var(--font-mono);
+
+  /* Sans-serif stack - Inter loaded from Google Fonts */
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto",
+               "Oxygen", "Ubuntu", "Cantarell", "Helvetica Neue", sans-serif;
+
+  /* Weights - normalized for cross-platform consistency */
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+}
+
+/* Font rendering optimizations */
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: "kern" 1, "liga" 1;
+}
+
+/* Ensure monospace elements use Fira Code */
+code, kbd, samp, pre {
+  font-family: var(--font-mono);
+}
+
+/* ===========================================
+   FOUC PREVENTION
+   =========================================== */
+
 /* FOUC Prevention - hide until fonts loaded */
 html {
   visibility: hidden;
@@ -26,49 +68,89 @@ html.fonts-loaded {
   }
 }
 
-/* Ensure full height */
+/* Ensure minimum full height - allows document to grow */
 html,
-body,
-#__next {
-  height: 100%;
+body {
   min-height: 100%;
 }
 
+#__next {
+  min-height: 100%;
+}
+
+/* ===== SCROLL SETUP ===== */
+
+/* Default: html scrolls for non-homepage pages */
 html {
   overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
 }
 
-#__next {
+/* Default: scroll-container is just a wrapper */
+#scroll-container {
+  min-height: 100%;
+}
+
+/* HOMEPAGE: html does NOT scroll, #scroll-container does (for scroll-snap) */
+html.page-homepage {
+  overflow: hidden;
+  height: 100vh;
+}
+
+html.page-homepage body {
+  overflow: hidden;
+  height: 100vh;
+}
+
+html.page-homepage #__next {
+  height: 100vh;
+}
+
+html.page-homepage #scroll-container {
+  height: 100vh;
+  overflow-y: auto;
   overflow-x: hidden;
-  overflow-y: hidden;
+  scroll-snap-type: y mandatory;
+  scroll-behavior: smooth;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
 }
 
-/* When multiple scroll-containers exist, hide scrollbar on all but the last */
-#scroll-container:not(:last-child) {
-  overflow-y: hidden !important;
-}
-
-
-/* Subtle scrollbar for dark mode */
-::-webkit-scrollbar {
+/* ===== SCROLLBAR STYLING ===== */
+/* Webkit scrollbar for html (non-homepage) */
+html::-webkit-scrollbar {
   width: 8px;
 }
 
-::-webkit-scrollbar-track {
+html::-webkit-scrollbar-track {
   background: transparent;
 }
 
-::-webkit-scrollbar-thumb {
+html::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.15);
   border-radius: 4px;
 }
 
-::-webkit-scrollbar-thumb:hover {
+html::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.25);
 }
 
-/* Firefox */
-* {
-  scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+/* Webkit scrollbar for homepage scroll-container */
+html.page-homepage #scroll-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+html.page-homepage #scroll-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+html.page-homepage #scroll-container::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+}
+
+html.page-homepage #scroll-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
 }

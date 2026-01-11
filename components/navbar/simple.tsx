@@ -77,7 +77,7 @@ const LogoContainer = styled.div`
 `;
 
 const NevuloTitle = styled.h1`
-  font-family: "Sixtyfour", monospace;
+  font-family: var(--font-display);
   font-weight: 400;
   color: ${(props) => props.theme.contrast};
   font-size: clamp(28px, 5vmax, 48px);
@@ -97,7 +97,7 @@ const TitleContainer = styled.div`
 `;
 
 const PageTitle = styled.h2`
-  font-family: "Inter", sans-serif;
+  font-family: var(--font-sans);
   font-weight: 600;
   color: ${(props) => props.theme.contrast};
   font-size: 32px;

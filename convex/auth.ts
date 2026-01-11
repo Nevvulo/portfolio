@@ -53,12 +53,58 @@ export function isCreator(user: { isCreator: boolean; discordId?: string | null 
 }
 
 /**
+ * Role levels:
+ * 0 = normal member (default)
+ * 1 = staff
+ * 2 = creator only (reserved for future use)
+ */
+export const ROLE_NORMAL = 0;
+export const ROLE_STAFF = 1;
+export const ROLE_CREATOR_ONLY = 2;
+
+/**
+ * Check if user is staff or higher
+ * Staff can moderate content, delete comments, etc.
+ */
+export function isStaff(user: { role?: number | null; isCreator?: boolean; discordId?: string | null }): boolean {
+  // Creator is always considered staff
+  if (user.isCreator || user.discordId === CREATOR_DISCORD_ID) {
+    return true;
+  }
+  // Check role level
+  return (user.role ?? 0) >= ROLE_STAFF;
+}
+
+/**
+ * Check if user can moderate (staff or creator)
+ */
+export function canModerate(user: { role?: number | null; isCreator?: boolean; discordId?: string | null }): boolean {
+  return isStaff(user);
+}
+
+/**
  * Require the user to be the creator, throw if not
  */
 export async function requireCreator(ctx: QueryCtx | MutationCtx) {
   const user = await requireUser(ctx);
   if (!isCreator(user)) {
     throw new Error("Only the creator can perform this action");
+  }
+  return user;
+}
+
+/**
+ * Require user to not be banned
+ * Use this for all user-generated content mutations
+ */
+export async function requireNotBanned(ctx: QueryCtx | MutationCtx) {
+  const user = await requireUser(ctx);
+  if (user.isBanned) {
+    throw new Error(
+      user.banReason
+        ? `Your account has been suspended: ${user.banReason}`
+        : "Your account has been suspended from posting content."
+    );
   }
   return user;
 }

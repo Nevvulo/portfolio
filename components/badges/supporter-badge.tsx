@@ -90,7 +90,7 @@ const BadgeContainer = styled.div<{ $color: string; $size: string; $expandOnHove
 `;
 
 const BadgeLabel = styled.span<{ $expandOnHover: boolean }>`
-	font-family: "SF Mono", "Monaco", "Inconsolata", monospace;
+	font-family: var(--font-mono);
 	font-weight: 600;
 	text-transform: uppercase;
 	letter-spacing: 0.5px;

@@ -15,7 +15,7 @@ export const Tab = styled.div<TabProps & HTMLAttributes<HTMLDivElement>>`
   border-radius: 4px;
   font-size: 14px;
   box-shadow: 1px 2px 3px rgba(0, 0, 0, 0.3);
-  font-family: "Inter", sans-serif;
+  font-family: var(--font-sans);
   cursor: pointer;
   transition: 0.2s;
 `;

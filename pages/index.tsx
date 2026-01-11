@@ -1,21 +1,22 @@
 import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
+import { Menu, X } from "lucide-react";
 import Head from "next/head";
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import styled from "styled-components";
+import { useQuery } from "convex/react";
+import { api } from "../convex/_generated/api";
 import NevuloLogoSrc from "../assets/svg/nevulo-huge-bold-svg.svg";
 import { SupporterBadges } from "../components/badges/supporter-badges";
-import { PostPreview } from "../components/blog/post-preview";
+import { BentoGrid, BentoCardProps } from "../components/learn";
+import { Skeleton } from "../components/generics/skeleton";
 import { SocialLinks } from "../components/generics";
 import { AnnouncementBanner } from "../components/generics/announcement-banner";
 import { FadeIn, FadeUp } from "../components/home/animation";
 import { CanvasIntro } from "../components/home/canvas-intro";
-import { FeaturedProjectPreview } from "../components/project/featured-project";
+import { FeaturedProjectCard } from "../components/project/featured-project";
 import { ROUTES } from "../constants/routes";
-import { Projects } from "../constants/projects";
-import getFile from "../modules/getFile";
-import type { Blogmap } from "../types/blog";
 import type { DiscordWidget } from "../types/discord";
 import { fetchDiscordWidget } from "../utils/discord-widget";
 import { checkTwitchLiveStatus } from "../utils/twitch";
@@ -23,10 +24,9 @@ import { checkTwitchLiveStatus } from "../utils/twitch";
 interface HomeProps {
   discordWidget: DiscordWidget | null;
   isLive: boolean;
-  posts: Blogmap;
 }
 
-export default function Home({ discordWidget, isLive: serverIsLive, posts }: HomeProps) {
+export default function Home({ discordWidget, isLive: serverIsLive }: HomeProps) {
   const [showCanvasIntro, setShowCanvasIntro] = useState(false);
   const [showContent, setShowContent] = useState(true);
   const [bannerOpacity, setBannerOpacity] = useState(1);
@@ -34,6 +34,8 @@ export default function Home({ discordWidget, isLive: serverIsLive, posts }: Hom
 
   // Allow overriding live status with ?mockLive=true query parameter for testing
   const [isLiveOverride, setIsLiveOverride] = useState<boolean | null>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const mobileMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -46,6 +48,19 @@ export default function Home({ discordWidget, isLive: serverIsLive, posts }: Hom
       console.log('⚫ MOCK: Twitch live status set to FALSE');
     }
   }, []);
+
+  // Close mobile menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (mobileMenuRef.current && !mobileMenuRef.current.contains(e.target as Node)) {
+        setMobileMenuOpen(false);
+      }
+    };
+    if (mobileMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [mobileMenuOpen]);
 
   // Handle scroll to fade out banner
   useEffect(() => {
@@ -73,40 +88,78 @@ export default function Home({ discordWidget, isLive: serverIsLive, posts }: Hom
     return undefined;
   }, []);
 
+  // Scroll snapping is now handled purely by CSS (scroll-snap-type: y mandatory)
+  // No custom wheel handler needed - let the browser do its thing
+
   const isLive = isLiveOverride !== null ? isLiveOverride : serverIsLive;
+
+  // Fetch learn posts from Convex
+  const learnPosts = useQuery(api.blogPosts.getForBento, { excludeNews: true });
 
   const handleIntroComplete = () => {
     setShowCanvasIntro(false);
     setShowContent(true);
   };
 
-  // Get latest posts and projects
-  const latestPosts = posts.slice(0, 3);
-  const featuredProjects = Projects.filter(p => p.projectId === "unloan" || p.projectId === "flux");
+  // Get first 5 posts for homepage learn section
+  const latestLearnPosts = learnPosts?.slice(0, 5) ?? [];
+
+  // DEBUG: Check bento sizes from Convex
+  if (learnPosts?.length) {
+    console.log('Learn posts bento sizes:', learnPosts.map(p => ({ title: p.title, bentoSize: p.bentoSize })));
+  }
+
+  // Get featured projects from Convex
+  const projects = useQuery(api.projects.listActive);
+  const featuredProjects = projects?.filter(p => p.slug === "unloan" || p.slug === "flux") ?? [];
 
   return (
-    <ScrollContainer id="scroll-container">
+    <>
       {showCanvasIntro && <CanvasIntro onComplete={handleIntroComplete} />}
 
       {showContent && (
         <>
           <TopNavBar>
-            <NavLink href={ROUTES.ABOUT}>About</NavLink>
-            <NavLink href={ROUTES.CONTACT}>Contact</NavLink>
-            <NavLink href={ROUTES.BLOG.ROOT}>Blog</NavLink>
-            <NavLink href={ROUTES.PROJECTS.ROOT}>Projects</NavLink>
-            <NavLink href="/games">Games</NavLink>
-            <NavLink href="/live">Live</NavLink>
-            <NavLink href="/support">Support</NavLink>
+            {/* Mobile hamburger menu */}
+            <MobileMenuWrapper ref={mobileMenuRef}>
+              <HamburgerButton onClick={() => setMobileMenuOpen(!mobileMenuOpen)} aria-label="Toggle menu">
+                {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+              </HamburgerButton>
+              {mobileMenuOpen && (
+                <MobileMenu>
+                  <MobileNavLink href={ROUTES.ABOUT} onClick={() => setMobileMenuOpen(false)}>About</MobileNavLink>
+                  <MobileNavLink href={ROUTES.CONTACT} onClick={() => setMobileMenuOpen(false)}>Contact</MobileNavLink>
+                  <MobileNavLink href={ROUTES.BLOG.ROOT} onClick={() => setMobileMenuOpen(false)}>Blog</MobileNavLink>
+                  <MobileNavLink href={ROUTES.PROJECTS.ROOT} onClick={() => setMobileMenuOpen(false)}>Projects</MobileNavLink>
+                  <MobileNavLink href="/games" onClick={() => setMobileMenuOpen(false)}>Games</MobileNavLink>
+                  <MobileNavLink href="/live" onClick={() => setMobileMenuOpen(false)}>Live</MobileNavLink>
+                  <MobileNavLink href="/support" onClick={() => setMobileMenuOpen(false)}>Support</MobileNavLink>
+                </MobileMenu>
+              )}
+            </MobileMenuWrapper>
 
-            <DesktopAuthContainer>
+            {/* Desktop nav links */}
+            <DesktopNavLinks>
+              <NavLink href={ROUTES.ABOUT}>About</NavLink>
+              <NavLink href={ROUTES.CONTACT}>Contact</NavLink>
+              <NavLink href={ROUTES.BLOG.ROOT}>Blog</NavLink>
+              <NavLink href={ROUTES.PROJECTS.ROOT}>Projects</NavLink>
+              <NavLink href="/games">Games</NavLink>
+              <NavLink href="/live">Live</NavLink>
+              <NavLink href="/support">Support</NavLink>
+            </DesktopNavLinks>
+
+            {/* Auth container - always visible */}
+            <AuthContainer>
               <SignedOut>
                 <SignInButton mode="modal">
-                  <LoginButton>Sign In</LoginButton>
+                  <LoginButton>Login</LoginButton>
                 </SignInButton>
               </SignedOut>
               <SignedIn>
-                <SupporterBadges size="small" expandOnHover />
+                <DesktopOnly>
+                  <SupporterBadges size="small" expandOnHover />
+                </DesktopOnly>
                 <UserButton
                   afterSignOutUrl="/"
                   appearance={{
@@ -117,49 +170,14 @@ export default function Home({ discordWidget, isLive: serverIsLive, posts }: Hom
                       },
                     },
                   }}
-
                 >
                   <UserButton.MenuItems>
                     <UserButton.Link href="/account" label="My Account" labelIcon={<AccountIcon />} />
                   </UserButton.MenuItems>
                 </UserButton>
               </SignedIn>
-            </DesktopAuthContainer>
+            </AuthContainer>
           </TopNavBar>
-
-          {/* Mobile sign in - directly under navbar */}
-          <MobileSignInBar>
-            <SignedOut>
-              <SignInButton mode="modal">
-                <MobileSignInButton>Sign In</MobileSignInButton>
-              </SignInButton>
-            </SignedOut>
-          </MobileSignInBar>
-
-          {/* Mobile bottom bar - only for signed in users */}
-          <MobileBottomBar>
-            <SignedIn>
-              <MobileBadgesContainer>
-                <SupporterBadges size="small" />
-              </MobileBadgesContainer>
-              <UserButton
-                afterSignOutUrl="/"
-                appearance={{
-                  elements: {
-                    avatarBox: {
-                      width: "32px",
-                      height: "32px",
-                    },
-                  },
-                }}
-
-              >
-                <UserButton.MenuItems>
-                  <UserButton.Link href="/account" label="My Account" labelIcon={<AccountIcon />} />
-                </UserButton.MenuItems>
-              </UserButton>
-            </SignedIn>
-          </MobileBottomBar>
 
           <BackgroundImage aria-hidden="true" />
 
@@ -229,25 +247,28 @@ export default function Home({ discordWidget, isLive: serverIsLive, posts }: Hom
             </SectionContent>
           </Section>
 
-          {/* Blog Section */}
+          {/* Learn Section */}
           <Section>
-            <SectionContent>
-              <SectionHeader>
-                <SectionTitle>
-                  <SectionTitlePrimary>latest</SectionTitlePrimary>
-                  <SectionTitleSecondary>blog</SectionTitleSecondary>
-                </SectionTitle>
-                <ViewAllLink href={ROUTES.BLOG.ROOT}>
-                  View all posts →
+            <LearnSectionContent>
+              <LearnSectionHeader>
+                <LearnTitle>learn</LearnTitle>
+                <ViewAllLink href="/learn">
+                  View all →
                 </ViewAllLink>
-              </SectionHeader>
+              </LearnSectionHeader>
 
-              <PreviewContainer>
-                {latestPosts.map((post, i) => (
-                  <PostPreview key={post.slug} prioritizeImage={i === 0} {...post} />
-                ))}
-              </PreviewContainer>
-            </SectionContent>
+              {latestLearnPosts.length > 0 ? (
+                <BentoGrid posts={latestLearnPosts as BentoCardProps[]} />
+              ) : (
+                <SkeletonBentoGrid>
+                  <SkeletonBentoCard $cols={3} $rows={2} />
+                  <SkeletonBentoCard $cols={2} $rows={2} />
+                  <SkeletonBentoCard $cols={2} $rows={1} />
+                  <SkeletonBentoCard $cols={2} $rows={1} />
+                  <SkeletonBentoCard $cols={1} $rows={1} />
+                </SkeletonBentoGrid>
+              )}
+            </LearnSectionContent>
           </Section>
 
           {/* Projects Section */}
@@ -265,11 +286,11 @@ export default function Home({ discordWidget, isLive: serverIsLive, posts }: Hom
 
               <ProjectsContainer>
                 {featuredProjects.map((project) => (
-                  <FeaturedProjectPreview
-                    key={project.projectId}
-                    href={`/projects/${project.projectId}`}
-                    isSmaller={project.projectId === "flux"}
-                    {...project}
+                  <FeaturedProjectCard
+                    key={project.slug}
+                    project={project}
+                    href={`/projects?expand=${project.slug}`}
+                    isSmaller={project.slug === "flux"}
                   />
                 ))}
               </ProjectsContainer>
@@ -278,6 +299,9 @@ export default function Home({ discordWidget, isLive: serverIsLive, posts }: Hom
 
       <Head>
         <title>Nevulo - Software Engineer | Portfolio</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link href="https://fonts.googleapis.com/css2?family=Protest+Revolution&display=swap" rel="stylesheet" />
         <meta
           name="description"
           content="Software engineer based in Melbourne, Australia. Building exceptional digital experiences with modern web technologies."
@@ -312,7 +336,7 @@ export default function Home({ discordWidget, isLive: serverIsLive, posts }: Hom
       </Head>
         </>
       )}
-    </ScrollContainer>
+    </>
   );
 }
 
@@ -324,21 +348,6 @@ const AccountIcon = () => (
   </svg>
 );
 
-// Scroll container with snap effect
-const ScrollContainer = styled.div`
-  height: 100vh;
-  overflow-y: scroll;
-  scroll-snap-type: y mandatory;
-  scroll-behavior: smooth;
-
-  /* Hide scrollbar for cleaner look */
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-  &::-webkit-scrollbar {
-    display: none;
-  }
-`;
-
 const TopNavBar = styled.nav`
   position: fixed;
   top: 0;
@@ -347,29 +356,31 @@ const TopNavBar = styled.nav`
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 2rem;
-  padding: 0.5rem;
-  padding-top: calc(0.5rem + env(safe-area-inset-top, 0px));
+  padding: 8px 1rem;
+  padding-top: calc(8px + env(safe-area-inset-top, 0px));
   background: rgba(17, 17, 17, 0.8);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid rgba(79, 77, 193, 0.1);
   z-index: 999;
+`;
+
+const DesktopNavLinks = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
 
   @media (max-width: 768px) {
     gap: 1rem;
-    padding: 0.5rem;
-    padding-top: calc(0.5rem + env(safe-area-inset-top, 0px));
   }
 
   @media (max-width: 650px) {
-    gap: 0.6rem;
-    padding: 0.4rem 0.5rem;
-    padding-top: calc(0.4rem + env(safe-area-inset-top, 0px));
+    display: none;
   }
 `;
 
 const NavLink = styled(Link)`
-  font-family: "SF Mono", "Monaco", "Inconsolata", "Roboto Mono", "Courier New", monospace;
+  font-family: var(--font-mono);
   font-size: 12px;
   font-weight: 600;
   text-transform: uppercase;
@@ -382,16 +393,79 @@ const NavLink = styled(Link)`
   &:hover {
     opacity: 1;
   }
+`;
+
+const MobileMenuWrapper = styled.div`
+  position: absolute;
+  left: 1rem;
+  display: none;
+  z-index: 10000;
 
   @media (max-width: 650px) {
-    font-size: 10px;
-    letter-spacing: 0.8px;
+    display: flex;
+    align-items: center;
   }
 `;
 
-const DesktopAuthContainer = styled.div`
+const HamburgerButton = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: ${(props) => props.theme.contrast};
+  padding: 0;
+  cursor: pointer;
+  opacity: 0.8;
+  transition: opacity 0.2s ease;
+
+  &:hover {
+    opacity: 1;
+  }
+`;
+
+const MobileMenu = styled.div`
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  background: rgba(17, 17, 17, 0.98);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(79, 77, 193, 0.2);
+  border-radius: 8px;
+  padding: 0.5rem 0;
+  min-width: 150px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  z-index: 10000;
+`;
+
+const MobileNavLink = styled(Link)`
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: ${(props) => props.theme.contrast};
+  text-decoration: none;
+  padding: 0.75rem 1rem;
+  opacity: 0.7;
+  transition: all 0.2s ease;
+
+  &:hover {
+    opacity: 1;
+    background: rgba(79, 77, 193, 0.1);
+  }
+`;
+
+const AuthContainer = styled.div`
   position: absolute;
   right: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+`;
+
+const DesktopOnly = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
@@ -401,67 +475,8 @@ const DesktopAuthContainer = styled.div`
   }
 `;
 
-const MobileSignInBar = styled.div`
-  display: none;
-
-  @media (max-width: 650px) {
-    display: flex;
-    position: fixed;
-    top: calc(32px + env(safe-area-inset-top, 0px));
-    left: 0;
-    right: 0;
-    justify-content: flex-end;
-    padding: 0.5rem 1rem;
-    z-index: 998;
-  }
-`;
-
-const MobileBottomBar = styled.div`
-  display: none;
-
-  @media (max-width: 650px) {
-    display: flex;
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    padding: 0.75rem 1rem;
-    padding-bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
-    background: transparent;
-    z-index: 999;
-    justify-content: space-between;
-    align-items: center;
-  }
-`;
-
-const MobileBadgesContainer = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 6px;
-`;
-
-const MobileSignInButton = styled.button`
-  font-family: "SF Mono", "Monaco", "Inconsolata", "Roboto Mono", "Courier New", monospace;
-  font-size: 12px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  color: ${(props) => props.theme.contrast};
-  background: transparent;
-  border: none;
-  padding: 8px 0;
-  cursor: pointer;
-  opacity: 0.8;
-  transition: opacity 0.2s ease;
-  margin: 0 auto;
-
-  &:hover {
-    opacity: 1;
-  }
-`;
-
 const LoginButton = styled.button`
-  font-family: "SF Mono", "Monaco", "Inconsolata", "Roboto Mono", "Courier New", monospace;
+  font-family: var(--font-mono);
   font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
@@ -507,11 +522,18 @@ const SocialContainer = styled.div`
 const BackgroundImage = styled.div`
   position: fixed;
   inset: 0;
-  z-index: -1;
-  background-image: url('/background.jpg');
-  background-size: cover;
-  background-position: center;
-  opacity: 0.1;
+  z-index: 0;
+  background-color: ${(props) => props.theme.background};
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: url('/background.jpg');
+    background-size: cover;
+    background-position: center;
+    opacity: 0.1;
+  }
 `;
 
 // Full-screen section with snap
@@ -525,6 +547,7 @@ const Section = styled.section`
   padding: 2rem 1rem;
   padding-bottom: 15vh;
   position: relative;
+  z-index: 1;
 
   @media (max-width: 768px) {
     padding: 1.5rem 1rem;
@@ -572,7 +595,7 @@ const LogoWrapper = styled.div`
 const NevuloTitle = styled.h1`
   display: block;
   color: ${(props) => props.theme.contrast};
-  font-family: "Sixtyfour", monospace;
+  font-family: var(--font-display);
   font-weight: 400;
   line-height: clamp(64px, 7vmax, 72px);
   font-size: clamp(4vh, 5.6vmax, 82px);
@@ -633,7 +656,7 @@ const Badge = styled.div`
   color: ${(props) => props.theme.contrast};
   padding: 6px 14px;
   border-radius: 20px;
-  font-family: "SF Mono", "Monaco", "Inconsolata", "Roboto Mono", "Courier New", monospace;
+  font-family: var(--font-mono);
   font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
@@ -648,7 +671,7 @@ const NavButton = styled(Link)`
   color: ${(props) => props.theme.contrast};
   padding: 6px 14px;
   border-radius: 20px;
-  font-family: "SF Mono", "Monaco", "Inconsolata", "Roboto Mono", "Courier New", monospace;
+  font-family: var(--font-mono);
   font-size: 11.5px;
   font-weight: 600;
   text-transform: uppercase;
@@ -686,7 +709,7 @@ const ScrollHint = styled.div`
 `;
 
 const ScrollText = styled.p`
-  font-family: "SF Mono", "Monaco", "Inconsolata", "Roboto Mono", "Courier New", monospace;
+  font-family: var(--font-mono);
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 1.5px;
@@ -727,11 +750,11 @@ const SectionTitle = styled.h2`
   flex-direction: column;
   align-items: flex-start;
   gap: 0.25rem;
-  margin: 4rem 0 0 0;
+  margin: 2rem 0 0 0;
 `;
 
 const SectionTitlePrimary = styled.span`
-  font-family: "Sixtyfour", monospace;
+  font-family: var(--font-display);
   font-weight: 400;
   font-size: clamp(16px, 2.5vw, 24px);
   color: ${(props) => props.theme.contrast};
@@ -741,7 +764,7 @@ const SectionTitlePrimary = styled.span`
 `;
 
 const SectionTitleSecondary = styled.span`
-  font-family: "Sixtyfour", monospace;
+  font-family: var(--font-display);
   font-weight: 400;
   font-size: clamp(32px, 5vw, 48px);
   color: ${(props) => props.theme.contrast};
@@ -750,7 +773,7 @@ const SectionTitleSecondary = styled.span`
 `;
 
 const ViewAllLink = styled(Link)`
-  font-family: "SF Mono", "Monaco", "Inconsolata", "Roboto Mono", "Courier New", monospace;
+  font-family: var(--font-mono);
   font-size: 13px;
   color: ${(props) => props.theme.contrast};
   text-decoration: none;
@@ -763,13 +786,87 @@ const ViewAllLink = styled(Link)`
   }
 `;
 
-// Preview containers
-const PreviewContainer = styled.div`
+// Learn section styles
+const LearnSectionContent = styled.div`
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 6rem 0;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
-  width: 100%;
+  gap: 1rem;
 `;
+
+const LearnSectionHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  padding: 0 24px;
+  margin-bottom: 0.5rem;
+
+  @media (max-width: 900px) {
+    padding: 0 16px;
+  }
+`;
+
+const LearnTitle = styled.h2`
+  margin: 0;
+  font-size: 80px;
+  font-weight: 900;
+  color: ${(props) => props.theme.contrast};
+  font-family: 'Protest Revolution', cursive;
+  letter-spacing: 2px;
+  transform: rotate(-3deg);
+  line-height: 1;
+
+  @media (max-width: 768px) {
+    font-size: 56px;
+  }
+`;
+
+const SkeletonBentoGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  grid-auto-rows: 200px;
+  grid-auto-flow: dense;
+  gap: 16px;
+  padding: 0 24px;
+
+  @media (max-width: 1200px) {
+    grid-template-columns: repeat(4, 1fr);
+    grid-auto-rows: 180px;
+  }
+
+  @media (max-width: 900px) {
+    grid-template-columns: repeat(2, 1fr);
+    grid-auto-rows: 180px;
+    gap: 14px;
+    padding: 0 16px;
+  }
+
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+    grid-auto-rows: auto;
+    gap: 16px;
+  }
+`;
+
+const SkeletonBentoCard = styled(Skeleton)<{ $cols: number; $rows: number }>`
+  border-radius: 16px;
+  grid-column: span ${(p) => p.$cols};
+  grid-row: span ${(p) => p.$rows};
+
+  @media (max-width: 900px) {
+    grid-column: span ${(p) => Math.min(p.$cols, 2)};
+  }
+
+  @media (max-width: 600px) {
+    grid-column: span 1 !important;
+    grid-row: span 1 !important;
+    min-height: 200px;
+  }
+`;
+
 
 const ProjectsContainer = styled.div`
   display: flex;
@@ -779,17 +876,15 @@ const ProjectsContainer = styled.div`
 `;
 
 export async function getStaticProps() {
-  const [discordWidget, isLive, posts] = await Promise.all([
+  const [discordWidget, isLive] = await Promise.all([
     fetchDiscordWidget(),
     checkTwitchLiveStatus(),
-    getFile("blogmap.json"),
   ]);
 
   return {
     props: {
       discordWidget,
       isLive,
-      posts: posts || [],
     },
     revalidate: 60, // Revalidate every 60 seconds
   };

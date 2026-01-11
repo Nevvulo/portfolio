@@ -46,7 +46,7 @@ export const ProjectBadges: React.FC<BadgesProps> = ({ roles, technologies }) =>
 type BadgeProps = { $background: string };
 const Badge = styled(m.div)<BadgeProps>`
   padding: 0.6em 0.75em;
-  font-family: "Inter", sans-serif;
+  font-family: var(--font-sans);
   letter-spacing: -0.2px;
   font-weight: 600;
   border-radius: 6px;
@@ -106,7 +106,7 @@ const BadgeRow = styled(Container)`
 const Subtitle = styled.p`
   text-transform: uppercase;
   font-size: 14px;
-  font-family: "Inter", sans-serif;
+  font-family: var(--font-sans);
   letter-spacing: -0.25px;
   margin: 0.5em 0 0.4em 0;
   font-weight: 600;

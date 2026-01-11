@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import type { EmbedType } from "../../../types/lounge";
+import { lookup } from "dns/promises";
 
 export const config = {
   api: {
@@ -15,6 +16,79 @@ interface UnfurlResponse {
   thumbnail?: string;
   siteName?: string;
   embedUrl?: string;
+}
+
+/**
+ * SECURITY: Check if an IP address is private/internal
+ * Blocks SSRF attacks against internal networks and cloud metadata
+ */
+function isPrivateIp(ip: string): boolean {
+  const parts = ip.split(".").map(Number);
+  if (parts.length !== 4 || parts.some((p) => isNaN(p) || p < 0 || p > 255)) {
+    // IPv6 or invalid - be conservative and block
+    return true;
+  }
+
+  const [a, b] = parts;
+
+  // Localhost: 127.0.0.0/8
+  if (a === 127) return true;
+
+  // Private: 10.0.0.0/8
+  if (a === 10) return true;
+
+  // Private: 172.16.0.0/12
+  if (a === 172 && b >= 16 && b <= 31) return true;
+
+  // Private: 192.168.0.0/16
+  if (a === 192 && b === 168) return true;
+
+  // Link-local: 169.254.0.0/16 (includes AWS metadata 169.254.169.254)
+  if (a === 169 && b === 254) return true;
+
+  // Loopback: 0.0.0.0
+  if (a === 0) return true;
+
+  return false;
+}
+
+/**
+ * SECURITY: Check if hostname is safe to fetch (not internal)
+ */
+async function isHostnameSafe(hostname: string): Promise<boolean> {
+  // Block obvious internal hostnames
+  const internalPatterns = [
+    /^localhost$/i,
+    /^127\./,
+    /^10\./,
+    /^172\.(1[6-9]|2[0-9]|3[01])\./,
+    /^192\.168\./,
+    /^169\.254\./,
+    /^0\./,
+    /\.local$/i,
+    /\.internal$/i,
+    /\.localhost$/i,
+  ];
+
+  for (const pattern of internalPatterns) {
+    if (pattern.test(hostname)) {
+      return false;
+    }
+  }
+
+  // Resolve hostname to IP and check if it's private
+  try {
+    const { address } = await lookup(hostname);
+    if (isPrivateIp(address)) {
+      return false;
+    }
+  } catch {
+    // DNS resolution failed - could be trying to access something weird
+    // Be conservative and block
+    return false;
+  }
+
+  return true;
 }
 
 // YouTube URL patterns
@@ -73,6 +147,12 @@ export default async function handler(
     // Only allow http and https
     if (!["http:", "https:"].includes(parsedUrl.protocol)) {
       return res.status(400).json({ error: "Only HTTP/HTTPS URLs are supported" });
+    }
+
+    // SECURITY: Block SSRF attacks against internal networks
+    const isSafe = await isHostnameSafe(parsedUrl.hostname);
+    if (!isSafe) {
+      return res.status(400).json({ error: "URL not allowed" });
     }
 
     // Check for YouTube

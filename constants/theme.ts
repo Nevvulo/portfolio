@@ -4,7 +4,7 @@ export const DarkTheme = {
   contrast: "#fff",
   pure: "#fff",
   textColor: "#bdbdbd",
-  postBackground: "rgba(50, 50, 50, 0.5)",
+  postBackground: "rgba(38, 32, 58, 0.7)",
   postImageLoadingBackground: "#1c1730",
   postImageLoadingBackgroundShimmerRgb: "42, 35, 66",
   postDescriptionText: "rgb(174 174 174)",
@@ -12,9 +12,9 @@ export const DarkTheme = {
   postImageBoxShadow: "rgba(0, 0, 0, 0.5)",
   subscriptionBackground: "rgba(247, 190, 92, 0.2)",
   subscriptionText: "#f7be5c",
-  difficultyBeginnerBackground: "rgb(0 132 72)",
-  difficultyIntermediateBackground: "rgb(0 108 150)",
-  difficultyAdvancedBackground: "rgb(168 87 76 / 96%)",
+  difficultyBeginnerBackground: "#2d6b4f",
+  difficultyIntermediateBackground: "#3d5a80",
+  difficultyAdvancedBackground: "#7b3b5c",
 };
 
 export const LightTheme = {

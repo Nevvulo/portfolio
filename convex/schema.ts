@@ -12,6 +12,8 @@ export default defineSchema({
     tier: v.union(v.literal("free"), v.literal("tier1"), v.literal("tier2")),
     tierValidUntil: v.optional(v.number()), // timestamp
     isCreator: v.boolean(), // Discord ID: 246574843460321291
+    // Role system: 0 = normal member, 1 = staff, 2 = creator-only
+    role: v.optional(v.number()),
     status: v.union(v.literal("online"), v.literal("offline"), v.literal("away")),
     lastSeenAt: v.number(),
     notificationPreferences: v.object({
@@ -42,6 +44,16 @@ export default defineSchema({
     banReason: v.optional(v.string()),
     bannedAt: v.optional(v.number()),
     kickedAt: v.optional(v.number()),
+    // Experience/Level system
+    level: v.optional(v.number()),           // Current level (starts at 1)
+    experience: v.optional(v.number()),      // XP towards next level
+    totalExperience: v.optional(v.number()), // All-time XP earned
+    // User feed settings
+    feedPrivacy: v.optional(v.union(
+      v.literal("everyone"),      // Anyone can post on feed
+      v.literal("approval"),      // Contributions require approval
+      v.literal("owner_only")     // Only profile owner can post
+    )),
     createdAt: v.number(),
   })
     .index("by_clerkId", ["clerkId"])
@@ -255,12 +267,21 @@ export default defineSchema({
       v.literal("new_content"),
       v.literal("reward"),
       v.literal("giveaway_win"),
-      v.literal("channel_message")
+      v.literal("channel_message"),
+      // Comment & feed notifications
+      v.literal("comment_reply"),
+      v.literal("collaborator_added"),
+      v.literal("comment_reaction"),
+      v.literal("feed_reply"),
+      v.literal("feed_reaction")
     ),
     referenceType: v.optional(v.union(
       v.literal("message"),
       v.literal("contentPost"),
-      v.literal("reward")
+      v.literal("reward"),
+      v.literal("blogComment"),
+      v.literal("blogPost"),
+      v.literal("feedPost")
     )),
     referenceId: v.optional(v.string()), // message/post/reward ID
     channelId: v.optional(v.id("channels")),
@@ -428,4 +449,564 @@ export default defineSchema({
     liveStreamStartedAt: v.optional(v.number()),
     updatedAt: v.number(),
   }),
+
+  // ============================================
+  // BLOG / LEARN SECTION
+  // ============================================
+
+  // Blog Post Content - separated for bandwidth optimization
+  // List queries read only metadata (~5KB), content loaded separately (~200KB)
+  blogPostContent: defineTable({
+    postId: v.id("blogPosts"),
+    content: v.string(), // MDX content
+  })
+    .index("by_post", ["postId"]),
+
+  // Blog Posts - migrated from Git, now stored in Convex
+  blogPosts: defineTable({
+    // Core content
+    slug: v.string(),
+    title: v.string(),
+    description: v.string(),
+    content: v.optional(v.string()), // DEPRECATED: Use blogPostContent table
+    contentType: v.union(
+      v.literal("article"),
+      v.literal("video"),
+      v.literal("news")
+    ),
+
+    // Media
+    coverImage: v.optional(v.string()), // Vercel Blob URL
+    coverAuthor: v.optional(v.string()), // Photo credit
+    coverAuthorUrl: v.optional(v.string()),
+    coverGradientIntensity: v.optional(v.number()), // 0-100, defaults to 100
+    youtubeId: v.optional(v.string()), // For video content type
+
+    // Author & metadata
+    authorId: v.id("users"),
+    collaborators: v.optional(v.array(v.id("users"))), // Users who can edit this post
+    labels: v.array(v.string()),
+    difficulty: v.optional(v.union(
+      v.literal("beginner"),
+      v.literal("intermediate"),
+      v.literal("advanced")
+    )),
+    readTimeMins: v.optional(v.number()),
+    keyIdeas: v.optional(v.array(v.string())),
+    location: v.optional(v.string()), // Where it was written
+
+    // AI disclosure - optional, computed from publishedAt if not set
+    aiDisclosureStatus: v.optional(v.union(
+      v.literal("none"),
+      v.literal("llm-assisted"),
+      v.literal("llm-reviewed")
+    )),
+
+    // Visibility & access
+    status: v.union(
+      v.literal("draft"),
+      v.literal("published"),
+      v.literal("archived")
+    ),
+    visibility: v.union(
+      v.literal("public"),
+      v.literal("members"),
+      v.literal("tier1"),
+      v.literal("tier2")
+    ),
+
+    // Bento layout
+    bentoSize: v.union(
+      v.literal("small"),
+      v.literal("medium"),
+      v.literal("large"),
+      v.literal("banner"),
+      v.literal("featured")
+    ),
+    bentoOrder: v.number(),
+
+    // External links (legacy from blogmap)
+    mediumUrl: v.optional(v.string()),
+    hashnodeUrl: v.optional(v.string()),
+    devToUrl: v.optional(v.string()),
+    discussionId: v.optional(v.string()),
+    discussionNo: v.optional(v.number()),
+
+    // Discord integration - for forum thread comments sync
+    discordThreadId: v.optional(v.string()),   // Forum thread ID (if forum channel)
+    discordMessageId: v.optional(v.string()),  // Announcement message ID (if text channel)
+    discordChannelId: v.optional(v.string()),  // Which channel it was posted to
+
+    // Analytics
+    viewCount: v.number(),
+
+    // Timestamps
+    publishedAt: v.optional(v.number()),
+    createdAt: v.number(),
+    updatedAt: v.optional(v.number()),
+  })
+    .index("by_slug", ["slug"])
+    .index("by_status", ["status", "publishedAt"])
+    .index("by_author", ["authorId"])
+    .index("by_visibility", ["visibility", "status"])
+    .index("by_contentType", ["contentType", "status"])
+    .index("by_bentoOrder", ["bentoOrder"])
+    .index("by_discordThreadId", ["discordThreadId"]),
+
+  // Blog Views - one view per account per post for analytics
+  blogViews: defineTable({
+    postId: v.id("blogPosts"),
+    userId: v.id("users"),
+    viewedAt: v.number(),
+  })
+    .index("by_post", ["postId"])
+    .index("by_user", ["userId"])
+    .index("by_user_post", ["userId", "postId"]),
+
+  // Blog Comments
+  blogComments: defineTable({
+    postId: v.id("blogPosts"),
+    authorId: v.optional(v.id("users")), // Optional for Discord-only commenters
+    content: v.string(), // Markdown
+    parentId: v.optional(v.id("blogComments")), // For replies
+    isEdited: v.boolean(),
+    isDeleted: v.boolean(),
+    createdAt: v.number(),
+    editedAt: v.optional(v.number()),
+    // Discord sync fields
+    discordMessageId: v.optional(v.string()),   // If synced to/from Discord
+    discordAuthor: v.optional(v.object({        // For Discord-originated comments
+      id: v.string(),
+      username: v.string(),
+      discriminator: v.optional(v.string()),
+      avatarUrl: v.optional(v.string()),
+    })),
+    source: v.optional(v.union(
+      v.literal("website"),
+      v.literal("discord")
+    )),
+  })
+    .index("by_post", ["postId", "createdAt"])
+    .index("by_author", ["authorId"])
+    .index("by_parent", ["parentId"])
+    .index("by_discordMessageId", ["discordMessageId"]),
+
+  // Blog Reactions - for engagement scoring (supports multiple per user per post)
+  blogReactions: defineTable({
+    postId: v.id("blogPosts"),
+    userId: v.id("users"),
+    type: v.union(
+      v.literal("like"),
+      v.literal("helpful"),
+      v.literal("insightful")
+    ),
+    createdAt: v.number(),
+  })
+    .index("by_post", ["postId"])
+    .index("by_user_post", ["userId", "postId"])
+    .index("by_user", ["userId", "createdAt"]),
+
+  // Blog Interaction Scores - for personalized recommendations
+  blogInteractions: defineTable({
+    postId: v.id("blogPosts"),
+    userId: v.id("users"),
+    score: v.number(), // Weighted interaction score
+    lastInteraction: v.number(),
+  })
+    .index("by_user", ["userId", "score"])
+    .index("by_post", ["postId"]),
+
+  // Article Watch Time - granular tracking for recommendations
+  articleWatchTime: defineTable({
+    postId: v.id("blogPosts"),
+    userId: v.id("users"),
+    totalSeconds: v.number(),
+    lastHeartbeat: v.number(),
+    sessionId: v.string(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_post", ["postId"])
+    .index("by_user_post", ["userId", "postId"]),
+
+  // Blog Comment Reports - for moderation
+  blogCommentReports: defineTable({
+    commentId: v.id("blogComments"),
+    reporterId: v.id("users"),
+    reason: v.optional(v.string()),
+    status: v.union(v.literal("pending"), v.literal("reviewed"), v.literal("dismissed")),
+    createdAt: v.number(),
+    resolvedAt: v.optional(v.number()),
+  })
+    .index("by_comment", ["commentId"])
+    .index("by_status", ["status", "createdAt"]),
+
+  // Blog Comment Reactions - emoji reactions on blog comments
+  blogCommentReactions: defineTable({
+    commentId: v.id("blogComments"),
+    postId: v.id("blogPosts"),     // Denormalized for efficient queries
+    userId: v.id("users"),
+    type: v.union(
+      v.literal("heart"),
+      v.literal("thumbs_up"),
+      v.literal("eyes"),
+      v.literal("fire"),
+      v.literal("thinking"),
+      v.literal("laugh")
+    ),
+    createdAt: v.number(),
+  })
+    .index("by_comment", ["commentId"])
+    .index("by_post", ["postId"])
+    .index("by_user_comment", ["userId", "commentId"]),
+
+  // Content Reports - for blog post content moderation
+  contentReports: defineTable({
+    postId: v.id("blogPosts"),
+    reporterId: v.id("users"),
+    category: v.union(
+      v.literal("content_quality"),    // Typo, spelling mistake
+      v.literal("factual_error"),      // Misreporting, misunderstanding
+      v.literal("dislike"),            // Don't like the content
+      v.literal("infringement"),       // Copyright/legal issue
+      v.literal("contact_request"),    // Wants to get in touch
+      v.literal("mention_removal"),    // Mentioned and wants removal
+      v.literal("other")               // Something else
+    ),
+    reason: v.optional(v.string()),    // Freeform text explanation
+    status: v.union(
+      v.literal("pending"),
+      v.literal("reviewed"),
+      v.literal("dismissed")
+    ),
+    createdAt: v.number(),
+    resolvedAt: v.optional(v.number()),
+  })
+    .index("by_post", ["postId"])
+    .index("by_status", ["status", "createdAt"])
+    .index("by_reporter", ["reporterId"]),
+
+  // Blog Comment Wormhole - Discord ↔ Convex comment ID mapping for sync
+  blogCommentWormhole: defineTable({
+    blogCommentId: v.id("blogComments"),
+    discordMessageId: v.string(),
+    discordThreadId: v.string(),
+    postId: v.id("blogPosts"),
+    createdAt: v.number(),
+  })
+    .index("by_blogComment", ["blogCommentId"])
+    .index("by_discordMessage", ["discordMessageId"])
+    .index("by_thread", ["discordThreadId"]),
+
+  // News Items - quick snippets with Discord webhook
+  newsItems: defineTable({
+    title: v.string(),
+    content: v.string(), // Short markdown (max 500 chars)
+    authorId: v.id("users"),
+    isPublished: v.boolean(),
+    sentToDiscord: v.boolean(),
+    discordMessageId: v.optional(v.string()),
+    createdAt: v.number(),
+  })
+    .index("by_published", ["isPublished", "createdAt"]),
+
+  // ============================================
+  // EXPERIENCE SYSTEM
+  // ============================================
+
+  // Experience Events - tracks XP grants to prevent farming
+  experienceEvents: defineTable({
+    userId: v.id("users"),
+    type: v.union(
+      v.literal("post_view"),      // 1-3 XP, once per post per day
+      v.literal("news_read"),      // 2 XP, once per news per day
+      v.literal("reaction"),       // 1 XP, first reaction on post (ever)
+      v.literal("comment"),        // 2-3 XP, max 5 per day
+      v.literal("time_on_site")    // 3-10 XP per 10 mins
+    ),
+    referenceId: v.optional(v.string()), // postId for views/reactions, null for time
+    xpGranted: v.number(),
+    date: v.string(), // "YYYY-MM-DD" for daily limits
+    createdAt: v.number(),
+  })
+    .index("by_user_date", ["userId", "date"])
+    .index("by_user_type_date", ["userId", "type", "date"])
+    .index("by_user_type_ref", ["userId", "type", "referenceId"]),
+
+  // Time tracking sessions for XP
+  timeTrackingSessions: defineTable({
+    userId: v.id("users"),
+    sessionStart: v.number(),
+    lastHeartbeat: v.number(),
+    totalMinutes: v.number(), // Minutes tracked this session
+    xpGrantedThisSession: v.number(),
+    date: v.string(), // "YYYY-MM-DD"
+  })
+    .index("by_user", ["userId"])
+    .index("by_user_date", ["userId", "date"]),
+
+  // ============================================
+  // ADMIN SETTINGS (singleton)
+  // ============================================
+
+  adminSettings: defineTable({
+    // YouTube PubSubHubbub integration
+    youtube: v.optional(v.object({
+      channelId: v.string(),
+      autoPublish: v.boolean(),
+      defaultLabels: v.array(v.string()),
+      defaultVisibility: v.union(
+        v.literal("public"),
+        v.literal("members"),
+        v.literal("tier1"),
+        v.literal("tier2")
+      ),
+      subscriptionExpiresAt: v.optional(v.number()),
+      lastVideoProcessed: v.optional(v.string()),
+      callbackSecret: v.optional(v.string()),
+    })),
+
+    // Discord blog integration
+    discord: v.optional(v.object({
+      // Auth preference - whether to post as user account or bot
+      useUserToken: v.boolean(), // false = bot token, true = user token from env
+
+      // Master enable/disable
+      botEnabled: v.boolean(),
+
+      // Channel config per content type
+      channels: v.object({
+        article: v.optional(v.object({
+          channelId: v.string(),
+          channelType: v.union(v.literal("forum"), v.literal("text")),
+          webhookUrl: v.optional(v.string()), // For text channels only
+        })),
+        video: v.optional(v.object({
+          channelId: v.string(),
+          channelType: v.union(v.literal("forum"), v.literal("text")),
+          webhookUrl: v.optional(v.string()),
+        })),
+        news: v.optional(v.object({
+          channelId: v.string(),
+          channelType: v.union(v.literal("forum"), v.literal("text")),
+          webhookUrl: v.optional(v.string()),
+        })),
+      }),
+
+      // Comment webhook - sends notifications when users comment on posts
+      commentWebhook: v.optional(v.object({
+        webhookUrl: v.string(),
+        enabled: v.boolean(),
+      })),
+    })),
+
+    updatedAt: v.number(),
+  }),
+
+  // ============================================
+  // PROJECTS PORTFOLIO
+  // ============================================
+
+  // Technologies - for project badges
+  technologies: defineTable({
+    key: v.string(),      // "REACT", "TYPESCRIPT"
+    label: v.string(),    // "React", "TypeScript"
+    color: v.string(),    // hex color
+  }).index("by_key", ["key"]),
+
+  // Roles - for project badges
+  roles: defineTable({
+    key: v.string(),          // "DEVELOPER", "LEAD_DEVELOPER"
+    label: v.string(),        // "Developer", "Lead Developer"
+    description: v.string(),  // Tooltip description
+    color: v.string(),        // hex color
+  }).index("by_key", ["key"]),
+
+  // Projects - portfolio projects
+  projects: defineTable({
+    slug: v.string(),
+    name: v.string(),
+    shortDescription: v.string(),
+    background: v.string(),              // CSS gradient
+    logoUrl: v.optional(v.string()),     // path to static asset
+    logoDarkUrl: v.optional(v.string()), // dark mode variant
+    logoWidth: v.optional(v.number()),
+    logoHeight: v.optional(v.number()),
+    logoIncludesName: v.optional(v.boolean()), // false = show title alongside logo
+    status: v.union(v.literal("active"), v.literal("inactive")),
+    maintained: v.boolean(),
+    timeline: v.object({
+      startYear: v.number(),
+      endYear: v.optional(v.number()),
+      startMonth: v.optional(v.number()),
+      endMonth: v.optional(v.number()),
+    }),
+    links: v.optional(v.object({
+      github: v.optional(v.string()),
+      website: v.optional(v.string()),
+    })),
+    technologies: v.array(v.string()),   // keys referencing technologies table
+    roles: v.array(v.string()),          // keys referencing roles table
+    contentSections: v.array(v.object({
+      id: v.string(),
+      emoji: v.optional(v.string()),
+      header: v.string(),
+      subheader: v.optional(v.string()),
+      subheaderColor: v.optional(v.string()),
+      text: v.string(),
+    })),
+    order: v.number(),
+    createdAt: v.number(),
+    updatedAt: v.optional(v.number()),
+  })
+    .index("by_slug", ["slug"])
+    .index("by_status", ["status"])
+    .index("by_order", ["order"]),
+
+  // ============================================
+  // CONTENT HIGHLIGHTS (Medium-style highlighting)
+  // ============================================
+
+  // Text highlights on blog posts - with text anchoring for resilience
+  contentHighlights: defineTable({
+    postId: v.id("blogPosts"),
+    userId: v.id("users"),
+
+    // Text anchoring (survives content edits)
+    highlightedText: v.string(),         // The selected text
+    prefix: v.string(),                  // ~80 chars before highlight
+    suffix: v.string(),                  // ~80 chars after highlight
+
+    // If true, this is a reaction-only anchor (no visible highlight mark)
+    isReactionOnly: v.optional(v.boolean()),
+
+    createdAt: v.number(),
+  })
+    .index("by_post", ["postId"])
+    .index("by_user", ["userId", "createdAt"])      // Query all user's highlights (sorted by date)
+    .index("by_user_post", ["userId", "postId"]),   // Check user's highlights on specific post
+
+  // Inline comments on highlights
+  contentComments: defineTable({
+    highlightId: v.id("contentHighlights"),
+    postId: v.id("blogPosts"),             // Denormalized for efficient queries
+    authorId: v.id("users"),
+    content: v.string(),                   // Markdown content
+    parentId: v.optional(v.id("contentComments")), // Threading support
+    isEdited: v.boolean(),
+    isDeleted: v.boolean(),
+    createdAt: v.number(),
+    editedAt: v.optional(v.number()),
+  })
+    .index("by_highlight", ["highlightId"])
+    .index("by_post", ["postId"])
+    .index("by_author", ["authorId"]),
+
+  // Inline reactions on highlights (emoji style)
+  contentReactions: defineTable({
+    highlightId: v.id("contentHighlights"),
+    postId: v.id("blogPosts"),             // Denormalized
+    userId: v.id("users"),
+    type: v.union(
+      v.literal("fire"),
+      v.literal("heart"),
+      v.literal("plus1"),
+      v.literal("eyes"),
+      v.literal("question")
+    ),
+    createdAt: v.number(),
+  })
+    .index("by_highlight", ["highlightId"])
+    .index("by_post", ["postId"])
+    .index("by_user_highlight", ["userId", "highlightId"]),
+
+  // ============================================
+  // User Profile Feed System
+  // ============================================
+
+  // User feed posts - supports unlimited threading depth
+  userFeedPosts: defineTable({
+    // Core content
+    authorId: v.id("users"),               // Who wrote this post
+    profileUserId: v.id("users"),          // Whose profile this appears on
+    content: v.string(),                   // Limited markdown (bold, italics only)
+
+    // Threading (unlimited depth, Reddit-style)
+    parentId: v.optional(v.id("userFeedPosts")),  // Parent post (for replies)
+    rootId: v.optional(v.id("userFeedPosts")),    // Root post of thread (denormalized)
+    replyDepth: v.number(),                        // 0 = root, 1+ = nested reply
+    replyCount: v.number(),                        // Direct reply count (denormalized)
+
+    // Media attachments (Vercel Blob)
+    media: v.optional(v.array(v.object({
+      type: v.union(v.literal("image"), v.literal("video")),
+      url: v.string(),
+      filename: v.string(),
+      mimeType: v.string(),
+      fileSize: v.number(),
+      width: v.optional(v.number()),
+      height: v.optional(v.number()),
+    }))),
+
+    // Resharing support
+    repostOfPostId: v.optional(v.id("blogPosts")),      // Learn post being shared
+    repostOfFeedId: v.optional(v.id("userFeedPosts")),  // Feed post being shared
+
+    // Moderation
+    moderationScore: v.optional(v.number()),  // 0-1 from AI scoring
+    moderationFlags: v.optional(v.array(v.string())),  // ["spam", "toxic", etc.]
+    isHidden: v.boolean(),                    // Hidden by moderation
+    isDeleted: v.boolean(),                   // Soft delete
+
+    // Timestamps
+    createdAt: v.number(),
+    editedAt: v.optional(v.number()),
+  })
+    .index("by_profile", ["profileUserId", "isDeleted", "createdAt"])
+    .index("by_profile_root", ["profileUserId", "parentId", "isDeleted", "createdAt"])  // Root posts only
+    .index("by_author", ["authorId", "createdAt"])
+    .index("by_parent", ["parentId", "createdAt"])
+    .index("by_root", ["rootId", "createdAt"]),
+
+  // Pending feed contributions (for approval mode)
+  pendingFeedPosts: defineTable({
+    profileUserId: v.id("users"),          // Whose profile this would appear on
+    authorId: v.id("users"),               // Who submitted
+    content: v.string(),
+    parentId: v.optional(v.id("userFeedPosts")),  // If replying to existing post
+    media: v.optional(v.array(v.object({
+      type: v.union(v.literal("image"), v.literal("video")),
+      url: v.string(),
+      filename: v.string(),
+      mimeType: v.string(),
+      fileSize: v.number(),
+      width: v.optional(v.number()),
+      height: v.optional(v.number()),
+    }))),
+    status: v.union(
+      v.literal("pending"),
+      v.literal("approved"),
+      v.literal("rejected")
+    ),
+    rejectReason: v.optional(v.string()),
+    createdAt: v.number(),
+    reviewedAt: v.optional(v.number()),
+  })
+    .index("by_profile_status", ["profileUserId", "status", "createdAt"])
+    .index("by_author", ["authorId", "createdAt"]),
+
+  // User feed reactions (likes on feed posts)
+  userFeedReactions: defineTable({
+    postId: v.id("userFeedPosts"),
+    userId: v.id("users"),
+    type: v.union(
+      v.literal("like"),
+      v.literal("heart"),
+      v.literal("fire")
+    ),
+    createdAt: v.number(),
+  })
+    .index("by_post", ["postId"])
+    .index("by_user_post", ["userId", "postId"]),
 });

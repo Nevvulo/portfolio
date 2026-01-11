@@ -2,7 +2,7 @@ import styled from "styled-components";
 
 export const Labels = styled.div`
   border-radius: 8px;
-  padding: 0.2em 0 0.45em 0;
+  margin-top: 0.5em;
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
@@ -12,12 +12,13 @@ export const Labels = styled.div`
 `;
 
 export const Label = styled.div`
-  background: #7a3cbd;
-  padding: 0.07em 0.5em;
-  border: 0.1px solid #212121;
-  box-shadow: 2px 2px 0px black;
-  font-family: "Fira Code", monospace;
-  font-size: 12px;
+  background: rgba(79, 77, 193, 0.15);
+  padding: 0.1em 0.6em;
+  border: 1px solid rgba(79, 77, 193, 0.3);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
   border-radius: 4px;
-  color: white;
+  color: #a5a3f5;
+  text-transform: lowercase;
 `;

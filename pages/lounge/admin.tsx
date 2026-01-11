@@ -1,6 +1,6 @@
 import Head from "next/head";
 import styled from "styled-components";
-import { useQuery, useMutation } from "convex/react";
+import { useQuery, useMutation, useAction } from "convex/react";
 import { useEffect, useState } from "react";
 import { api } from "../../convex/_generated/api";
 import { LoungeLayout } from "../../components/lounge/layout/LoungeLayout";
@@ -58,28 +58,21 @@ export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<TabType>("analytics");
   const { isLoading, isCreator, user, tier, displayName, avatarUrl } = useTierAccess();
 
-  const getOrCreateUser = useMutation(api.users.getOrCreateUser);
+  const getOrCreateUser = useAction(api.users.getOrCreateUser);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
+  // SECURITY: Server fetches verified discordId and tier from Clerk
   useEffect(() => {
-    if (!mounted || isLoading || !user || !tier || userReady) return;
-
-    const discordAccount = user.externalAccounts?.find(
-      (account) => account.provider === "discord"
-    );
-    // Clerk stores Discord user ID in providerUserId (preferred) or externalId
-    const discordId = (discordAccount as any)?.providerUserId || (discordAccount as any)?.externalId;
+    if (!mounted || isLoading || !user || userReady) return;
 
     getOrCreateUser({
       displayName: displayName || "Anonymous",
       avatarUrl: avatarUrl,
-      tier: tier,
-      discordId: discordId,
     }).then(() => setUserReady(true)).catch(() => setUserReady(true));
-  }, [mounted, isLoading, user, tier, displayName, avatarUrl, userReady, getOrCreateUser]);
+  }, [mounted, isLoading, user, displayName, avatarUrl, userReady, getOrCreateUser]);
 
   if (isLoading || !userReady) {
     return (
@@ -495,8 +488,20 @@ function UsersTab() {
   const setUserRole = useMutation(api.users.setUserRole);
 
   const [filter, setFilter] = useState<"all" | "tier1" | "tier2" | "banned">("all");
+  const [searchQuery, setSearchQuery] = useState("");
 
   const filteredUsers = users?.filter((u) => {
+    // Apply search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      const matchesSearch =
+        u.displayName?.toLowerCase().includes(query) ||
+        u.username?.toLowerCase().includes(query) ||
+        u._id.toString().includes(query);
+      if (!matchesSearch) return false;
+    }
+
+    // Apply tier/status filter
     if (filter === "banned") return u.isBanned;
     if (filter === "tier1") return u.tier === "tier1";
     if (filter === "tier2") return u.tier === "tier2";
@@ -535,6 +540,13 @@ function UsersTab() {
         </FilterGroup>
       </SectionHeader>
 
+      <SearchInput
+        type="text"
+        placeholder="Search by name, username, or ID..."
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+      />
+
       <UserList>
         {filteredUsers?.map((u) => (
           <UserItem key={u._id} $banned={u.isBanned}>
@@ -542,11 +554,15 @@ function UsersTab() {
             <UserInfo>
               <UserName>
                 {u.displayName}
+                {u.username && <UsernameText>@{u.username}</UsernameText>}
                 {u.isCreator && <StaffBadge>staff</StaffBadge>}
                 {u.isBanned && <BannedBadge>Banned</BannedBadge>}
               </UserName>
               <UserMeta>
-                {u.tier === "tier2" ? "VIP" : "Member"} | Last seen: {u.lastSeenAt ? new Date(u.lastSeenAt).toLocaleDateString() : "Never"}
+                {u.tier === "tier2" ? "VIP" : u.tier === "tier1" ? "Tier 1" : "Member"} | Last seen: {u.lastSeenAt ? new Date(u.lastSeenAt).toLocaleDateString() : "Never"}
+                {u.isBanned && u.banReason && (
+                  <BanReason> | Reason: {u.banReason}</BanReason>
+                )}
               </UserMeta>
             </UserInfo>
             {!u.isCreator && (
@@ -1554,6 +1570,9 @@ function RewardsTab() {
 
 // Styled Components
 const AdminContainer = styled.div`
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
   height: 100%;
   overflow-y: auto;
   padding: 1.5rem;
@@ -1952,6 +1971,26 @@ const FilterButton = styled.button<{ $active: boolean }>`
   &:hover { background: ${LOUNGE_COLORS.channelHover}; }
 `;
 
+const SearchInput = styled.input`
+  width: 100%;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  background: ${LOUNGE_COLORS.glassBackground};
+  border: 1px solid ${LOUNGE_COLORS.glassBorder};
+  border-radius: 8px;
+  color: #fff;
+  font-size: 0.9rem;
+
+  &::placeholder {
+    color: rgba(255, 255, 255, 0.4);
+  }
+
+  &:focus {
+    outline: none;
+    border-color: ${LOUNGE_COLORS.tier1};
+  }
+`;
+
 const UserList = styled.div`
   background: ${LOUNGE_COLORS.glassBackground};
   border: 1px solid ${LOUNGE_COLORS.glassBorder};
@@ -1989,7 +2028,7 @@ const UserName = styled.div`
 const StaffBadge = styled.span`
   margin-left: auto;
   font-size: 0.55rem;
-  font-family: "Sixtyfour", monospace;
+  font-family: var(--font-display);
   background: linear-gradient(135deg, ${LOUNGE_COLORS.tier1}, ${LOUNGE_COLORS.tier2});
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -2007,6 +2046,17 @@ const BannedBadge = styled.span`
 const UserMeta = styled.div`
   font-size: 0.75rem;
   color: rgba(255, 255, 255, 0.5);
+`;
+
+const UsernameText = styled.span`
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.4);
+  margin-left: 6px;
+`;
+
+const BanReason = styled.span`
+  color: #ed4245;
+  font-style: italic;
 `;
 
 const UserActions = styled.div`

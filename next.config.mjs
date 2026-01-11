@@ -43,6 +43,11 @@ const nextConfig = {
         hostname: "i.ytimg.com",
       },
       {
+        // YouTube thumbnails for embeds (alternate domain)
+        protocol: "https",
+        hostname: "img.youtube.com",
+      },
+      {
         // Discord CDN for emojis and attachments
         protocol: "https",
         hostname: "cdn.discordapp.com",
@@ -79,6 +84,8 @@ const nextConfig = {
         permanent: true,
         basePath: false,
       },
+      // Blog -> Learn redirects (keep both routes working)
+      // Note: These are soft redirects, the old routes still work
     ];
   },
 

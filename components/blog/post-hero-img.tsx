@@ -1,7 +1,15 @@
-import type { PropsWithChildren } from "react";
+import type { PropsWithChildren, CSSProperties } from "react";
 import styled from "styled-components";
+import { m, type MotionStyle } from "framer-motion";
 
-const PostHeroImgContainer = styled.div<{ img?: string }>`
+// Base opacity values at 100% intensity
+const GRADIENT_BASE = {
+  start: 1,      // rgba(144, 116, 242, X)
+  middle: 0.88,  // rgb(38 23 90 / X%)
+  end: 0.96,     // rgb(61 38 38 / X%)
+};
+
+const PostHeroImgContainer = styled(m.div)<{ $img?: string; $intensity: number }>`
   display: flex;
   position: relative;
   min-height: 320px;
@@ -21,11 +29,11 @@ const PostHeroImgContainer = styled.div<{ img?: string }>`
   object-fit: contain;
   background-image: linear-gradient(
       249deg,
-      rgba(144, 116, 242, 1) 0%,
-      rgb(38 23 90 / 88%) 50%,
-      rgb(61 38 38 / 96%) 98%
+      rgba(144, 116, 242, ${(props) => GRADIENT_BASE.start * props.$intensity}) 0%,
+      rgb(38 23 90 / ${(props) => GRADIENT_BASE.middle * props.$intensity * 100}%) 50%,
+      rgb(61 38 38 / ${(props) => GRADIENT_BASE.end * props.$intensity * 100}%) 98%
     ),
-    url("${(props) => props.img}");
+    url("${(props) => props.$img}");
   background-size: cover;
   background-position: center;
 
@@ -65,10 +73,15 @@ type PostHeroImgProps = {
   src: string;
   coverAuthor?: string;
   coverAuthorUrl?: string;
+  gradientIntensity?: number; // 0-100, defaults to 100
+  style?: MotionStyle;
 };
 export function PostHeroImg(props: PropsWithChildren<PostHeroImgProps>) {
+  // Convert 0-100 to 0-1, default to 100% intensity
+  const intensity = (props.gradientIntensity ?? 100) / 100;
+
   return (
-    <PostHeroImgContainer img={props.src}>
+    <PostHeroImgContainer $img={props.src} $intensity={intensity} style={props.style}>
       {props.children}
       {props.coverAuthor && (
         <CoverAuthorContainer>

@@ -1,7 +1,7 @@
 import Head from "next/head";
 import Link from "next/link";
 import styled from "styled-components";
-import { useQuery, useMutation } from "convex/react";
+import { useQuery, useMutation, useAction } from "convex/react";
 import { useEffect, useState } from "react";
 import { formatDistanceToNow } from "date-fns";
 import {
@@ -16,6 +16,8 @@ import {
   Check,
   CheckCheck,
   Trash2,
+  Heart,
+  UserPlus,
 } from "lucide-react";
 import { api } from "../../convex/_generated/api";
 import { LoungeLayout } from "../../components/lounge/layout/LoungeLayout";
@@ -25,7 +27,18 @@ import type { Id } from "../../convex/_generated/dataModel";
 
 export const getServerSideProps = () => ({ props: {} });
 
-type NotificationType = "mention" | "reply" | "new_content" | "reward" | "giveaway_win" | "channel_message";
+type NotificationType =
+  | "mention"
+  | "reply"
+  | "new_content"
+  | "reward"
+  | "giveaway_win"
+  | "channel_message"
+  | "comment_reply"
+  | "collaborator_added"
+  | "comment_reaction"
+  | "feed_reply"
+  | "feed_reaction";
 
 interface Notification {
   _id: Id<"notifications">;
@@ -35,7 +48,7 @@ interface Notification {
   isRead: boolean;
   createdAt: number;
   channelId?: Id<"channels">;
-  referenceType?: "message" | "contentPost" | "reward";
+  referenceType?: "message" | "contentPost" | "reward" | "blogComment" | "blogPost" | "feedPost";
   referenceId?: string;
 }
 
@@ -46,6 +59,11 @@ const NOTIFICATION_ICONS: Record<NotificationType, typeof Bell> = {
   reward: Gift,
   giveaway_win: Trophy,
   channel_message: MessageCircle,
+  comment_reply: Reply,
+  collaborator_added: UserPlus,
+  comment_reaction: Heart,
+  feed_reply: Reply,
+  feed_reaction: Heart,
 };
 
 const NOTIFICATION_COLORS: Record<NotificationType, string> = {
@@ -55,6 +73,11 @@ const NOTIFICATION_COLORS: Record<NotificationType, string> = {
   reward: "#f97316",
   giveaway_win: "#eab308",
   channel_message: "rgba(255, 255, 255, 0.5)",
+  comment_reply: "#60a5fa",      // Blue
+  collaborator_added: "#34d399", // Green
+  comment_reaction: "#f472b6",   // Pink
+  feed_reply: "#a78bfa",         // Purple
+  feed_reaction: "#fb923c",      // Orange
 };
 
 export default function NotificationsPage() {
@@ -63,7 +86,7 @@ export default function NotificationsPage() {
 
   const { isLoading, user, tier, displayName, avatarUrl } = useTierAccess();
 
-  const getOrCreateUser = useMutation(api.users.getOrCreateUser);
+  const getOrCreateUser = useAction(api.users.getOrCreateUser);
   const markAsRead = useMutation(api.notifications.markAsRead);
   const markAllAsRead = useMutation(api.notifications.markAllAsRead);
   const removeNotification = useMutation(api.notifications.remove);
@@ -83,25 +106,17 @@ export default function NotificationsPage() {
     setMounted(true);
   }, []);
 
+  // SECURITY: Server fetches verified discordId and tier from Clerk
   useEffect(() => {
-    if (!mounted || isLoading || !user || !tier || userReady) return;
-
-    const discordAccount = user.externalAccounts?.find(
-      (account) => account.provider === "discord"
-    );
-    const discordId =
-      (discordAccount as any)?.providerUserId ||
-      (discordAccount as any)?.externalId;
+    if (!mounted || isLoading || !user || userReady) return;
 
     getOrCreateUser({
       displayName: displayName || "Anonymous",
       avatarUrl: avatarUrl,
-      tier: tier,
-      discordId: discordId,
     })
       .then(() => setUserReady(true))
       .catch(() => setUserReady(true));
-  }, [mounted, isLoading, user, tier, displayName, avatarUrl, userReady, getOrCreateUser]);
+  }, [mounted, isLoading, user, displayName, avatarUrl, userReady, getOrCreateUser]);
 
   const handleMarkAsRead = async (notificationId: Id<"notifications">) => {
     try {
@@ -252,6 +267,23 @@ function NotificationItem({
   const getLink = () => {
     if (notification.type === "reward") return "/lounge/rewards";
     if (notification.channelId) return `/lounge`; // Could link to specific channel
+
+    // Blog/content notifications
+    if (notification.type === "comment_reply" || notification.type === "comment_reaction") {
+      // referenceId is the comment ID, would need slug lookup for full link
+      // For now, link to learn page (could be enhanced later)
+      return "/learn";
+    }
+    if (notification.type === "collaborator_added") {
+      // referenceId is the post ID
+      return "/learn";
+    }
+
+    // Feed notifications
+    if (notification.type === "feed_reply" || notification.type === "feed_reaction") {
+      return "/lounge"; // Feed is in the lounge
+    }
+
     return null;
   };
 
@@ -312,7 +344,7 @@ const LoadingContainer = styled.div`
 
 const LoadingText = styled.p`
   color: rgba(255, 255, 255, 0.5);
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-sans);
   font-size: 0.9rem;
   letter-spacing: -0.01em;
 `;
@@ -332,7 +364,7 @@ const HeaderTitle = styled.h1`
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-sans);
   font-size: 1.5rem;
   font-weight: 600;
   letter-spacing: -0.02em;
@@ -344,7 +376,7 @@ const UnreadBadge = styled.span`
   padding: 3px 10px;
   background: ${LOUNGE_COLORS.tier1};
   color: #fff;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-sans);
   font-size: 0.75rem;
   font-weight: 600;
   border-radius: 12px;
@@ -364,7 +396,7 @@ const ActionButton = styled.button<{ $danger?: boolean }>`
   border: 1px solid ${(props) => (props.$danger ? "rgba(239, 68, 68, 0.2)" : "rgba(255, 255, 255, 0.08)")};
   border-radius: 8px;
   color: ${(props) => (props.$danger ? "#f87171" : "rgba(255, 255, 255, 0.7)")};
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-sans);
   font-size: 0.8rem;
   font-weight: 500;
   letter-spacing: -0.01em;
@@ -390,7 +422,7 @@ const Section = styled.div`
 `;
 
 const SectionHeader = styled.h2`
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-sans);
   font-size: 0.7rem;
   font-weight: 600;
   text-transform: uppercase;
@@ -448,7 +480,7 @@ const LinkWrapper = styled(Link)`
 `;
 
 const Title = styled.h3<{ $isRead: boolean }>`
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-sans);
   font-size: 0.95rem;
   font-weight: ${(props) => (props.$isRead ? 500 : 600)};
   letter-spacing: -0.01em;
@@ -457,7 +489,7 @@ const Title = styled.h3<{ $isRead: boolean }>`
 `;
 
 const Body = styled.p`
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-sans);
   font-size: 0.875rem;
   color: rgba(255, 255, 255, 0.5);
   margin: 0 0 0.5rem;
@@ -466,7 +498,7 @@ const Body = styled.p`
 `;
 
 const Time = styled.span`
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-sans);
   font-size: 0.75rem;
   color: rgba(255, 255, 255, 0.35);
   letter-spacing: -0.01em;
@@ -514,7 +546,7 @@ const EmptyState = styled.div`
 `;
 
 const EmptyTitle = styled.h2`
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-sans);
   font-size: 1.1rem;
   font-weight: 600;
   letter-spacing: -0.02em;
@@ -523,7 +555,7 @@ const EmptyTitle = styled.h2`
 `;
 
 const EmptyText = styled.p`
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-sans);
   font-size: 0.9rem;
   color: rgba(255, 255, 255, 0.35);
   margin: 0;

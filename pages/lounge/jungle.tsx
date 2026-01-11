@@ -1,6 +1,7 @@
 import Head from "next/head";
+import { useRouter } from "next/router";
 import styled from "styled-components";
-import { useQuery, useMutation } from "convex/react";
+import { useQuery, useMutation, useAction } from "convex/react";
 import { useEffect, useState, useCallback, useRef } from "react";
 import { m, AnimatePresence } from "framer-motion";
 import {
@@ -22,9 +23,10 @@ import {
   Radio,
   Youtube,
   Settings,
+  LogOut,
 } from "lucide-react";
 import YouTube, { type YouTubePlayer, type YouTubeEvent } from "react-youtube";
-import { useLiveKitAudio } from "../../hooks/lounge/useLiveKitAudio";
+import { useLiveKitContext } from "../../lib/lounge/LiveKitContext";
 import { api } from "../../convex/_generated/api";
 import { LoungeLayout } from "../../components/lounge/layout/LoungeLayout";
 import { useTierAccess } from "../../hooks/lounge/useTierAccess";
@@ -169,22 +171,20 @@ export default function JunglePage() {
   const [liveStreamTitle, setLiveStreamTitle] = useState("Live Audio");
   const playerRef = useRef<YouTubePlayer | null>(null);
 
-  // LiveKit audio streaming
-  const liveKit = useLiveKitAudio({
-    onError: (error) => console.error("LiveKit error:", error),
-  });
+  // Global LiveKit provider (persistent across navigation)
+  const liveKit = useLiveKitContext();
 
   // Auto-disconnect when session expires
   useEffect(() => {
     if (liveKit.timeRemaining === 0 && liveKit.isConnected) {
       liveKit.disconnect(true);
     }
-  }, [liveKit.timeRemaining, liveKit.isConnected, liveKit.disconnect]);
-
+  }, [liveKit, liveKit.timeRemaining, liveKit.isConnected, liveKit.disconnect]);
+  const router = useRouter();
   const { isLoading, user, tier, displayName, avatarUrl, isFreeUser, isCreator } =
     useTierAccess();
 
-  const getOrCreateUser = useMutation(api.users.getOrCreateUser);
+  const getOrCreateUser = useAction(api.users.getOrCreateUser);
   const joinJungle = useMutation(api.jungle.join);
   const leaveJungle = useMutation(api.jungle.leave);
   const heartbeat = useMutation(api.jungle.heartbeat);
@@ -202,29 +202,37 @@ export default function JunglePage() {
     userReady && !isFreeUser ? {} : "skip"
   ) as JungleState | null | undefined;
 
+  // Register callbacks for mini player controls (using refs to avoid re-renders)
+  useEffect(() => {
+    liveKit.callbacksRef.current.onDisconnect = () => {
+      liveKit.disconnect(true);
+      leaveJungle().catch(console.error);
+    };
+    liveKit.callbacksRef.current.onSetMuted = liveKit.setMuted;
+    liveKit.callbacksRef.current.onSetVolume = liveKit.setVolume;
+
+    return () => {
+      liveKit.callbacksRef.current.onDisconnect = null;
+      liveKit.callbacksRef.current.onSetMuted = null;
+      liveKit.callbacksRef.current.onSetVolume = null;
+    };
+  }, [liveKit, liveKit.disconnect, liveKit.setMuted, liveKit.setVolume, leaveJungle, liveKit.callbacksRef]);
+
   useEffect(() => {
     setMounted(true);
   }, []);
 
+  // SECURITY: Server fetches verified discordId and tier from Clerk
   useEffect(() => {
-    if (!mounted || isLoading || !user || !tier || userReady) return;
-
-    const discordAccount = user.externalAccounts?.find(
-      (account) => account.provider === "discord"
-    );
-    const discordId =
-      (discordAccount as any)?.providerUserId ||
-      (discordAccount as any)?.externalId;
+    if (!mounted || isLoading || !user || userReady) return;
 
     getOrCreateUser({
       displayName: displayName || "Anonymous",
       avatarUrl: avatarUrl,
-      tier: tier,
-      discordId: discordId,
     })
       .then(() => setUserReady(true))
       .catch(() => setUserReady(true));
-  }, [mounted, isLoading, user, tier, displayName, avatarUrl, userReady, getOrCreateUser]);
+  }, [mounted, isLoading, user, displayName, avatarUrl, userReady, getOrCreateUser]);
 
   useEffect(() => {
     if (!userReady || isFreeUser) return;
@@ -389,6 +397,19 @@ export default function JunglePage() {
       await stopLiveStream();
     } catch (error) {
       console.error("Failed to stop live stream:", error);
+    }
+  };
+
+  // Handle leaving the jungle
+  const handleLeaveJungle = async () => {
+    try {
+      if (liveKit.isConnected) {
+        liveKit.disconnect();
+      }
+      await leaveJungle();
+      router.push("/lounge");
+    } catch (error) {
+      console.error("Failed to leave jungle:", error);
     }
   };
 
@@ -704,6 +725,16 @@ export default function JunglePage() {
                   </ControlButton>
                 </>
               )}
+
+              {/* Leave Button */}
+              <Divider />
+              <ControlButton
+                onClick={handleLeaveJungle}
+                title="Leave Jungle"
+                $danger
+              >
+                <LogOut size={20} />
+              </ControlButton>
             </AudioControls>
           </ControlsBar>
 
@@ -993,7 +1024,7 @@ const LoadingContainer = styled.div`
 
 const LoadingText = styled.p`
   color: rgba(255, 255, 255, 0.5);
-  font-family: "Sixtyfour", monospace;
+  font-family: var(--font-display);
   font-size: 1rem;
 `;
 
@@ -1804,7 +1835,7 @@ const DebugLabel = styled.span`
 
 const DebugValue = styled.span`
   color: #22c55e;
-  font-family: monospace;
+  font-family: var(--font-mono);
 `;
 
 const DebugButton = styled.button<{ $active?: boolean }>`
@@ -1831,7 +1862,7 @@ const SessionTimer = styled.span<{ $isLow?: boolean }>`
   border-radius: 4px;
   font-size: 0.75rem;
   font-weight: 600;
-  font-family: monospace;
+  font-family: var(--font-mono);
   color: ${(props) => props.$isLow ? "#ef4444" : "#22c55e"};
   ${(props) => props.$isLow && `animation: pulse 1s ease-in-out infinite;`}
 `;

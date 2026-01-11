@@ -1,55 +1,292 @@
 import { v } from "convex/values";
 import { action, internalMutation, mutation, query } from "./_generated/server";
 import { internal } from "./_generated/api";
+import { Id } from "./_generated/dataModel";
 import { getCurrentUser, requireUser, CREATOR_DISCORD_ID, requireCreator } from "./auth";
 
 /**
- * Get or create a user from Clerk identity
+ * Helper function to compute tier from supporter status (server-side)
+ * This mirrors the client-side logic but is authoritative
  */
-export const getOrCreateUser = mutation({
+function computeTierFromStatus(status: {
+  clerkPlan?: string;
+  clerkPlanStatus?: string;
+  discordHighestRole?: { name: string } | null;
+  twitchSubTier?: number | null;
+  discordBooster?: boolean | null;
+}): "free" | "tier1" | "tier2" {
+  // Check Clerk subscription first (highest priority)
+  if (status.clerkPlan === "super_legend_2" && status.clerkPlanStatus === "active") {
+    return "tier2";
+  }
+  if (status.clerkPlan === "super_legend" && status.clerkPlanStatus === "active") {
+    return "tier1";
+  }
+
+  // Check Discord roles that grant tier access
+  if (status.discordHighestRole) {
+    const roleName = status.discordHighestRole.name.toLowerCase();
+    if (roleName.includes("super legend ii") || roleName.includes("super legend 2")) {
+      return "tier2";
+    }
+    if (roleName.includes("super legend")) {
+      return "tier1";
+    }
+  }
+
+  // Check Twitch subscription
+  if (status.twitchSubTier) {
+    return status.twitchSubTier >= 3 ? "tier2" : "tier1";
+  }
+
+  // Discord booster gets tier1
+  if (status.discordBooster) {
+    return "tier1";
+  }
+
+  return "free";
+}
+
+/**
+ * SECURE: Get or create a user from Clerk identity
+ * This action fetches verified discordId and tier from Clerk API
+ * Never trusts client-provided discordId or tier
+ */
+export const getOrCreateUser = action({
   args: {
     displayName: v.string(),
     avatarUrl: v.optional(v.string()),
-    tier: v.union(v.literal("free"), v.literal("tier1"), v.literal("tier2")),
-    discordId: v.optional(v.string()),
   },
-  handler: async (ctx, args) => {
+  handler: async (ctx, args): Promise<Id<"users">> => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
       throw new Error("Not authenticated");
     }
 
+    const clerkId = identity.subject;
+
+    // Fetch verified user data from Clerk API
+    const clerkRes = await fetch(
+      `https://api.clerk.com/v1/users/${clerkId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.CLERK_SECRET_KEY}`,
+        },
+      }
+    );
+
+    if (!clerkRes.ok) {
+      throw new Error(`Failed to fetch from Clerk: ${clerkRes.status}`);
+    }
+
+    const clerkUser = await clerkRes.json();
+
+    // Get verified Discord ID from Clerk's external accounts
+    const discordAccount = clerkUser.external_accounts?.find(
+      (a: { provider: string }) => a.provider === "oauth_discord"
+    );
+    const discordId = discordAccount?.provider_user_id || discordAccount?.external_id || undefined;
+
+    // Get Discord username
+    const discordUsername = discordAccount?.username;
+
+    // Get Twitch account
+    const twitchAccount = clerkUser.external_accounts?.find(
+      (a: { provider: string }) => a.provider === "oauth_twitch"
+    );
+    const twitchUsername = twitchAccount?.username;
+
+    // Fetch Clerk subscription for tier
+    let clerkPlan: string | undefined;
+    let clerkPlanStatus: string | undefined;
+    try {
+      const billingRes = await fetch(
+        `https://api.clerk.com/v1/users/${clerkId}/billing/subscription`,
+        {
+          headers: {
+            Authorization: `Bearer ${process.env.CLERK_SECRET_KEY}`,
+          },
+        }
+      );
+
+      if (billingRes.ok) {
+        const billingData = await billingRes.json();
+        const item = billingData.subscription_items?.[0];
+        const planSlug = item?.plan?.slug;
+        const planName = item?.plan?.name?.toLowerCase().replace(/\s+/g, "_");
+        const status = billingData.status;
+
+        if (planSlug === "super_legend" || planName === "super_legend") {
+          clerkPlan = "super_legend";
+        } else if (planSlug === "super_legend_2" || planName === "super_legend_ii" || planName === "super_legend_2") {
+          clerkPlan = "super_legend_2";
+        }
+
+        if (status === "active" || status === "past_due" || status === "canceled") {
+          clerkPlanStatus = status;
+        } else if (clerkPlan) {
+          clerkPlanStatus = "active";
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching Clerk subscription:", error);
+    }
+
+    // Fetch Discord supporter status if we have a Discord ID
+    let discordHighestRole: { id: string; name: string; color: number; position: number } | undefined;
+    let discordBooster: boolean | undefined;
+
+    if (discordId) {
+      try {
+        const DISCORD_GUILD_ID = process.env.DISCORD_GUILD_ID;
+        const DISCORD_BOT_TOKEN = process.env.DISCORD_BOT_TOKEN;
+
+        if (DISCORD_GUILD_ID && DISCORD_BOT_TOKEN) {
+          const memberRes = await fetch(
+            `https://discord.com/api/v10/guilds/${DISCORD_GUILD_ID}/members/${discordId}`,
+            {
+              headers: {
+                Authorization: `Bot ${DISCORD_BOT_TOKEN}`,
+              },
+            }
+          );
+
+          if (memberRes.ok) {
+            const member = await memberRes.json();
+            discordBooster = !!member.premium_since;
+
+            const rolesRes = await fetch(
+              `https://discord.com/api/v10/guilds/${DISCORD_GUILD_ID}/roles`,
+              {
+                headers: {
+                  Authorization: `Bot ${DISCORD_BOT_TOKEN}`,
+                },
+              }
+            );
+
+            if (rolesRes.ok) {
+              const allRoles = await rolesRes.json();
+              const memberRoles = allRoles
+                .filter((r: { id: string }) => member.roles.includes(r.id))
+                .sort((a: { position: number }, b: { position: number }) => b.position - a.position);
+
+              if (memberRoles.length > 0) {
+                const highest = memberRoles[0];
+                discordHighestRole = {
+                  id: highest.id,
+                  name: highest.name,
+                  color: highest.color,
+                  position: highest.position,
+                };
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching Discord status:", error);
+      }
+    }
+
+    // Compute tier server-side based on verified data
+    const tier = computeTierFromStatus({
+      clerkPlan,
+      clerkPlanStatus,
+      discordHighestRole,
+      twitchSubTier: undefined, // Would need Twitch API call
+      discordBooster,
+    });
+
+    // Determine isCreator from VERIFIED discordId
+    const isCreator = discordId === CREATOR_DISCORD_ID;
+
+    // Call internal mutation to create/update user
+    const userId: Id<"users"> = await ctx.runMutation(internal.users.createOrUpdateUserInternal, {
+      clerkId,
+      displayName: args.displayName || clerkUser.first_name || clerkUser.username || "Anonymous",
+      avatarUrl: args.avatarUrl || clerkUser.image_url,
+      discordId,
+      discordUsername,
+      twitchUsername,
+      tier,
+      isCreator,
+      discordHighestRole,
+      discordBooster,
+      clerkPlan,
+      clerkPlanStatus,
+    });
+
+    return userId;
+  },
+});
+
+/**
+ * Internal mutation to create or update user (only called from secure action)
+ */
+export const createOrUpdateUserInternal = internalMutation({
+  args: {
+    clerkId: v.string(),
+    displayName: v.string(),
+    avatarUrl: v.optional(v.string()),
+    discordId: v.optional(v.string()),
+    discordUsername: v.optional(v.string()),
+    twitchUsername: v.optional(v.string()),
+    tier: v.union(v.literal("free"), v.literal("tier1"), v.literal("tier2")),
+    isCreator: v.boolean(),
+    discordHighestRole: v.optional(v.object({
+      id: v.string(),
+      name: v.string(),
+      color: v.number(),
+      position: v.number(),
+    })),
+    discordBooster: v.optional(v.boolean()),
+    clerkPlan: v.optional(v.string()),
+    clerkPlanStatus: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
     // Check if user already exists
     const existingUser = await ctx.db
       .query("users")
-      .withIndex("by_clerkId", (q) => q.eq("clerkId", identity.subject))
+      .withIndex("by_clerkId", (q) => q.eq("clerkId", args.clerkId))
       .unique();
 
     if (existingUser) {
-      // Update user info if changed
+      // Update user info
       await ctx.db.patch(existingUser._id, {
         displayName: args.displayName,
         avatarUrl: args.avatarUrl,
         tier: args.tier,
         discordId: args.discordId,
+        discordUsername: args.discordUsername,
+        twitchUsername: args.twitchUsername,
+        isCreator: args.isCreator,
+        discordHighestRole: args.discordHighestRole,
+        discordBooster: args.discordBooster,
+        clerkPlan: args.clerkPlan,
+        clerkPlanStatus: args.clerkPlanStatus,
         status: "online",
         lastSeenAt: Date.now(),
+        supporterSyncedAt: Date.now(),
       });
       return existingUser._id;
     }
 
-    // Create new user
-    const isCreator = args.discordId === CREATOR_DISCORD_ID;
-
+    // Create new user with verified data
     const userId = await ctx.db.insert("users", {
-      clerkId: identity.subject,
+      clerkId: args.clerkId,
       discordId: args.discordId,
+      discordUsername: args.discordUsername,
+      twitchUsername: args.twitchUsername,
       displayName: args.displayName,
       avatarUrl: args.avatarUrl,
       tier: args.tier,
-      isCreator,
+      isCreator: args.isCreator,
+      discordHighestRole: args.discordHighestRole,
+      discordBooster: args.discordBooster,
+      clerkPlan: args.clerkPlan,
+      clerkPlanStatus: args.clerkPlanStatus,
       status: "online",
       lastSeenAt: Date.now(),
+      supporterSyncedAt: Date.now(),
       notificationPreferences: {
         emailDigest: "weekly",
         inAppNotifications: true,
@@ -152,9 +389,7 @@ export const updateNotificationPreferences = mutation({
   },
 });
 
-/**
- * Update user tier (admin only or self from Clerk webhook)
- */
+/** Update user tier. Creator only. */
 export const updateTier = mutation({
   args: {
     userId: v.optional(v.id("users")),
@@ -162,6 +397,8 @@ export const updateTier = mutation({
     tier: v.union(v.literal("free"), v.literal("tier1"), v.literal("tier2")),
   },
   handler: async (ctx, args) => {
+    await requireCreator(ctx);
+
     let targetUser;
 
     if (args.userId) {
@@ -207,6 +444,7 @@ export const listAll = query({
       _id: user._id,
       clerkId: user.clerkId,
       discordId: user.discordId,
+      username: user.username,
       displayName: user.displayName,
       avatarUrl: user.avatarUrl,
       tier: user.tier,
@@ -303,15 +541,47 @@ export const setUserRole = mutation({
   },
 });
 
-/**
- * Refresh a user's profile data from Clerk (action because it uses fetch)
- * Pass the Clerk user ID and it fetches their latest info including supporter status
- */
+/** Refresh a user's profile data from Clerk. Own profile or creator only. */
 export const refreshUser = action({
   args: {
     clerkId: v.string(),
   },
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Not authenticated");
+    }
+
+    // Check if user is trying to refresh their own profile
+    const isOwnProfile = identity.subject === args.clerkId;
+
+    // If not their own profile, check if they're the creator
+    if (!isOwnProfile) {
+      // Fetch caller's Discord ID to check if they're the creator
+      const callerClerkRes = await fetch(
+        `https://api.clerk.com/v1/users/${identity.subject}`,
+        {
+          headers: {
+            Authorization: `Bearer ${process.env.CLERK_SECRET_KEY}`,
+          },
+        }
+      );
+
+      if (!callerClerkRes.ok) {
+        throw new Error("Failed to verify identity");
+      }
+
+      const callerClerkUser = await callerClerkRes.json();
+      const callerDiscordAccount = callerClerkUser.external_accounts?.find(
+        (a: { provider: string }) => a.provider === "oauth_discord"
+      );
+      const callerDiscordId = callerDiscordAccount?.provider_user_id || callerDiscordAccount?.external_id;
+
+      if (callerDiscordId !== CREATOR_DISCORD_ID) {
+        throw new Error("You can only refresh your own profile");
+      }
+    }
+
     // Fetch from Clerk API
     const clerkRes = await fetch(
       `https://api.clerk.com/v1/users/${args.clerkId}`,
@@ -565,9 +835,7 @@ export const updateUserFromClerk = internalMutation({
   },
 });
 
-/**
- * Update supporter status for a user (called from sync API)
- */
+/** Update supporter status for a user (called from sync API). Own profile only. */
 export const updateSupporterStatus = mutation({
   args: {
     clerkId: v.string(),
@@ -585,6 +853,16 @@ export const updateSupporterStatus = mutation({
     twitchUsername: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Not authenticated");
+    }
+
+    // Only allow updating your own status
+    if (identity.subject !== args.clerkId) {
+      throw new Error("You can only update your own supporter status");
+    }
+
     // Find user by Clerk ID
     const user = await ctx.db
       .query("users")
@@ -802,6 +1080,8 @@ export const getByUsername = query({
       // Include role info for badges
       discordHighestRole: user.discordHighestRole,
       discordBooster: user.discordBooster,
+      // Feed privacy setting
+      feedPrivacy: user.feedPrivacy,
     };
   },
 });
@@ -908,9 +1188,159 @@ export const searchUsers = query({
       clerkId: u.clerkId,
       discordId: u.discordId ?? null,
       displayName: u.displayName,
+      username: u.username ?? null,
       avatarUrl: u.avatarUrl ?? null,
       tier: u.tier,
       isCreator: u.isCreator ?? false,
     }));
+  },
+});
+
+/**
+ * Get users by their IDs
+ * Used for displaying collaborator details in the editor
+ */
+export const getUsersByIds = query({
+  args: {
+    userIds: v.array(v.id("users")),
+  },
+  handler: async (ctx, args) => {
+    const users = await Promise.all(
+      args.userIds.map((id) => ctx.db.get(id))
+    );
+
+    return users
+      .filter((u): u is NonNullable<typeof u> => u !== null)
+      .map((u) => ({
+        _id: u._id,
+        displayName: u.displayName,
+        username: u.username ?? null,
+        avatarUrl: u.avatarUrl ?? null,
+        tier: u.tier,
+      }));
+  },
+});
+
+// ============================================
+// STAFF MANAGEMENT
+// ============================================
+
+// Role constants (keep in sync with auth.ts)
+const ROLE_NORMAL = 0;
+const ROLE_STAFF = 1;
+
+/**
+ * Get all staff members (role >= ROLE_STAFF or isCreator)
+ * Creator only
+ */
+export const getStaffMembers = query({
+  handler: async (ctx) => {
+    await requireCreator(ctx);
+
+    const allUsers = await ctx.db.query("users").collect();
+
+    // Filter to staff members (role >= 1 or isCreator)
+    const staffMembers = allUsers.filter(
+      (u) => u.isCreator || (u.role ?? 0) >= ROLE_STAFF
+    );
+
+    return staffMembers.map((u) => ({
+      _id: u._id,
+      displayName: u.displayName,
+      username: u.username ?? null,
+      avatarUrl: u.avatarUrl ?? null,
+      tier: u.tier,
+      role: u.role ?? ROLE_NORMAL,
+      isCreator: u.isCreator ?? false,
+    }));
+  },
+});
+
+/**
+ * Set a user's staff role (creator only)
+ * role: 0 = normal, 1 = staff, 2 = creator-only (reserved)
+ */
+export const setRole = mutation({
+  args: {
+    userId: v.id("users"),
+    role: v.number(),
+  },
+  handler: async (ctx, args) => {
+    await requireCreator(ctx);
+
+    const user = await ctx.db.get(args.userId);
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    // Don't allow changing creator's role
+    if (user.isCreator) {
+      throw new Error("Cannot modify the creator's role");
+    }
+
+    // Validate role value (0, 1, or 2)
+    if (args.role < 0 || args.role > 2) {
+      throw new Error("Invalid role value");
+    }
+
+    await ctx.db.patch(args.userId, {
+      role: args.role,
+    });
+
+    return { success: true };
+  },
+});
+
+/**
+ * Add a user as staff (shorthand for setRole with ROLE_STAFF)
+ */
+export const addStaff = mutation({
+  args: {
+    userId: v.id("users"),
+  },
+  handler: async (ctx, args) => {
+    await requireCreator(ctx);
+
+    const user = await ctx.db.get(args.userId);
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    if (user.isCreator) {
+      throw new Error("Creator is already staff");
+    }
+
+    await ctx.db.patch(args.userId, {
+      role: ROLE_STAFF,
+    });
+
+    return { success: true };
+  },
+});
+
+/**
+ * Remove a user from staff (set role to normal)
+ */
+export const removeStaff = mutation({
+  args: {
+    userId: v.id("users"),
+  },
+  handler: async (ctx, args) => {
+    await requireCreator(ctx);
+
+    const user = await ctx.db.get(args.userId);
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    if (user.isCreator) {
+      throw new Error("Cannot remove creator from staff");
+    }
+
+    await ctx.db.patch(args.userId, {
+      role: ROLE_NORMAL,
+    });
+
+    return { success: true };
   },
 });

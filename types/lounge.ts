@@ -43,7 +43,12 @@ export type NotificationType =
   | "new_content"
   | "reward"
   | "giveaway_win"
-  | "channel_message";
+  | "channel_message"
+  | "comment_reply"
+  | "collaborator_added"
+  | "comment_reaction"
+  | "feed_reply"
+  | "feed_reaction";
 
 /**
  * Reward types
@@ -381,7 +386,7 @@ export interface Notification {
   _id: Id<"notifications">;
   userId: Id<"users">;
   type: NotificationType;
-  referenceType?: "message" | "contentPost" | "reward";
+  referenceType?: "message" | "contentPost" | "reward" | "blogComment" | "blogPost" | "feedPost";
   referenceId?: string;
   channelId?: Id<"channels">;
   title: string;

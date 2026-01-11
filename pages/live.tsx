@@ -32,7 +32,7 @@ const LiveHeader = styled.div`
 `;
 
 const LiveText = styled.span`
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family: var(--font-sans);
   font-size: 1.25rem;
   font-weight: 600;
   letter-spacing: 0.1em;

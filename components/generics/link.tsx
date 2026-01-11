@@ -35,6 +35,15 @@ const IconLinkContainer = styled.span`
   align-items: baseline;
 `;
 
+const ExternalLinkStyled = styled.a<{ color?: string }>`
+  color: ${(props) => props.color || COLORS.LINK};
+  font-family: var(--font-mono);
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+`;
+
 export type IconLinkProps = Partial<LinkProps> &
   Omit<FontAwesomeIconProps, "icon"> & {
     isExternal?: boolean;
@@ -49,59 +58,65 @@ export const IconLink: React.FC<IconLinkProps> = ({
   spacing,
   isExternal = false,
   ...iconProps
-}) => (
-  <IconLinkContainer>
-    {!children ? (
-      <Link color={color} href={href}>
-        {iconProps.icon && (
-          <FontAwesomeIcon
-            width="24"
-            height="24"
-            {...iconProps}
-            style={style}
-            icon={iconProps.icon}
-          />
-        )}
-      </Link>
-    ) : (
-      <>
-        {iconProps.icon && (
-          <FontAwesomeIcon
-            color="white"
-            width="22"
-            height="22"
-            style={{ marginRight: "8px" }}
-            {...iconProps}
-            icon={iconProps.icon}
-          />
-        )}
-        <Link style={style} color={color} href={href}>
-          {children || " "}
-        </Link>
-      </>
-    )}
+}) => {
+  // For external links, use native <a> tag with proper attributes
+  const LinkComponent = isExternal ? ExternalLinkStyled : Link;
+  const linkProps = isExternal
+    ? { href, style, color, target: "_blank", rel: "noopener noreferrer" }
+    : { href, style, color };
 
-    {isExternal && (
-      <FontAwesomeIcon
-        role="img"
-        aria-label="External link"
-        color="#bbbbbb"
-        style={{
-          width: "10px",
-          marginLeft: "4px",
-          marginRight: spacing || "2px",
-          display: "inline-block",
-          verticalAlign: "baseline",
-        }}
-        icon={faExternalLinkAlt}
-      />
-    )}
-  </IconLinkContainer>
-);
+  return (
+    <IconLinkContainer>
+      {!children ? (
+        <LinkComponent {...linkProps}>
+          {iconProps.icon && (
+            <FontAwesomeIcon
+              width="24"
+              height="24"
+              {...iconProps}
+              style={style}
+              icon={iconProps.icon}
+            />
+          )}
+        </LinkComponent>
+      ) : (
+        <>
+          {iconProps.icon && (
+            <FontAwesomeIcon
+              color="white"
+              width="22"
+              height="22"
+              style={{ marginRight: "8px" }}
+              {...iconProps}
+              icon={iconProps.icon}
+            />
+          )}
+          <LinkComponent {...linkProps}>{children || " "}</LinkComponent>
+        </>
+      )}
+
+      {isExternal && (
+        <FontAwesomeIcon
+          role="img"
+          aria-label="External link"
+          color="#bbbbbb"
+          style={{
+            width: "10px",
+            marginLeft: "4px",
+            marginRight: spacing || "2px",
+            display: "inline-block",
+            verticalAlign: "baseline",
+          }}
+          icon={faExternalLinkAlt}
+        />
+      )}
+    </IconLinkContainer>
+  );
+};
 
 const LinkTextStyled = styled.a<{ color?: string }>`
   color: ${(props) => props.color || COLORS.LINK};
-  font-family: "Fira Code", monospace;
+  font-family: var(--font-mono);
   font-size: 15px;
   font-weight: 600;
   text-decoration: none;

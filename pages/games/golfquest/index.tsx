@@ -128,7 +128,7 @@ const DevBannerIcon = styled.span`
 `;
 
 const DevBannerText = styled.span`
-  font-family: "SF Mono", "Monaco", "Inconsolata", "Roboto Mono", "Courier New", monospace;
+  font-family: var(--font-mono);
   font-size: 12px;
   font-weight: 600;
   text-transform: uppercase;
@@ -149,7 +149,7 @@ const RobloxLogoWrapper = styled.div`
 `;
 
 const GameTitle = styled.h1`
-  font-family: "Inter", sans-serif;
+  font-family: var(--font-sans);
   font-weight: 800;
   font-size: 48px;
   color: ${(props) => props.theme.contrast};
@@ -173,7 +173,7 @@ const GameBadge = styled.span<{ $color: string }>`
   color: ${(props) => props.$color};
   padding: 6px 14px;
   border-radius: 20px;
-  font-family: "SF Mono", "Monaco", "Inconsolata", "Roboto Mono", "Courier New", monospace;
+  font-family: var(--font-mono);
   font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
@@ -181,7 +181,7 @@ const GameBadge = styled.span<{ $color: string }>`
 `;
 
 const PreviewTitle = styled.h3`
-  font-family: "Inter", sans-serif;
+  font-family: var(--font-sans);
   font-weight: 800;
   font-size: 36px;
   color: ${Colors.WHITE};

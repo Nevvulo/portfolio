@@ -9,7 +9,7 @@ export const HeroContainer = styled.div`
   flex-direction: column;
   box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
   color: white;
-  font-family: "Inter", sans-serif;
+  font-family: var(--font-sans);
 `;
 
 export const HeroImage = styled(Image)`
