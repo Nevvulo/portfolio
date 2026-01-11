@@ -1,5 +1,5 @@
 import type { Id } from "../convex/_generated/dataModel";
-import type { Tier, PresenceStatus } from "./lounge";
+import type { PresenceStatus, Tier } from "./lounge";
 import type { DiscordRole } from "./supporter";
 
 /**

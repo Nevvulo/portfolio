@@ -1,6 +1,6 @@
-import { useState, useRef, memo, useEffect } from "react";
+import { Pause, Play, Volume2, VolumeX } from "lucide-react";
+import { memo, useEffect, useRef, useState } from "react";
 import styled from "styled-components";
-import { Play, Pause, Volume2, VolumeX } from "lucide-react";
 import { LOUNGE_COLORS } from "../../../../constants/lounge";
 
 interface AudioEmbedProps {
@@ -9,10 +9,7 @@ interface AudioEmbedProps {
   duration?: number;
 }
 
-export const AudioEmbed = memo(function AudioEmbed({
-  url,
-  filename,
-}: AudioEmbedProps) {
+export const AudioEmbed = memo(function AudioEmbed({ url, filename }: AudioEmbedProps) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);

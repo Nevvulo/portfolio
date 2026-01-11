@@ -1,12 +1,9 @@
-import type { NextApiRequest, NextApiResponse } from "next";
 import { ConvexHttpClient } from "convex/browser";
+import type { NextApiRequest, NextApiResponse } from "next";
 import { api } from "../../../convex/_generated/api";
 import { upsertArticleWithEmbedding, vectorIndex } from "../../../lib/upstash-vector";
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   // GET: Check vector DB status without syncing
   if (req.method === "GET") {
     try {

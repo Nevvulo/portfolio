@@ -1,27 +1,24 @@
+import { useQuery } from "convex/react";
+import { ArrowLeft, Loader2 } from "lucide-react";
+import dynamic from "next/dynamic";
 import Head from "next/head";
 import { useRouter } from "next/router";
-import styled from "styled-components";
-import { useQuery } from "convex/react";
 import { useEffect, useState } from "react";
-import dynamic from "next/dynamic";
-import { api } from "../../../convex/_generated/api";
+import styled from "styled-components";
 import { BlogView } from "../../../components/layout/blog";
 import { SimpleNavbar } from "../../../components/navbar/simple";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { api } from "../../../convex/_generated/api";
 
 // Dynamically import PostEditor to avoid SSR issues
-const PostEditor = dynamic(
-  () => import("../../admin/blog/index").then((mod) => mod.PostEditor),
-  {
-    ssr: false,
-    loading: () => (
-      <LoadingContainer>
-        <Loader2 className="spinner" size={24} />
-        <LoadingText>Loading editor...</LoadingText>
-      </LoadingContainer>
-    ),
-  }
-);
+const PostEditor = dynamic(() => import("../../admin/blog/index").then((mod) => mod.PostEditor), {
+  ssr: false,
+  loading: () => (
+    <LoadingContainer>
+      <Loader2 className="spinner" size={24} />
+      <LoadingText>Loading editor...</LoadingText>
+    </LoadingContainer>
+  ),
+});
 
 export const getServerSideProps = () => ({ props: {} });
 
@@ -31,10 +28,7 @@ export default function EditContentPage() {
   const [mounted, setMounted] = useState(false);
 
   // Fetch post by slug (includes edit access check)
-  const post = useQuery(
-    api.blogPosts.getBySlugForEdit,
-    slug ? { slug: slug as string } : "skip"
-  );
+  const post = useQuery(api.blogPosts.getBySlugForEdit, slug ? { slug: slug as string } : "skip");
 
   useEffect(() => {
     setMounted(true);

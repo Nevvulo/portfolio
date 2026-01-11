@@ -1,7 +1,7 @@
 import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
-import { requireUser, requireChannelAccess, isCreator } from "./auth";
 import { internal } from "./_generated/api";
+import { mutation, query } from "./_generated/server";
+import { isCreator, requireChannelAccess, requireUser } from "./auth";
 
 // Content type validator matching schema
 const contentTypeValidator = v.union(
@@ -15,7 +15,7 @@ const contentTypeValidator = v.union(
   v.literal("advice"),
   v.literal("giveaway"),
   v.literal("poll"),
-  v.literal("emoji")
+  v.literal("emoji"),
 );
 
 /**
@@ -59,7 +59,7 @@ export const list = query({
               }
             : null,
         };
-      })
+      }),
     );
 
     return postsWithAuthors;
@@ -113,7 +113,7 @@ export const create = mutation({
         fileSize: v.optional(v.number()),
         platforms: v.optional(v.array(v.string())),
         soundcloudUrl: v.optional(v.string()),
-      })
+      }),
     ),
     // Event data
     eventData: v.optional(
@@ -122,7 +122,7 @@ export const create = mutation({
         endTime: v.optional(v.number()),
         timezone: v.string(),
         location: v.optional(v.string()),
-      })
+      }),
     ),
     // Giveaway data
     giveawayData: v.optional(
@@ -130,7 +130,7 @@ export const create = mutation({
         endsAt: v.number(),
         maxEntries: v.optional(v.number()),
         prize: v.string(),
-      })
+      }),
     ),
     // Poll data
     pollData: v.optional(
@@ -139,18 +139,18 @@ export const create = mutation({
           v.object({
             id: v.string(),
             text: v.string(),
-          })
+          }),
         ),
         endsAt: v.optional(v.number()),
         allowMultiple: v.boolean(),
-      })
+      }),
     ),
     // Emoji data
     emojiData: v.optional(
       v.object({
         emoji: v.string(),
         message: v.optional(v.string()),
-      })
+      }),
     ),
     // Discord options
     sendToDiscord: v.optional(v.boolean()),
@@ -278,7 +278,7 @@ export const update = mutation({
         fileSize: v.optional(v.number()),
         platforms: v.optional(v.array(v.string())),
         soundcloudUrl: v.optional(v.string()),
-      })
+      }),
     ),
     isPinned: v.optional(v.boolean()),
   },
@@ -377,9 +377,7 @@ export const votePoll = mutation({
     if (!post.pollData.allowMultiple) {
       const existingVote = await ctx.db
         .query("pollVotes")
-        .withIndex("by_user_post", (q) =>
-          q.eq("userId", user._id).eq("postId", args.postId)
-        )
+        .withIndex("by_user_post", (q) => q.eq("userId", user._id).eq("postId", args.postId))
         .first();
 
       if (existingVote) {
@@ -390,9 +388,7 @@ export const votePoll = mutation({
     // Check if already voted for this option
     const existingOptionVote = await ctx.db
       .query("pollVotes")
-      .withIndex("by_user_post", (q) =>
-        q.eq("userId", user._id).eq("postId", args.postId)
-      )
+      .withIndex("by_user_post", (q) => q.eq("userId", user._id).eq("postId", args.postId))
       .filter((q) => q.eq(q.field("optionId"), args.optionId))
       .first();
 
@@ -485,9 +481,7 @@ export const enterGiveaway = mutation({
     // Check if already entered
     const existingEntry = await ctx.db
       .query("giveawayEntries")
-      .withIndex("by_user_post", (q) =>
-        q.eq("userId", user._id).eq("postId", args.postId)
-      )
+      .withIndex("by_user_post", (q) => q.eq("userId", user._id).eq("postId", args.postId))
       .first();
 
     if (existingEntry) {

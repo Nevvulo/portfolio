@@ -1,28 +1,29 @@
-import { useState } from "react";
-import styled, { keyframes, css } from "styled-components";
+import { format, formatDistanceToNow, isPast } from "date-fns";
 import { m } from "framer-motion";
 import {
-  Smile,
-  Image,
-  Ticket,
+  AlertTriangle,
+  Check,
   Clock,
-  Megaphone,
-  Sparkles,
-  Music,
-  Video,
+  Copy,
+  Download,
   Gamepad2,
   Gift,
-  Download,
-  Copy,
-  Check,
-  AlertTriangle,
+  Image,
+  Megaphone,
+  Music,
+  Smile,
+  Sparkles,
+  Ticket,
+  Video,
 } from "lucide-react";
-import { format, formatDistanceToNow, isPast } from "date-fns";
+import { useState } from "react";
+import styled, { css, keyframes } from "styled-components";
 
 // Remove "about" prefix from relative time
 const formatRelativeTime = (date: number | Date) =>
   formatDistanceToNow(date, { addSuffix: true }).replace(/^about /, "");
-import { RARITY_COLORS, REWARD_TYPES, LOUNGE_COLORS } from "../../../constants/lounge";
+
+import { LOUNGE_COLORS, RARITY_COLORS, REWARD_TYPES } from "../../../constants/lounge";
 import type { InventoryItem as InventoryItemType, ItemRarity } from "../../../types/lounge";
 
 interface InventoryItemProps {
@@ -85,9 +86,7 @@ export function InventoryItem({ item, onClaim }: InventoryItemProps) {
       {item.expiresAt && (
         <ExpiryInfo $isExpired={!!isExpired}>
           <AlertTriangle size={12} />
-          {isExpired
-            ? "Expired"
-            : `Expires ${formatRelativeTime(new Date(item.expiresAt))}`}
+          {isExpired ? "Expired" : `Expires ${formatRelativeTime(new Date(item.expiresAt))}`}
         </ExpiryInfo>
       )}
 
@@ -118,9 +117,7 @@ export function InventoryItem({ item, onClaim }: InventoryItemProps) {
       </ActionArea>
 
       {item.isClaimed && item.claimedAt && (
-        <ClaimedDate>
-          Claimed {format(new Date(item.claimedAt), "MMM d, yyyy")}
-        </ClaimedDate>
+        <ClaimedDate>Claimed {format(new Date(item.claimedAt), "MMM d, yyyy")}</ClaimedDate>
       )}
 
       {item.rarity === "legendary" && !isExpired && <LegendaryShimmer />}
@@ -165,8 +162,7 @@ const Card = styled(m.div)<{
 
   &:hover {
     border-color: ${(props) => (props.$isExpired ? "rgba(255, 255, 255, 0.1)" : props.$glowColor)};
-    box-shadow: ${(props) =>
-      props.$isExpired ? "none" : `0 0 20px ${props.$glowColor}`};
+    box-shadow: ${(props) => (props.$isExpired ? "none" : `0 0 20px ${props.$glowColor}`)};
   }
 `;
 

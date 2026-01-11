@@ -1,9 +1,9 @@
-import { useEffect, useRef, useCallback, memo } from "react";
-import styled from "styled-components";
-import { Hash, Megaphone, MessageCircle, Sparkles, Crown, Star } from "lucide-react";
 import { useQuery } from "convex/react";
-import { api } from "../../../convex/_generated/api";
+import { Crown, Hash, Megaphone, MessageCircle, Sparkles, Star } from "lucide-react";
+import { memo, useCallback, useEffect, useRef } from "react";
+import styled from "styled-components";
 import { LOUNGE_COLORS } from "../../../constants/lounge";
+import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 
 // Types for users and channels from queries
@@ -70,20 +70,18 @@ export const MentionAutocomplete = memo(function MentionAutocomplete({
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Fetch data based on type
-  const users = useQuery(
-    api.users.searchUsers,
-    type === "user" ? { query, limit: 10 } : "skip"
-  ) as MentionUser[] | undefined;
+  const users = useQuery(api.users.searchUsers, type === "user" ? { query, limit: 10 } : "skip") as
+    | MentionUser[]
+    | undefined;
 
-  const channels = useQuery(
-    api.channels.listForMention,
-    type === "channel" ? {} : "skip"
-  ) as MentionChannel[] | undefined;
+  const channels = useQuery(api.channels.listForMention, type === "channel" ? {} : "skip") as
+    | MentionChannel[]
+    | undefined;
 
   // Filter channels by query on client side
-  const filteredChannels = channels?.filter((c) =>
-    c.name.toLowerCase().includes(query.toLowerCase())
-  ).slice(0, 10);
+  const filteredChannels = channels
+    ?.filter((c) => c.name.toLowerCase().includes(query.toLowerCase()))
+    .slice(0, 10);
 
   const items = type === "user" ? users : filteredChannels;
   const itemCount = items?.length ?? 0;
@@ -106,33 +104,34 @@ export const MentionAutocomplete = memo(function MentionAutocomplete({
     }
   }, [itemCount, selectedIndex, onSelectedIndexChange]);
 
-  const handleSelect = useCallback((item: MentionUser | MentionChannel) => {
-    if (type === "user") {
-      const user = item as MentionUser;
-      // Use Discord ID if available, otherwise fall back to Clerk ID format
-      const insertText = user.discordId
-        ? `<@${user.discordId}>`
-        : `<@n:${user.clerkId}>`;
+  const handleSelect = useCallback(
+    (item: MentionUser | MentionChannel) => {
+      if (type === "user") {
+        const user = item as MentionUser;
+        // Use Discord ID if available, otherwise fall back to Clerk ID format
+        const insertText = user.discordId ? `<@${user.discordId}>` : `<@n:${user.clerkId}>`;
 
-      onSelect({
-        type: "user",
-        user,
-        insertText,
-        displayText: `@${user.displayName}`,
-      });
-    } else {
-      const channel = item as MentionChannel;
-      // Use our custom channel mention format with Convex ID
-      const insertText = `<#c:${channel._id}>`;
+        onSelect({
+          type: "user",
+          user,
+          insertText,
+          displayText: `@${user.displayName}`,
+        });
+      } else {
+        const channel = item as MentionChannel;
+        // Use our custom channel mention format with Convex ID
+        const insertText = `<#c:${channel._id}>`;
 
-      onSelect({
-        type: "channel",
-        channel,
-        insertText,
-        displayText: `#${channel.name}`,
-      });
-    }
-  }, [type, onSelect]);
+        onSelect({
+          type: "channel",
+          channel,
+          insertText,
+          displayText: `#${channel.name}`,
+        });
+      }
+    },
+    [type, onSelect],
+  );
 
   // Listen for Enter/Tab selection from parent
   useEffect(() => {
@@ -151,9 +150,7 @@ export const MentionAutocomplete = memo(function MentionAutocomplete({
   if (!items || items.length === 0) {
     return (
       <Container ref={containerRef} style={{ bottom: position.top, left: position.left }}>
-        <EmptyState>
-          {type === "user" ? "No users found" : "No channels found"}
-        </EmptyState>
+        <EmptyState>{type === "user" ? "No users found" : "No channels found"}</EmptyState>
       </Container>
     );
   }

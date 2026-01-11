@@ -1,12 +1,10 @@
-import React, { useEffect, useRef, useState, useMemo } from "react";
-import styled, { keyframes, css } from "styled-components";
-import { m, AnimatePresence } from "framer-motion";
+import { AnimatePresence, m } from "framer-motion";
+import type React from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import styled, { css, keyframes } from "styled-components";
 import { LOUNGE_COLORS } from "@/constants/lounge";
-import {
-  findAllHighlightPositions,
-  mergeOverlappingPositions,
-} from "./textAnchor";
-import { Id } from "@/convex/_generated/dataModel";
+import type { Id } from "@/convex/_generated/dataModel";
+import { findAllHighlightPositions, mergeOverlappingPositions } from "./textAnchor";
 
 // Emoji mapping for reaction types
 const REACTION_EMOJI: Record<string, string> = {
@@ -97,28 +95,21 @@ export function HighlightOverlay({
 
   const highlightKey = useMemo(
     () => highlights.map((h) => h._id.toString()).join(","),
-    [highlights]
+    [highlights],
   );
 
   const newHighlightIdsKey = useMemo(
     () => Array.from(newHighlightIds).sort().join(","),
-    [newHighlightIds]
+    [newHighlightIds],
   );
 
-  const commentCountsKey = useMemo(
-    () => JSON.stringify(commentCounts),
-    [commentCounts]
-  );
+  const commentCountsKey = useMemo(() => JSON.stringify(commentCounts), [commentCounts]);
 
-  const reactionsKey = useMemo(
-    () => JSON.stringify(reactionsByHighlight),
-    [reactionsByHighlight]
-  );
+  const reactionsKey = useMemo(() => JSON.stringify(reactionsByHighlight), [reactionsByHighlight]);
 
   useEffect(() => {
     const container = containerRef.current;
     const allHighlights = highlightsRef.current;
-    const visibleHighlights = allHighlights.filter((h) => !h.isReactionOnly);
 
     if (!container || allHighlights.length === 0) {
       setMarks([]);
@@ -144,16 +135,12 @@ export function HighlightOverlay({
           highlightedText: h.highlightedText,
           prefix: h.prefix,
           suffix: h.suffix,
-        }))
+        })),
       );
 
       const newReactionPositions: ReactionPosition[] = [];
 
-      const walker = document.createTreeWalker(
-        container,
-        NodeFilter.SHOW_TEXT,
-        null
-      );
+      const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, null);
 
       const textNodes: Array<{ node: Text; start: number; end: number }> = [];
       let currentPos = 0;
@@ -173,20 +160,17 @@ export function HighlightOverlay({
         const reactions = latestReactions[highlightId];
         if (!reactions || reactions.total === 0) continue;
 
-        const relevantNodes = textNodes.filter(
-          (tn) => tn.end > pos.start && tn.start < pos.end
-        );
+        const relevantNodes = textNodes.filter((tn) => tn.end > pos.start && tn.start < pos.end);
 
-        if (relevantNodes.length === 0) continue;
+        const firstNode = relevantNodes[0];
+        const lastNode = relevantNodes[relevantNodes.length - 1];
+        if (!firstNode || !lastNode) continue;
 
         const range = document.createRange();
-        const startNode = relevantNodes[0].node;
-        const startOffset = Math.max(0, pos.start - relevantNodes[0].start);
-        const endNode = relevantNodes[relevantNodes.length - 1].node;
-        const endOffset = Math.min(
-          endNode.textContent?.length || 0,
-          pos.end - relevantNodes[relevantNodes.length - 1].start
-        );
+        const startNode = firstNode.node;
+        const startOffset = Math.max(0, pos.start - firstNode.start);
+        const endNode = lastNode.node;
+        const endOffset = Math.min(endNode.textContent?.length || 0, pos.end - lastNode.start);
 
         try {
           range.setStart(startNode, startOffset);
@@ -196,8 +180,8 @@ export function HighlightOverlay({
         }
 
         const rects = range.getClientRects();
-        if (rects.length > 0) {
-          const lastRect = rects[rects.length - 1];
+        const lastRect = rects[rects.length - 1];
+        if (lastRect) {
           // Container-relative position (scrolls with page)
           newReactionPositions.push({
             id: highlightId,
@@ -215,7 +199,7 @@ export function HighlightOverlay({
           highlightedText: h.highlightedText,
           prefix: h.prefix,
           suffix: h.suffix,
-        }))
+        })),
       );
 
       if (visiblePositions.size === 0) {
@@ -223,9 +207,10 @@ export function HighlightOverlay({
         return;
       }
 
-      const positionsArray = Array.from(visiblePositions.entries()).map(
-        ([id, pos]) => ({ id, position: pos })
-      );
+      const positionsArray = Array.from(visiblePositions.entries()).map(([id, pos]) => ({
+        id,
+        position: pos,
+      }));
       const merged = mergeOverlappingPositions(positionsArray);
 
       const newMarks: MarkPosition[] = [];
@@ -233,21 +218,21 @@ export function HighlightOverlay({
       for (const segment of merged) {
         const { ids, start, end } = segment;
 
-        const segmentNodes = textNodes.filter(
-          (tn) => tn.end > start && tn.start < end
-        );
+        const segmentNodes = textNodes.filter((tn) => tn.end > start && tn.start < end);
 
-        if (segmentNodes.length === 0) continue;
+        const firstSegment = segmentNodes[0];
+        const lastSegment = segmentNodes[segmentNodes.length - 1];
+        if (!firstSegment || !lastSegment) continue;
 
         const markRange = document.createRange();
 
-        const markStartNode = segmentNodes[0].node;
-        const markStartOffset = Math.max(0, start - segmentNodes[0].start);
+        const markStartNode = firstSegment.node;
+        const markStartOffset = Math.max(0, start - firstSegment.start);
 
-        const markEndNode = segmentNodes[segmentNodes.length - 1].node;
+        const markEndNode = lastSegment.node;
         const markEndOffset = Math.min(
           markEndNode.textContent?.length || 0,
-          end - segmentNodes[segmentNodes.length - 1].start
+          end - lastSegment.start,
         );
 
         try {
@@ -262,13 +247,14 @@ export function HighlightOverlay({
         const validRects: DOMRect[] = [];
         for (let i = 0; i < markRects.length; i++) {
           const rect = markRects[i];
-          if (rect.width >= 2 && rect.height >= 2) {
+          if (rect && rect.width >= 2 && rect.height >= 2) {
             validRects.push(rect);
           }
         }
 
         for (let i = 0; i < validRects.length; i++) {
           const rect = validRects[i];
+          if (!rect) continue;
           const isLastMark = i === validRects.length - 1;
 
           const isOwn = ids.some((id) => {
@@ -278,10 +264,7 @@ export function HighlightOverlay({
 
           const isNew = ids.some((id) => latestNewIds.has(id));
 
-          const commentCount = ids.reduce(
-            (sum, id) => sum + (latestCommentCounts[id] || 0),
-            0
-          );
+          const commentCount = ids.reduce((sum, id) => sum + (latestCommentCounts[id] || 0), 0);
 
           newMarks.push({
             id: `${ids.join("-")}-${i}`,
@@ -391,9 +374,9 @@ export function HighlightOverlay({
           $isOwn={mark.isOwn}
           $isNew={mark.isNew}
           $isHovered={mark.ids.some((id) => id === hoveredId)}
-          onMouseEnter={() => setHoveredId(mark.ids[0])}
+          onMouseEnter={() => setHoveredId(mark.ids[0] ?? null)}
           onMouseLeave={() => setHoveredId(null)}
-          onClick={() => onHighlightClick?.(mark.ids[0])}
+          onClick={() => mark.ids[0] && onHighlightClick?.(mark.ids[0])}
         >
           {mark.commentCount > 0 && mark.isLastMark && mark.ids[0] === hoveredId && (
             <CommentBadge>{mark.commentCount}</CommentBadge>

@@ -1,19 +1,19 @@
-import Head from "next/head";
-import styled from "styled-components";
-import { useState } from "react";
 import {
-  HelpCircle,
-  Shield,
-  FileText,
-  Heart,
   AlertTriangle,
-  MessageCircle,
   Ban,
-  Mail,
   ChevronDown,
   ChevronRight,
   ExternalLink,
+  FileText,
+  Heart,
+  HelpCircle,
+  Mail,
+  MessageCircle,
+  Shield,
 } from "lucide-react";
+import Head from "next/head";
+import { useState } from "react";
+import styled from "styled-components";
 import { LoungeLayout } from "../../components/lounge/layout/LoungeLayout";
 import { LOUNGE_COLORS } from "../../constants/lounge";
 
@@ -72,9 +72,7 @@ export default function HelpPage() {
               <HelpCircle size={32} />
             </HeaderIcon>
             <HeaderTitle>Help & Guidelines</HeaderTitle>
-            <HeaderSubtitle>
-              Everything you need to know about nevulounge
-            </HeaderSubtitle>
+            <HeaderSubtitle>Everything you need to know about nevulounge</HeaderSubtitle>
           </Header>
 
           {/* Community Rules */}
@@ -89,8 +87,8 @@ export default function HelpPage() {
                 <RuleContent>
                   <RuleTitle>Be Respectful</RuleTitle>
                   <RuleText>
-                    Treat everyone with respect. No harassment, hate speech,
-                    discrimination, or personal attacks of any kind.
+                    Treat everyone with respect. No harassment, hate speech, discrimination, or
+                    personal attacks of any kind.
                   </RuleText>
                 </RuleContent>
               </RuleItem>
@@ -99,8 +97,8 @@ export default function HelpPage() {
                 <RuleContent>
                   <RuleTitle>No Spam or Self-Promotion</RuleTitle>
                   <RuleText>
-                    Don't spam messages, links, or excessive self-promotion.
-                    Share content naturally in relevant conversations.
+                    Don't spam messages, links, or excessive self-promotion. Share content naturally
+                    in relevant conversations.
                   </RuleText>
                 </RuleContent>
               </RuleItem>
@@ -109,8 +107,8 @@ export default function HelpPage() {
                 <RuleContent>
                   <RuleTitle>Keep it Safe for Work</RuleTitle>
                   <RuleText>
-                    No NSFW content, gore, or disturbing material. Keep
-                    discussions and media appropriate for all ages.
+                    No NSFW content, gore, or disturbing material. Keep discussions and media
+                    appropriate for all ages.
                   </RuleText>
                 </RuleContent>
               </RuleItem>
@@ -119,9 +117,8 @@ export default function HelpPage() {
                 <RuleContent>
                   <RuleTitle>No Illegal Activity</RuleTitle>
                   <RuleText>
-                    Don't share pirated content, engage in fraud, or discuss
-                    illegal activities. This includes sharing others' personal
-                    information.
+                    Don't share pirated content, engage in fraud, or discuss illegal activities.
+                    This includes sharing others' personal information.
                   </RuleText>
                 </RuleContent>
               </RuleItem>
@@ -130,8 +127,8 @@ export default function HelpPage() {
                 <RuleContent>
                   <RuleTitle>Follow Channel Guidelines</RuleTitle>
                   <RuleText>
-                    Each channel may have specific rules. Check channel
-                    descriptions and respect their intended purpose.
+                    Each channel may have specific rules. Check channel descriptions and respect
+                    their intended purpose.
                   </RuleText>
                 </RuleContent>
               </RuleItem>
@@ -140,9 +137,8 @@ export default function HelpPage() {
                 <RuleContent>
                   <RuleTitle>Use Common Sense</RuleTitle>
                   <RuleText>
-                    If something feels wrong, it probably is. When in doubt,
-                    don't do it. Moderators have final say on rule
-                    interpretations.
+                    If something feels wrong, it probably is. When in doubt, don't do it. Moderators
+                    have final say on rule interpretations.
                   </RuleText>
                 </RuleContent>
               </RuleItem>
@@ -201,11 +197,7 @@ export default function HelpPage() {
                 >
                   <FAQQuestion>
                     {item.question}
-                    {openFAQ === index ? (
-                      <ChevronDown size={18} />
-                    ) : (
-                      <ChevronRight size={18} />
-                    )}
+                    {openFAQ === index ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
                   </FAQQuestion>
                   {openFAQ === index && <FAQAnswer>{item.answer}</FAQAnswer>}
                 </FAQCard>
@@ -221,33 +213,20 @@ export default function HelpPage() {
             </SectionHeader>
             <TermsCard>
               <TermsText>
-                By using nevulounge, you agree to our Terms of Service. Key
-                points:
+                By using nevulounge, you agree to our Terms of Service. Key points:
               </TermsText>
               <TermsList>
+                <TermsItem>You must be 16 years or older to use this service</TermsItem>
                 <TermsItem>
-                  You must be 16 years or older to use this service
+                  Content you post remains yours, but you grant us license to display it
                 </TermsItem>
+                <TermsItem>We may terminate accounts that violate our rules</TermsItem>
                 <TermsItem>
-                  Content you post remains yours, but you grant us license to
-                  display it
+                  Supporter benefits are non-refundable except as required by law
                 </TermsItem>
-                <TermsItem>
-                  We may terminate accounts that violate our rules
-                </TermsItem>
-                <TermsItem>
-                  Supporter benefits are non-refundable except as required by
-                  law
-                </TermsItem>
-                <TermsItem>
-                  We're not liable for user-generated content
-                </TermsItem>
+                <TermsItem>We're not liable for user-generated content</TermsItem>
               </TermsList>
-              <FullTermsLink
-                href="https://nev.so/terms"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
+              <FullTermsLink href="https://nev.so/terms" target="_blank" rel="noopener noreferrer">
                 Read Full Terms of Service
                 <ExternalLink size={14} />
               </FullTermsLink>
@@ -261,20 +240,16 @@ export default function HelpPage() {
               Privacy
             </SectionHeader>
             <PrivacyCard>
-              <PrivacyText>
-                We collect minimal data necessary to provide the service:
-              </PrivacyText>
+              <PrivacyText>We collect minimal data necessary to provide the service:</PrivacyText>
               <PrivacyList>
                 <PrivacyItem>
-                  <strong>Account info:</strong> Email, username, avatar (from
-                  Discord/Twitch)
+                  <strong>Account info:</strong> Email, username, avatar (from Discord/Twitch)
                 </PrivacyItem>
                 <PrivacyItem>
                   <strong>Messages:</strong> Stored to display chat history
                 </PrivacyItem>
                 <PrivacyItem>
-                  <strong>Usage data:</strong> Basic analytics to improve the
-                  service
+                  <strong>Usage data:</strong> Basic analytics to improve the service
                 </PrivacyItem>
               </PrivacyList>
               <PrivacyNote>
@@ -298,9 +273,7 @@ export default function HelpPage() {
               Need Help?
             </SectionHeader>
             <ContactCard>
-              <ContactText>
-                Have questions or need to report an issue? Reach out!
-              </ContactText>
+              <ContactText>Have questions or need to report an issue? Reach out!</ContactText>
               <ContactLinks>
                 <ContactLink
                   href="https://discord.gg/nevulo"
@@ -471,8 +444,7 @@ const FAQCard = styled.div<{ $isOpen: boolean }>`
   background: ${(props) =>
     props.$isOpen ? "rgba(144, 116, 242, 0.1)" : LOUNGE_COLORS.glassBackground};
   border: 1px solid
-    ${(props) =>
-      props.$isOpen ? "rgba(144, 116, 242, 0.3)" : LOUNGE_COLORS.glassBorder};
+    ${(props) => (props.$isOpen ? "rgba(144, 116, 242, 0.3)" : LOUNGE_COLORS.glassBorder)};
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.15s;

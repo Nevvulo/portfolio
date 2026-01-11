@@ -1,11 +1,11 @@
-import { useState, useEffect, useCallback } from "react";
-import styled, { keyframes, css } from "styled-components";
-import { m, AnimatePresence } from "framer-motion";
+import { AnimatePresence, m } from "framer-motion";
 import { Gift, Sparkles, X } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import styled, { css, keyframes } from "styled-components";
 import { RARITY_COLORS, RARITY_ORDER } from "../../../constants/lounge";
+import type { MysteryBoxState, Reward } from "../../../types/lounge";
 import { ItemReveal } from "./ItemReveal";
 import { ParticleEffect } from "./ParticleEffect";
-import type { Reward, MysteryBoxState } from "../../../types/lounge";
 
 interface MysteryBoxAnimationProps {
   reward: Reward;
@@ -20,7 +20,7 @@ export function MysteryBoxAnimation({ reward, onComplete, onClose }: MysteryBoxA
 
   // Sort items by rarity (legendary first for dramatic reveal)
   const sortedItems = [...reward.items].sort(
-    (a, b) => (RARITY_ORDER[b.rarity] || 0) - (RARITY_ORDER[a.rarity] || 0)
+    (a, b) => (RARITY_ORDER[b.rarity] || 0) - (RARITY_ORDER[a.rarity] || 0),
   );
 
   // Get the best rarity for glow color during shake
@@ -80,11 +80,7 @@ export function MysteryBoxAnimation({ reward, onComplete, onClose }: MysteryBoxA
   }, [showParticles]);
 
   return (
-    <Overlay
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-    >
+    <Overlay initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
       <CloseButton onClick={onClose}>
         <X size={24} />
       </CloseButton>
@@ -127,14 +123,8 @@ export function MysteryBoxAnimation({ reward, onComplete, onClose }: MysteryBoxA
           )}
 
           {(state === "revealing" || state === "complete") && (
-            <ItemsContainer
-              key="items"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-            >
-              <ItemsTitle>
-                {state === "complete" ? "You received:" : "Revealing..."}
-              </ItemsTitle>
+            <ItemsContainer key="items" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+              <ItemsTitle>{state === "complete" ? "You received:" : "Revealing..."}</ItemsTitle>
               <ItemsGrid $count={sortedItems.length}>
                 {sortedItems.map((item, index) => (
                   <ItemReveal
@@ -160,10 +150,7 @@ export function MysteryBoxAnimation({ reward, onComplete, onClose }: MysteryBoxA
         </AnimatePresence>
 
         {showParticles && (
-          <ParticleEffect
-            color={bestRarityColors.color}
-            count={bestRarityColors.particleCount}
-          />
+          <ParticleEffect color={bestRarityColors.color} count={bestRarityColors.particleCount} />
         )}
       </Content>
     </Overlay>

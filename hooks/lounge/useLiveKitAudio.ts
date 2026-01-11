@@ -1,14 +1,14 @@
-import { useState, useCallback, useRef, useEffect } from "react";
 import {
+  createLocalAudioTrack,
+  LocalAudioTrack,
+  type Participant,
+  type RemoteTrack,
+  type RemoteTrackPublication,
   Room,
   RoomEvent,
   Track,
-  LocalAudioTrack,
-  RemoteTrack,
-  RemoteTrackPublication,
-  Participant,
-  createLocalAudioTrack,
 } from "livekit-client";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 // Session limits to control costs
 const SESSION_LIMIT_MS = 60 * 60 * 1000; // 1 hour
@@ -153,7 +153,11 @@ export function useLiveKitAudio(options?: UseLiveKitAudioOptions) {
         const deviceToSelect = virtualDevice || audioInputs[0];
         if (deviceToSelect) {
           setSelectedDevice(deviceToSelect.deviceId);
-          console.log("[LiveKit] Auto-selected device:", deviceToSelect.label, deviceToSelect.isVirtual ? "(virtual)" : "");
+          console.log(
+            "[LiveKit] Auto-selected device:",
+            deviceToSelect.label,
+            deviceToSelect.isVirtual ? "(virtual)" : "",
+          );
         }
       }
     } catch (err) {
@@ -178,7 +182,7 @@ export function useLiveKitAudio(options?: UseLiveKitAudioOptions) {
 
       return response.json();
     },
-    []
+    [],
   );
 
   // Connect to room as listener
@@ -215,18 +219,15 @@ export function useLiveKitAudio(options?: UseLiveKitAudioOptions) {
               audioElementRef.current = audioElement;
               setIsReceiving(true);
             }
-          }
+          },
         );
 
-        room.on(
-          RoomEvent.TrackUnsubscribed,
-          (track: RemoteTrack) => {
-            if (track.kind === Track.Kind.Audio) {
-              track.detach().forEach((el) => el.remove());
-              setIsReceiving(false);
-            }
+        room.on(RoomEvent.TrackUnsubscribed, (track: RemoteTrack) => {
+          if (track.kind === Track.Kind.Audio) {
+            track.detach().forEach((el) => el.remove());
+            setIsReceiving(false);
           }
-        );
+        });
 
         room.on(RoomEvent.Disconnected, () => {
           setIsConnected(false);
@@ -242,12 +243,17 @@ export function useLiveKitAudio(options?: UseLiveKitAudioOptions) {
         options?.onError?.(error);
       }
     },
-    [getToken, options, cooldownUntil, startSessionTimer]
+    [getToken, options, cooldownUntil, startSessionTimer],
   );
 
   // Connect as publisher (creator only)
   const connectAsPublisher = useCallback(
-    async (userId: string, displayName?: string, deviceId?: string, sourceType?: AudioSourceType) => {
+    async (
+      userId: string,
+      displayName?: string,
+      deviceId?: string,
+      sourceType?: AudioSourceType,
+    ) => {
       // Check cooldown
       if (cooldownUntil !== null && Date.now() < cooldownUntil) {
         const remaining = Math.ceil((cooldownUntil - Date.now()) / 1000);
@@ -270,12 +276,15 @@ export function useLiveKitAudio(options?: UseLiveKitAudioOptions) {
 
           // Build constraints based on source type
           const displayMediaOptions: DisplayMediaStreamOptions = {
-            video: source === "screen" ? true : {
-              // For tab audio, request minimal video that we'll discard
-              width: 1,
-              height: 1,
-              frameRate: 1,
-            },
+            video:
+              source === "screen"
+                ? true
+                : {
+                    // For tab audio, request minimal video that we'll discard
+                    width: 1,
+                    height: 1,
+                    frameRate: 1,
+                  },
             audio: {
               echoCancellation: false,
               noiseSuppression: false,
@@ -295,14 +304,21 @@ export function useLiveKitAudio(options?: UseLiveKitAudioOptions) {
           const displayStream = await navigator.mediaDevices.getDisplayMedia(displayMediaOptions);
 
           mediaStreamRef.current = displayStream;
-          console.log("[LiveKit] Got display stream, audio tracks:", displayStream.getAudioTracks().length, "video tracks:", displayStream.getVideoTracks().length);
+          console.log(
+            "[LiveKit] Got display stream, audio tracks:",
+            displayStream.getAudioTracks().length,
+            "video tracks:",
+            displayStream.getVideoTracks().length,
+          );
 
           // Get the audio track from the display stream
           const audioTracks = displayStream.getAudioTracks();
           if (audioTracks.length === 0) {
             // Clean up video tracks
             displayStream.getVideoTracks().forEach((track) => track.stop());
-            throw new Error("No audio track found. Make sure to check 'Share tab audio' in the share dialog.");
+            throw new Error(
+              "No audio track found. Make sure to check 'Share tab audio' in the share dialog.",
+            );
           }
 
           // Stop video track - we only want audio
@@ -314,7 +330,12 @@ export function useLiveKitAudio(options?: UseLiveKitAudioOptions) {
           const rawTrack = audioTracks[0]!;
           console.log("[LiveKit] Audio track settings:", rawTrack.getSettings());
           console.log("[LiveKit] Audio track label:", rawTrack.label);
-          console.log("[LiveKit] Audio track enabled:", rawTrack.enabled, "readyState:", rawTrack.readyState);
+          console.log(
+            "[LiveKit] Audio track enabled:",
+            rawTrack.enabled,
+            "readyState:",
+            rawTrack.readyState,
+          );
 
           // Create LocalAudioTrack from the MediaStreamTrack
           audioTrack = new LocalAudioTrack(rawTrack, undefined, false);
@@ -387,7 +408,7 @@ export function useLiveKitAudio(options?: UseLiveKitAudioOptions) {
         throw error; // Re-throw so caller knows it failed
       }
     },
-    [getToken, selectedDevice, audioSource, options, cooldownUntil, startSessionTimer]
+    [getToken, selectedDevice, audioSource, options, cooldownUntil, startSessionTimer],
   );
 
   // Stop publishing
@@ -408,35 +429,38 @@ export function useLiveKitAudio(options?: UseLiveKitAudioOptions) {
   }, []);
 
   // Disconnect from room
-  const disconnect = useCallback((expired: boolean = false) => {
-    if (roomRef.current) {
-      roomRef.current.disconnect();
-      roomRef.current = null;
-    }
+  const disconnect = useCallback(
+    (expired: boolean = false) => {
+      if (roomRef.current) {
+        roomRef.current.disconnect();
+        roomRef.current = null;
+      }
 
-    if (localTrackRef.current) {
-      localTrackRef.current.stop();
-      localTrackRef.current = null;
-    }
+      if (localTrackRef.current) {
+        localTrackRef.current.stop();
+        localTrackRef.current = null;
+      }
 
-    // Stop display media stream if active
-    if (mediaStreamRef.current) {
-      mediaStreamRef.current.getTracks().forEach((track) => track.stop());
-      mediaStreamRef.current = null;
-    }
+      // Stop display media stream if active
+      if (mediaStreamRef.current) {
+        mediaStreamRef.current.getTracks().forEach((track) => track.stop());
+        mediaStreamRef.current = null;
+      }
 
-    if (audioElementRef.current) {
-      audioElementRef.current.remove();
-      audioElementRef.current = null;
-    }
+      if (audioElementRef.current) {
+        audioElementRef.current.remove();
+        audioElementRef.current = null;
+      }
 
-    // Clear session timer and set cooldown if session expired
-    clearSessionTimer(expired);
+      // Clear session timer and set cooldown if session expired
+      clearSessionTimer(expired);
 
-    setIsConnected(false);
-    setIsPublishing(false);
-    setIsReceiving(false);
-  }, [clearSessionTimer]);
+      setIsConnected(false);
+      setIsPublishing(false);
+      setIsReceiving(false);
+    },
+    [clearSessionTimer],
+  );
 
   // Set audio volume
   const setVolume = useCallback((volume: number) => {
@@ -492,12 +516,13 @@ export function useLiveKitAudio(options?: UseLiveKitAudioOptions) {
       publishedTracks: roomRef.current?.localParticipant?.trackPublications.size || 0,
       remoteParticipants: roomRef.current?.remoteParticipants.size || 0,
       mediaStreamActive: mediaStreamRef.current?.active || false,
-      mediaStreamTracks: mediaStreamRef.current?.getTracks().map(t => ({
-        kind: t.kind,
-        enabled: t.enabled,
-        readyState: t.readyState,
-        label: t.label,
-      })) || [],
+      mediaStreamTracks:
+        mediaStreamRef.current?.getTracks().map((t) => ({
+          kind: t.kind,
+          enabled: t.enabled,
+          readyState: t.readyState,
+          label: t.label,
+        })) || [],
       localTrackSid: localTrackRef.current?.sid || null,
     };
   }, []);

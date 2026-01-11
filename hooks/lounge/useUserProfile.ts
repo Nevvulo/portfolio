@@ -1,9 +1,9 @@
-import { useQuery, useMutation } from "convex/react";
 import { useUser } from "@clerk/nextjs";
-import { useState, useCallback } from "react";
+import { useMutation, useQuery } from "convex/react";
+import { useCallback, useState } from "react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
-import type { UserProfile, ConnectedAccount } from "../../types/user-popout";
+import type { ConnectedAccount, UserProfile } from "../../types/user-popout";
 
 /**
  * Hook to fetch and manage a user's profile for the popout
@@ -12,10 +12,7 @@ export function useUserProfile(userId: Id<"users"> | null) {
   const { user: clerkUser, isLoaded: isClerkLoaded } = useUser();
 
   // Fetch profile from Convex
-  const profile = useQuery(
-    api.userProfiles.getUserProfile,
-    userId ? { userId } : "skip"
-  );
+  const profile = useQuery(api.userProfiles.getUserProfile, userId ? { userId } : "skip");
 
   // Mutations
   const clearBioMutation = useMutation(api.userProfiles.clearBio);
@@ -58,11 +55,10 @@ export function useUserProfile(userId: Id<"users"> | null) {
     const accounts: ConnectedAccount[] = [];
 
     // Get Discord account
-    const discordAccount = clerkUser.externalAccounts?.find(
-      (acc) => acc.provider === "discord"
-    );
+    const discordAccount = clerkUser.externalAccounts?.find((acc) => acc.provider === "discord");
     if (discordAccount) {
-      const discordId = (discordAccount as any).providerUserId || (discordAccount as any).externalId;
+      const discordId =
+        (discordAccount as any).providerUserId || (discordAccount as any).externalId;
       accounts.push({
         provider: "discord",
         username: discordAccount.username || "",
@@ -71,9 +67,7 @@ export function useUserProfile(userId: Id<"users"> | null) {
     }
 
     // Get Twitch account
-    const twitchAccount = clerkUser.externalAccounts?.find(
-      (acc) => acc.provider === "twitch"
-    );
+    const twitchAccount = clerkUser.externalAccounts?.find((acc) => acc.provider === "twitch");
     if (twitchAccount) {
       accounts.push({
         provider: "twitch",
@@ -85,7 +79,13 @@ export function useUserProfile(userId: Id<"users"> | null) {
     // Note: Google is intentionally NOT included per requirements
 
     return accounts;
-  }, [clerkUser, isOwnProfile, profile?.discordId, profile?.discordUsername, profile?.twitchUsername]);
+  }, [
+    clerkUser,
+    isOwnProfile,
+    profile?.discordId,
+    profile?.discordUsername,
+    profile?.twitchUsername,
+  ]);
 
   // Update bio
   const updateBio = useCallback(
@@ -114,7 +114,7 @@ export function useUserProfile(userId: Id<"users"> | null) {
         setIsUpdating(false);
       }
     },
-    [isOwnProfile]
+    [isOwnProfile],
   );
 
   // Clear bio
@@ -166,7 +166,7 @@ export function useUserProfile(userId: Id<"users"> | null) {
 
   // Get showConnections from Clerk metadata
   const showConnections = isOwnProfile
-    ? (clerkUser?.publicMetadata as any)?.showConnections ?? true
+    ? ((clerkUser?.publicMetadata as any)?.showConnections ?? true)
     : true; // Default to showing for others (they control their own)
 
   // Build the full profile object - supporter data now comes from profile itself

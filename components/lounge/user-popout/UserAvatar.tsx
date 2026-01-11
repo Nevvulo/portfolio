@@ -35,9 +35,7 @@ export function UserAvatar({
       ) : (
         <AvatarFallback $size={size}>{initials}</AvatarFallback>
       )}
-      {showPresence && (
-        <PresenceIndicator $status={status} $size={size} />
-      )}
+      {showPresence && <PresenceIndicator $status={status} $size={size} />}
     </AvatarContainer>
   );
 }

@@ -1,6 +1,6 @@
-import styled from "styled-components";
 import { useQuery } from "convex/react";
-import { useState, useCallback } from "react";
+import { useCallback, useState } from "react";
+import styled from "styled-components";
 import { api } from "../../convex/_generated/api";
 
 // Blog Post Preview Component
@@ -368,9 +368,7 @@ export function CodePlayground({
       </PlaygroundCode>
 
       {(output || error) && (
-        <PlaygroundOutput $hasError={!!error}>
-          {error || output}
-        </PlaygroundOutput>
+        <PlaygroundOutput $hasError={!!error}>{error || output}</PlaygroundOutput>
       )}
     </PlaygroundWrapper>
   );

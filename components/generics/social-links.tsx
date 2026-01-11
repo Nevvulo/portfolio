@@ -1,4 +1,11 @@
-import { faGithub, faLinkedin, faReddit, faTiktok, faTwitch, faYoutube } from "@fortawesome/free-brands-svg-icons";
+import {
+  faGithub,
+  faLinkedin,
+  faReddit,
+  faTiktok,
+  faTwitch,
+  faYoutube,
+} from "@fortawesome/free-brands-svg-icons";
 import { faEnvelope } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { m } from "framer-motion";
@@ -55,7 +62,11 @@ interface ExtraSocialLinks {
 }
 
 export const SocialLinks: React.FC<
-  ContainerProps & { include?: ExtraSocialLinks } & { color?: string; hideTwitch?: boolean; onHoverChange?: (isHovered: boolean) => void }
+  ContainerProps & { include?: ExtraSocialLinks } & {
+    color?: string;
+    hideTwitch?: boolean;
+    onHoverChange?: (isHovered: boolean) => void;
+  }
 > = ({ direction = "column", include = {}, color, hideTwitch = false, onHoverChange }) => {
   const handleHover = (isHovered: boolean, platform: string) => {
     // Don't trigger the extra "v" animation for Reddit

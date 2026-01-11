@@ -6,7 +6,7 @@ import NevuloLogo from "../../assets/svg/nevulo-huge-bold-svg.svg";
 import { BackButton, Header } from "../generics";
 import type { NavbarProps } from ".";
 
-type SimpleNavbarProps = Omit<NavbarProps, 'title'> & { title?: string; backRoute?: string };
+type SimpleNavbarProps = Omit<NavbarProps, "title"> & { title?: string; backRoute?: string };
 export function SimpleNavbar({ title, backRoute, children }: PropsWithChildren<SimpleNavbarProps>) {
   return (
     <Header justifyContent="center" direction="column">

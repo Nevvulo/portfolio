@@ -1,12 +1,13 @@
-import React, { useState, useCallback, useRef, useEffect } from "react";
-import styled from "styled-components";
-import { createPortal } from "react-dom";
-import { m, AnimatePresence } from "framer-motion";
-import { Send, X, MessageSquare } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import { LOUNGE_COLORS } from "@/constants/lounge";
-import { Id } from "@/convex/_generated/dataModel";
+import { AnimatePresence, m } from "framer-motion";
+import { MessageSquare, Send, X } from "lucide-react";
+import type React from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import styled from "styled-components";
 import { UserPopoutTrigger } from "@/components/lounge/user-popout";
+import { LOUNGE_COLORS } from "@/constants/lounge";
+import type { Id } from "@/convex/_generated/dataModel";
 
 interface Comment {
   _id: Id<"contentComments">;
@@ -59,8 +60,8 @@ interface InlineCommentBubbleProps {
 }
 
 export function InlineCommentBubble({
-  highlightId,
-  highlightedText,
+  highlightId: _highlightId,
+  highlightedText: _highlightedText,
   rect,
   isExpanded,
   comments,
@@ -129,7 +130,7 @@ export function InlineCommentBubble({
         onClose();
       }
     },
-    [handleSubmit, onClose]
+    [handleSubmit, onClose],
   );
 
   // Calculate position (viewport coordinates for fixed positioning)
@@ -209,7 +210,7 @@ export function InlineCommentBubble({
         <MessageSquare size={12} />
         {comments.length > 0 && <Count>{comments.length}</Count>}
       </CollapsedBubble>,
-      document.body
+      document.body,
     );
   }
 
@@ -261,10 +262,7 @@ export function InlineCommentBubble({
                     />
                   </UserPopoutTrigger>
                 ) : (
-                  <CommentAvatar
-                    src="/default-avatar.png"
-                    alt="User"
-                  />
+                  <CommentAvatar src="/default-avatar.png" alt="User" />
                 )}
                 <CommentContent>
                   <CommentHeader>
@@ -289,8 +287,8 @@ export function InlineCommentBubble({
           </CommentsList>
         )}
 
-        {!isReactionOnly && (
-          isSignedIn ? (
+        {!isReactionOnly &&
+          (isSignedIn ? (
             <InputWrapper>
               <CommentInput
                 ref={inputRef}
@@ -313,11 +311,10 @@ export function InlineCommentBubble({
             </InputWrapper>
           ) : (
             <SignInPrompt>Sign in to comment</SignInPrompt>
-          )
-        )}
+          ))}
       </BubbleContainer>
     </AnimatePresence>,
-    document.body
+    document.body,
   );
 }
 
@@ -479,8 +476,7 @@ const CommentHeader = styled.div`
 const AuthorName = styled.span<{ $isCreator?: boolean }>`
   font-size: 12px;
   font-weight: 600;
-  color: ${(props) =>
-    props.$isCreator ? LOUNGE_COLORS.tier2 : "rgba(255, 255, 255, 0.9)"};
+  color: ${(props) => (props.$isCreator ? LOUNGE_COLORS.tier2 : "rgba(255, 255, 255, 0.9)")};
   cursor: pointer;
 
   &:hover {

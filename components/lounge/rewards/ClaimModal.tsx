@@ -1,8 +1,8 @@
-import { useState, useRef } from "react";
-import styled from "styled-components";
-import { m, AnimatePresence } from "framer-motion";
-import { X, Upload, Mail, Package, Megaphone, Loader2 } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
+import { AnimatePresence, m } from "framer-motion";
+import { Loader2, Mail, Megaphone, Package, Upload, X } from "lucide-react";
+import { useRef, useState } from "react";
+import styled from "styled-components";
 import { LOUNGE_COLORS, RARITY_COLORS } from "../../../constants/lounge";
 import type { InventoryItem, ItemRarity } from "../../../types/lounge";
 
@@ -134,7 +134,7 @@ export function ClaimModal({ item, isOpen, onClose, onClaim }: ClaimModalProps) 
         itemId: item.id,
         rewardId: item.rewardId as string,
         deliveryMethod: isShoutout ? "inventory" : deliveryMethod,
-        email: deliveryMethod === "email" ? (customEmail || userEmail) : undefined,
+        email: deliveryMethod === "email" ? customEmail || userEmail : undefined,
         shoutoutTitle: isShoutout ? shoutoutTitle.trim() : undefined,
         shoutoutImage: isShoutout ? shoutoutImage || undefined : undefined,
         shoutoutLink: isShoutout && shoutoutLink.trim() ? shoutoutLink.trim() : undefined,
@@ -209,10 +209,7 @@ export function ClaimModal({ item, isOpen, onClose, onClaim }: ClaimModalProps) 
                   {shoutoutImage ? (
                     <ImagePreview>
                       <img src={shoutoutImage} alt="Preview" />
-                      <RemoveImageButton
-                        onClick={() => setShoutoutImage(null)}
-                        type="button"
-                      >
+                      <RemoveImageButton onClick={() => setShoutoutImage(null)} type="button">
                         <X size={16} />
                       </RemoveImageButton>
                     </ImagePreview>
@@ -247,9 +244,7 @@ export function ClaimModal({ item, isOpen, onClose, onClaim }: ClaimModalProps) 
                   />
                 </FormGroup>
 
-                <HelpText>
-                  Your shoutout will be posted to the #shoutouts channel!
-                </HelpText>
+                <HelpText>Your shoutout will be posted to the #shoutouts channel!</HelpText>
               </>
             ) : (
               // Delivery Method Form

@@ -1,4 +1,4 @@
-import { Node, mergeAttributes } from "@tiptap/core";
+import { mergeAttributes, Node } from "@tiptap/core";
 import { ReactNodeViewRenderer } from "@tiptap/react";
 import { EditorBlogPostPreview } from "../components/EditorBlogPostPreview";
 
@@ -36,7 +36,7 @@ export const BlogPostPreview = Node.create<BlogPostPreviewOptions>({
   parseHTML() {
     return [
       {
-        tag: 'blog-post-preview[data-id]',
+        tag: "blog-post-preview[data-id]",
       },
     ];
   },

@@ -1,28 +1,28 @@
-import React, { useState, useEffect, useCallback } from "react";
-import styled from "styled-components";
-import { createPortal } from "react-dom";
-import { m, AnimatePresence } from "framer-motion";
+import { useUser } from "@clerk/nextjs";
+import { useMutation, useQuery } from "convex/react";
+import { AnimatePresence, m } from "framer-motion";
 import {
-  X,
-  Share2,
-  Copy,
-  Check,
-  MessageSquare,
-  ChevronRight,
   ArrowLeft,
-  Lock,
-  Hash,
-  Megaphone,
+  Check,
+  ChevronRight,
+  Copy,
   FileText,
-  User,
-  Repeat2,
+  Hash,
   Loader2,
+  Lock,
+  Megaphone,
+  MessageSquare,
+  Repeat2,
+  Share2,
+  X,
 } from "lucide-react";
+import type React from "react";
+import { useCallback, useEffect, useState } from "react";
+import { createPortal } from "react-dom";
+import styled from "styled-components";
 import { LOUNGE_COLORS } from "@/constants/lounge";
-import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
-import { useUser } from "@clerk/nextjs";
 
 interface ShareModalProps {
   isOpen: boolean;
@@ -40,20 +40,12 @@ const CHANNEL_ICONS: Record<string, React.ReactNode> = {
   content: <FileText size={16} />,
 };
 
-export function ShareModal({
-  isOpen,
-  onClose,
-  postId,
-  postSlug,
-  postTitle,
-}: ShareModalProps) {
+export function ShareModal({ isOpen, onClose, postId, postSlug, postTitle }: ShareModalProps) {
   const [mounted, setMounted] = useState(false);
   const [screen, setScreen] = useState<ScreenState>("options");
   const [copied, setCopied] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
-  const [selectedChannel, setSelectedChannel] = useState<Id<"channels"> | null>(
-    null
-  );
+  const [selectedChannel, setSelectedChannel] = useState<Id<"channels"> | null>(null);
   const [shareComment, setShareComment] = useState("");
 
   const { isSignedIn } = useUser();
@@ -62,13 +54,12 @@ export function ShareModal({
   const repostToFeed = useMutation(api.userFeed.repostBlogPost);
   const hasReposted = useQuery(
     api.userFeed.hasUserRepostedBlogPost,
-    isSignedIn ? { blogPostId: postId } : "skip"
+    isSignedIn ? { blogPostId: postId } : "skip",
   );
   const [isReposting, setIsReposting] = useState(false);
 
   const postUrl = `https://nev.so/learn/${postSlug}`;
-  const canNativeShare =
-    typeof navigator !== "undefined" && typeof navigator.share === "function";
+  const canNativeShare = typeof navigator !== "undefined" && typeof navigator.share === "function";
 
   useEffect(() => {
     setMounted(true);
@@ -243,12 +234,8 @@ export function ShareModal({
                             {copied ? <Check size={18} /> : <Copy size={18} />}
                           </OptionIcon>
                           <OptionText>
-                            <OptionLabel>
-                              {copied ? "Copied!" : "Copy Link"}
-                            </OptionLabel>
-                            <OptionDescription>
-                              Copy the article URL to clipboard
-                            </OptionDescription>
+                            <OptionLabel>{copied ? "Copied!" : "Copy Link"}</OptionLabel>
+                            <OptionDescription>Copy the article URL to clipboard</OptionDescription>
                           </OptionText>
                         </OptionButton>
 
@@ -278,9 +265,7 @@ export function ShareModal({
                             </OptionIcon>
                             <OptionText>
                               <OptionLabel>Share to Lounge</OptionLabel>
-                              <OptionDescription>
-                                Post in a lounge channel
-                              </OptionDescription>
+                              <OptionDescription>Post in a lounge channel</OptionDescription>
                             </OptionText>
                             <ChevronRight size={16} />
                           </OptionButton>
@@ -291,9 +276,7 @@ export function ShareModal({
                             </OptionIcon>
                             <OptionText>
                               <OptionLabel $disabled>Share to Lounge</OptionLabel>
-                              <OptionDescription>
-                                Sign in to share in the lounge
-                              </OptionDescription>
+                              <OptionDescription>Sign in to share in the lounge</OptionDescription>
                             </OptionText>
                             <Lock size={14} />
                           </OptionButton>
@@ -330,9 +313,7 @@ export function ShareModal({
                             </OptionIcon>
                             <OptionText>
                               <OptionLabel $disabled>Repost to Feed</OptionLabel>
-                              <OptionDescription>
-                                Sign in to share to your feed
-                              </OptionDescription>
+                              <OptionDescription>Sign in to share to your feed</OptionDescription>
                             </OptionText>
                             <Lock size={14} />
                           </OptionButton>
@@ -407,9 +388,7 @@ export function ShareModal({
                         <Check size={32} />
                       </SuccessIcon>
                       <ScreenTitle>Shared!</ScreenTitle>
-                      <ScreenSubtitle>
-                        Your article has been shared to the channel.
-                      </ScreenSubtitle>
+                      <ScreenSubtitle>Your article has been shared to the channel.</ScreenSubtitle>
                       <DoneButton onClick={onClose}>Done</DoneButton>
                     </ScreenContainer>
                   )}
@@ -420,7 +399,7 @@ export function ShareModal({
         </>
       )}
     </AnimatePresence>,
-    document.body
+    document.body,
   );
 }
 
@@ -603,8 +582,7 @@ const OptionIcon = styled.div<{ $disabled?: boolean }>`
   justify-content: center;
   width: 36px;
   height: 36px;
-  background: ${(p) =>
-    p.$disabled ? "rgba(255, 255, 255, 0.05)" : "rgba(144, 116, 242, 0.15)"};
+  background: ${(p) => (p.$disabled ? "rgba(255, 255, 255, 0.05)" : "rgba(144, 116, 242, 0.15)")};
   border-radius: 8px;
   color: ${(p) => (p.$disabled ? "rgba(255, 255, 255, 0.4)" : LOUNGE_COLORS.tier1)};
   flex-shrink: 0;
@@ -671,19 +649,16 @@ const ChannelButton = styled.button<{ $selected?: boolean }>`
   gap: 10px;
   width: 100%;
   padding: 10px 12px;
-  background: ${(p) =>
-    p.$selected ? "rgba(144, 116, 242, 0.15)" : "rgba(255, 255, 255, 0.03)"};
+  background: ${(p) => (p.$selected ? "rgba(144, 116, 242, 0.15)" : "rgba(255, 255, 255, 0.03)")};
   border: 1px solid
-    ${(p) =>
-      p.$selected ? "rgba(144, 116, 242, 0.4)" : "rgba(255, 255, 255, 0.08)"};
+    ${(p) => (p.$selected ? "rgba(144, 116, 242, 0.4)" : "rgba(255, 255, 255, 0.08)")};
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.15s ease;
   text-align: left;
 
   &:hover {
-    background: ${(p) =>
-      p.$selected ? "rgba(144, 116, 242, 0.2)" : "rgba(255, 255, 255, 0.06)"};
+    background: ${(p) => (p.$selected ? "rgba(144, 116, 242, 0.2)" : "rgba(255, 255, 255, 0.06)")};
   }
 `;
 

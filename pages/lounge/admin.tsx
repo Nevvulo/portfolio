@@ -1,20 +1,11 @@
-import Head from "next/head";
-import styled from "styled-components";
-import { useQuery, useMutation, useAction } from "convex/react";
-import { useEffect, useState } from "react";
-import { api } from "../../convex/_generated/api";
-import { LoungeLayout } from "../../components/lounge/layout/LoungeLayout";
-import { useTierAccess } from "../../hooks/lounge/useTierAccess";
-import { useContentFormStore } from "../../hooks/lounge/useContentFormStore";
-import { LOUNGE_COLORS } from "../../constants/lounge";
 import {
-  DndContext,
   closestCenter,
+  DndContext,
+  type DragEndEvent,
   KeyboardSensor,
   PointerSensor,
   useSensor,
   useSensors,
-  type DragEndEvent,
 } from "@dnd-kit/core";
 import {
   arrayMove,
@@ -24,29 +15,37 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { useAction, useMutation, useQuery } from "convex/react";
 import {
-  Users,
-  MessageSquare,
-  TrendingUp,
-  Hash,
   Ban,
-  UserX,
   Crown,
-  Star,
-  Plus,
   Edit2,
-  Trash2,
-  Send,
-  Link,
-  RefreshCw,
   Gift,
-  Package,
-  Sparkles,
   GripVertical,
+  Hash,
+  Link,
+  MessageSquare,
+  Package,
+  Plus,
+  RefreshCw,
+  Send,
+  Sparkles,
+  Star,
+  Trash2,
+  TrendingUp,
+  Users,
+  UserX,
 } from "lucide-react";
-import { RARITY_COLORS, REWARD_TYPES } from "../../constants/lounge";
-import type { ItemRarity } from "../../types/lounge";
+import Head from "next/head";
+import { useEffect, useState } from "react";
+import styled from "styled-components";
+import { LoungeLayout } from "../../components/lounge/layout/LoungeLayout";
+import { LOUNGE_COLORS, RARITY_COLORS, REWARD_TYPES } from "../../constants/lounge";
+import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
+import { useContentFormStore } from "../../hooks/lounge/useContentFormStore";
+import { useTierAccess } from "../../hooks/lounge/useTierAccess";
+import type { ItemRarity } from "../../types/lounge";
 
 export const getServerSideProps = () => ({ props: {} });
 
@@ -56,7 +55,7 @@ export default function AdminPage() {
   const [mounted, setMounted] = useState(false);
   const [userReady, setUserReady] = useState(false);
   const [activeTab, setActiveTab] = useState<TabType>("analytics");
-  const { isLoading, isCreator, user, tier, displayName, avatarUrl } = useTierAccess();
+  const { isLoading, isCreator, user, displayName, avatarUrl } = useTierAccess();
 
   const getOrCreateUser = useAction(api.users.getOrCreateUser);
 
@@ -71,13 +70,17 @@ export default function AdminPage() {
     getOrCreateUser({
       displayName: displayName || "Anonymous",
       avatarUrl: avatarUrl,
-    }).then(() => setUserReady(true)).catch(() => setUserReady(true));
+    })
+      .then(() => setUserReady(true))
+      .catch(() => setUserReady(true));
   }, [mounted, isLoading, user, displayName, avatarUrl, userReady, getOrCreateUser]);
 
   if (isLoading || !userReady) {
     return (
       <LoungeLayout>
-        <Container><p>Loading...</p></Container>
+        <Container>
+          <p>Loading...</p>
+        </Container>
       </LoungeLayout>
     );
   }
@@ -85,7 +88,9 @@ export default function AdminPage() {
   if (!isCreator) {
     return (
       <>
-        <Head><title>Access Denied | nevulounge</title></Head>
+        <Head>
+          <title>Access Denied | nevulounge</title>
+        </Head>
         <LoungeLayout>
           <Container>
             <Title>Access Denied</Title>
@@ -98,7 +103,9 @@ export default function AdminPage() {
 
   return (
     <>
-      <Head><title>Admin Panel | nevulounge</title></Head>
+      <Head>
+        <title>Admin Panel | nevulounge</title>
+      </Head>
       <LoungeLayout>
         <AdminContainer>
           <Header>
@@ -116,7 +123,10 @@ export default function AdminPage() {
             <Tab $active={activeTab === "users"} onClick={() => setActiveTab("users")}>
               <Users size={16} /> Users
             </Tab>
-            <Tab $active={activeTab === "announcements"} onClick={() => setActiveTab("announcements")}>
+            <Tab
+              $active={activeTab === "announcements"}
+              onClick={() => setActiveTab("announcements")}
+            >
               <MessageSquare size={16} /> Announce
             </Tab>
             <Tab $active={activeTab === "discord"} onClick={() => setActiveTab("discord")}>
@@ -152,22 +162,30 @@ function AnalyticsTab() {
       <SectionTitle>Overview</SectionTitle>
       <StatsGrid>
         <StatCard>
-          <StatIcon><Users size={24} /></StatIcon>
+          <StatIcon>
+            <Users size={24} />
+          </StatIcon>
           <StatValue>{analytics.users.total}</StatValue>
           <StatLabel>Total Users</StatLabel>
         </StatCard>
         <StatCard>
-          <StatIcon $color={LOUNGE_COLORS.tier1}><Star size={24} /></StatIcon>
+          <StatIcon $color={LOUNGE_COLORS.tier1}>
+            <Star size={24} />
+          </StatIcon>
           <StatValue>{analytics.users.tier1}</StatValue>
           <StatLabel>Tier 1</StatLabel>
         </StatCard>
         <StatCard>
-          <StatIcon $color={LOUNGE_COLORS.tier2}><Crown size={24} /></StatIcon>
+          <StatIcon $color={LOUNGE_COLORS.tier2}>
+            <Crown size={24} />
+          </StatIcon>
           <StatValue>{analytics.users.tier2}</StatValue>
           <StatLabel>Tier 2 (VIP)</StatLabel>
         </StatCard>
         <StatCard>
-          <StatIcon $color="#3ba55d"><Users size={24} /></StatIcon>
+          <StatIcon $color="#3ba55d">
+            <Users size={24} />
+          </StatIcon>
           <StatValue>{analytics.users.activeToday}</StatValue>
           <StatLabel>Active Today</StatLabel>
         </StatCard>
@@ -203,9 +221,7 @@ function AnalyticsTab() {
             <ContributorCount>{contrib.messageCount} msgs</ContributorCount>
           </ContributorItem>
         ))}
-        {analytics.topContributors.length === 0 && (
-          <EmptyText>No messages yet</EmptyText>
-        )}
+        {analytics.topContributors.length === 0 && <EmptyText>No messages yet</EmptyText>}
       </ContributorsList>
     </div>
   );
@@ -221,14 +237,9 @@ function SortableChannelItem({
   onEdit: (channel: any) => void;
   onArchive: (channelId: Id<"channels">) => void;
 }) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: channel._id });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: channel._id,
+  });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -244,12 +255,21 @@ function SortableChannelItem({
       <ChannelInfo>
         <ChannelName>#{channel.name}</ChannelName>
         <ChannelMeta>
-          {channel.type} | {channel.requiredTier === "free" ? "Everyone" : channel.requiredTier === "tier2" ? "Tier 2 Only" : "Tier 1+"}
+          {channel.type} |{" "}
+          {channel.requiredTier === "free"
+            ? "Everyone"
+            : channel.requiredTier === "tier2"
+              ? "Tier 2 Only"
+              : "Tier 1+"}
         </ChannelMeta>
       </ChannelInfo>
       <ChannelActions>
-        <IconButton onClick={() => onEdit(channel)} title="Edit"><Edit2 size={14} /></IconButton>
-        <IconButton onClick={() => onArchive(channel._id)} title="Archive" $danger><Trash2 size={14} /></IconButton>
+        <IconButton onClick={() => onEdit(channel)} title="Edit">
+          <Edit2 size={14} />
+        </IconButton>
+        <IconButton onClick={() => onArchive(channel._id)} title="Archive" $danger>
+          <Trash2 size={14} />
+        </IconButton>
       </ChannelActions>
     </ChannelItem>
   );
@@ -294,7 +314,7 @@ function ChannelsTab() {
     }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
-    })
+    }),
   );
 
   const handleDragEnd = async (event: DragEndEvent) => {
@@ -333,7 +353,16 @@ function ChannelsTab() {
         discordWebhookUrl: formData.discordWebhookUrl || undefined,
       });
       setShowCreate(false);
-      setFormData({ name: "", slug: "", description: "", type: "chat", requiredTier: "tier1", icon: "hash", discordChannelId: "", discordWebhookUrl: "" });
+      setFormData({
+        name: "",
+        slug: "",
+        description: "",
+        type: "chat",
+        requiredTier: "tier1",
+        icon: "hash",
+        discordChannelId: "",
+        discordWebhookUrl: "",
+      });
     } catch (err: any) {
       alert(err.message);
     }
@@ -391,8 +420,12 @@ function ChannelsTab() {
       <SectionHeader>
         <SectionTitle>Channels</SectionTitle>
         <ButtonGroup>
-          <ActionButton onClick={() => setShowCreate(true)}><Plus size={14} /> New Channel</ActionButton>
-          <SecondaryButton onClick={handleSeed}><RefreshCw size={14} /> Seed Defaults</SecondaryButton>
+          <ActionButton onClick={() => setShowCreate(true)}>
+            <Plus size={14} /> New Channel
+          </ActionButton>
+          <SecondaryButton onClick={handleSeed}>
+            <RefreshCw size={14} /> Seed Defaults
+          </SecondaryButton>
         </ButtonGroup>
       </SectionHeader>
 
@@ -406,17 +439,28 @@ function ChannelsTab() {
           <FormGrid>
             <FormGroup>
               <Label>Name</Label>
-              <Input value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} placeholder="general" />
+              <Input
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                placeholder="general"
+              />
             </FormGroup>
             {!editingId && (
               <FormGroup>
                 <Label>Slug</Label>
-                <Input value={formData.slug} onChange={(e) => setFormData({ ...formData, slug: e.target.value })} placeholder="auto-generated" />
+                <Input
+                  value={formData.slug}
+                  onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+                  placeholder="auto-generated"
+                />
               </FormGroup>
             )}
             <FormGroup>
               <Label>Type</Label>
-              <Select value={formData.type} onChange={(e) => setFormData({ ...formData, type: e.target.value as any })}>
+              <Select
+                value={formData.type}
+                onChange={(e) => setFormData({ ...formData, type: e.target.value as any })}
+              >
                 <option value="chat">Chat</option>
                 <option value="announcements">Announcements</option>
                 <option value="content">Content</option>
@@ -424,7 +468,10 @@ function ChannelsTab() {
             </FormGroup>
             <FormGroup>
               <Label>Required Tier</Label>
-              <Select value={formData.requiredTier} onChange={(e) => setFormData({ ...formData, requiredTier: e.target.value as any })}>
+              <Select
+                value={formData.requiredTier}
+                onChange={(e) => setFormData({ ...formData, requiredTier: e.target.value as any })}
+              >
                 <option value="free">Everyone (Free)</option>
                 <option value="tier1">Tier 1+</option>
                 <option value="tier2">Tier 2 Only</option>
@@ -432,11 +479,18 @@ function ChannelsTab() {
             </FormGroup>
             <FormGroup $fullWidth>
               <Label>Description</Label>
-              <Input value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} placeholder="Optional description" />
+              <Input
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                placeholder="Optional description"
+              />
             </FormGroup>
             <FormGroup>
               <Label>Icon</Label>
-              <Select value={formData.icon} onChange={(e) => setFormData({ ...formData, icon: e.target.value })}>
+              <Select
+                value={formData.icon}
+                onChange={(e) => setFormData({ ...formData, icon: e.target.value })}
+              >
                 <option value="hash">Hash #</option>
                 <option value="megaphone">Megaphone</option>
                 <option value="sparkles">Sparkles</option>
@@ -447,18 +501,23 @@ function ChannelsTab() {
             </FormGroup>
           </FormGrid>
           <FormActions>
-            <SecondaryButton onClick={() => { setShowCreate(false); setEditingId(null); }}>Cancel</SecondaryButton>
-            <ActionButton onClick={editingId ? handleUpdate : handleCreate}>{editingId ? "Save" : "Create"}</ActionButton>
+            <SecondaryButton
+              onClick={() => {
+                setShowCreate(false);
+                setEditingId(null);
+              }}
+            >
+              Cancel
+            </SecondaryButton>
+            <ActionButton onClick={editingId ? handleUpdate : handleCreate}>
+              {editingId ? "Save" : "Create"}
+            </ActionButton>
           </FormActions>
         </FormCard>
       )}
 
       <ChannelList>
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragEnd={handleDragEnd}
-        >
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
           <SortableContext
             items={localChannels.map((c) => c._id)}
             strategy={verticalListSortingStrategy}
@@ -473,7 +532,9 @@ function ChannelsTab() {
             ))}
           </SortableContext>
         </DndContext>
-        {!localChannels.length && <EmptyText>No channels. Click "Seed Defaults" to create some.</EmptyText>}
+        {!localChannels.length && (
+          <EmptyText>No channels. Click "Seed Defaults" to create some.</EmptyText>
+        )}
       </ChannelList>
     </div>
   );
@@ -533,10 +594,18 @@ function UsersTab() {
       <SectionHeader>
         <SectionTitle>Users ({users?.length ?? 0})</SectionTitle>
         <FilterGroup>
-          <FilterButton $active={filter === "all"} onClick={() => setFilter("all")}>All</FilterButton>
-          <FilterButton $active={filter === "tier1"} onClick={() => setFilter("tier1")}>Tier 1</FilterButton>
-          <FilterButton $active={filter === "tier2"} onClick={() => setFilter("tier2")}>VIP</FilterButton>
-          <FilterButton $active={filter === "banned"} onClick={() => setFilter("banned")}>Banned</FilterButton>
+          <FilterButton $active={filter === "all"} onClick={() => setFilter("all")}>
+            All
+          </FilterButton>
+          <FilterButton $active={filter === "tier1"} onClick={() => setFilter("tier1")}>
+            Tier 1
+          </FilterButton>
+          <FilterButton $active={filter === "tier2"} onClick={() => setFilter("tier2")}>
+            VIP
+          </FilterButton>
+          <FilterButton $active={filter === "banned"} onClick={() => setFilter("banned")}>
+            Banned
+          </FilterButton>
         </FilterGroup>
       </SectionHeader>
 
@@ -559,10 +628,9 @@ function UsersTab() {
                 {u.isBanned && <BannedBadge>Banned</BannedBadge>}
               </UserName>
               <UserMeta>
-                {u.tier === "tier2" ? "VIP" : u.tier === "tier1" ? "Tier 1" : "Member"} | Last seen: {u.lastSeenAt ? new Date(u.lastSeenAt).toLocaleDateString() : "Never"}
-                {u.isBanned && u.banReason && (
-                  <BanReason> | Reason: {u.banReason}</BanReason>
-                )}
+                {u.tier === "tier2" ? "VIP" : u.tier === "tier1" ? "Tier 1" : "Member"} | Last seen:{" "}
+                {u.lastSeenAt ? new Date(u.lastSeenAt).toLocaleDateString() : "Never"}
+                {u.isBanned && u.banReason && <BanReason> | Reason: {u.banReason}</BanReason>}
               </UserMeta>
             </UserInfo>
             {!u.isCreator && (
@@ -575,11 +643,17 @@ function UsersTab() {
                   <option value="tier1">Tier 1</option>
                   <option value="tier2">VIP</option>
                 </Select>
-                <IconButton onClick={() => handleKick(u._id)} title="Kick"><UserX size={14} /></IconButton>
+                <IconButton onClick={() => handleKick(u._id)} title="Kick">
+                  <UserX size={14} />
+                </IconButton>
                 {u.isBanned ? (
-                  <IconButton onClick={() => handleUnban(u._id)} title="Unban" $success><RefreshCw size={14} /></IconButton>
+                  <IconButton onClick={() => handleUnban(u._id)} title="Unban" $success>
+                    <RefreshCw size={14} />
+                  </IconButton>
                 ) : (
-                  <IconButton onClick={() => handleBan(u._id)} title="Ban" $danger><Ban size={14} /></IconButton>
+                  <IconButton onClick={() => handleBan(u._id)} title="Ban" $danger>
+                    <Ban size={14} />
+                  </IconButton>
                 )}
               </UserActions>
             )}
@@ -597,8 +671,18 @@ const CONTENT_TYPES = [
   { value: "music", label: "Music", icon: "🎵", description: "Audio tracks and music releases" },
   { value: "video", label: "Video", icon: "🎬", description: "Video content and clips" },
   { value: "writing", label: "Writing/Blog", icon: "📝", description: "Articles and blog posts" },
-  { value: "game_build", label: "Game Build", icon: "🎮", description: "Game releases and updates" },
-  { value: "tools", label: "Tools/Resources", icon: "🔧", description: "Useful tools and resources" },
+  {
+    value: "game_build",
+    label: "Game Build",
+    icon: "🎮",
+    description: "Game releases and updates",
+  },
+  {
+    value: "tools",
+    label: "Tools/Resources",
+    icon: "🔧",
+    description: "Useful tools and resources",
+  },
   { value: "event", label: "Event", icon: "📅", description: "Upcoming events and streams" },
   { value: "advice", label: "Advice/Tips", icon: "💡", description: "Tips and recommendations" },
   { value: "giveaway", label: "Giveaway", icon: "🎁", description: "Prize giveaways" },
@@ -614,19 +698,60 @@ function AnnouncementsTab() {
   // Use Zustand store for all form state
   const form = useContentFormStore();
   const {
-    selectedChannel, contentType, title, content, requiredTier, sendToDiscord,
-    sending, uploadingMedia, mediaUrl, mediaThumbnail, mediaDuration, mediaFile, soundcloudUrl,
-    eventStartTime, eventEndTime, eventTimezone, eventLocation,
-    giveawayEndsAt, giveawayPrize, giveawayMaxEntries,
-    pollOptions, pollEndsAt, pollAllowMultiple,
-    emojiEmoji, emojiMessage,
+    selectedChannel,
+    contentType,
+    title,
+    content,
+    requiredTier,
+    sendToDiscord,
+    sending,
+    uploadingMedia,
+    mediaUrl,
+    mediaThumbnail,
+    mediaDuration,
+    mediaFile,
+    soundcloudUrl,
+    eventStartTime,
+    eventEndTime,
+    eventTimezone,
+    eventLocation,
+    giveawayEndsAt,
+    giveawayPrize,
+    giveawayMaxEntries,
+    pollOptions,
+    pollEndsAt,
+    pollAllowMultiple,
+    emojiEmoji,
+    emojiMessage,
     // Actions
-    setSelectedChannel, setContentType, setTitle, setContent, setRequiredTier,
-    setSendToDiscord, setSending, setUploadingMedia, setMediaUrl, setMediaThumbnail,
-    setMediaDuration, setMediaFile, setSoundcloudUrl, setEventStartTime, setEventEndTime, setEventTimezone,
-    setEventLocation, setGiveawayEndsAt, setGiveawayPrize, setGiveawayMaxEntries,
-    updatePollOption, addPollOption, removePollOption, setPollEndsAt, setPollAllowMultiple,
-    setEmojiEmoji, setEmojiMessage, resetForm,
+    setSelectedChannel,
+    setContentType,
+    setTitle,
+    setContent,
+    setRequiredTier,
+    setSendToDiscord,
+    setSending,
+    setUploadingMedia,
+    setMediaUrl,
+    setMediaThumbnail,
+    setMediaDuration,
+    setMediaFile,
+    setSoundcloudUrl,
+    setEventStartTime,
+    setEventEndTime,
+    setEventTimezone,
+    setEventLocation,
+    setGiveawayEndsAt,
+    setGiveawayPrize,
+    setGiveawayMaxEntries,
+    updatePollOption,
+    addPollOption,
+    removePollOption,
+    setPollEndsAt,
+    setPollAllowMultiple,
+    setEmojiEmoji,
+    setEmojiMessage,
+    resetForm,
   } = form;
 
   const handleSend = async () => {
@@ -650,11 +775,11 @@ function AnnouncementsTab() {
     setSending(true);
     try {
       // Build type-specific data
-      let media = undefined;
-      let eventData = undefined;
-      let giveawayData = undefined;
-      let pollData = undefined;
-      let emojiData = undefined;
+      let media;
+      let eventData;
+      let giveawayData;
+      let pollData;
+      let emojiData;
 
       if (contentType === "music" || contentType === "video") {
         let finalMediaUrl = mediaUrl;
@@ -820,16 +945,17 @@ function AnnouncementsTab() {
               </ContentTypeCard>
             ))}
           </ContentTypeGrid>
-          {selectedTypeInfo && (
-            <TypeDescription>{selectedTypeInfo.description}</TypeDescription>
-          )}
+          {selectedTypeInfo && <TypeDescription>{selectedTypeInfo.description}</TypeDescription>}
         </FormGroup>
 
         {/* Basic Fields - hide for emoji type */}
         {contentType !== "emoji" && (
           <FormGrid>
             <FormGroup $fullWidth>
-              <Label>Title {!["poll", "video", "game_build", "giveaway", "music"].includes(contentType) && "*"}</Label>
+              <Label>
+                Title{" "}
+                {!["poll", "video", "game_build", "giveaway", "music"].includes(contentType) && "*"}
+              </Label>
               <Input
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
@@ -838,7 +964,12 @@ function AnnouncementsTab() {
             </FormGroup>
 
             <FormGroup $fullWidth>
-              <Label>Content {!["poll", "emoji", "video", "game_build", "giveaway", "music"].includes(contentType) && "*"}</Label>
+              <Label>
+                Content{" "}
+                {!["poll", "emoji", "video", "game_build", "giveaway", "music"].includes(
+                  contentType,
+                ) && "*"}
+              </Label>
               <TextArea
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
@@ -879,16 +1010,23 @@ function AnnouncementsTab() {
         {/* Type-specific Fields */}
         {(contentType === "music" || contentType === "video") && (
           <TypeSpecificSection>
-            <SectionLabel>
-              {contentType === "music" ? "🎵" : "🎬"} Media Details
-            </SectionLabel>
+            <SectionLabel>{contentType === "music" ? "🎵" : "🎬"} Media Details</SectionLabel>
             <FormGrid>
               <FormGroup $fullWidth>
-                <Label>Upload File {contentType === "music" ? "(MP3, WAV, OGG - max 15MB)" : "(MP4, WebM - max 25MB)"}</Label>
+                <Label>
+                  Upload File{" "}
+                  {contentType === "music"
+                    ? "(MP3, WAV, OGG - max 15MB)"
+                    : "(MP4, WebM - max 25MB)"}
+                </Label>
                 <FileInputWrapper>
                   <FileInput
                     type="file"
-                    accept={contentType === "music" ? "audio/mpeg,audio/mp3,audio/wav,audio/ogg" : "video/mp4,video/webm"}
+                    accept={
+                      contentType === "music"
+                        ? "audio/mpeg,audio/mp3,audio/wav,audio/ogg"
+                        : "video/mp4,video/webm"
+                    }
                     onChange={(e) => {
                       const file = e.target.files?.[0];
                       if (file) {
@@ -898,7 +1036,9 @@ function AnnouncementsTab() {
                     }}
                   />
                   <FileInputLabel>
-                    {mediaFile ? mediaFile.name : `Choose ${contentType === "music" ? "audio" : "video"} file...`}
+                    {mediaFile
+                      ? mediaFile.name
+                      : `Choose ${contentType === "music" ? "audio" : "video"} file...`}
                   </FileInputLabel>
                 </FileInputWrapper>
                 {mediaFile && (
@@ -916,7 +1056,11 @@ function AnnouncementsTab() {
                     setMediaUrl(e.target.value);
                     setMediaFile(null); // Clear file when URL entered
                   }}
-                  placeholder={contentType === "music" ? "https://example.com/track.mp3" : "https://example.com/video.mp4"}
+                  placeholder={
+                    contentType === "music"
+                      ? "https://example.com/track.mp3"
+                      : "https://example.com/video.mp4"
+                  }
                   disabled={!!mediaFile}
                 />
               </FormGroup>
@@ -945,7 +1089,9 @@ function AnnouncementsTab() {
                     onChange={(e) => setSoundcloudUrl(e.target.value)}
                     placeholder="https://soundcloud.com/artist/track"
                   />
-                  <HelpText>If provided, users can choose between SoundCloud or direct download</HelpText>
+                  <HelpText>
+                    If provided, users can choose between SoundCloud or direct download
+                  </HelpText>
                 </FormGroup>
               )}
             </FormGrid>
@@ -1050,7 +1196,11 @@ function AnnouncementsTab() {
                 </PollOptionRow>
               ))}
               {pollOptions.length < 10 && (
-                <SecondaryButton type="button" onClick={addPollOption} style={{ marginTop: "0.5rem" }}>
+                <SecondaryButton
+                  type="button"
+                  onClick={addPollOption}
+                  style={{ marginTop: "0.5rem" }}
+                >
                   <Plus size={14} /> Add Option
                 </SecondaryButton>
               )}
@@ -1115,8 +1265,13 @@ function AnnouncementsTab() {
           </CheckboxLabel>
         </FormGroup>
 
-        <ActionButton onClick={handleSend} disabled={sending || uploadingMedia} style={{ marginTop: "1rem" }}>
-          <Send size={14} /> {uploadingMedia ? "Uploading file..." : sending ? "Posting..." : "Post Content Drop"}
+        <ActionButton
+          onClick={handleSend}
+          disabled={sending || uploadingMedia}
+          style={{ marginTop: "1rem" }}
+        >
+          <Send size={14} />{" "}
+          {uploadingMedia ? "Uploading file..." : sending ? "Posting..." : "Post Content Drop"}
         </ActionButton>
       </FormCard>
     </div>
@@ -1221,23 +1376,27 @@ function RewardsTab() {
   const [shipType, setShipType] = useState<"monthly_drop" | "special">("special");
   const [shipTarget, setShipTarget] = useState<"all" | "tier1" | "tier2" | "individual">("tier1");
   const [selectedUserId, setSelectedUserId] = useState<Id<"users"> | null>(null);
-  const [items, setItems] = useState<Array<{
-    type: string;
-    name: string;
-    description: string;
-    rarity: ItemRarity;
-    assetUrl: string;
-    code: string;
-    expiresAfterDays: string;
-  }>>([{
-    type: "wallpaper",
-    name: "",
-    description: "",
-    rarity: "rare",
-    assetUrl: "",
-    code: "",
-    expiresAfterDays: "",
-  }]);
+  const [items, setItems] = useState<
+    Array<{
+      type: string;
+      name: string;
+      description: string;
+      rarity: ItemRarity;
+      assetUrl: string;
+      code: string;
+      expiresAfterDays: string;
+    }>
+  >([
+    {
+      type: "wallpaper",
+      name: "",
+      description: "",
+      rarity: "rare",
+      assetUrl: "",
+      code: "",
+      expiresAfterDays: "",
+    },
+  ]);
 
   // Queries
   const analytics = useQuery(api.rewards.getRewardsAnalytics);
@@ -1250,15 +1409,18 @@ function RewardsTab() {
 
   const addItem = () => {
     if (items.length >= 3) return;
-    setItems([...items, {
-      type: "wallpaper",
-      name: "",
-      description: "",
-      rarity: "rare",
-      assetUrl: "",
-      code: "",
-      expiresAfterDays: "",
-    }]);
+    setItems([
+      ...items,
+      {
+        type: "wallpaper",
+        name: "",
+        description: "",
+        rarity: "rare",
+        assetUrl: "",
+        code: "",
+        expiresAfterDays: "",
+      },
+    ]);
   };
 
   const removeItem = (index: number) => {
@@ -1310,15 +1472,17 @@ function RewardsTab() {
 
       alert("Mystery boxes shipped successfully!");
       setShowShipModal(false);
-      setItems([{
-        type: "wallpaper",
-        name: "",
-        description: "",
-        rarity: "rare",
-        assetUrl: "",
-        code: "",
-        expiresAfterDays: "",
-      }]);
+      setItems([
+        {
+          type: "wallpaper",
+          name: "",
+          description: "",
+          rarity: "rare",
+          assetUrl: "",
+          code: "",
+          expiresAfterDays: "",
+        },
+      ]);
     } catch (err: any) {
       alert(err.message);
     } finally {
@@ -1348,22 +1512,30 @@ function RewardsTab() {
       {analytics && (
         <StatsGrid>
           <StatCard>
-            <StatIcon><Package size={24} /></StatIcon>
+            <StatIcon>
+              <Package size={24} />
+            </StatIcon>
             <StatValue>{analytics.totalBoxes}</StatValue>
             <StatLabel>Total Boxes</StatLabel>
           </StatCard>
           <StatCard>
-            <StatIcon $color="#22c55e"><Gift size={24} /></StatIcon>
+            <StatIcon $color="#22c55e">
+              <Gift size={24} />
+            </StatIcon>
             <StatValue>{analytics.openedBoxes}</StatValue>
             <StatLabel>Opened</StatLabel>
           </StatCard>
           <StatCard>
-            <StatIcon $color="#f59e0b"><Package size={24} /></StatIcon>
+            <StatIcon $color="#f59e0b">
+              <Package size={24} />
+            </StatIcon>
             <StatValue>{analytics.pendingBoxes}</StatValue>
             <StatLabel>Pending</StatLabel>
           </StatCard>
           <StatCard>
-            <StatIcon $color={LOUNGE_COLORS.tier1}><Sparkles size={24} /></StatIcon>
+            <StatIcon $color={LOUNGE_COLORS.tier1}>
+              <Sparkles size={24} />
+            </StatIcon>
             <StatValue>{analytics.totalItems}</StatValue>
             <StatLabel>Total Items</StatLabel>
           </StatCard>
@@ -1397,9 +1569,7 @@ function RewardsTab() {
             <RewardItem key={reward._id}>
               <RewardInfo>
                 <RewardUserInfo>
-                  {reward.user?.avatarUrl && (
-                    <UserAvatar src={reward.user.avatarUrl} alt="" />
-                  )}
+                  {reward.user?.avatarUrl && <UserAvatar src={reward.user.avatarUrl} alt="" />}
                   <div>
                     <RewardUserName>{reward.user?.displayName || "Unknown"}</RewardUserName>
                     <RewardMeta>
@@ -1410,7 +1580,10 @@ function RewardsTab() {
                 </RewardUserInfo>
                 <RewardItems>
                   {reward.items.map((item: any, i: number) => (
-                    <RewardItemBadge key={i} $color={RARITY_COLORS[item.rarity as ItemRarity]?.color || "#9CA3AF"}>
+                    <RewardItemBadge
+                      key={i}
+                      $color={RARITY_COLORS[item.rarity as ItemRarity]?.color || "#9CA3AF"}
+                    >
                       {item.name}
                     </RewardItemBadge>
                   ))}
@@ -1489,7 +1662,9 @@ function RewardsTab() {
                       onChange={(e) => updateItem(index, "type", e.target.value)}
                     >
                       {Object.entries(REWARD_TYPES).map(([key, val]) => (
-                        <option key={key} value={key}>{val.label}</option>
+                        <option key={key} value={key}>
+                          {val.label}
+                        </option>
                       ))}
                     </Select>
                   </FormGroup>
@@ -1499,9 +1674,13 @@ function RewardsTab() {
                       value={item.rarity}
                       onChange={(e) => updateItem(index, "rarity", e.target.value)}
                     >
-                      {(["common", "uncommon", "rare", "epic", "legendary"] as ItemRarity[]).map((r) => (
-                        <option key={r} value={r}>{RARITY_COLORS[r].label}</option>
-                      ))}
+                      {(["common", "uncommon", "rare", "epic", "legendary"] as ItemRarity[]).map(
+                        (r) => (
+                          <option key={r} value={r}>
+                            {RARITY_COLORS[r].label}
+                          </option>
+                        ),
+                      )}
                     </Select>
                   </FormGroup>
                   <FormGroup $fullWidth>
@@ -1898,7 +2077,7 @@ const ChannelItem = styled.div<{ $isDragging?: boolean }>`
   gap: 0.5rem;
   padding: 0.75rem 1rem;
   border-bottom: 1px solid ${LOUNGE_COLORS.glassBorder};
-  background: ${(p) => p.$isDragging ? LOUNGE_COLORS.channelActive : "transparent"};
+  background: ${(p) => (p.$isDragging ? LOUNGE_COLORS.channelActive : "transparent")};
   &:last-child { border-bottom: none; }
 `;
 

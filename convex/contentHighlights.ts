@@ -1,14 +1,14 @@
 import { v } from "convex/values";
-import { query, mutation } from "./_generated/server";
-import { getCurrentUser, requireUser, hasAccessToTier } from "./auth";
-import { Doc, Id } from "./_generated/dataModel";
+import type { Doc, Id } from "./_generated/dataModel";
+import { mutation, query } from "./_generated/server";
+import { getCurrentUser, hasAccessToTier, requireUser } from "./auth";
 
 /**
  * Check if user can access a post
  */
 async function canAccessPost(
   ctx: any,
-  postId: Id<"blogPosts">
+  postId: Id<"blogPosts">,
 ): Promise<{ post: Doc<"blogPosts">; user: Doc<"users"> | null }> {
   const post = await ctx.db.get(postId);
   if (!post) {
@@ -103,7 +103,7 @@ export const getWithDetails = query({
               }
             : null,
         };
-      })
+      }),
     );
 
     // Group by user for display
@@ -165,7 +165,7 @@ export const getMyHighlights = query({
               }
             : null,
         };
-      })
+      }),
     );
 
     return highlightsWithPosts;
@@ -183,9 +183,7 @@ export const getMyHighlightsForPost = query({
 
     const highlights = await ctx.db
       .query("contentHighlights")
-      .withIndex("by_user_post", (q) =>
-        q.eq("userId", user._id).eq("postId", args.postId)
-      )
+      .withIndex("by_user_post", (q) => q.eq("userId", user._id).eq("postId", args.postId))
       .collect();
 
     return highlights;

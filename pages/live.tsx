@@ -1,12 +1,12 @@
+import { faTwitch } from "@fortawesome/free-brands-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Head from "next/head";
+import Image from "next/image";
 import Script from "next/script";
 import styled from "styled-components";
+import TwitchLogo from "../assets/svg/twitch.svg";
 import { TopNavView } from "../components/layout/topnav";
 import { SimpleNavbar } from "../components/navbar/simple";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faTwitch } from "@fortawesome/free-brands-svg-icons";
-import Image from "next/image";
-import TwitchLogo from "../assets/svg/twitch.svg";
 
 const Background = styled.div`
   width: 100%;
@@ -172,14 +172,14 @@ export default function LivePage() {
         src="https://embed.twitch.tv/embed/v1.js"
         strategy="afterInteractive"
         onLoad={() => {
-          // @ts-ignore
+          // @ts-expect-error
           if (window.Twitch) {
             const embedContainer = document.getElementById("twitch-embed");
             if (embedContainer) {
               const width = embedContainer.offsetWidth;
               const height = embedContainer.offsetHeight;
 
-              // @ts-ignore
+              // @ts-expect-error
               new window.Twitch.Embed("twitch-embed", {
                 width: width,
                 height: height,
@@ -211,10 +211,7 @@ export default function LivePage() {
         />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="Nevulo Live on Twitch" />
-        <meta
-          name="twitter:description"
-          content="Watch Nevulo live streaming on Twitch."
-        />
+        <meta name="twitter:description" content="Watch Nevulo live streaming on Twitch." />
         <meta
           name="twitter:image"
           content="https://nev.so/api/og?title=Live%20Stream&subtitle=Watch%20me%20live%20on%20Twitch"

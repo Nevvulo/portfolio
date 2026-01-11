@@ -1,2 +1,2 @@
 export { TimelineScene } from "./TimelineScene";
-export { YearWheel, YearTicker, TickerDigit } from "./YearWheel";
+export { TickerDigit, YearTicker, YearWheel } from "./YearWheel";

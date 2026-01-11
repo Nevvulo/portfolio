@@ -1,22 +1,22 @@
 import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
+import { useQuery } from "convex/react";
 import { Menu, X } from "lucide-react";
 import Head from "next/head";
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import styled from "styled-components";
-import { useQuery } from "convex/react";
-import { api } from "../convex/_generated/api";
 import NevuloLogoSrc from "../assets/svg/nevulo-huge-bold-svg.svg";
 import { SupporterBadges } from "../components/badges/supporter-badges";
-import { BentoGrid, BentoCardProps } from "../components/learn";
-import { Skeleton } from "../components/generics/skeleton";
 import { SocialLinks } from "../components/generics";
 import { AnnouncementBanner } from "../components/generics/announcement-banner";
+import { Skeleton } from "../components/generics/skeleton";
 import { FadeIn, FadeUp } from "../components/home/animation";
 import { CanvasIntro } from "../components/home/canvas-intro";
+import { type BentoCardProps, BentoGrid } from "../components/learn";
 import { FeaturedProjectCard } from "../components/project/featured-project";
 import { ROUTES } from "../constants/routes";
+import { api } from "../convex/_generated/api";
 import type { DiscordWidget } from "../types/discord";
 import { fetchDiscordWidget } from "../utils/discord-widget";
 import { checkTwitchLiveStatus } from "../utils/twitch";
@@ -39,13 +39,13 @@ export default function Home({ discordWidget, isLive: serverIsLive }: HomeProps)
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const mockLive = params.get('mockLive');
-    if (mockLive === 'true') {
+    const mockLive = params.get("mockLive");
+    if (mockLive === "true") {
       setIsLiveOverride(true);
-      console.log('🔴 MOCK: Twitch live status set to TRUE');
-    } else if (mockLive === 'false') {
+      console.log("🔴 MOCK: Twitch live status set to TRUE");
+    } else if (mockLive === "false") {
       setIsLiveOverride(false);
-      console.log('⚫ MOCK: Twitch live status set to FALSE');
+      console.log("⚫ MOCK: Twitch live status set to FALSE");
     }
   }, []);
 
@@ -57,9 +57,9 @@ export default function Home({ discordWidget, isLive: serverIsLive }: HomeProps)
       }
     };
     if (mobileMenuOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener("mousedown", handleClickOutside);
     }
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [mobileMenuOpen]);
 
   // Handle scroll to fade out banner
@@ -80,10 +80,10 @@ export default function Home({ discordWidget, isLive: serverIsLive }: HomeProps)
       }
     };
 
-    const scrollContainer = document.getElementById('scroll-container');
+    const scrollContainer = document.getElementById("scroll-container");
     if (scrollContainer) {
-      scrollContainer.addEventListener('scroll', handleScroll);
-      return () => scrollContainer.removeEventListener('scroll', handleScroll);
+      scrollContainer.addEventListener("scroll", handleScroll);
+      return () => scrollContainer.removeEventListener("scroll", handleScroll);
     }
     return undefined;
   }, []);
@@ -106,12 +106,15 @@ export default function Home({ discordWidget, isLive: serverIsLive }: HomeProps)
 
   // DEBUG: Check bento sizes from Convex
   if (learnPosts?.length) {
-    console.log('Learn posts bento sizes:', learnPosts.map(p => ({ title: p.title, bentoSize: p.bentoSize })));
+    console.log(
+      "Learn posts bento sizes:",
+      learnPosts.map((p) => ({ title: p.title, bentoSize: p.bentoSize })),
+    );
   }
 
   // Get featured projects from Convex
   const projects = useQuery(api.projects.listActive);
-  const featuredProjects = projects?.filter(p => p.slug === "unloan" || p.slug === "flux") ?? [];
+  const featuredProjects = projects?.filter((p) => p.slug === "unloan" || p.slug === "flux") ?? [];
 
   return (
     <>
@@ -122,18 +125,38 @@ export default function Home({ discordWidget, isLive: serverIsLive }: HomeProps)
           <TopNavBar>
             {/* Mobile hamburger menu */}
             <MobileMenuWrapper ref={mobileMenuRef}>
-              <HamburgerButton onClick={() => setMobileMenuOpen(!mobileMenuOpen)} aria-label="Toggle menu">
+              <HamburgerButton
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                aria-label="Toggle menu"
+              >
                 {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
               </HamburgerButton>
               {mobileMenuOpen && (
                 <MobileMenu>
-                  <MobileNavLink href={ROUTES.ABOUT} onClick={() => setMobileMenuOpen(false)}>About</MobileNavLink>
-                  <MobileNavLink href={ROUTES.CONTACT} onClick={() => setMobileMenuOpen(false)}>Contact</MobileNavLink>
-                  <MobileNavLink href={ROUTES.BLOG.ROOT} onClick={() => setMobileMenuOpen(false)}>Blog</MobileNavLink>
-                  <MobileNavLink href={ROUTES.PROJECTS.ROOT} onClick={() => setMobileMenuOpen(false)}>Projects</MobileNavLink>
-                  <MobileNavLink href="/games" onClick={() => setMobileMenuOpen(false)}>Games</MobileNavLink>
-                  <MobileNavLink href="/live" onClick={() => setMobileMenuOpen(false)}>Live</MobileNavLink>
-                  <MobileNavLink href="/support" onClick={() => setMobileMenuOpen(false)}>Support</MobileNavLink>
+                  <MobileNavLink href={ROUTES.ABOUT} onClick={() => setMobileMenuOpen(false)}>
+                    About
+                  </MobileNavLink>
+                  <MobileNavLink href={ROUTES.CONTACT} onClick={() => setMobileMenuOpen(false)}>
+                    Contact
+                  </MobileNavLink>
+                  <MobileNavLink href={ROUTES.BLOG.ROOT} onClick={() => setMobileMenuOpen(false)}>
+                    Blog
+                  </MobileNavLink>
+                  <MobileNavLink
+                    href={ROUTES.PROJECTS.ROOT}
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Projects
+                  </MobileNavLink>
+                  <MobileNavLink href="/games" onClick={() => setMobileMenuOpen(false)}>
+                    Games
+                  </MobileNavLink>
+                  <MobileNavLink href="/live" onClick={() => setMobileMenuOpen(false)}>
+                    Live
+                  </MobileNavLink>
+                  <MobileNavLink href="/support" onClick={() => setMobileMenuOpen(false)}>
+                    Support
+                  </MobileNavLink>
                 </MobileMenu>
               )}
             </MobileMenuWrapper>
@@ -172,7 +195,11 @@ export default function Home({ discordWidget, isLive: serverIsLive }: HomeProps)
                   }}
                 >
                   <UserButton.MenuItems>
-                    <UserButton.Link href="/account" label="My Account" labelIcon={<AccountIcon />} />
+                    <UserButton.Link
+                      href="/account"
+                      label="My Account"
+                      labelIcon={<AccountIcon />}
+                    />
                   </UserButton.MenuItems>
                 </UserButton>
               </SignedIn>
@@ -187,19 +214,31 @@ export default function Home({ discordWidget, isLive: serverIsLive }: HomeProps)
               <HeroContainer>
                 <SocialContainer>
                   <FadeIn $delay={500}>
-                    <BannerWrapper style={{ opacity: bannerOpacity, pointerEvents: bannerOpacity === 0 ? 'none' : 'auto' }}>
+                    <BannerWrapper
+                      style={{
+                        opacity: bannerOpacity,
+                        pointerEvents: bannerOpacity === 0 ? "none" : "auto",
+                      }}
+                    >
                       <AnnouncementBanner isLive={isLive} discordWidget={discordWidget} />
                     </BannerWrapper>
                   </FadeIn>
 
                   <FadeIn $delay={545}>
-                    <SocialLinks direction='row' hideTwitch={isLive} onHoverChange={setIsSocialHovered} />
+                    <SocialLinks
+                      direction="row"
+                      hideTwitch={isLive}
+                      onHoverChange={setIsSocialHovered}
+                    />
                   </FadeIn>
                 </SocialContainer>
 
                 <HeaderContainer>
                   <TitleRow>
-                    <FadeUp $delay={100} style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                    <FadeUp
+                      $delay={100}
+                      style={{ display: "flex", alignItems: "center", gap: "12px" }}
+                    >
                       <LogoWrapper>
                         <Image
                           src={NevuloLogoSrc}
@@ -236,14 +275,12 @@ export default function Home({ discordWidget, isLive: serverIsLive }: HomeProps)
                 </HeaderContainer>
               </HeroContainer>
 
-                <FadeUp $delay={650}>
-
-              <ScrollHint>
+              <FadeUp $delay={650}>
+                <ScrollHint>
                   <ScrollText>scroll to explore</ScrollText>
                   <ScrollArrow>↓</ScrollArrow>
-              </ScrollHint>
-                </FadeUp>
-
+                </ScrollHint>
+              </FadeUp>
             </SectionContent>
           </Section>
 
@@ -252,9 +289,7 @@ export default function Home({ discordWidget, isLive: serverIsLive }: HomeProps)
             <LearnSectionContent>
               <LearnSectionHeader>
                 <LearnTitle>learn</LearnTitle>
-                <ViewAllLink href="/learn">
-                  View all →
-                </ViewAllLink>
+                <ViewAllLink href="/learn">View all →</ViewAllLink>
               </LearnSectionHeader>
 
               {latestLearnPosts.length > 0 ? (
@@ -279,9 +314,7 @@ export default function Home({ discordWidget, isLive: serverIsLive }: HomeProps)
                   <SectionTitlePrimary>latest</SectionTitlePrimary>
                   <SectionTitleSecondary>projects</SectionTitleSecondary>
                 </SectionTitle>
-                <ViewAllLink href={ROUTES.PROJECTS.ROOT}>
-                  View all projects →
-                </ViewAllLink>
+                <ViewAllLink href={ROUTES.PROJECTS.ROOT}>View all projects →</ViewAllLink>
               </SectionHeader>
 
               <ProjectsContainer>
@@ -297,43 +330,46 @@ export default function Home({ discordWidget, isLive: serverIsLive }: HomeProps)
             </SectionContent>
           </Section>
 
-      <Head>
-        <title>Nevulo - Software Engineer | Portfolio</title>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Protest+Revolution&display=swap" rel="stylesheet" />
-        <meta
-          name="description"
-          content="Software engineer based in Melbourne, Australia. Building exceptional digital experiences with modern web technologies."
-        />
+          <Head>
+            <title>Nevulo - Software Engineer | Portfolio</title>
+            <link rel="preconnect" href="https://fonts.googleapis.com" />
+            <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+            <link
+              href="https://fonts.googleapis.com/css2?family=Protest+Revolution&display=swap"
+              rel="stylesheet"
+            />
+            <meta
+              name="description"
+              content="Software engineer based in Melbourne, Australia. Building exceptional digital experiences with modern web technologies."
+            />
 
-        <meta property="og:title" content="Nevulo - Software Engineer" />
-        <meta
-          property="og:description"
-          content="Software engineer based in Melbourne, Australia. Building exceptional digital experiences with modern web technologies."
-        />
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://nev.so" />
-        <meta property="og:site_name" content="Blake's Portfolio" />
-        <meta
-          property="og:image"
-          content="https://nev.so/api/og?title=Blake%20-%20Software%20Engineer&subtitle=Building%20exceptional%20digital%20experiences%20in%20Melbourne"
-        />
-        <meta property="og:image:width" content="1200" />
-        <meta property="og:image:height" content="630" />
-        <meta property="og:image:alt" content="Blake - Software Engineer Portfolio" />
+            <meta property="og:title" content="Nevulo - Software Engineer" />
+            <meta
+              property="og:description"
+              content="Software engineer based in Melbourne, Australia. Building exceptional digital experiences with modern web technologies."
+            />
+            <meta property="og:type" content="website" />
+            <meta property="og:url" content="https://nev.so" />
+            <meta property="og:site_name" content="Blake's Portfolio" />
+            <meta
+              property="og:image"
+              content="https://nev.so/api/og?title=Blake%20-%20Software%20Engineer&subtitle=Building%20exceptional%20digital%20experiences%20in%20Melbourne"
+            />
+            <meta property="og:image:width" content="1200" />
+            <meta property="og:image:height" content="630" />
+            <meta property="og:image:alt" content="Blake - Software Engineer Portfolio" />
 
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Nevulo - Software Engineer" />
-        <meta
-          name="twitter:description"
-          content="Software engineer based in Melbourne, Australia. Building exceptional digital experiences with modern web technologies."
-        />
-        <meta
-          name="twitter:image"
-          content="https://nev.so/api/og?title=Blake%20-%20Software%20Engineer&subtitle=Building%20exceptional%20digital%20experiences%20in%20Melbourne"
-        />
-      </Head>
+            <meta name="twitter:card" content="summary_large_image" />
+            <meta name="twitter:title" content="Nevulo - Software Engineer" />
+            <meta
+              name="twitter:description"
+              content="Software engineer based in Melbourne, Australia. Building exceptional digital experiences with modern web technologies."
+            />
+            <meta
+              name="twitter:image"
+              content="https://nev.so/api/og?title=Blake%20-%20Software%20Engineer&subtitle=Building%20exceptional%20digital%20experiences%20in%20Melbourne"
+            />
+          </Head>
         </>
       )}
     </>
@@ -342,7 +378,16 @@ export default function Home({ discordWidget, isLive: serverIsLive }: HomeProps)
 
 // Simple account icon for UserButton menu
 const AccountIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg
+    width="14"
+    height="14"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
     <circle cx="12" cy="7" r="4" />
   </svg>
@@ -356,8 +401,9 @@ const TopNavBar = styled.nav`
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 8px 1rem;
-  padding-top: calc(8px + env(safe-area-inset-top, 0px));
+  min-height: 48px;
+  padding: 10px 1rem;
+  padding-top: calc(10px + env(safe-area-inset-top, 0px));
   background: rgba(17, 17, 17, 0.8);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid rgba(79, 77, 193, 0.1);
@@ -589,7 +635,7 @@ const LogoWrapper = styled.div`
   height: 48px;
   flex-shrink: 0;
   margin-right: 26px;
-  filter: ${(props) => props.theme.background === "#fff" ? "invert(1)" : "none"};
+  filter: ${(props) => (props.theme.background === "#fff" ? "invert(1)" : "none")};
 `;
 
 const NevuloTitle = styled.h1`
@@ -866,7 +912,6 @@ const SkeletonBentoCard = styled(Skeleton)<{ $cols: number; $rows: number }>`
     min-height: 200px;
   }
 `;
-
 
 const ProjectsContainer = styled.div`
   display: flex;

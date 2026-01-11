@@ -1,19 +1,21 @@
 /// <reference lib="dom" />
 import { describe, expect, test } from "bun:test";
 import { render, screen } from "@testing-library/react";
-import { ThemeProvider } from "styled-components";
 import { ConvexProvider, ConvexReactClient } from "convex/react";
+import { ThemeProvider } from "styled-components";
 import { LightTheme } from "../../constants/theme";
 import Home from "../../pages/index";
 
 // Mock Convex client for testing
-const mockConvexClient = new ConvexReactClient(process.env.NEXT_PUBLIC_CONVEX_URL || "https://mock.convex.cloud");
+const mockConvexClient = new ConvexReactClient(
+  process.env.NEXT_PUBLIC_CONVEX_URL || "https://mock.convex.cloud",
+);
 
 const renderWithProviders = (component: React.ReactElement) => {
   return render(
     <ConvexProvider client={mockConvexClient}>
       <ThemeProvider theme={LightTheme}>{component}</ThemeProvider>
-    </ConvexProvider>
+    </ConvexProvider>,
   );
 };
 

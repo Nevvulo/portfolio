@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback, useRef } from "react";
-import { extractAnchor, TextAnchor } from "./textAnchor";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { extractAnchor, type TextAnchor } from "./textAnchor";
 
 export interface SelectionState {
   /** The selected text */
@@ -216,7 +216,7 @@ export function useTextSelection({
 /**
  * Hook to manage highlight data fetching and mutations.
  */
-export function useHighlights(postId: string | undefined) {
+export function useHighlights(_postId: string | undefined) {
   // This will be implemented with Convex hooks in the component
   // Placeholder for the interface
   return {

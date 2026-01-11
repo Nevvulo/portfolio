@@ -1,26 +1,26 @@
-import Head from "next/head";
-import styled from "styled-components";
-import { useQuery, useMutation } from "convex/react";
-import { useEffect, useState } from "react";
-import { api } from "../../../convex/_generated/api";
-import { BlogView } from "../../../components/layout/blog";
-import { SimpleNavbar } from "../../../components/navbar/simple";
-import { useTierAccess } from "../../../hooks/lounge/useTierAccess";
+import { useMutation, useQuery } from "convex/react";
 import {
-  FolderOpen,
-  Database,
-  Check,
   AlertCircle,
-  Play,
-  Trash2,
+  Check,
+  Database,
   Edit,
   Eye,
   EyeOff,
+  FolderOpen,
   GripVertical,
+  Play,
   Plus,
+  Trash2,
   X,
 } from "lucide-react";
-import { Id } from "../../../convex/_generated/dataModel";
+import Head from "next/head";
+import { useEffect, useState } from "react";
+import styled from "styled-components";
+import { BlogView } from "../../../components/layout/blog";
+import { SimpleNavbar } from "../../../components/navbar/simple";
+import { api } from "../../../convex/_generated/api";
+import type { Id } from "../../../convex/_generated/dataModel";
+import { useTierAccess } from "../../../hooks/lounge/useTierAccess";
 
 // Migration data for seeding
 const TECHNOLOGIES_SEED = [
@@ -46,19 +46,22 @@ const ROLES_SEED = [
   {
     key: "CONTRIBUTOR",
     label: "Contributor",
-    description: "I've provided one or more meaningful pull requests to an open-source project that were accepted.",
+    description:
+      "I've provided one or more meaningful pull requests to an open-source project that were accepted.",
     color: "#00838f",
   },
   {
     key: "PLUGIN_DEVELOPER",
     label: "Plugin Developer",
-    description: "This project implements plugins which provide modifications to the base experience, and I have developed a plugin that extends functionality but isn't part of the core project.",
+    description:
+      "This project implements plugins which provide modifications to the base experience, and I have developed a plugin that extends functionality but isn't part of the core project.",
     color: "grey",
   },
   {
     key: "PAST_LEAD_DEVELOPER",
     label: "Past Lead Developer",
-    description: "This project was mostly or fully developed solely by me but no longer maintained.",
+    description:
+      "This project was mostly or fully developed solely by me but no longer maintained.",
     color: "#49704b",
   },
   {
@@ -86,7 +89,8 @@ const PROJECTS_SEED = [
     slug: "unloan",
     name: "Unloan",
     shortDescription: "Australia's first digital home loan",
-    background: "linear-gradient(30deg, #1f005c, #260062, #3d0074, #67008d, #ab00ad, #d10098, #f5006b, #ff1a3c, #ff4e3a, #ff8953, #ffaa65, #ffb56b)",
+    background:
+      "linear-gradient(30deg, #1f005c, #260062, #3d0074, #67008d, #ab00ad, #d10098, #f5006b, #ff1a3c, #ff4e3a, #ff8953, #ffaa65, #ffb56b)",
     logoUrl: "/assets/svg/projects/logo/unloan-white.svg",
     logoDarkUrl: "/assets/svg/projects/logo/unloan-logo-black.svg",
     logoWidth: 208,
@@ -125,7 +129,8 @@ const PROJECTS_SEED = [
     slug: "flux",
     name: "Flux",
     shortDescription: "Helping 200,000 Aussies win at money",
-    background: "linear-gradient(135deg, rgba(108, 234, 156, 0.15), rgba(108, 234, 156, 0.2), rgba(108, 234, 156, 0.25))",
+    background:
+      "linear-gradient(135deg, rgba(108, 234, 156, 0.15), rgba(108, 234, 156, 0.2), rgba(108, 234, 156, 0.25))",
     logoUrl: "/assets/svg/projects/logo/flux-white.svg",
     logoDarkUrl: "/assets/svg/projects/logo/flux-dark.svg",
     logoWidth: 180,
@@ -308,7 +313,7 @@ const PROJECTS_SEED = [
         id: "users",
         emoji: "🙋🏻",
         header: "60 thousand users over 1,500 guilds",
-        text: "zBot is the largest self-made project I've worked on, both in terms of userbase and complexity. The application was \"installed\" on over 1,500 separate Discord servers at its peak, totalling over 60 thousand aggregate users daily.\n\nzBot had over 100 unique commands and over 200 source files handling events, external services, custom logic and advanced customisation so server owners could build their own configuration.",
+        text: 'zBot is the largest self-made project I\'ve worked on, both in terms of userbase and complexity. The application was "installed" on over 1,500 separate Discord servers at its peak, totalling over 60 thousand aggregate users daily.\n\nzBot had over 100 unique commands and over 200 source files handling events, external services, custom logic and advanced customisation so server owners could build their own configuration.',
       },
     ],
     order: 6,
@@ -430,9 +435,7 @@ function MigrationSection() {
         </SectionTitle>
       </SectionHeader>
 
-      <SectionDescription>
-        Migrate hardcoded project data to Convex database.
-      </SectionDescription>
+      <SectionDescription>Migrate hardcoded project data to Convex database.</SectionDescription>
 
       {message && (
         <Message $type={message.type}>
@@ -444,17 +447,23 @@ function MigrationSection() {
       <StatusGrid>
         <StatusCard>
           <StatusLabel>Technologies</StatusLabel>
-          <StatusValue>{techCount} / {TECHNOLOGIES_SEED.length}</StatusValue>
+          <StatusValue>
+            {techCount} / {TECHNOLOGIES_SEED.length}
+          </StatusValue>
           <StatusIndicator $active={techCount >= TECHNOLOGIES_SEED.length} />
         </StatusCard>
         <StatusCard>
           <StatusLabel>Roles</StatusLabel>
-          <StatusValue>{roleCount} / {ROLES_SEED.length}</StatusValue>
+          <StatusValue>
+            {roleCount} / {ROLES_SEED.length}
+          </StatusValue>
           <StatusIndicator $active={roleCount >= ROLES_SEED.length} />
         </StatusCard>
         <StatusCard>
           <StatusLabel>Projects</StatusLabel>
-          <StatusValue>{projectCount} / {PROJECTS_SEED.length}</StatusValue>
+          <StatusValue>
+            {projectCount} / {PROJECTS_SEED.length}
+          </StatusValue>
           <StatusIndicator $active={projectCount >= PROJECTS_SEED.length} />
         </StatusCard>
       </StatusGrid>
@@ -478,12 +487,15 @@ function ProjectsListSection() {
   const updateProject = useMutation(api.projects.update);
 
   const [filter, setFilter] = useState<"all" | "active" | "inactive">("all");
-  const [editingProject, setEditingProject] = useState<NonNullable<typeof projects>[number] | null>(null);
+  const [editingProject, setEditingProject] = useState<NonNullable<typeof projects>[number] | null>(
+    null,
+  );
 
-  const filteredProjects = projects?.filter((p) => {
-    if (filter === "all") return true;
-    return p.status === filter;
-  }) ?? [];
+  const filteredProjects =
+    projects?.filter((p) => {
+      if (filter === "all") return true;
+      return p.status === filter;
+    }) ?? [];
 
   const handleToggle = async (projectId: Id<"projects">) => {
     await toggleStatus({ projectId });
@@ -534,27 +546,25 @@ function ProjectsListSection() {
                     {project.shortDescription}
                     <TimelineBadge>
                       {project.timeline.startYear}
-                      {project.timeline.endYear
-                        ? ` — ${project.timeline.endYear}`
-                        : " — Present"}
+                      {project.timeline.endYear ? ` — ${project.timeline.endYear}` : " — Present"}
                     </TimelineBadge>
                   </ProjectMeta>
                 </ProjectInfo>
               </ProjectCardLeft>
               <ProjectCardRight>
-                <StatusBadge $status={project.status}>
-                  {project.status}
-                </StatusBadge>
-                {project.maintained && (
-                  <MaintainedBadge>Maintained</MaintainedBadge>
-                )}
+                <StatusBadge $status={project.status}>{project.status}</StatusBadge>
+                {project.maintained && <MaintainedBadge>Maintained</MaintainedBadge>}
                 <IconButton onClick={() => setEditingProject(project)} title="Edit project">
                   <Edit size={16} />
                 </IconButton>
                 <IconButton onClick={() => handleToggle(project._id)} title="Toggle visibility">
                   {project.status === "active" ? <Eye size={16} /> : <EyeOff size={16} />}
                 </IconButton>
-                <IconButton $danger onClick={() => handleDelete(project._id, project.name)} title="Delete project">
+                <IconButton
+                  $danger
+                  onClick={() => handleDelete(project._id, project.name)}
+                  title="Delete project"
+                >
                   <Trash2 size={16} />
                 </IconButton>
               </ProjectCardRight>
@@ -622,9 +632,17 @@ interface EditProjectModalProps {
   }) => Promise<void>;
 }
 
-function EditProjectModal({ project, technologies, roles, onClose, onSave }: EditProjectModalProps) {
+function EditProjectModal({
+  project,
+  technologies,
+  roles,
+  onClose,
+  onSave,
+}: EditProjectModalProps) {
   const [saving, setSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState<"basic" | "timeline" | "media" | "tech" | "content">("basic");
+  const [activeTab, setActiveTab] = useState<"basic" | "timeline" | "media" | "tech" | "content">(
+    "basic",
+  );
 
   // Form state
   const [slug, setSlug] = useState(project.slug);
@@ -702,7 +720,10 @@ function EditProjectModal({ project, technologies, roles, onClose, onSave }: Edi
     ]);
   };
 
-  const updateContentSection = (index: number, updates: Partial<typeof contentSections[number]>) => {
+  const updateContentSection = (
+    index: number,
+    updates: Partial<(typeof contentSections)[number]>,
+  ) => {
     const newSections = [...contentSections];
     newSections[index] = { ...newSections[index], ...updates };
     setContentSections(newSections);
@@ -725,11 +746,21 @@ function EditProjectModal({ project, technologies, roles, onClose, onSave }: Edi
         </ModalHeader>
 
         <TabRow>
-          <Tab $active={activeTab === "basic"} onClick={() => setActiveTab("basic")}>Basic Info</Tab>
-          <Tab $active={activeTab === "timeline"} onClick={() => setActiveTab("timeline")}>Timeline</Tab>
-          <Tab $active={activeTab === "media"} onClick={() => setActiveTab("media")}>Media</Tab>
-          <Tab $active={activeTab === "tech"} onClick={() => setActiveTab("tech")}>Tech & Roles</Tab>
-          <Tab $active={activeTab === "content"} onClick={() => setActiveTab("content")}>Content</Tab>
+          <Tab $active={activeTab === "basic"} onClick={() => setActiveTab("basic")}>
+            Basic Info
+          </Tab>
+          <Tab $active={activeTab === "timeline"} onClick={() => setActiveTab("timeline")}>
+            Timeline
+          </Tab>
+          <Tab $active={activeTab === "media"} onClick={() => setActiveTab("media")}>
+            Media
+          </Tab>
+          <Tab $active={activeTab === "tech"} onClick={() => setActiveTab("tech")}>
+            Tech & Roles
+          </Tab>
+          <Tab $active={activeTab === "content"} onClick={() => setActiveTab("content")}>
+            Content
+          </Tab>
         </TabRow>
 
         <ModalBody>
@@ -737,11 +768,19 @@ function EditProjectModal({ project, technologies, roles, onClose, onSave }: Edi
             <FormSection>
               <FormGroup>
                 <Label>Slug</Label>
-                <Input value={slug} onChange={(e) => setSlug(e.target.value)} placeholder="project-slug" />
+                <Input
+                  value={slug}
+                  onChange={(e) => setSlug(e.target.value)}
+                  placeholder="project-slug"
+                />
               </FormGroup>
               <FormGroup>
                 <Label>Name</Label>
-                <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Project Name" />
+                <Input
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Project Name"
+                />
               </FormGroup>
               <FormGroup>
                 <Label>Short Description</Label>
@@ -754,20 +793,31 @@ function EditProjectModal({ project, technologies, roles, onClose, onSave }: Edi
               </FormGroup>
               <FormGroup>
                 <Label>Background (CSS Gradient)</Label>
-                <Input value={background} onChange={(e) => setBackground(e.target.value)} placeholder="linear-gradient(...)" />
+                <Input
+                  value={background}
+                  onChange={(e) => setBackground(e.target.value)}
+                  placeholder="linear-gradient(...)"
+                />
                 <GradientPreview style={{ background }} />
               </FormGroup>
               <FormRow>
                 <FormGroup>
                   <Label>Status</Label>
-                  <Select value={status} onChange={(e) => setStatus(e.target.value as "active" | "inactive")}>
+                  <Select
+                    value={status}
+                    onChange={(e) => setStatus(e.target.value as "active" | "inactive")}
+                  >
                     <option value="active">Active</option>
                     <option value="inactive">Inactive</option>
                   </Select>
                 </FormGroup>
                 <FormGroup>
                   <CheckboxLabel>
-                    <input type="checkbox" checked={maintained} onChange={(e) => setMaintained(e.target.checked)} />
+                    <input
+                      type="checkbox"
+                      checked={maintained}
+                      onChange={(e) => setMaintained(e.target.checked)}
+                    />
                     Maintained
                   </CheckboxLabel>
                 </FormGroup>
@@ -775,11 +825,19 @@ function EditProjectModal({ project, technologies, roles, onClose, onSave }: Edi
               <FormRow>
                 <FormGroup>
                   <Label>GitHub URL</Label>
-                  <Input value={github} onChange={(e) => setGithub(e.target.value)} placeholder="https://github.com/..." />
+                  <Input
+                    value={github}
+                    onChange={(e) => setGithub(e.target.value)}
+                    placeholder="https://github.com/..."
+                  />
                 </FormGroup>
                 <FormGroup>
                   <Label>Website URL</Label>
-                  <Input value={website} onChange={(e) => setWebsite(e.target.value)} placeholder="https://..." />
+                  <Input
+                    value={website}
+                    onChange={(e) => setWebsite(e.target.value)}
+                    placeholder="https://..."
+                  />
                 </FormGroup>
               </FormRow>
             </FormSection>
@@ -812,7 +870,11 @@ function EditProjectModal({ project, technologies, roles, onClose, onSave }: Edi
               </FormRow>
               <FormGroup>
                 <CheckboxLabel>
-                  <input type="checkbox" checked={isOngoing} onChange={(e) => setIsOngoing(e.target.checked)} />
+                  <input
+                    type="checkbox"
+                    checked={isOngoing}
+                    onChange={(e) => setIsOngoing(e.target.checked)}
+                  />
                   Ongoing (no end date)
                 </CheckboxLabel>
               </FormGroup>
@@ -842,7 +904,9 @@ function EditProjectModal({ project, technologies, roles, onClose, onSave }: Edi
                 </FormRow>
               )}
               <TimelinePreview>
-                Preview: {startMonth ? `${startMonth}/` : ""}{startYear} — {isOngoing ? "Present" : `${endMonth ? `${endMonth}/` : ""}${endYear || "?"}`}
+                Preview: {startMonth ? `${startMonth}/` : ""}
+                {startYear} —{" "}
+                {isOngoing ? "Present" : `${endMonth ? `${endMonth}/` : ""}${endYear || "?"}`}
               </TimelinePreview>
             </FormSection>
           )}
@@ -851,25 +915,47 @@ function EditProjectModal({ project, technologies, roles, onClose, onSave }: Edi
             <FormSection>
               <FormGroup>
                 <Label>Logo URL</Label>
-                <Input value={logoUrl} onChange={(e) => setLogoUrl(e.target.value)} placeholder="/assets/img/logo.png" />
+                <Input
+                  value={logoUrl}
+                  onChange={(e) => setLogoUrl(e.target.value)}
+                  placeholder="/assets/img/logo.png"
+                />
               </FormGroup>
               <FormGroup>
                 <Label>Logo Dark URL (for light mode)</Label>
-                <Input value={logoDarkUrl} onChange={(e) => setLogoDarkUrl(e.target.value)} placeholder="/assets/img/logo-dark.png" />
+                <Input
+                  value={logoDarkUrl}
+                  onChange={(e) => setLogoDarkUrl(e.target.value)}
+                  placeholder="/assets/img/logo-dark.png"
+                />
               </FormGroup>
               <FormRow>
                 <FormGroup>
                   <Label>Logo Width</Label>
-                  <Input type="number" value={logoWidth || ""} onChange={(e) => setLogoWidth(Number(e.target.value))} placeholder="46" />
+                  <Input
+                    type="number"
+                    value={logoWidth || ""}
+                    onChange={(e) => setLogoWidth(Number(e.target.value))}
+                    placeholder="46"
+                  />
                 </FormGroup>
                 <FormGroup>
                   <Label>Logo Height</Label>
-                  <Input type="number" value={logoHeight || ""} onChange={(e) => setLogoHeight(Number(e.target.value))} placeholder="46" />
+                  <Input
+                    type="number"
+                    value={logoHeight || ""}
+                    onChange={(e) => setLogoHeight(Number(e.target.value))}
+                    placeholder="46"
+                  />
                 </FormGroup>
               </FormRow>
               <FormGroup>
                 <CheckboxLabel>
-                  <input type="checkbox" checked={logoIncludesName} onChange={(e) => setLogoIncludesName(e.target.checked)} />
+                  <input
+                    type="checkbox"
+                    checked={logoIncludesName}
+                    onChange={(e) => setLogoIncludesName(e.target.checked)}
+                  />
                   Logo includes project name (don't show title separately)
                 </CheckboxLabel>
               </FormGroup>
@@ -890,7 +976,7 @@ function EditProjectModal({ project, technologies, roles, onClose, onSave }: Edi
                         setSelectedTechs(
                           selectedTechs.includes(tech.key)
                             ? selectedTechs.filter((t) => t !== tech.key)
-                            : [...selectedTechs, tech.key]
+                            : [...selectedTechs, tech.key],
                         );
                       }}
                     >
@@ -911,7 +997,7 @@ function EditProjectModal({ project, technologies, roles, onClose, onSave }: Edi
                         setSelectedRoles(
                           selectedRoles.includes(role.key)
                             ? selectedRoles.filter((r) => r !== role.key)
-                            : [...selectedRoles, role.key]
+                            : [...selectedRoles, role.key],
                         );
                       }}
                     >
@@ -938,7 +1024,9 @@ function EditProjectModal({ project, technologies, roles, onClose, onSave }: Edi
                     <Label>Emoji (optional)</Label>
                     <Input
                       value={section.emoji ?? ""}
-                      onChange={(e) => updateContentSection(index, { emoji: e.target.value || undefined })}
+                      onChange={(e) =>
+                        updateContentSection(index, { emoji: e.target.value || undefined })
+                      }
                       placeholder="🚀"
                       style={{ width: "80px" }}
                     />
@@ -956,7 +1044,9 @@ function EditProjectModal({ project, technologies, roles, onClose, onSave }: Edi
                       <Label>Subheader (optional)</Label>
                       <Input
                         value={section.subheader ?? ""}
-                        onChange={(e) => updateContentSection(index, { subheader: e.target.value || undefined })}
+                        onChange={(e) =>
+                          updateContentSection(index, { subheader: e.target.value || undefined })
+                        }
                         placeholder="Optional subheader"
                       />
                     </FormGroup>
@@ -964,7 +1054,11 @@ function EditProjectModal({ project, technologies, roles, onClose, onSave }: Edi
                       <Label>Subheader Color</Label>
                       <Input
                         value={section.subheaderColor ?? ""}
-                        onChange={(e) => updateContentSection(index, { subheaderColor: e.target.value || undefined })}
+                        onChange={(e) =>
+                          updateContentSection(index, {
+                            subheaderColor: e.target.value || undefined,
+                          })
+                        }
                         placeholder="#6cea9c"
                       />
                     </FormGroup>
@@ -988,7 +1082,9 @@ function EditProjectModal({ project, technologies, roles, onClose, onSave }: Edi
         </ModalBody>
 
         <ModalFooter>
-          <ActionButton $secondary onClick={onClose}>Cancel</ActionButton>
+          <ActionButton $secondary onClick={onClose}>
+            Cancel
+          </ActionButton>
           <ActionButton onClick={handleSave} disabled={saving}>
             {saving ? "Saving..." : "Save Changes"}
           </ActionButton>

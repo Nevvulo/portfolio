@@ -33,7 +33,7 @@ const TTL = {
 export async function trackWatchTime(
   clerkId: string,
   postId: string,
-  secondsIncrement: number
+  secondsIncrement: number,
 ): Promise<number> {
   const key = `${KEYS.WATCH_TIME}:${clerkId}:${postId}`;
 
@@ -49,10 +49,7 @@ export async function trackWatchTime(
 /**
  * Get buffered watch time for a specific user/post
  */
-export async function getBufferedWatchTime(
-  clerkId: string,
-  postId: string
-): Promise<number> {
+export async function getBufferedWatchTime(clerkId: string, postId: string): Promise<number> {
   const key = `${KEYS.WATCH_TIME}:${clerkId}:${postId}`;
   const value = await redis.get<number>(key);
   return value ?? 0;
@@ -142,20 +139,24 @@ export async function clearAllWatchTime(): Promise<void> {
  */
 export async function setUserPresence(
   clerkId: string,
-  status: "online" | "away" | "offline" = "online"
+  status: "online" | "away" | "offline" = "online",
 ): Promise<void> {
   const key = `${KEYS.PRESENCE}:${clerkId}`;
-  await redis.setex(key, TTL.PRESENCE, JSON.stringify({
-    status,
-    lastSeen: Date.now(),
-  }));
+  await redis.setex(
+    key,
+    TTL.PRESENCE,
+    JSON.stringify({
+      status,
+      lastSeen: Date.now(),
+    }),
+  );
 }
 
 /**
  * Get user presence status
  */
 export async function getUserPresence(
-  clerkId: string
+  clerkId: string,
 ): Promise<{ status: string; lastSeen: number } | null> {
   const key = `${KEYS.PRESENCE}:${clerkId}`;
   const value = await redis.get<{ status: string; lastSeen: number }>(key);
@@ -198,7 +199,7 @@ interface SessionData {
  */
 export async function trackSessionTime(
   clerkId: string,
-  date: string // Format: YYYY-MM-DD
+  date: string, // Format: YYYY-MM-DD
 ): Promise<SessionData> {
   const key = `${KEYS.SESSION}:${clerkId}:${date}`;
   const now = Date.now();
@@ -236,19 +237,19 @@ export async function trackSessionTime(
 /**
  * Mark XP as granted for a session
  */
-export async function markXpGranted(
-  clerkId: string,
-  date: string,
-  blocks: number
-): Promise<void> {
+export async function markXpGranted(clerkId: string, date: string, blocks: number): Promise<void> {
   const key = `${KEYS.SESSION}:${clerkId}:${date}`;
   const existing = await redis.get<SessionData>(key);
 
   if (existing) {
-    await redis.setex(key, TTL.SESSION, JSON.stringify({
-      ...existing,
-      xpGrantedBlocks: blocks,
-    }));
+    await redis.setex(
+      key,
+      TTL.SESSION,
+      JSON.stringify({
+        ...existing,
+        xpGrantedBlocks: blocks,
+      }),
+    );
   }
 }
 

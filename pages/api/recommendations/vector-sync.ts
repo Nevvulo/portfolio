@@ -1,15 +1,13 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { upsertArticleWithEmbedding, deleteArticleEmbedding } from "../../../lib/upstash-vector";
+import { deleteArticleEmbedding, upsertArticleWithEmbedding } from "../../../lib/upstash-vector";
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const { action, slug, title, description, labels, difficulty, contentType, publishedAt } = req.body;
+  const { action, slug, title, description, labels, difficulty, contentType, publishedAt } =
+    req.body;
 
   if (!slug) {
     return res.status(400).json({ error: "Missing slug" });

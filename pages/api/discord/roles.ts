@@ -1,6 +1,5 @@
+import { clerkClient, getAuth } from "@clerk/nextjs/server";
 import type { NextApiRequest, NextApiResponse } from "next";
-import { getAuth } from "@clerk/nextjs/server";
-import { clerkClient } from "@clerk/nextjs/server";
 import { PLANS } from "../../../lib/clerk";
 
 const DISCORD_API = "https://discord.com/api/v10";
@@ -12,8 +11,8 @@ const PLAN_TO_ROLE: Record<string, string> = {
   [PLANS.SUPER_LEGEND]: process.env.DISCORD_ROLE_SUPER_LEGEND!,
   [PLANS.SUPER_LEGEND_2]: process.env.DISCORD_ROLE_SUPER_LEGEND_2!,
   // Clerk internal plan IDs (dev)
-  "cplan_36glMpITSsfy0ftlNNL2FYvKnGL": process.env.DISCORD_ROLE_SUPER_LEGEND!,
-  "cplan_36gqZlOflmAmtcH5nGrMShDMO17": process.env.DISCORD_ROLE_SUPER_LEGEND_2!,
+  cplan_36glMpITSsfy0ftlNNL2FYvKnGL: process.env.DISCORD_ROLE_SUPER_LEGEND!,
+  cplan_36gqZlOflmAmtcH5nGrMShDMO17: process.env.DISCORD_ROLE_SUPER_LEGEND_2!,
 };
 
 // All supporter roles (for removal when subscription ends)
@@ -28,7 +27,7 @@ async function getDiscordUserId(clerkUserId: string): Promise<string | null> {
 
   // Find Discord OAuth account
   const discordAccount = user.externalAccounts.find(
-    (account) => account.provider === "oauth_discord"
+    (account) => account.provider === "oauth_discord",
   );
 
   if (!discordAccount) return null;
@@ -75,7 +74,7 @@ async function removeRole(discordUserId: string, roleId: string): Promise<boolea
 
 export async function syncDiscordRoles(
   clerkUserId: string,
-  activePlanId: string | null
+  activePlanId: string | null,
 ): Promise<{ success: boolean; error?: string }> {
   console.log(`[syncDiscordRoles] clerkUserId: ${clerkUserId}, planId: ${activePlanId}`);
   console.log(`[syncDiscordRoles] PLAN_TO_ROLE mapping:`, PLAN_TO_ROLE);
@@ -101,17 +100,16 @@ export async function syncDiscordRoles(
       return { success: false, error: "Failed to add role - user may not be in server" };
     }
   } else {
-    console.log(`[syncDiscordRoles] No role to add - planId: ${activePlanId}, mapped: ${PLAN_TO_ROLE[activePlanId || ""]}`);
+    console.log(
+      `[syncDiscordRoles] No role to add - planId: ${activePlanId}, mapped: ${PLAN_TO_ROLE[activePlanId || ""]}`,
+    );
   }
 
   return { success: true };
 }
 
 // API endpoint for manual sync (user can trigger from account page)
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }

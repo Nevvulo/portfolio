@@ -1,6 +1,6 @@
-import { useEffect, useRef, useCallback } from "react";
-import { useMutation } from "convex/react";
 import { useUser } from "@clerk/nextjs";
+import { useMutation } from "convex/react";
+import { useCallback, useEffect, useRef } from "react";
 import { api } from "../../convex/_generated/api";
 
 // Heartbeat interval: 60 seconds

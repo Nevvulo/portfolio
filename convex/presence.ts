@@ -1,6 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
-import { requireUser, requireChannelAccess } from "./auth";
+import { requireChannelAccess, requireUser } from "./auth";
 
 const TYPING_TIMEOUT_MS = 5000; // 5 seconds
 
@@ -83,7 +83,7 @@ export const getTyping = query({
             displayName: typingUser.displayName,
             avatarUrl: typingUser.avatarUrl,
           };
-        })
+        }),
     );
 
     return typingUsers.filter(Boolean);

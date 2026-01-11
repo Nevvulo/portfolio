@@ -1,5 +1,5 @@
-import styled from "styled-components";
 import { ExternalLink, Eye, EyeOff } from "lucide-react";
+import styled from "styled-components";
 import { LOUNGE_COLORS } from "../../../constants/lounge";
 import type { ConnectedAccount } from "../../../types/user-popout";
 
@@ -61,11 +61,7 @@ export function UserConnections({
             $provider={connection.provider}
           >
             <ConnectionIcon $provider={connection.provider}>
-              {connection.provider === "discord" ? (
-                <DiscordIcon />
-              ) : (
-                <TwitchIcon />
-              )}
+              {connection.provider === "discord" ? <DiscordIcon /> : <TwitchIcon />}
             </ConnectionIcon>
             <ConnectionInfo>
               <ConnectionProvider>
@@ -158,8 +154,7 @@ const ConnectionItem = styled.a<{ $provider: "discord" | "twitch" }>`
 
   &:hover {
     background: rgba(0, 0, 0, 0.3);
-    border-color: ${(p) =>
-      p.$provider === "discord" ? DISCORD_COLOR : TWITCH_COLOR}44;
+    border-color: ${(p) => (p.$provider === "discord" ? DISCORD_COLOR : TWITCH_COLOR)}44;
   }
 `;
 
@@ -170,10 +165,8 @@ const ConnectionIcon = styled.div<{ $provider: "discord" | "twitch" }>`
   width: 28px;
   height: 28px;
   border-radius: 6px;
-  background: ${(p) =>
-    p.$provider === "discord" ? DISCORD_COLOR : TWITCH_COLOR}22;
-  color: ${(p) =>
-    p.$provider === "discord" ? DISCORD_COLOR : TWITCH_COLOR};
+  background: ${(p) => (p.$provider === "discord" ? DISCORD_COLOR : TWITCH_COLOR)}22;
+  color: ${(p) => (p.$provider === "discord" ? DISCORD_COLOR : TWITCH_COLOR)};
 `;
 
 const ConnectionInfo = styled.div`

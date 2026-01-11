@@ -1,12 +1,12 @@
 import type { Editor } from "@tiptap/react";
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  SlashCommandMenu,
-  SlashCommandItem,
+  SlashCommandDescription,
   SlashCommandIcon,
+  SlashCommandItem,
+  SlashCommandMenu,
   SlashCommandText,
   SlashCommandTitle,
-  SlashCommandDescription,
 } from "./styles";
 
 interface SlashCommandProps {
@@ -25,25 +25,19 @@ const COMMANDS: CommandItem[] = [
   {
     title: "Heading 1",
     description: "Large section heading",
-    icon: (
-      <span style={{ fontWeight: 700, fontSize: "14px" }}>H1</span>
-    ),
+    icon: <span style={{ fontWeight: 700, fontSize: "14px" }}>H1</span>,
     command: (editor) => editor.chain().focus().toggleHeading({ level: 1 }).run(),
   },
   {
     title: "Heading 2",
     description: "Medium section heading",
-    icon: (
-      <span style={{ fontWeight: 700, fontSize: "14px" }}>H2</span>
-    ),
+    icon: <span style={{ fontWeight: 700, fontSize: "14px" }}>H2</span>,
     command: (editor) => editor.chain().focus().toggleHeading({ level: 2 }).run(),
   },
   {
     title: "Heading 3",
     description: "Small section heading",
-    icon: (
-      <span style={{ fontWeight: 700, fontSize: "14px" }}>H3</span>
-    ),
+    icon: <span style={{ fontWeight: 700, fontSize: "14px" }}>H3</span>,
     command: (editor) => editor.chain().focus().toggleHeading({ level: 3 }).run(),
   },
   {
@@ -189,7 +183,7 @@ export function SlashCommand({ editor, onImageUpload }: SlashCommandProps) {
     ? commands.filter(
         (cmd) =>
           cmd.title.toLowerCase().includes(query.toLowerCase()) ||
-          cmd.description.toLowerCase().includes(query.toLowerCase())
+          cmd.description.toLowerCase().includes(query.toLowerCase()),
       )
     : commands;
 
@@ -200,15 +194,11 @@ export function SlashCommand({ editor, onImageUpload }: SlashCommandProps) {
       switch (event.key) {
         case "ArrowDown":
           event.preventDefault();
-          setSelectedIndex((prev) =>
-            prev < filteredCommands.length - 1 ? prev + 1 : 0
-          );
+          setSelectedIndex((prev) => (prev < filteredCommands.length - 1 ? prev + 1 : 0));
           break;
         case "ArrowUp":
           event.preventDefault();
-          setSelectedIndex((prev) =>
-            prev > 0 ? prev - 1 : filteredCommands.length - 1
-          );
+          setSelectedIndex((prev) => (prev > 0 ? prev - 1 : filteredCommands.length - 1));
           break;
         case "Enter":
           event.preventDefault();
@@ -232,7 +222,7 @@ export function SlashCommand({ editor, onImageUpload }: SlashCommandProps) {
           break;
       }
     },
-    [isOpen, filteredCommands, selectedIndex, editor, query]
+    [isOpen, filteredCommands, selectedIndex, editor, query],
   );
 
   useEffect(() => {

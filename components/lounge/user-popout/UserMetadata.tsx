@@ -1,5 +1,5 @@
-import styled from "styled-components";
 import { Calendar } from "lucide-react";
+import styled from "styled-components";
 import type { DiscordRole } from "../../../types/supporter";
 
 interface UserMetadataProps {
@@ -30,10 +30,7 @@ function discordColorToHex(color: number): string {
 /**
  * Display user metadata (join date, Discord role)
  */
-export function UserMetadata({
-  createdAt,
-  discordHighestRole,
-}: UserMetadataProps) {
+export function UserMetadata({ createdAt, discordHighestRole }: UserMetadataProps) {
   return (
     <MetadataContainer>
       {/* Join date */}
@@ -41,9 +38,7 @@ export function UserMetadata({
         <MetadataIcon>
           <Calendar size={12} />
         </MetadataIcon>
-        <MetadataText>
-          Member since {formatJoinDate(createdAt)}
-        </MetadataText>
+        <MetadataText>Member since {formatJoinDate(createdAt)}</MetadataText>
       </MetadataItem>
 
       {/* Discord role */}

@@ -1,90 +1,84 @@
+import { faClock } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Link from "next/link";
 import styled, { type DefaultTheme, useTheme } from "styled-components";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faClock } from "@fortawesome/free-solid-svg-icons";
-import { SkeletonImage } from "../blog/skeleton-image";
-import { Label, Labels } from "../blog/labels";
-import { Title } from "../generics/title";
 import type { SearchResult } from "../../hooks/useBlogSearch";
-
-type Difficulty = "beginner" | "intermediate" | "advanced";
+import { Label, Labels } from "../blog/labels";
+import { SkeletonImage } from "../blog/skeleton-image";
+import { Title } from "../generics/title";
 
 function getDifficultyBackground(difficulty: string | undefined, theme: DefaultTheme) {
-	const {
-		difficultyAdvancedBackground,
-		difficultyIntermediateBackground,
-		difficultyBeginnerBackground,
-	} = theme;
+  const {
+    difficultyAdvancedBackground,
+    difficultyIntermediateBackground,
+    difficultyBeginnerBackground,
+  } = theme;
 
-	switch (difficulty?.toLowerCase()) {
-		case "beginner":
-			return difficultyBeginnerBackground;
-		case "intermediate":
-			return difficultyIntermediateBackground;
-		case "advanced":
-			return difficultyAdvancedBackground;
-		default:
-			return undefined;
-	}
+  switch (difficulty?.toLowerCase()) {
+    case "beginner":
+      return difficultyBeginnerBackground;
+    case "intermediate":
+      return difficultyIntermediateBackground;
+    case "advanced":
+      return difficultyAdvancedBackground;
+    default:
+      return undefined;
+  }
 }
 
 interface SearchResultCardProps {
-	result: SearchResult;
-	prioritizeImage?: boolean;
+  result: SearchResult;
+  prioritizeImage?: boolean;
 }
 
 export function SearchResultCard({ result, prioritizeImage }: SearchResultCardProps) {
-	const theme = useTheme();
-	const difficultyBackground = getDifficultyBackground(result.difficulty, theme);
+  const theme = useTheme();
+  const difficultyBackground = getDifficultyBackground(result.difficulty, theme);
 
-	// Capitalize first letter of difficulty for display
-	const difficultyDisplay = result.difficulty
-		? result.difficulty.charAt(0).toUpperCase() + result.difficulty.slice(1)
-		: null;
+  // Capitalize first letter of difficulty for display
+  const difficultyDisplay = result.difficulty
+    ? result.difficulty.charAt(0).toUpperCase() + result.difficulty.slice(1)
+    : null;
 
-	return (
-		<Link href={`/learn/${result.slug}`} style={{ textDecoration: "none" }}>
-			<Card>
-				<Content>
-					<Title fontSize="24px">{result.title}</Title>
-					<Description>{result.description}</Description>
-					{result.labels?.length > 0 && (
-						<Labels>
-							{result.labels
-								.slice(0, 3)
-								.map((label) => (
-									<Label key={label}>{label.replace(/-/g, " ")}</Label>
-								))}
-						</Labels>
-					)}
-					<MetaRow>
-						{result.readTimeMins > 0 && (
-							<ReadTime>
-								<FontAwesomeIcon icon={faClock} />
-								<span>{result.readTimeMins} mins</span>
-							</ReadTime>
-						)}
-						{difficultyBackground && difficultyDisplay && (
-							<DifficultyBadge $color={difficultyBackground}>
-								{difficultyDisplay}
-							</DifficultyBadge>
-						)}
-					</MetaRow>
-				</Content>
-				{result.coverImage && (
-					<ImageWrapper>
-						<SkeletonImage
-							alt={result.title}
-							fill
-							style={{ objectFit: "cover" }}
-							src={result.coverImage}
-							priority={prioritizeImage}
-						/>
-					</ImageWrapper>
-				)}
-			</Card>
-		</Link>
-	);
+  return (
+    <Link href={`/learn/${result.slug}`} style={{ textDecoration: "none" }}>
+      <Card>
+        <Content>
+          <Title fontSize="24px">{result.title}</Title>
+          <Description>{result.description}</Description>
+          {result.labels?.length > 0 && (
+            <Labels>
+              {result.labels.slice(0, 3).map((label) => (
+                <Label key={label}>{label.replace(/-/g, " ")}</Label>
+              ))}
+            </Labels>
+          )}
+          <MetaRow>
+            {result.readTimeMins > 0 && (
+              <ReadTime>
+                <FontAwesomeIcon icon={faClock} />
+                <span>{result.readTimeMins} mins</span>
+              </ReadTime>
+            )}
+            {difficultyBackground && difficultyDisplay && (
+              <DifficultyBadge $color={difficultyBackground}>{difficultyDisplay}</DifficultyBadge>
+            )}
+          </MetaRow>
+        </Content>
+        {result.coverImage && (
+          <ImageWrapper>
+            <SkeletonImage
+              alt={result.title}
+              fill
+              style={{ objectFit: "cover" }}
+              src={result.coverImage}
+              priority={prioritizeImage}
+            />
+          </ImageWrapper>
+        )}
+      </Card>
+    </Link>
+  );
 }
 
 const Card = styled.div`

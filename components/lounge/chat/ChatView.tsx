@@ -1,19 +1,23 @@
-import { useEffect, useRef, useState, useCallback } from "react";
-import styled from "styled-components";
-import { useMutation, useQuery } from "convex/react";
-import { api } from "../../../convex/_generated/api";
-import { LOUNGE_COLORS } from "../../../constants/lounge";
-import { Message } from "./Message";
-import { SystemMessage, type SystemMessageType } from "./SystemMessage";
-import { MessageInput } from "./MessageInput";
-import { TypingIndicator } from "./TypingIndicator";
-import { EmbeddedContentPost } from "./EmbeddedContentPost";
-import { getCachedMessages, setCachedMessages, hasChannelBeenFetched } from "../../../lib/lounge/messageCache";
-import type { Id } from "../../../convex/_generated/dataModel";
-import type { Tier, MessageEmbed, ContentPostType } from "../../../types/lounge";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faMessage } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { useMutation, useQuery } from "convex/react";
 import { ChevronDown, Loader2 } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import styled from "styled-components";
+import { LOUNGE_COLORS } from "../../../constants/lounge";
+import { api } from "../../../convex/_generated/api";
+import type { Id } from "../../../convex/_generated/dataModel";
+import {
+  getCachedMessages,
+  hasChannelBeenFetched,
+  setCachedMessages,
+} from "../../../lib/lounge/messageCache";
+import type { ContentPostType, MessageEmbed, Tier } from "../../../types/lounge";
+import { EmbeddedContentPost } from "./EmbeddedContentPost";
+import { Message } from "./Message";
+import { MessageInput } from "./MessageInput";
+import { SystemMessage, type SystemMessageType } from "./SystemMessage";
+import { TypingIndicator } from "./TypingIndicator";
 
 // Threshold for "near bottom" detection (pixels from bottom)
 const SCROLL_THRESHOLD = 150;
@@ -56,15 +60,24 @@ function getFriendlyErrorMessage(error: unknown): string {
 const MESSAGE_GROUP_THRESHOLD = 5 * 60 * 1000;
 
 // Helper to determine if messages should be grouped
-function shouldGroupMessages(
-  currentMsg: MessageData,
-  prevMsg: MessageData | null
-): boolean {
+function shouldGroupMessages(currentMsg: MessageData, prevMsg: MessageData | null): boolean {
   if (!prevMsg) return false;
 
   // Don't group system messages
-  const systemTypes = ["system", "emoji_blast", "join", "leave", "boost", "giveaway", "poll", "content"];
-  if (systemTypes.includes(currentMsg.messageType || "") || systemTypes.includes(prevMsg.messageType || "")) {
+  const systemTypes = [
+    "system",
+    "emoji_blast",
+    "join",
+    "leave",
+    "boost",
+    "giveaway",
+    "poll",
+    "content",
+  ];
+  if (
+    systemTypes.includes(currentMsg.messageType || "") ||
+    systemTypes.includes(prevMsg.messageType || "")
+  ) {
     return false;
   }
 
@@ -150,13 +163,30 @@ interface MessageData {
   isEdited: boolean;
   isPinned: boolean;
   discordAuthor?: { username: string; avatarUrl?: string };
-  messageType?: "default" | "system" | "emoji_blast" | "join" | "leave" | "boost" | "giveaway" | "poll" | "content";
+  messageType?:
+    | "default"
+    | "system"
+    | "emoji_blast"
+    | "join"
+    | "leave"
+    | "boost"
+    | "giveaway"
+    | "poll"
+    | "content";
   contentPost?: ContentPostData | null;
   replyTo?: { _id: Id<"messages">; content: string; author: MessageAuthor | null } | null;
   reactions?: { emoji: string; count: number; userIds: Id<"users">[] }[];
 }
 
-export function ChatView({ channelId, channelName, currentUserId, currentUserName, currentUserAvatar, currentUserTier, isCreator }: ChatViewProps) {
+export function ChatView({
+  channelId,
+  channelName,
+  currentUserId,
+  currentUserName,
+  currentUserAvatar,
+  currentUserTier,
+  isCreator,
+}: ChatViewProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [pendingMessages, setPendingMessages] = useState<PendingMessage[]>([]);
@@ -169,15 +199,17 @@ export function ChatView({ channelId, channelName, currentUserId, currentUserNam
         _id: c._id as Id<"messages">,
         content: c.content,
         authorId: c.authorId as Id<"users">,
-        author: c.author ? {
-          _id: c.author._id as Id<"users"> | undefined,
-          clerkId: c.author.clerkId,
-          displayName: c.author.displayName,
-          avatarUrl: c.author.avatarUrl,
-          tier: c.author.tier as Tier | undefined,
-          isCreator: c.author.isCreator,
-          isDiscord: c.author.isDiscord,
-        } : null,
+        author: c.author
+          ? {
+              _id: c.author._id as Id<"users"> | undefined,
+              clerkId: c.author.clerkId,
+              displayName: c.author.displayName,
+              avatarUrl: c.author.avatarUrl,
+              tier: c.author.tier as Tier | undefined,
+              isCreator: c.author.isCreator,
+              isDiscord: c.author.isDiscord,
+            }
+          : null,
         createdAt: c.createdAt,
         isEdited: c.isEdited,
         isPinned: c.isPinned,
@@ -196,15 +228,17 @@ export function ChatView({ channelId, channelName, currentUserId, currentUserNam
         _id: c._id as Id<"messages">,
         content: c.content,
         authorId: c.authorId as Id<"users">,
-        author: c.author ? {
-          _id: c.author._id as Id<"users"> | undefined,
-          clerkId: c.author.clerkId,
-          displayName: c.author.displayName,
-          avatarUrl: c.author.avatarUrl,
-          tier: c.author.tier as Tier | undefined,
-          isCreator: c.author.isCreator,
-          isDiscord: c.author.isDiscord,
-        } : null,
+        author: c.author
+          ? {
+              _id: c.author._id as Id<"users"> | undefined,
+              clerkId: c.author.clerkId,
+              displayName: c.author.displayName,
+              avatarUrl: c.author.avatarUrl,
+              tier: c.author.tier as Tier | undefined,
+              isCreator: c.author.isCreator,
+              isDiscord: c.author.isDiscord,
+            }
+          : null,
         createdAt: c.createdAt,
         isEdited: c.isEdited,
         isPinned: c.isPinned,
@@ -229,21 +263,25 @@ export function ChatView({ channelId, channelName, currentUserId, currentUserNam
   const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   // Messages query - gets the latest messages (real-time updates)
-  const messagesResult = useQuery(api.messages.list, { channelId }) as {
-    messages: MessageData[];
-    hasMore: boolean;
-    nextCursor: string | null;
-  } | undefined;
+  const messagesResult = useQuery(api.messages.list, { channelId }) as
+    | {
+        messages: MessageData[];
+        hasMore: boolean;
+        nextCursor: string | null;
+      }
+    | undefined;
 
   // Query for older messages when cursor is set
   const olderMessagesResult = useQuery(
     api.messages.list,
-    cursor ? { channelId, cursor } : "skip"
-  ) as {
-    messages: MessageData[];
-    hasMore: boolean;
-    nextCursor: string | null;
-  } | undefined;
+    cursor ? { channelId, cursor } : "skip",
+  ) as
+    | {
+        messages: MessageData[];
+        hasMore: boolean;
+        nextCursor: string | null;
+      }
+    | undefined;
 
   const serverMessages = messagesResult?.messages;
 
@@ -260,9 +298,7 @@ export function ChatView({ channelId, channelName, currentUserId, currentUserNam
       setOlderMessages((prev) => {
         // Merge older messages, avoiding duplicates
         const existingIds = new Set(prev.map((m) => m._id));
-        const newMessages = olderMessagesResult.messages.filter(
-          (m) => !existingIds.has(m._id)
-        );
+        const newMessages = olderMessagesResult.messages.filter((m) => !existingIds.has(m._id));
         return [...newMessages, ...prev];
       });
       setHasMore(olderMessagesResult.hasMore);
@@ -303,9 +339,9 @@ export function ChatView({ channelId, channelName, currentUserId, currentUserNam
 
   // Combine older messages with current messages (deduplicated)
   const currentMessages = serverMessages ?? cachedMessages;
-  const messages = [...olderMessages, ...currentMessages].filter(
-    (msg, index, self) => self.findIndex((m) => m._id === msg._id) === index
-  ).sort((a, b) => a.createdAt - b.createdAt);
+  const messages = [...olderMessages, ...currentMessages]
+    .filter((msg, index, self) => self.findIndex((m) => m._id === msg._id) === index)
+    .sort((a, b) => a.createdAt - b.createdAt);
 
   // Mutations
   const sendMessage = useMutation(api.messages.send);
@@ -335,11 +371,10 @@ export function ChatView({ channelId, channelName, currentUserId, currentUserNam
       prev.filter((pending) => {
         const isConfirmed = messages.some(
           (msg) =>
-            msg.content === pending.content &&
-            Math.abs(msg.createdAt - pending.createdAt) < 5000
+            msg.content === pending.content && Math.abs(msg.createdAt - pending.createdAt) < 5000,
         );
         return !isConfirmed;
-      })
+      }),
     );
   }, [messages, pendingMessages.length]);
 
@@ -446,39 +481,45 @@ export function ChatView({ channelId, channelName, currentUserId, currentUserNam
   }, []);
 
   // Optimistic send handler
-  const handleSend = useCallback(async (content: string, embeds?: MessageEmbed[]) => {
-    const tempId = `pending-${Date.now()}-${Math.random()}`;
-    const createdAt = Date.now();
+  const handleSend = useCallback(
+    async (content: string, embeds?: MessageEmbed[]) => {
+      const tempId = `pending-${Date.now()}-${Math.random()}`;
+      const createdAt = Date.now();
 
-    // Add pending message immediately
-    setPendingMessages((prev) => [
-      ...prev,
-      { tempId, content, embeds, createdAt, status: "sending" },
-    ]);
+      // Add pending message immediately
+      setPendingMessages((prev) => [
+        ...prev,
+        { tempId, content, embeds, createdAt, status: "sending" },
+      ]);
 
-    try {
-      await sendMessage({ channelId, content, embeds });
-      // Message will be removed from pending when it appears in server response
-    } catch (error) {
-      console.error("Failed to send message:", error);
-      // Mark as error with friendly message
-      const errorMessage = getFriendlyErrorMessage(error);
-      setPendingMessages((prev) =>
-        prev.map((msg) =>
-          msg.tempId === tempId ? { ...msg, status: "error", errorMessage } : msg
-        )
-      );
-    }
-  }, [channelId, sendMessage]);
+      try {
+        await sendMessage({ channelId, content, embeds });
+        // Message will be removed from pending when it appears in server response
+      } catch (error) {
+        console.error("Failed to send message:", error);
+        // Mark as error with friendly message
+        const errorMessage = getFriendlyErrorMessage(error);
+        setPendingMessages((prev) =>
+          prev.map((msg) =>
+            msg.tempId === tempId ? { ...msg, status: "error", errorMessage } : msg,
+          ),
+        );
+      }
+    },
+    [channelId, sendMessage],
+  );
 
   // Retry failed message
-  const handleRetry = useCallback((tempId: string) => {
-    const pending = pendingMessages.find((p) => p.tempId === tempId);
-    if (pending) {
-      setPendingMessages((prev) => prev.filter((p) => p.tempId !== tempId));
-      handleSend(pending.content, pending.embeds);
-    }
-  }, [pendingMessages, handleSend]);
+  const handleRetry = useCallback(
+    (tempId: string) => {
+      const pending = pendingMessages.find((p) => p.tempId === tempId);
+      if (pending) {
+        setPendingMessages((prev) => prev.filter((p) => p.tempId !== tempId));
+        handleSend(pending.content, pending.embeds);
+      }
+    },
+    [pendingMessages, handleSend],
+  );
 
   // Dismiss failed message
   const handleDismiss = useCallback((tempId: string) => {
@@ -556,12 +597,22 @@ export function ChatView({ channelId, channelName, currentUserId, currentUserNam
           const isFromDiscord = message.author?.isDiscord === true;
           // For linked Discord users, we have author._id; for unlinked, we don't
           const linkedUserId = isFromDiscord ? message.author?._id : undefined;
-          const prevMessage: MessageData | null = index > 0 ? (sortedMessages[index - 1] ?? null) : null;
+          const prevMessage: MessageData | null =
+            index > 0 ? (sortedMessages[index - 1] ?? null) : null;
           const isGrouped = shouldGroupMessages(message, prevMessage);
 
           // Render system messages (emoji_blast, join, leave, boost) as single-line
-          const systemTypes: SystemMessageType[] = ["system", "emoji_blast", "join", "leave", "boost"];
-          if (message.messageType && systemTypes.includes(message.messageType as SystemMessageType)) {
+          const systemTypes: SystemMessageType[] = [
+            "system",
+            "emoji_blast",
+            "join",
+            "leave",
+            "boost",
+          ];
+          if (
+            message.messageType &&
+            systemTypes.includes(message.messageType as SystemMessageType)
+          ) {
             return (
               <SystemMessage
                 key={message._id}
@@ -575,7 +626,11 @@ export function ChatView({ channelId, channelName, currentUserId, currentUserNam
 
           // Render content post messages (giveaway, poll, content) with embedded post
           const contentPostTypes = ["giveaway", "poll", "content"];
-          if (message.messageType && contentPostTypes.includes(message.messageType) && message.contentPost) {
+          if (
+            message.messageType &&
+            contentPostTypes.includes(message.messageType) &&
+            message.contentPost
+          ) {
             return (
               <EmbeddedContentPost
                 key={message._id}
@@ -606,10 +661,14 @@ export function ChatView({ channelId, channelName, currentUserId, currentUserNam
               isEdited={message.isEdited}
               isPinned={message.isPinned}
               isFromDiscord={isFromDiscord}
-              discordAuthor={isFromDiscord && !linkedUserId && message.discordAuthor ? {
-                name: message.discordAuthor.username,
-                avatar: message.discordAuthor.avatarUrl,
-              } : undefined}
+              discordAuthor={
+                isFromDiscord && !linkedUserId && message.discordAuthor
+                  ? {
+                      name: message.discordAuthor.username,
+                      avatar: message.discordAuthor.avatarUrl,
+                    }
+                  : undefined
+              }
               isOwnMessage={message.author?.clerkId === currentUserId}
               isCreator={isCreator}
               isGrouped={isGrouped}
@@ -687,8 +746,8 @@ const MessagesContainer = styled.div`
 `;
 
 const InputSection = styled.div`
-  border-top: 1px solid ${(props) => props.theme.background === "#fff" ? "rgba(0,0,0,0.08)" : LOUNGE_COLORS.glassBorder};
-  background: ${(props) => props.theme.background === "#fff" ? "#f5f3fa" : LOUNGE_COLORS.glassBackground};
+  border-top: 1px solid ${(props) => (props.theme.background === "#fff" ? "rgba(0,0,0,0.08)" : LOUNGE_COLORS.glassBorder)};
+  background: ${(props) => (props.theme.background === "#fff" ? "#f5f3fa" : LOUNGE_COLORS.glassBackground)};
   position: relative;
 `;
 
@@ -701,10 +760,10 @@ const NewMessagesBar = styled.button`
   align-items: center;
   gap: 6px;
   padding: 5px 12px;
-  background: ${(props) => props.theme.background === "#fff" ? "rgba(0,0,0,0.6)" : "rgba(255, 255, 255, 0.15)"};
+  background: ${(props) => (props.theme.background === "#fff" ? "rgba(0,0,0,0.6)" : "rgba(255, 255, 255, 0.15)")};
   border: none;
   border-radius: 16px;
-  color: ${(props) => props.theme.background === "#fff" ? "#fff" : "rgba(255, 255, 255, 0.8)"};
+  color: ${(props) => (props.theme.background === "#fff" ? "#fff" : "rgba(255, 255, 255, 0.8)")};
   font-family: var(--font-display);
   font-size: 0.55rem;
   cursor: pointer;
@@ -713,7 +772,7 @@ const NewMessagesBar = styled.button`
   z-index: 10;
 
   &:hover {
-    background: ${(props) => props.theme.background === "#fff" ? "rgba(0,0,0,0.75)" : "rgba(255, 255, 255, 0.25)"};
+    background: ${(props) => (props.theme.background === "#fff" ? "rgba(0,0,0,0.75)" : "rgba(255, 255, 255, 0.25)")};
     transform: translateX(-50%) translateY(-1px);
   }
 
@@ -742,7 +801,7 @@ const EmptyTitle = styled.h3`
 
 const EmptyText = styled.p`
   font-size: 0.9rem;
-  color: ${(props) => props.theme.background === "#fff" ? "rgba(0,0,0,0.5)" : "rgba(255, 255, 255, 0.5)"};
+  color: ${(props) => (props.theme.background === "#fff" ? "rgba(0,0,0,0.5)" : "rgba(255, 255, 255, 0.5)")};
   margin: 0;
 `;
 
@@ -753,7 +812,7 @@ const LoadingState = styled.div`
   justify-content: center;
   flex: 1;
   gap: 1rem;
-  color: ${(props) => props.theme.background === "#fff" ? "rgba(0,0,0,0.5)" : "rgba(255, 255, 255, 0.5)"};
+  color: ${(props) => (props.theme.background === "#fff" ? "rgba(0,0,0,0.5)" : "rgba(255, 255, 255, 0.5)")};
   font-size: 0.9rem;
 `;
 
@@ -848,7 +907,7 @@ const LoadMoreSpinner = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
-  color: ${(props) => props.theme.background === "#fff" ? "rgba(0,0,0,0.5)" : "rgba(255, 255, 255, 0.5)"};
+  color: ${(props) => (props.theme.background === "#fff" ? "rgba(0,0,0,0.5)" : "rgba(255, 255, 255, 0.5)")};
   font-size: 0.8rem;
 
   .spin {
@@ -866,7 +925,7 @@ const LoadMoreSpinner = styled.div`
 `;
 
 const EndOfMessages = styled.div`
-  color: ${(props) => props.theme.background === "#fff" ? "rgba(0,0,0,0.35)" : "rgba(255, 255, 255, 0.35)"};
+  color: ${(props) => (props.theme.background === "#fff" ? "rgba(0,0,0,0.35)" : "rgba(255, 255, 255, 0.35)")};
   font-family: var(--font-display);
   font-size: 0.65rem;
 `;

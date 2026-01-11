@@ -1,14 +1,21 @@
-import { useState, useRef, useEffect, useCallback } from "react";
-import styled from "styled-components";
-import { Send, Smile, Paperclip, X, Loader2, Image as ImageIcon, Film, Music } from "lucide-react";
 import { useMutation } from "convex/react";
-import { api } from "../../../convex/_generated/api";
+import { Film, Image as ImageIcon, Loader2, Music, Paperclip, Send, Smile, X } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import styled from "styled-components";
 import { LOUNGE_COLORS } from "../../../constants/lounge";
-import { EmojiPicker } from "./EmojiPicker";
-import { MentionAutocomplete, type MentionType, type MentionSelection } from "./MentionAutocomplete";
-import { useMessageAttachments, type PendingAttachment } from "../../../hooks/lounge/useMessageAttachments";
+import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
+import {
+  type PendingAttachment,
+  useMessageAttachments,
+} from "../../../hooks/lounge/useMessageAttachments";
 import type { MessageEmbed } from "../../../types/lounge";
+import { EmojiPicker } from "./EmojiPicker";
+import {
+  MentionAutocomplete,
+  type MentionSelection,
+  type MentionType,
+} from "./MentionAutocomplete";
 
 interface MessageInputProps {
   channelId: Id<"channels">;
@@ -20,7 +27,7 @@ interface MessageInputProps {
 // Track inserted mentions for conversion on send
 interface InsertedMention {
   displayText: string; // @Username or #channel
-  insertText: string;  // <@id> or <#c:id>
+  insertText: string; // <@id> or <#c:id>
 }
 
 export function MessageInput({ channelId, channelName, disabled, onSend }: MessageInputProps) {
@@ -79,52 +86,55 @@ export function MessageInput({ channelId, channelName, disabled, onSend }: Messa
   }, [content]);
 
   // Check for mention triggers on content change
-  const checkMentionTrigger = useCallback((text: string, cursorPos: number) => {
-    // Look backwards from cursor to find @ or #
-    const textBeforeCursor = text.slice(0, cursorPos);
+  const checkMentionTrigger = useCallback(
+    (text: string, cursorPos: number) => {
+      // Look backwards from cursor to find @ or #
+      const textBeforeCursor = text.slice(0, cursorPos);
 
-    // Find the last @ or # that could be a trigger
-    // Must be at start or after whitespace, and not inside a completed mention
-    const atMatch = textBeforeCursor.match(/(^|[\s])@([^\s]*)$/);
-    const hashMatch = textBeforeCursor.match(/(^|[\s])#([^\s]*)$/);
+      // Find the last @ or # that could be a trigger
+      // Must be at start or after whitespace, and not inside a completed mention
+      const atMatch = textBeforeCursor.match(/(^|[\s])@([^\s]*)$/);
+      const hashMatch = textBeforeCursor.match(/(^|[\s])#([^\s]*)$/);
 
-    if (atMatch && atMatch[2] !== undefined) {
-      const query = atMatch[2];
-      const triggerIndex = cursorPos - query.length - 1; // -1 for the @
+      if (atMatch && atMatch[2] !== undefined) {
+        const query = atMatch[2];
+        const triggerIndex = cursorPos - query.length - 1; // -1 for the @
 
-      // Calculate position for dropdown
-      const position = calculateDropdownPosition();
+        // Calculate position for dropdown
+        const position = calculateDropdownPosition();
 
-      setMentionState({
-        isOpen: true,
-        type: "user",
-        query,
-        triggerIndex,
-        position,
-      });
-      setMentionSelectedIndex(0);
-    } else if (hashMatch && hashMatch[2] !== undefined) {
-      const query = hashMatch[2];
-      const triggerIndex = cursorPos - query.length - 1; // -1 for the #
+        setMentionState({
+          isOpen: true,
+          type: "user",
+          query,
+          triggerIndex,
+          position,
+        });
+        setMentionSelectedIndex(0);
+      } else if (hashMatch && hashMatch[2] !== undefined) {
+        const query = hashMatch[2];
+        const triggerIndex = cursorPos - query.length - 1; // -1 for the #
 
-      // Calculate position for dropdown
-      const position = calculateDropdownPosition();
+        // Calculate position for dropdown
+        const position = calculateDropdownPosition();
 
-      setMentionState({
-        isOpen: true,
-        type: "channel",
-        query,
-        triggerIndex,
-        position,
-      });
-      setMentionSelectedIndex(0);
-    } else {
-      // Close mention autocomplete
-      if (mentionState?.isOpen) {
-        setMentionState(null);
+        setMentionState({
+          isOpen: true,
+          type: "channel",
+          query,
+          triggerIndex,
+          position,
+        });
+        setMentionSelectedIndex(0);
+      } else {
+        // Close mention autocomplete
+        if (mentionState?.isOpen) {
+          setMentionState(null);
+        }
       }
-    }
-  }, [mentionState?.isOpen]);
+    },
+    [mentionState?.isOpen],
+  );
 
   // Calculate dropdown position relative to input
   const calculateDropdownPosition = useCallback(() => {
@@ -139,44 +149,53 @@ export function MessageInput({ channelId, channelName, disabled, onSend }: Messa
   }, []);
 
   // Handle content change with mention detection
-  const handleContentChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const newContent = e.target.value;
-    const cursorPos = e.target.selectionStart;
-    setContent(newContent);
-    checkMentionTrigger(newContent, cursorPos);
-  }, [checkMentionTrigger]);
+  const handleContentChange = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      const newContent = e.target.value;
+      const cursorPos = e.target.selectionStart;
+      setContent(newContent);
+      checkMentionTrigger(newContent, cursorPos);
+    },
+    [checkMentionTrigger],
+  );
 
   // Handle mention selection
-  const handleMentionSelect = useCallback((selection: MentionSelection) => {
-    if (!mentionState) return;
+  const handleMentionSelect = useCallback(
+    (selection: MentionSelection) => {
+      if (!mentionState) return;
 
-    const textarea = textareaRef.current;
-    if (!textarea) return;
+      const textarea = textareaRef.current;
+      if (!textarea) return;
 
-    // Replace the @query or #query with the display text
-    const beforeTrigger = content.slice(0, mentionState.triggerIndex);
-    const afterCursor = content.slice(textarea.selectionStart);
+      // Replace the @query or #query with the display text
+      const beforeTrigger = content.slice(0, mentionState.triggerIndex);
+      const afterCursor = content.slice(textarea.selectionStart);
 
-    // Insert display text (e.g., @Username) - we'll convert on send
-    const newContent = beforeTrigger + selection.displayText + " " + afterCursor;
-    setContent(newContent);
+      // Insert display text (e.g., @Username) - we'll convert on send
+      const newContent = beforeTrigger + selection.displayText + " " + afterCursor;
+      setContent(newContent);
 
-    // Track the mention for conversion on send
-    setMentions(prev => [...prev, {
-      displayText: selection.displayText,
-      insertText: selection.insertText,
-    }]);
+      // Track the mention for conversion on send
+      setMentions((prev) => [
+        ...prev,
+        {
+          displayText: selection.displayText,
+          insertText: selection.insertText,
+        },
+      ]);
 
-    // Close autocomplete
-    setMentionState(null);
+      // Close autocomplete
+      setMentionState(null);
 
-    // Focus and set cursor position after the inserted mention
-    setTimeout(() => {
-      const newCursorPos = beforeTrigger.length + selection.displayText.length + 1;
-      textarea.selectionStart = textarea.selectionEnd = newCursorPos;
-      textarea.focus();
-    }, 0);
-  }, [content, mentionState]);
+      // Focus and set cursor position after the inserted mention
+      setTimeout(() => {
+        const newCursorPos = beforeTrigger.length + selection.displayText.length + 1;
+        textarea.selectionStart = textarea.selectionEnd = newCursorPos;
+        textarea.focus();
+      }, 0);
+    },
+    [content, mentionState],
+  );
 
   // Close mention autocomplete
   const closeMentionAutocomplete = useCallback(() => {
@@ -454,17 +473,13 @@ function AttachmentPreview({
           {!isVideo && !isAudio && <ImageIcon size={24} />}
         </PreviewIcon>
       )}
-      <PreviewName title={attachment.file.name}>
-        {attachment.file.name}
-      </PreviewName>
+      <PreviewName title={attachment.file.name}>{attachment.file.name}</PreviewName>
       {attachment.status === "uploading" && (
         <UploadingOverlay>
           <Loader2 size={16} className="spin" />
         </UploadingOverlay>
       )}
-      {attachment.status === "error" && (
-        <ErrorOverlay title={attachment.error}>!</ErrorOverlay>
-      )}
+      {attachment.status === "error" && <ErrorOverlay title={attachment.error}>!</ErrorOverlay>}
       <RemoveButton onClick={onRemove} title="Remove">
         <X size={14} />
       </RemoveButton>
@@ -484,8 +499,8 @@ const AttachmentPreviewArea = styled.div`
   gap: 0.5rem;
   padding: 0.5rem;
   margin-bottom: 0.5rem;
-  background: ${(props) => props.theme.background === "#fff" ? "rgba(0,0,0,0.04)" : "rgba(0, 0, 0, 0.2)"};
-  border: 1px solid ${(props) => props.theme.background === "#fff" ? "rgba(0,0,0,0.1)" : LOUNGE_COLORS.glassBorder};
+  background: ${(props) => (props.theme.background === "#fff" ? "rgba(0,0,0,0.04)" : "rgba(0, 0, 0, 0.2)")};
+  border: 1px solid ${(props) => (props.theme.background === "#fff" ? "rgba(0,0,0,0.1)" : LOUNGE_COLORS.glassBorder)};
   border-radius: 8px;
 `;
 
@@ -631,7 +646,7 @@ const InputWrapper = styled.div<{ $isDragging?: boolean }>`
   align-items: flex-end;
   gap: 0.5rem;
   padding: 0.5rem;
-  background: ${(props) => props.theme.background === "#fff" ? "rgba(0,0,0,0.04)" : "rgba(0, 0, 0, 0.3)"};
+  background: ${(props) => (props.theme.background === "#fff" ? "rgba(0,0,0,0.04)" : "rgba(0, 0, 0, 0.3)")};
   border: 1px solid ${(p) => (p.$isDragging ? LOUNGE_COLORS.tier1 : p.theme.background === "#fff" ? "rgba(0,0,0,0.12)" : LOUNGE_COLORS.glassBorder)};
   border-radius: 12px;
   transition: border-color 0.2s ease;
@@ -679,7 +694,7 @@ const TextInput = styled.textarea`
   overflow-y: auto;
 
   &::placeholder {
-    color: ${(props) => props.theme.background === "#fff" ? "rgba(0,0,0,0.4)" : "rgba(255, 255, 255, 0.4)"};
+    color: ${(props) => (props.theme.background === "#fff" ? "rgba(0,0,0,0.4)" : "rgba(255, 255, 255, 0.4)")};
   }
 
   &:focus {
@@ -704,13 +719,13 @@ const IconButton = styled.button`
   background: transparent;
   border: none;
   border-radius: 6px;
-  color: ${(props) => props.theme.background === "#fff" ? "rgba(0,0,0,0.5)" : "rgba(255, 255, 255, 0.5)"};
+  color: ${(props) => (props.theme.background === "#fff" ? "rgba(0,0,0,0.5)" : "rgba(255, 255, 255, 0.5)")};
   cursor: pointer;
   transition: all 0.15s ease;
   flex-shrink: 0;
 
   &:hover:not(:disabled) {
-    background: ${(props) => props.theme.background === "#fff" ? "rgba(0,0,0,0.08)" : "rgba(255, 255, 255, 0.1)"};
+    background: ${(props) => (props.theme.background === "#fff" ? "rgba(0,0,0,0.08)" : "rgba(255, 255, 255, 0.1)")};
     color: ${(props) => props.theme.foreground};
   }
 
@@ -738,7 +753,7 @@ const IconButton = styled.button`
 `;
 
 const AttachButton = styled(IconButton)`
-  color: ${(props) => props.theme.background === "#fff" ? "rgba(0,0,0,0.5)" : "rgba(255, 255, 255, 0.6)"};
+  color: ${(props) => (props.theme.background === "#fff" ? "rgba(0,0,0,0.5)" : "rgba(255, 255, 255, 0.6)")};
 
   &:hover:not(:disabled) {
     color: ${LOUNGE_COLORS.tier1};
@@ -752,26 +767,39 @@ const EmojiWrapper = styled.div`
 
 const EmojiButton = styled(IconButton)<{ $isActive?: boolean }>`
   color: ${(props) =>
-    props.$isActive ? LOUNGE_COLORS.tier1 : props.theme.background === "#fff" ? "rgba(0,0,0,0.5)" : "rgba(255, 255, 255, 0.6)"};
-  background: ${(props) =>
-    props.$isActive ? LOUNGE_COLORS.tier1Background : "transparent"};
+    props.$isActive
+      ? LOUNGE_COLORS.tier1
+      : props.theme.background === "#fff"
+        ? "rgba(0,0,0,0.5)"
+        : "rgba(255, 255, 255, 0.6)"};
+  background: ${(props) => (props.$isActive ? LOUNGE_COLORS.tier1Background : "transparent")};
 
   &:hover:not(:disabled) {
     background: ${(props) =>
       props.$isActive
         ? LOUNGE_COLORS.tier1Background
-        : props.theme.background === "#fff" ? "rgba(0,0,0,0.08)" : "rgba(255, 255, 255, 0.1)"};
+        : props.theme.background === "#fff"
+          ? "rgba(0,0,0,0.08)"
+          : "rgba(255, 255, 255, 0.1)"};
     color: ${(props) => (props.$isActive ? LOUNGE_COLORS.tier1 : props.theme.foreground)};
   }
 `;
 
 const SendButton = styled(IconButton)<{ $hasContent: boolean }>`
   color: ${(props) =>
-    props.$hasContent ? LOUNGE_COLORS.tier1 : props.theme.background === "#fff" ? "rgba(0,0,0,0.3)" : "rgba(255, 255, 255, 0.4)"};
+    props.$hasContent
+      ? LOUNGE_COLORS.tier1
+      : props.theme.background === "#fff"
+        ? "rgba(0,0,0,0.3)"
+        : "rgba(255, 255, 255, 0.4)"};
 
   &:hover:not(:disabled) {
     background: ${(props) =>
-      props.$hasContent ? "rgba(144, 116, 242, 0.2)" : props.theme.background === "#fff" ? "rgba(0,0,0,0.04)" : "rgba(255, 255, 255, 0.05)"};
+      props.$hasContent
+        ? "rgba(144, 116, 242, 0.2)"
+        : props.theme.background === "#fff"
+          ? "rgba(0,0,0,0.04)"
+          : "rgba(255, 255, 255, 0.05)"};
     color: ${(props) => (props.$hasContent ? LOUNGE_COLORS.tier1 : props.theme.background === "#fff" ? "rgba(0,0,0,0.5)" : "rgba(255, 255, 255, 0.5)")};
   }
 

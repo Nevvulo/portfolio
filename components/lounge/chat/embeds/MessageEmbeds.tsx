@@ -1,11 +1,11 @@
-import { memo, useState, useCallback } from "react";
+import { memo, useCallback, useState } from "react";
 import styled from "styled-components";
 import type { MessageEmbed } from "../../../../types/lounge";
-import { VideoEmbed } from "./VideoEmbed";
 import { AudioEmbed } from "./AudioEmbed";
-import { LinkEmbed } from "./LinkEmbed";
-import { YouTubeEmbed } from "./YouTubeEmbed";
 import { ImageLightbox } from "./ImageLightbox";
+import { LinkEmbed } from "./LinkEmbed";
+import { VideoEmbed } from "./VideoEmbed";
+import { YouTubeEmbed } from "./YouTubeEmbed";
 
 interface MessageEmbedsProps {
   embeds: MessageEmbed[];
@@ -36,9 +36,7 @@ function calcDisplaySize(w?: number, h?: number): { width: number; height: numbe
   return { width: Math.round(displayW), height: Math.round(displayH) };
 }
 
-export const MessageEmbeds = memo(function MessageEmbeds({
-  embeds,
-}: MessageEmbedsProps) {
+export const MessageEmbeds = memo(function MessageEmbeds({ embeds }: MessageEmbedsProps) {
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [failedImages, setFailedImages] = useState<Set<number>>(new Set());
 
@@ -79,9 +77,7 @@ export const MessageEmbeds = memo(function MessageEmbeds({
 
       {/* Render other embeds normally */}
       {otherEmbeds.map((embed, index) => (
-        <EmbedWrapper key={`other-${index}`}>
-          {renderEmbed(embed)}
-        </EmbedWrapper>
+        <EmbedWrapper key={`other-${index}`}>{renderEmbed(embed)}</EmbedWrapper>
       ))}
 
       {/* Lightbox for full-size image viewing */}
@@ -112,11 +108,7 @@ function renderEmbed(embed: MessageEmbed) {
 
     case "audio":
       return (
-        <AudioEmbed
-          url={embed.url || ""}
-          filename={embed.filename}
-          duration={embed.duration}
-        />
+        <AudioEmbed url={embed.url || ""} filename={embed.filename} duration={embed.duration} />
       );
 
     case "youtube":

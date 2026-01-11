@@ -1,6 +1,12 @@
 import { v } from "convex/values";
-import { query, mutation, internalQuery, internalMutation, internalAction } from "./_generated/server";
 import { internal } from "./_generated/api";
+import {
+  internalAction,
+  internalMutation,
+  internalQuery,
+  mutation,
+  query,
+} from "./_generated/server";
 import { getCurrentUser } from "./auth";
 
 const UPSTASH_REDIS_URL = process.env.UPSTASH_REDIS_REST_URL;
@@ -42,9 +48,7 @@ export const trackHeartbeat = mutation({
 
     const existing = await ctx.db
       .query("articleWatchTime")
-      .withIndex("by_user_post", (q) =>
-        q.eq("userId", user._id).eq("postId", args.postId)
-      )
+      .withIndex("by_user_post", (q) => q.eq("userId", user._id).eq("postId", args.postId))
       .unique();
 
     if (existing) {
@@ -94,16 +98,12 @@ export const getUserWatchHistory = query({
       .collect();
 
     // Sort and limit
-    const sorted = watchRecords
-      .sort((a, b) => b.totalSeconds - a.totalSeconds)
-      .slice(0, limit);
+    const sorted = watchRecords.sort((a, b) => b.totalSeconds - a.totalSeconds).slice(0, limit);
 
     // Batch fetch all posts at once (avoids N+1 queries)
-    const postIds = [...new Set(sorted.map(r => r.postId))];
-    const posts = await Promise.all(postIds.map(id => ctx.db.get(id)));
-    const postMap = new Map(
-      posts.filter(Boolean).map(p => [p!._id.toString(), p!])
-    );
+    const postIds = [...new Set(sorted.map((r) => r.postId))];
+    const posts = await Promise.all(postIds.map((id) => ctx.db.get(id)));
+    const postMap = new Map(posts.filter(Boolean).map((p) => [p!._id.toString(), p!]));
 
     // Build results using cached post data
     const withSlugs = sorted.map((record) => {
@@ -137,16 +137,12 @@ export const getWatchHistoryForRecs = internalQuery({
       .withIndex("by_user", (q) => q.eq("userId", args.userId))
       .collect();
 
-    const sorted = watchRecords
-      .sort((a, b) => b.totalSeconds - a.totalSeconds)
-      .slice(0, limit);
+    const sorted = watchRecords.sort((a, b) => b.totalSeconds - a.totalSeconds).slice(0, limit);
 
     // Batch fetch all posts at once (avoids N+1 queries)
-    const postIds = [...new Set(sorted.map(r => r.postId))];
-    const posts = await Promise.all(postIds.map(id => ctx.db.get(id)));
-    const postMap = new Map(
-      posts.filter(Boolean).map(p => [p!._id.toString(), p!])
-    );
+    const postIds = [...new Set(sorted.map((r) => r.postId))];
+    const posts = await Promise.all(postIds.map((id) => ctx.db.get(id)));
+    const postMap = new Map(posts.filter(Boolean).map((p) => [p!._id.toString(), p!]));
 
     const withSlugs = sorted.map((record) => {
       const post = postMap.get(record.postId.toString());
@@ -177,20 +173,16 @@ export const getAllWatchTimeRecent = internalQuery({
     const recent = records.filter((r) => r.updatedAt > cutoff);
 
     // Batch fetch all posts and users at once (avoids N+2 queries per record)
-    const postIds = [...new Set(recent.map(r => r.postId))];
-    const userIds = [...new Set(recent.map(r => r.userId))];
+    const postIds = [...new Set(recent.map((r) => r.postId))];
+    const userIds = [...new Set(recent.map((r) => r.userId))];
 
     const [posts, users] = await Promise.all([
-      Promise.all(postIds.map(id => ctx.db.get(id))),
-      Promise.all(userIds.map(id => ctx.db.get(id))),
+      Promise.all(postIds.map((id) => ctx.db.get(id))),
+      Promise.all(userIds.map((id) => ctx.db.get(id))),
     ]);
 
-    const postMap = new Map(
-      posts.filter(Boolean).map(p => [p!._id.toString(), p!])
-    );
-    const userMap = new Map(
-      users.filter(Boolean).map(u => [u!._id.toString(), u!])
-    );
+    const postMap = new Map(posts.filter(Boolean).map((p) => [p!._id.toString(), p!]));
+    const userMap = new Map(users.filter(Boolean).map((u) => [u!._id.toString(), u!]));
 
     const withDetails = recent.map((record) => {
       const post = postMap.get(record.postId.toString());
@@ -241,9 +233,7 @@ export const upsertFromBuffer = internalMutation({
     // Check if watch time record exists
     const existing = await ctx.db
       .query("articleWatchTime")
-      .withIndex("by_user_post", (q) =>
-        q.eq("userId", user._id).eq("postId", postId)
-      )
+      .withIndex("by_user_post", (q) => q.eq("userId", user._id).eq("postId", postId))
       .unique();
 
     const now = Date.now();
@@ -290,7 +280,14 @@ export const flushRedisBuffer = internalAction({
     let cursor = "0";
 
     do {
-      const result = await redisCommand(["SCAN", cursor, "MATCH", "watchtime:*", "COUNT", "100"]) as [string, string[]] | null;
+      const result = (await redisCommand([
+        "SCAN",
+        cursor,
+        "MATCH",
+        "watchtime:*",
+        "COUNT",
+        "100",
+      ])) as [string, string[]] | null;
       if (!result) break;
       cursor = result[0];
       keys.push(...result[1]);
@@ -304,7 +301,7 @@ export const flushRedisBuffer = internalAction({
     console.log(`[articleWatchTime] Flushing ${keys.length} watch time records from Redis`);
 
     // Get all values in batch
-    const values = await redisCommand(["MGET", ...keys]) as string[] | null;
+    const values = (await redisCommand(["MGET", ...keys])) as string[] | null;
     if (!values) {
       console.error("[articleWatchTime] Failed to get values from Redis");
       return { flushed: 0 };
@@ -316,7 +313,7 @@ export const flushRedisBuffer = internalAction({
     for (let i = 0; i < keys.length; i++) {
       const key = keys[i];
       const value = values[i];
-      if (!value) continue;
+      if (!key || !value) continue;
 
       // Parse key: watchtime:{clerkId}:{postId}
       const parts = key.split(":");
@@ -324,6 +321,7 @@ export const flushRedisBuffer = internalAction({
 
       const clerkId = parts[1];
       const postId = parts[2];
+      if (!clerkId || !postId) continue;
       const totalSeconds = parseInt(value, 10);
 
       if (isNaN(totalSeconds) || totalSeconds <= 0) continue;

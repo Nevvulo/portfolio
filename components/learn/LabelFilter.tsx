@@ -1,42 +1,42 @@
-import styled from "styled-components";
 import { X } from "lucide-react";
+import styled from "styled-components";
 
 interface LabelFilterProps {
-	labels: string[];
-	selectedLabels: string[];
-	onToggle: (label: string) => void;
-	onClear?: () => void;
+  labels: string[];
+  selectedLabels: string[];
+  onToggle: (label: string) => void;
+  onClear?: () => void;
 }
 
 export function LabelFilter({ labels, selectedLabels, onToggle, onClear }: LabelFilterProps) {
-	if (labels.length === 0) return null;
+  if (labels.length === 0) return null;
 
-	const hasSelection = selectedLabels.length > 0;
+  const hasSelection = selectedLabels.length > 0;
 
-	return (
-		<Container>
-			<FilterRow>
-				<LabelsScroll>
-					{labels.map((label) => (
-						<FilterLabel
-							key={label}
-							$selected={selectedLabels.includes(label)}
-							onClick={() => onToggle(label)}
-							type="button"
-						>
-							{label.replace(/-/g, " ")}
-						</FilterLabel>
-					))}
-				</LabelsScroll>
-				{hasSelection && onClear && (
-					<ClearButton onClick={onClear} type="button">
-						<X size={12} />
-						Clear
-					</ClearButton>
-				)}
-			</FilterRow>
-		</Container>
-	);
+  return (
+    <Container>
+      <FilterRow>
+        <LabelsScroll>
+          {labels.map((label) => (
+            <FilterLabel
+              key={label}
+              $selected={selectedLabels.includes(label)}
+              onClick={() => onToggle(label)}
+              type="button"
+            >
+              {label.replace(/-/g, " ")}
+            </FilterLabel>
+          ))}
+        </LabelsScroll>
+        {hasSelection && onClear && (
+          <ClearButton onClick={onClear} type="button">
+            <X size={12} />
+            Clear
+          </ClearButton>
+        )}
+      </FilterRow>
+    </Container>
+  );
 }
 
 const Container = styled.div`
@@ -85,8 +85,7 @@ const LabelsScroll = styled.div`
 `;
 
 const FilterLabel = styled.button<{ $selected: boolean }>`
-	background: ${(p) =>
-		p.$selected ? "rgba(79, 77, 193, 0.35)" : "rgba(79, 77, 193, 0.15)"};
+	background: ${(p) => (p.$selected ? "rgba(79, 77, 193, 0.35)" : "rgba(79, 77, 193, 0.15)")};
 	padding: 0.2em 0.6em;
 	border: 1px solid
 		${(p) => (p.$selected ? "rgba(79, 77, 193, 0.6)" : "rgba(79, 77, 193, 0.3)")};

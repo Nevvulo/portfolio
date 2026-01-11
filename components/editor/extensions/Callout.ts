@@ -1,4 +1,4 @@
-import { Node, mergeAttributes } from "@tiptap/core";
+import { mergeAttributes, Node } from "@tiptap/core";
 import { ReactNodeViewRenderer } from "@tiptap/react";
 import { EditorCallout } from "../components/EditorCallout";
 
@@ -43,7 +43,7 @@ export const Callout = Node.create<CalloutOptions>({
   parseHTML() {
     return [
       {
-        tag: 'div[data-callout]',
+        tag: "div[data-callout]",
       },
     ];
   },

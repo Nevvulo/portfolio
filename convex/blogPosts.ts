@@ -1,29 +1,21 @@
 import { v } from "convex/values";
-import { query, mutation, internalQuery } from "./_generated/server";
 import { internal } from "./_generated/api";
-import { getCurrentUser, requireUser, requireCreator, hasAccessToTier, isCreator } from "./auth";
-import { Doc, Id } from "./_generated/dataModel";
+import type { Doc, Id } from "./_generated/dataModel";
+import { internalQuery, mutation, query } from "./_generated/server";
+import { getCurrentUser, hasAccessToTier, isCreator, requireCreator, requireUser } from "./auth";
 
 // Content type validator
-const contentTypeValidator = v.union(
-  v.literal("article"),
-  v.literal("video"),
-  v.literal("news")
-);
+const contentTypeValidator = v.union(v.literal("article"), v.literal("video"), v.literal("news"));
 
 // Status validator
-const statusValidator = v.union(
-  v.literal("draft"),
-  v.literal("published"),
-  v.literal("archived")
-);
+const statusValidator = v.union(v.literal("draft"), v.literal("published"), v.literal("archived"));
 
 // Visibility validator
 const visibilityValidator = v.union(
   v.literal("public"),
   v.literal("members"),
   v.literal("tier1"),
-  v.literal("tier2")
+  v.literal("tier2"),
 );
 
 // Bento size validator
@@ -32,21 +24,21 @@ const bentoSizeValidator = v.union(
   v.literal("medium"),
   v.literal("large"),
   v.literal("banner"),
-  v.literal("featured")
+  v.literal("featured"),
 );
 
 // Difficulty validator
 const difficultyValidator = v.union(
   v.literal("beginner"),
   v.literal("intermediate"),
-  v.literal("advanced")
+  v.literal("advanced"),
 );
 
 // AI disclosure status validator
 const aiDisclosureStatusValidator = v.union(
   v.literal("none"),
   v.literal("llm-assisted"),
-  v.literal("llm-reviewed")
+  v.literal("llm-reviewed"),
 );
 
 /**
@@ -54,7 +46,7 @@ const aiDisclosureStatusValidator = v.union(
  */
 function canAccessPost(
   user: Doc<"users"> | null,
-  visibility: "public" | "members" | "tier1" | "tier2"
+  visibility: "public" | "members" | "tier1" | "tier2",
 ): boolean {
   if (visibility === "public") return true;
   if (!user) return false;
@@ -66,7 +58,11 @@ function canAccessPost(
  * Fetch content from separate table (bandwidth optimization)
  * Falls back to post.content for backward compatibility during migration
  */
-async function getPostContent(ctx: any, postId: Id<"blogPosts">, fallbackContent?: string): Promise<string> {
+async function getPostContent(
+  ctx: any,
+  postId: Id<"blogPosts">,
+  fallbackContent?: string,
+): Promise<string> {
   const contentDoc = await ctx.db
     .query("blogPostContent")
     .withIndex("by_post", (q: any) => q.eq("postId", postId))
@@ -96,20 +92,25 @@ async function getAuthorInfo(ctx: any, authorId: Id<"users">) {
  */
 async function batchGetAuthors(ctx: any, authorIds: Id<"users">[]) {
   // Dedupe author IDs
-  const uniqueIds = [...new Set(authorIds.map(id => id.toString()))].map(id => id as unknown as Id<"users">);
+  const uniqueIds = [...new Set(authorIds.map((id) => id.toString()))].map(
+    (id) => id as unknown as Id<"users">,
+  );
 
   // Fetch all authors in parallel
-  const authors = await Promise.all(uniqueIds.map(id => ctx.db.get(id)));
+  const authors = await Promise.all(uniqueIds.map((id) => ctx.db.get(id)));
 
   // Build lookup map
-  const authorMap = new Map<string, {
-    _id: Id<"users">;
-    displayName: string;
-    username?: string;
-    avatarUrl?: string;
-    tier?: string;
-    isCreator?: boolean;
-  } | null>();
+  const authorMap = new Map<
+    string,
+    {
+      _id: Id<"users">;
+      displayName: string;
+      username?: string;
+      avatarUrl?: string;
+      tier?: string;
+      isCreator?: boolean;
+    } | null
+  >();
 
   for (let i = 0; i < uniqueIds.length; i++) {
     const author = authors[i];
@@ -147,9 +148,7 @@ export const list = query({
   handler: async (ctx, args) => {
     const user = await requireCreator(ctx);
 
-    let postsQuery = ctx.db
-      .query("blogPosts")
-      .order("desc");
+    const postsQuery = ctx.db.query("blogPosts").order("desc");
 
     const posts = await postsQuery.collect();
 
@@ -173,7 +172,7 @@ export const list = query({
       filtered.map(async (post) => ({
         ...post,
         author: await getAuthorInfo(ctx, post.authorId),
-      }))
+      })),
     );
 
     return postsWithAuthors;
@@ -191,11 +190,7 @@ export const listPublished = query({
   handler: async (ctx, args) => {
     const user = await getCurrentUser(ctx);
 
-    const posts = await ctx.db
-      .query("blogPosts")
-      .withIndex("by_bentoOrder")
-      .order("asc")
-      .collect();
+    const posts = await ctx.db.query("blogPosts").withIndex("by_bentoOrder").order("asc").collect();
 
     // Filter to published only and accessible by user
     const accessible = posts.filter((post) => {
@@ -219,7 +214,7 @@ export const listPublished = query({
       filtered.map(async (post) => ({
         ...post,
         author: await getAuthorInfo(ctx, post.authorId),
-      }))
+      })),
     );
 
     return postsWithAuthors;
@@ -267,9 +262,7 @@ export const getPreLLMPosts = query({
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const posts = await ctx.db
-      .query("blogPosts")
-      .collect();
+    const posts = await ctx.db.query("blogPosts").collect();
 
     // Filter to published posts before the cutoff date
     const preLLMPosts = posts
@@ -312,9 +305,7 @@ export const getBySlugForEdit = query({
     // Check if user can edit (creator, author, or collaborator)
     const hasEditAccess =
       user &&
-      (isCreator(user) ||
-        post.authorId === user._id ||
-        post.collaborators?.includes(user._id));
+      (isCreator(user) || post.authorId === user._id || post.collaborators?.includes(user._id));
 
     if (!hasEditAccess) return null;
 
@@ -322,9 +313,9 @@ export const getBySlugForEdit = query({
     const content = await getPostContent(ctx, post._id, post.content);
     const author = await getAuthorInfo(ctx, post.authorId);
     const collaborators = post.collaborators
-      ? await Promise.all(
-          post.collaborators.map((id) => getAuthorInfo(ctx, id))
-        ).then((results) => results.filter(Boolean))
+      ? await Promise.all(post.collaborators.map((id) => getAuthorInfo(ctx, id))).then((results) =>
+          results.filter(Boolean),
+        )
       : [];
 
     return { ...post, content, author, collaborators };
@@ -361,9 +352,9 @@ export const getBySlug = query({
 
     // Fetch collaborator info
     const collaborators = post.collaborators
-      ? await Promise.all(
-          post.collaborators.map((id) => getAuthorInfo(ctx, id))
-        ).then((results) => results.filter(Boolean))
+      ? await Promise.all(post.collaborators.map((id) => getAuthorInfo(ctx, id))).then((results) =>
+          results.filter(Boolean),
+        )
       : [];
 
     return { ...post, content, author, collaborators };
@@ -382,9 +373,7 @@ export const listSlugs = query({
       .collect();
 
     // Only return public posts for static paths
-    return posts
-      .filter((p) => p.visibility === "public")
-      .map((p) => p.slug);
+    return posts.filter((p) => p.visibility === "public").map((p) => p.slug);
   },
 });
 
@@ -450,19 +439,19 @@ export const getForBento = query({
 export const getForBentoPersonalized = query({
   args: {
     excludeNews: v.optional(v.boolean()),
-    recommendationScores: v.optional(v.array(v.object({
-      slug: v.string(),
-      score: v.number(),
-    }))),
+    recommendationScores: v.optional(
+      v.array(
+        v.object({
+          slug: v.string(),
+          score: v.number(),
+        }),
+      ),
+    ),
   },
   handler: async (ctx, args) => {
     const user = await getCurrentUser(ctx);
 
-    const posts = await ctx.db
-      .query("blogPosts")
-      .withIndex("by_bentoOrder")
-      .order("asc")
-      .collect();
+    const posts = await ctx.db.query("blogPosts").withIndex("by_bentoOrder").order("asc").collect();
 
     let accessible = posts.filter((post) => {
       if (post.status !== "published") return false;
@@ -487,7 +476,7 @@ export const getForBentoPersonalized = query({
     if (hasPersonalization) {
       // STEP 1: Separate featured posts - they ALWAYS come first
       const featuredPosts: typeof accessible = [];
-      const nonFeaturedPosts: { post: typeof accessible[0]; bentoIndex: number }[] = [];
+      const nonFeaturedPosts: { post: (typeof accessible)[0]; bentoIndex: number }[] = [];
 
       accessible.forEach((post, bentoIndex) => {
         if (post.bentoSize === "featured") {
@@ -558,10 +547,14 @@ export const getForBentoPersonalized = query({
 export const getForBentoPaginated = query({
   args: {
     excludeNews: v.optional(v.boolean()),
-    recommendationScores: v.optional(v.array(v.object({
-      slug: v.string(),
-      score: v.number(),
-    }))),
+    recommendationScores: v.optional(
+      v.array(
+        v.object({
+          slug: v.string(),
+          score: v.number(),
+        }),
+      ),
+    ),
     limit: v.optional(v.number()),
     offset: v.optional(v.number()),
   },
@@ -570,11 +563,7 @@ export const getForBentoPaginated = query({
     const limit = args.limit ?? 20;
     const offset = args.offset ?? 0;
 
-    const posts = await ctx.db
-      .query("blogPosts")
-      .withIndex("by_bentoOrder")
-      .order("asc")
-      .collect();
+    const posts = await ctx.db.query("blogPosts").withIndex("by_bentoOrder").order("asc").collect();
 
     let accessible = posts.filter((post) => {
       if (post.status !== "published") return false;
@@ -599,7 +588,7 @@ export const getForBentoPaginated = query({
     if (hasPersonalization) {
       // STEP 1: Separate featured posts - they ALWAYS come first
       const featuredPosts: typeof accessible = [];
-      const nonFeaturedPosts: { post: typeof accessible[0]; bentoIndex: number }[] = [];
+      const nonFeaturedPosts: { post: (typeof accessible)[0]; bentoIndex: number }[] = [];
 
       accessible.forEach((post, bentoIndex) => {
         if (post.bentoSize === "featured") {
@@ -681,19 +670,19 @@ export const getForBentoPaginated = query({
 export const getForBentoDebug = query({
   args: {
     excludeNews: v.optional(v.boolean()),
-    recommendationScores: v.optional(v.array(v.object({
-      slug: v.string(),
-      score: v.number(),
-    }))),
+    recommendationScores: v.optional(
+      v.array(
+        v.object({
+          slug: v.string(),
+          score: v.number(),
+        }),
+      ),
+    ),
   },
   handler: async (ctx, args) => {
     const user = await requireCreator(ctx);
 
-    const posts = await ctx.db
-      .query("blogPosts")
-      .withIndex("by_bentoOrder")
-      .order("asc")
-      .collect();
+    const posts = await ctx.db.query("blogPosts").withIndex("by_bentoOrder").order("asc").collect();
 
     let accessible = posts.filter((post) => {
       if (post.status !== "published") return false;
@@ -784,7 +773,7 @@ export const getForBentoDebug = query({
       posts: withRank,
       meta: {
         totalPosts: withRank.length,
-        featuredCount: withRank.filter(p => p.debug.isFeatured).length,
+        featuredCount: withRank.filter((p) => p.debug.isFeatured).length,
         hasPersonalization,
         maxRecScore,
         maxPositionShift: MAX_POSITION_SHIFT,
@@ -819,20 +808,19 @@ export const getPostsBySlugs = query({
     const user = await getCurrentUser(ctx);
 
     // Use by_slug index for each slug - much more efficient than scanning all published posts
-    const postPromises = args.slugs.map(slug =>
+    const postPromises = args.slugs.map((slug) =>
       ctx.db
         .query("blogPosts")
         .withIndex("by_slug", (q) => q.eq("slug", slug))
-        .first()
+        .first(),
     );
 
     const allPosts = await Promise.all(postPromises);
 
     // Filter to published, accessible posts (maintain original order from args.slugs)
-    const posts = allPosts.filter((post): post is NonNullable<typeof post> =>
-      post !== null &&
-      post.status === "published" &&
-      canAccessPost(user, post.visibility)
+    const posts = allPosts.filter(
+      (post): post is NonNullable<typeof post> =>
+        post !== null && post.status === "published" && canAccessPost(user, post.visibility),
     );
 
     // Build result with MINIMAL fields (no author lookup - not needed for recommendations)
@@ -924,7 +912,7 @@ export const getByUserContributions = query({
       .collect();
 
     // Filter to published only
-    const publishedAuthored = authoredPosts.filter(p => p.status === "published");
+    const publishedAuthored = authoredPosts.filter((p) => p.status === "published");
 
     // For collaborator posts, we need to scan published posts (collaborators is an array)
     // This is less efficient but collaborators are rare
@@ -936,7 +924,7 @@ export const getByUserContributions = query({
     const collaboratedPosts = publishedPosts.filter(
       (post) =>
         post.authorId !== args.userId && // Not already in authored list
-        post.collaborators?.includes(args.userId)
+        post.collaborators?.includes(args.userId),
     );
 
     // Combine and dedupe
@@ -946,7 +934,7 @@ export const getByUserContributions = query({
     allUserPosts.sort((a, b) => (b.publishedAt || 0) - (a.publishedAt || 0));
 
     // Batch fetch all authors at once (avoids N+1 queries)
-    const authorIds = allUserPosts.map(p => p.authorId);
+    const authorIds = allUserPosts.map((p) => p.authorId);
     const authorsMap = await batchGetAuthors(ctx, authorIds);
 
     const result = allUserPosts.map((post) => ({
@@ -1136,7 +1124,8 @@ export const update = mutation({
     if (args.coverImage !== undefined) updates.coverImage = args.coverImage;
     if (args.coverAuthor !== undefined) updates.coverAuthor = args.coverAuthor;
     if (args.coverAuthorUrl !== undefined) updates.coverAuthorUrl = args.coverAuthorUrl;
-    if (args.coverGradientIntensity !== undefined) updates.coverGradientIntensity = args.coverGradientIntensity;
+    if (args.coverGradientIntensity !== undefined)
+      updates.coverGradientIntensity = args.coverGradientIntensity;
     if (args.youtubeId !== undefined) updates.youtubeId = args.youtubeId;
     if (args.labels !== undefined) updates.labels = args.labels;
     if (args.difficulty !== undefined) updates.difficulty = args.difficulty;
@@ -1331,14 +1320,18 @@ export const updateBentoLayout = mutation({
         postId: v.id("blogPosts"),
         bentoOrder: v.number(),
         bentoSize: v.optional(bentoSizeValidator),
-      })
+      }),
     ),
   },
   handler: async (ctx, args) => {
     await requireCreator(ctx);
 
     for (const update of args.updates) {
-      const patch: { bentoOrder: number; bentoSize?: "small" | "medium" | "large" | "banner" | "featured"; updatedAt: number } = {
+      const patch: {
+        bentoOrder: number;
+        bentoSize?: "small" | "medium" | "large" | "banner" | "featured";
+        updatedAt: number;
+      } = {
         bentoOrder: update.bentoOrder,
         updatedAt: Date.now(),
       };
@@ -1380,13 +1373,9 @@ export const updateCollaborators = mutation({
     }
 
     // Find newly added collaborators (not in previous list, not self)
-    const previousCollaborators = new Set(
-      (post.collaborators || []).map((id) => id.toString())
-    );
+    const previousCollaborators = new Set((post.collaborators || []).map((id) => id.toString()));
     const newCollaborators = args.collaborators.filter(
-      (id) =>
-        !previousCollaborators.has(id.toString()) &&
-        id.toString() !== user._id.toString()
+      (id) => !previousCollaborators.has(id.toString()) && id.toString() !== user._id.toString(),
     );
 
     await ctx.db.patch(args.postId, {

@@ -204,7 +204,7 @@ export const getUserProfiles = query({
           isCreator: user.isCreator,
           createdAt: user.createdAt,
         };
-      })
+      }),
     );
 
     return profiles.filter(Boolean);

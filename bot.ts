@@ -11,8 +11,8 @@
  * - discord:sync_comment - Sync website comments to Discord threads
  */
 
-import { Client, GatewayIntentBits, type Message } from "discord.js";
 import { ConvexHttpClient } from "convex/browser";
+import { Client, GatewayIntentBits, type Message } from "discord.js";
 import { createClient, type RedisClientType } from "redis";
 import { api } from "./convex/_generated/api";
 import type { Id } from "./convex/_generated/dataModel";
@@ -86,18 +86,18 @@ function splitMessage(content: string): string[] {
     let cutPoint = MAX_MESSAGE_LENGTH - BUFFER;
 
     // Try to break at a newline first
-    const newlineIndex = remaining.lastIndexOf('\n', cutPoint);
+    const newlineIndex = remaining.lastIndexOf("\n", cutPoint);
     if (newlineIndex > cutPoint - 500) {
       cutPoint = newlineIndex;
     } else {
       // Try to break at a space
-      const spaceIndex = remaining.lastIndexOf(' ', cutPoint);
+      const spaceIndex = remaining.lastIndexOf(" ", cutPoint);
       if (spaceIndex > cutPoint - 200) {
         cutPoint = spaceIndex;
       }
     }
 
-    const chunk = remaining.slice(0, cutPoint).trimEnd() + '...';
+    const chunk = remaining.slice(0, cutPoint).trimEnd() + "...";
     chunks.push(chunk);
     remaining = remaining.slice(cutPoint).trimStart();
   }
@@ -110,7 +110,7 @@ async function discordApiCall(
   endpoint: string,
   method: string,
   body?: object,
-  useUserToken = false
+  useUserToken = false,
 ): Promise<Response> {
   const token = useUserToken && DISCORD_USER_TOKEN ? DISCORD_USER_TOKEN : DISCORD_BOT_TOKEN;
   const authHeader = useUserToken && DISCORD_USER_TOKEN ? token : `Bot ${token}`;
@@ -248,9 +248,7 @@ async function handlePublishPost(data: PublishPostData) {
     console.log(`📤 Publishing post to Discord: ${post.title}`);
 
     const description =
-      post.description.length > 300
-        ? post.description.slice(0, 297) + "..."
-        : post.description;
+      post.description.length > 300 ? post.description.slice(0, 297) + "..." : post.description;
 
     if (data.channelConfig.channelType === "forum") {
       // Build full content
@@ -271,7 +269,7 @@ async function handlePublishPost(data: PublishPostData) {
           },
           type: 11, // GUILD_PUBLIC_THREAD for forum posts
         },
-        data.useUserToken
+        data.useUserToken,
       );
 
       if (!threadResponse.ok) {
@@ -289,11 +287,13 @@ async function handlePublishPost(data: PublishPostData) {
           `/channels/${thread.id}/messages`,
           "POST",
           { content: chunks[i] },
-          data.useUserToken
+          data.useUserToken,
         );
       }
 
-      console.log(`✅ Created Discord forum thread: ${thread.name} (${thread.id}) [${chunks.length} message(s)]`);
+      console.log(
+        `✅ Created Discord forum thread: ${thread.name} (${thread.id}) [${chunks.length} message(s)]`,
+      );
 
       // Report back to Convex
       await convex.mutation(api.blogDiscord.reportPostPublished, {
@@ -351,7 +351,7 @@ async function handlePublishPost(data: PublishPostData) {
               },
             ],
           },
-          data.useUserToken
+          data.useUserToken,
         );
 
         if (!messageResponse.ok) {
@@ -425,7 +425,7 @@ async function handleSyncComment(data: SyncCommentData) {
           ? { message_id: comment.replyToDiscordMessageId, fail_if_not_exists: false }
           : undefined,
       },
-      useUserToken
+      useUserToken,
     );
 
     if (!messageResponse.ok) {
@@ -442,7 +442,7 @@ async function handleSyncComment(data: SyncCommentData) {
         `/channels/${comment.discordThreadId}/messages`,
         "POST",
         { content: chunks[i] },
-        useUserToken
+        useUserToken,
       );
     }
 
@@ -496,7 +496,9 @@ client.on("messageCreate", async (message: Message) => {
 
     const attachmentCount = message.attachments.size;
     const contentPreview = message.content.slice(0, 50) || "(no text)";
-    console.log(`📨 [#${(message.channel as any).name}] ${message.author.username}: ${contentPreview}${attachmentCount > 0 ? ` [${attachmentCount} attachment(s)]` : ""}...`);
+    console.log(
+      `📨 [#${(message.channel as any).name}] ${message.author.username}: ${contentPreview}${attachmentCount > 0 ? ` [${attachmentCount} attachment(s)]` : ""}...`,
+    );
 
     // Build avatar URL
     const avatarUrl = message.author.displayAvatarURL({ size: 128 });
@@ -541,7 +543,9 @@ client.on("messageCreate", async (message: Message) => {
       attachments: attachments.length > 0 ? attachments : undefined,
     });
 
-    console.log(`✅ Synced to lounge${attachmentCount > 0 ? ` with ${attachmentCount} attachment(s)` : ""}`);
+    console.log(
+      `✅ Synced to lounge${attachmentCount > 0 ? ` with ${attachmentCount} attachment(s)` : ""}`,
+    );
   } catch (error) {
     console.error("❌ Failed to sync message:", error);
   }

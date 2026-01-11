@@ -1,36 +1,36 @@
-import { memo, useState } from "react";
-import styled, { keyframes } from "styled-components";
-import { formatDistanceToNow, format } from "date-fns";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
 import {
-  faMusic,
-  faVideo,
+  faCalendarAlt,
+  faCheck,
+  faClock,
+  faCrown,
   faFileAlt,
   faGamepad,
-  faNewspaper,
-  faWrench,
-  faCalendarAlt,
-  faLightbulb,
   faGift,
+  faLightbulb,
+  faMapMarkerAlt,
+  faMusic,
+  faNewspaper,
   faPoll,
   faSmile,
-  faClock,
-  faMapMarkerAlt,
-  faUsers,
+  faSpinner,
   faThumbtack,
-  faCrown,
   faTicket,
   faTrophy,
-  faCheck,
-  faSpinner,
+  faUsers,
+  faVideo,
+  faWrench,
 } from "@fortawesome/free-solid-svg-icons";
-import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useMutation, useQuery } from "convex/react";
-import { LOUNGE_COLORS, CONTENT_TYPES } from "../../../constants/lounge";
-import { MessageMarkdown } from "../chat/MessageMarkdown";
-import { AudioPlayer } from "./AudioPlayer";
+import { format, formatDistanceToNow } from "date-fns";
+import { memo, useState } from "react";
+import styled, { keyframes } from "styled-components";
+import { CONTENT_TYPES, LOUNGE_COLORS } from "../../../constants/lounge";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
+import { MessageMarkdown } from "../chat/MessageMarkdown";
+import { AudioPlayer } from "./AudioPlayer";
 
 // Remove "about" prefix from relative time
 const formatRelativeTime = (date: number | Date) =>
@@ -165,12 +165,7 @@ export const ContentPost = memo(function ContentPost({ post }: ContentPostProps)
 
       {post.type === "video" && post.media && (
         <VideoContainer>
-          <video
-            src={post.media.url}
-            poster={post.media.thumbnail}
-            controls
-            preload="metadata"
-          />
+          <video src={post.media.url} poster={post.media.thumbnail} controls preload="metadata" />
         </VideoContainer>
       )}
 
@@ -201,9 +196,7 @@ export const ContentPost = memo(function ContentPost({ post }: ContentPostProps)
         <GiveawayCard postId={post._id} data={post.giveawayData} />
       )}
 
-      {post.type === "poll" && post.pollData && (
-        <PollCard postId={post._id} data={post.pollData} />
-      )}
+      {post.type === "poll" && post.pollData && <PollCard postId={post._id} data={post.pollData} />}
 
       {/* Main content */}
       {post.type !== "emoji" && (
@@ -329,11 +322,7 @@ function GiveawayCard({
         </EnterButtonWrapper>
       )}
 
-      {isEnded && (
-        <EndedMessage>
-          This giveaway has ended. Stay tuned for more!
-        </EndedMessage>
-      )}
+      {isEnded && <EndedMessage>This giveaway has ended. Stay tuned for more!</EndedMessage>}
     </GiveawayContainer>
   );
 }
@@ -383,10 +372,7 @@ function PollCard({
       <PollMeta>
         {totalVotes} vote{totalVotes !== 1 ? "s" : ""}
         {data.endsAt && (
-          <span>
-            {" "}
-            | {isEnded ? "Ended" : `Ends ${formatRelativeTime(data.endsAt)}`}
-          </span>
+          <span> | {isEnded ? "Ended" : `Ends ${formatRelativeTime(data.endsAt)}`}</span>
         )}
       </PollMeta>
     </PollContainer>
@@ -413,8 +399,7 @@ const spin = keyframes`
 const PostContainer = styled.div<{ $isPinned?: boolean; $gradient: string; $borderColor: string }>`
   position: relative;
   padding: 1.25rem;
-  background: ${(p) =>
-    p.$isPinned ? "rgba(250, 168, 26, 0.05)" : p.$gradient};
+  background: ${(p) => (p.$isPinned ? "rgba(250, 168, 26, 0.05)" : p.$gradient)};
   border: 1px solid ${(p) => (p.$isPinned ? LOUNGE_COLORS.goldPrimary : p.$borderColor)};
   border-radius: 12px;
   margin-bottom: 1rem;
@@ -755,16 +740,12 @@ const EnterButton = styled.button<{ $entered?: boolean }>`
   cursor: ${(p) => (p.$entered ? "default" : "pointer")};
   transition: all 0.2s ease;
   box-shadow: ${(p) =>
-    p.$entered
-      ? "0 4px 16px rgba(34, 197, 94, 0.4)"
-      : "0 4px 16px rgba(249, 115, 22, 0.4)"};
+    p.$entered ? "0 4px 16px rgba(34, 197, 94, 0.4)" : "0 4px 16px rgba(249, 115, 22, 0.4)"};
 
   &:hover:not(:disabled) {
     transform: ${(p) => (p.$entered ? "none" : "translateY(-2px)")};
     box-shadow: ${(p) =>
-      p.$entered
-        ? "0 4px 16px rgba(34, 197, 94, 0.4)"
-        : "0 6px 20px rgba(249, 115, 22, 0.5)"};
+      p.$entered ? "0 4px 16px rgba(34, 197, 94, 0.4)" : "0 6px 20px rgba(249, 115, 22, 0.5)"};
   }
 
   &:disabled {

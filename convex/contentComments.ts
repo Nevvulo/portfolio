@@ -1,12 +1,19 @@
 import { v } from "convex/values";
-import { query, mutation } from "./_generated/server";
-import { getCurrentUser, requireUser, isCreator, isStaff, requireNotBanned, hasAccessToTier } from "./auth";
-import { Id, Doc } from "./_generated/dataModel";
+import type { Doc, Id } from "./_generated/dataModel";
+import { mutation, query } from "./_generated/server";
+import {
+  getCurrentUser,
+  hasAccessToTier,
+  isCreator,
+  isStaff,
+  requireNotBanned,
+  requireUser,
+} from "./auth";
 
 /** Verifies user can access the post via its highlight. Throws if not. */
 async function canAccessPostViaHighlight(
   ctx: any,
-  highlightId: Id<"contentHighlights">
+  highlightId: Id<"contentHighlights">,
 ): Promise<{ highlight: Doc<"contentHighlights">; post: Doc<"blogPosts"> }> {
   const highlight = await ctx.db.get(highlightId);
   if (!highlight) {
@@ -66,7 +73,7 @@ export const getForHighlight = query({
               }
             : null,
         };
-      })
+      }),
     );
 
     // Separate top-level and replies
@@ -76,9 +83,7 @@ export const getForHighlight = query({
     // Nest replies under their parents
     const nested = topLevel.map((comment) => ({
       ...comment,
-      replies: replies.filter(
-        (r) => r.parentId?.toString() === comment._id.toString()
-      ),
+      replies: replies.filter((r) => r.parentId?.toString() === comment._id.toString()),
     }));
 
     return nested;

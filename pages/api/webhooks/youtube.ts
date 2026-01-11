@@ -1,5 +1,5 @@
-import type { NextApiRequest, NextApiResponse } from "next";
 import { ConvexHttpClient } from "convex/browser";
+import type { NextApiRequest, NextApiResponse } from "next";
 import { api } from "../../../convex/_generated/api";
 
 // Disable body parsing - we need the raw body for XML
@@ -18,7 +18,9 @@ async function getRawBody(req: NextApiRequest): Promise<string> {
 }
 
 // Simple XML parser for YouTube Atom feed
-function parseYouTubeAtom(xml: string): { videoId: string; title: string; channelId: string } | null {
+function parseYouTubeAtom(
+  xml: string,
+): { videoId: string; title: string; channelId: string } | null {
   // Extract video ID
   const videoIdMatch = xml.match(/<yt:videoId>([^<]+)<\/yt:videoId>/);
   if (!videoIdMatch) return null;
@@ -36,10 +38,7 @@ function parseYouTubeAtom(xml: string): { videoId: string; title: string; channe
   };
 }
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   // GET request = verification challenge from PubSubHubbub
   if (req.method === "GET") {
     const challenge = req.query["hub.challenge"];

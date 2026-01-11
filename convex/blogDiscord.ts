@@ -1,4 +1,6 @@
 import { v } from "convex/values";
+import { internal } from "./_generated/api";
+import type { Id } from "./_generated/dataModel";
 import {
   action,
   internalAction,
@@ -7,8 +9,6 @@ import {
   mutation,
   query,
 } from "./_generated/server";
-import { internal } from "./_generated/api";
-import { Id } from "./_generated/dataModel";
 import { publishPostMessage } from "./lib/upstashPubsub";
 
 // ============================================
@@ -51,7 +51,7 @@ const channelConfigValidator = v.optional(
     channelId: v.string(),
     channelType: v.union(v.literal("forum"), v.literal("text")),
     webhookUrl: v.optional(v.string()),
-  })
+  }),
 );
 
 // Update Discord blog settings
@@ -160,7 +160,7 @@ export const publishToDiscord = internalAction({
           channelType: channelConfig.channelType,
           webhookUrl: channelConfig.webhookUrl,
         },
-        settings.useUserToken
+        settings.useUserToken,
       );
 
       if (!result.success) {
@@ -173,7 +173,9 @@ export const publishToDiscord = internalAction({
         return { success: false, reason: "no_subscribers" };
       }
 
-      console.log(`Published Discord request for post ${post.slug}, ${result.subscribers} subscriber(s)`);
+      console.log(
+        `Published Discord request for post ${post.slug}, ${result.subscribers} subscriber(s)`,
+      );
       // Bot will call updatePostDiscordInfo mutation when done
       return { success: true };
     } catch (error) {
@@ -289,7 +291,9 @@ export const syncCommentToDiscord = internalAction({
     // Get channel config for this content type to find webhook URL
     const channelConfig = settings.channels[post.contentType as keyof typeof settings.channels];
     if (!channelConfig?.webhookUrl) {
-      console.warn(`No webhook URL configured for ${post.contentType} channel, cannot sync comment`);
+      console.warn(
+        `No webhook URL configured for ${post.contentType} channel, cannot sync comment`,
+      );
       return { success: false, reason: "no_webhook_configured" };
     }
 
@@ -394,9 +398,7 @@ export const createCommentFromDiscord = mutation({
     // Find blog post by Discord thread ID
     const post = await ctx.db
       .query("blogPosts")
-      .withIndex("by_discordThreadId", (q) =>
-        q.eq("discordThreadId", args.discordThreadId)
-      )
+      .withIndex("by_discordThreadId", (q) => q.eq("discordThreadId", args.discordThreadId))
       .unique();
 
     if (!post) {
@@ -406,9 +408,7 @@ export const createCommentFromDiscord = mutation({
     // Check for duplicate
     const existing = await ctx.db
       .query("blogComments")
-      .withIndex("by_discordMessageId", (q) =>
-        q.eq("discordMessageId", args.discordMessageId)
-      )
+      .withIndex("by_discordMessageId", (q) => q.eq("discordMessageId", args.discordMessageId))
       .unique();
 
     if (existing) {
@@ -433,9 +433,7 @@ export const createCommentFromDiscord = mutation({
     if (replyToId) {
       const parentMapping = await ctx.db
         .query("blogCommentWormhole")
-        .withIndex("by_discordMessage", (q) =>
-          q.eq("discordMessageId", replyToId)
-        )
+        .withIndex("by_discordMessage", (q) => q.eq("discordMessageId", replyToId))
         .unique();
 
       if (parentMapping) {
@@ -537,9 +535,7 @@ export const updateCommentDiscordId = internalMutation({
 export const getPostsWithThreads = query({
   args: {},
   handler: async (ctx) => {
-    const posts = await ctx.db
-      .query("blogPosts")
-      .collect();
+    const posts = await ctx.db.query("blogPosts").collect();
 
     return posts
       .filter((p) => p.discordThreadId)
@@ -557,9 +553,7 @@ export const getPostByThreadId = query({
   handler: async (ctx, args) => {
     return await ctx.db
       .query("blogPosts")
-      .withIndex("by_discordThreadId", (q) =>
-        q.eq("discordThreadId", args.discordThreadId)
-      )
+      .withIndex("by_discordThreadId", (q) => q.eq("discordThreadId", args.discordThreadId))
       .unique();
   },
 });
@@ -709,4 +703,3 @@ export const reportCommentSynced = mutation({
     console.log(`Synced comment ${args.commentId} to Discord message ${args.discordMessageId}`);
   },
 });
-

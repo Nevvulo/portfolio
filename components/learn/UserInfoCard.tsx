@@ -1,9 +1,9 @@
-import { useUser, SignInButton, UserButton } from "@clerk/nextjs";
+import { SignInButton, UserButton, useUser } from "@clerk/nextjs";
 import { useQuery } from "convex/react";
-import styled, { keyframes } from "styled-components";
-import { api } from "../../convex/_generated/api";
 import { Bell } from "lucide-react";
 import Link from "next/link";
+import styled, { keyframes } from "styled-components";
+import { api } from "../../convex/_generated/api";
 
 interface UserInfoCardProps {
   className?: string;
@@ -12,10 +12,7 @@ interface UserInfoCardProps {
 export function UserInfoCard({ className }: UserInfoCardProps) {
   const { isSignedIn, user, isLoaded } = useUser();
   const experienceData = useQuery(api.experience.getMyExperience);
-  const notifications = useQuery(
-    api.notifications.getUnreadCount,
-    isSignedIn ? {} : "skip"
-  );
+  const notifications = useQuery(api.notifications.getUnreadCount, isSignedIn ? {} : "skip");
 
   if (!isLoaded) {
     return (
@@ -64,12 +61,16 @@ export function UserInfoCard({ className }: UserInfoCardProps) {
 
         <XpDisplay>
           <LevelText>lv {level}</LevelText>
-          <XpNumbers>{currentXp}/{xpForNextLevel}</XpNumbers>
+          <XpNumbers>
+            {currentXp}/{xpForNextLevel}
+          </XpNumbers>
         </XpDisplay>
 
         <NotificationButton href="/lounge/notifications">
           <Bell size={14} />
-          {unreadCount > 0 && <NotificationBadge>{unreadCount > 99 ? "99+" : unreadCount}</NotificationBadge>}
+          {unreadCount > 0 && (
+            <NotificationBadge>{unreadCount > 99 ? "99+" : unreadCount}</NotificationBadge>
+          )}
         </NotificationButton>
       </CardContent>
     </CardContainer>

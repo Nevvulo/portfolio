@@ -1,27 +1,27 @@
-import React, { useState, useCallback, useEffect, RefObject } from "react";
-import styled from "styled-components";
-import { m, AnimatePresence } from "framer-motion";
+import { useUser } from "@clerk/nextjs";
+import { useQuery } from "convex/react";
+import { AnimatePresence, m } from "framer-motion";
 import {
-  Highlighter,
   ChevronDown,
-  ChevronUp,
   ChevronsUp,
-  Share2,
-  MessageSquare,
-  Pencil,
+  ChevronUp,
   Flag,
+  Highlighter,
+  MessageSquare,
   MoreVertical,
+  Pencil,
+  Share2,
   X,
 } from "lucide-react";
+import { useRouter } from "next/router";
+import { type RefObject, useCallback, useEffect, useState } from "react";
+import styled from "styled-components";
 import { LOUNGE_COLORS } from "@/constants/lounge";
-import { ToolbarButton } from "./ToolbarButton";
+import { api } from "@/convex/_generated/api";
+import type { Id } from "@/convex/_generated/dataModel";
 import { ReactionFan } from "./ReactionFan";
 import { ReportModal } from "./ReportModal";
-import type { Id } from "@/convex/_generated/dataModel";
-import { useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
-import { useUser } from "@clerk/nextjs";
-import { useRouter } from "next/router";
+import { ToolbarButton } from "./ToolbarButton";
 
 interface TOCItem {
   id: string;
@@ -52,7 +52,6 @@ export function FloatingToolbar({
   activeHeading,
   highlightCount,
   tocCollapsed,
-  onTocCollapseChange,
   onOpenHighlights,
   heroRef,
   thanksSectionRef,
@@ -85,7 +84,7 @@ export function FloatingToolbar({
           setHeroVisible(entry.isIntersecting);
         }
       },
-      { threshold: 0.1 }
+      { threshold: 0.1 },
     );
 
     observer.observe(heroRef.current);
@@ -103,7 +102,7 @@ export function FloatingToolbar({
           setThanksReached(true);
         }
       },
-      { threshold: 0.1 }
+      { threshold: 0.1 },
     );
 
     observer.observe(thanksSectionRef.current);
@@ -207,72 +206,58 @@ export function FloatingToolbar({
               exit={{ opacity: 0, x: -12 }}
               transition={{ duration: 0.15, ease: "easeOut" }}
             >
-            {/* Reactions */}
-            <ReactionFan
-              postId={postId}
-              isExpanded={showReactionFan}
-              onToggle={() => setShowReactionFan(!showReactionFan)}
-            />
-
-            {/* Highlights */}
-            <ToolbarButton
-              icon={Highlighter}
-              label="View highlights"
-              onClick={onOpenHighlights}
-              badge={highlightCount}
-            />
-
-            <Divider />
-
-            {/* Navigation */}
-            <ToolbarButton
-              icon={ChevronUp}
-              label="Previous section"
-              onClick={navigateToPrevSection}
-              disabled={!canGoPrev}
-            />
-            <ToolbarButton
-              icon={ChevronDown}
-              label="Next section"
-              onClick={navigateToNextSection}
-              disabled={!canGoNext}
-            />
-            <ToolbarButton
-              icon={ChevronsUp}
-              label="Scroll to top"
-              onClick={scrollToTop}
-            />
-
-            <Divider />
-
-            {/* Actions */}
-            <ToolbarButton
-              icon={Share2}
-              label="Share"
-              onClick={handleShare}
-            />
-            <ToolbarButton
-              icon={MessageSquare}
-              label={isSignedIn ? "Go to comments" : "Sign in to comment"}
-              onClick={handleComment}
-            />
-
-            {/* Edit (only for authorized users) */}
-            {canEdit && (
-              <ToolbarButton
-                icon={Pencil}
-                label="Edit post"
-                onClick={handleEdit}
+              {/* Reactions */}
+              <ReactionFan
+                postId={postId}
+                isExpanded={showReactionFan}
+                onToggle={() => setShowReactionFan(!showReactionFan)}
               />
-            )}
 
-            {/* Report */}
-            <ToolbarButton
-              icon={Flag}
-              label="Report an issue"
-              onClick={() => setReportModalOpen(true)}
-              variant="danger"
-            />
+              {/* Highlights */}
+              <ToolbarButton
+                icon={Highlighter}
+                label="View highlights"
+                onClick={onOpenHighlights}
+                badge={highlightCount}
+              />
+
+              <Divider />
+
+              {/* Navigation */}
+              <ToolbarButton
+                icon={ChevronUp}
+                label="Previous section"
+                onClick={navigateToPrevSection}
+                disabled={!canGoPrev}
+              />
+              <ToolbarButton
+                icon={ChevronDown}
+                label="Next section"
+                onClick={navigateToNextSection}
+                disabled={!canGoNext}
+              />
+              <ToolbarButton icon={ChevronsUp} label="Scroll to top" onClick={scrollToTop} />
+
+              <Divider />
+
+              {/* Actions */}
+              <ToolbarButton icon={Share2} label="Share" onClick={handleShare} />
+              <ToolbarButton
+                icon={MessageSquare}
+                label={isSignedIn ? "Go to comments" : "Sign in to comment"}
+                onClick={handleComment}
+              />
+
+              {/* Edit (only for authorized users) */}
+              {canEdit && <ToolbarButton icon={Pencil} label="Edit post" onClick={handleEdit} />}
+
+              {/* Report */}
+              <ToolbarButton
+                icon={Flag}
+                label="Report an issue"
+                onClick={() => setReportModalOpen(true)}
+                variant="danger"
+              />
             </ToolbarContainer>
           </ToolbarWrapper>
         )}
@@ -473,8 +458,7 @@ const MobileToolbarButton = styled(m.button)<{ $isOpen: boolean }>`
   width: 40px;
   height: 40px;
   border-radius: 8px;
-  background: ${(props) =>
-    props.$isOpen ? "rgba(144, 116, 242, 0.3)" : "rgba(0, 0, 0, 0.75)"};
+  background: ${(props) => (props.$isOpen ? "rgba(144, 116, 242, 0.3)" : "rgba(0, 0, 0, 0.75)")};
   border: none;
   color: white;
   cursor: pointer;

@@ -1,8 +1,9 @@
-import React, { useState, useCallback, useRef, useEffect } from "react";
-import styled from "styled-components";
-import { createPortal } from "react-dom";
-import { m, AnimatePresence } from "framer-motion";
+import { AnimatePresence, m } from "framer-motion";
 import { Send, X } from "lucide-react";
+import type React from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import styled from "styled-components";
 import { LOUNGE_COLORS } from "@/constants/lounge";
 
 interface SelectionCommentInputProps {
@@ -91,7 +92,7 @@ export function SelectionCommentInput({
         onCancel();
       }
     },
-    [handleSubmit, onCancel]
+    [handleSubmit, onCancel],
   );
 
   if (!mounted || !isVisible || !position) return null;
@@ -183,7 +184,7 @@ export function SelectionCommentInput({
         </Container>
       )}
     </AnimatePresence>,
-    document.body
+    document.body,
   );
 }
 

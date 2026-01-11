@@ -7,16 +7,17 @@
 /* Define consistent font stacks as CSS custom properties */
 :root {
   /* Primary monospace - Fira Code loaded from Google Fonts, with cross-platform fallbacks */
-  --font-mono: "Fira Code", "Cascadia Code", "JetBrains Mono", "SF Mono", "Monaco",
-               "Inconsolata", "Roboto Mono", "Source Code Pro", "Consolas",
-               "DejaVu Sans Mono", "Courier New", monospace;
+  --font-mono:
+    "Fira Code", "Cascadia Code", "JetBrains Mono", "SF Mono", "Monaco", "Inconsolata",
+    "Roboto Mono", "Source Code Pro", "Consolas", "DejaVu Sans Mono", "Courier New", monospace;
 
   /* Display font - Sixtyfour for headings */
   --font-display: "Sixtyfour", var(--font-mono);
 
   /* Sans-serif stack - Inter loaded from Google Fonts */
-  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto",
-               "Oxygen", "Ubuntu", "Cantarell", "Helvetica Neue", sans-serif;
+  --font-sans:
+    "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu",
+    "Cantarell", "Helvetica Neue", sans-serif;
 
   /* Weights - normalized for cross-platform consistency */
   --font-weight-normal: 400;
@@ -30,11 +31,16 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
-  font-feature-settings: "kern" 1, "liga" 1;
+  font-feature-settings:
+    "kern" 1,
+    "liga" 1;
 }
 
 /* Ensure monospace elements use Fira Code */
-code, kbd, samp, pre {
+code,
+kbd,
+samp,
+pre {
   font-family: var(--font-mono);
 }
 

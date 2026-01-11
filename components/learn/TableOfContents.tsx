@@ -1,8 +1,8 @@
-import { useEffect, useState, useCallback, RefObject, useRef } from "react";
-import styled from "styled-components";
-import { m, AnimatePresence } from "framer-motion";
+import { AnimatePresence, m } from "framer-motion";
+import { ChevronLeft, List, X } from "lucide-react";
+import { type RefObject, useCallback, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { List, X, ChevronLeft } from "lucide-react";
+import styled from "styled-components";
 import { LOUNGE_COLORS } from "@/constants/lounge";
 
 export interface TOCItem {
@@ -44,7 +44,6 @@ export function TableOfContents({
   useEffect(() => {
     setMounted(true);
   }, []);
-
 
   // Extract headings from content on mount
   useEffect(() => {
@@ -96,7 +95,7 @@ export function TableOfContents({
         const entry = entries[0];
         if (entry) setHeroVisible(entry.isIntersecting);
       },
-      { threshold: 0.1 }
+      { threshold: 0.1 },
     );
 
     observer.observe(heroRef.current);
@@ -114,7 +113,7 @@ export function TableOfContents({
           setThanksReached(true);
         }
       },
-      { threshold: 0.1 }
+      { threshold: 0.1 },
     );
 
     observer.observe(thanksSectionRef.current);
@@ -131,9 +130,7 @@ export function TableOfContents({
         const visibleEntries = entries.filter((entry) => entry.isIntersecting);
         if (visibleEntries.length > 0) {
           // Sort by top position and take the topmost
-          visibleEntries.sort(
-            (a, b) => a.boundingClientRect.top - b.boundingClientRect.top
-          );
+          visibleEntries.sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
           const topEntry = visibleEntries[0];
           if (topEntry) {
             setActiveId(topEntry.target.id);
@@ -141,7 +138,7 @@ export function TableOfContents({
           }
         }
       },
-      { rootMargin: "-80px 0px -70% 0px", threshold: 0 }
+      { rootMargin: "-80px 0px -70% 0px", threshold: 0 },
     );
 
     headings.forEach((heading) => {
@@ -158,8 +155,7 @@ export function TableOfContents({
     if (element) {
       // Add offset for fixed header to prevent title being cut off
       const offset = 120;
-      const elementPosition =
-        element.getBoundingClientRect().top + window.scrollY;
+      const elementPosition = element.getBoundingClientRect().top + window.scrollY;
       window.scrollTo({ top: elementPosition - offset, behavior: "smooth" });
       // Auto-close mobile drawer
       setMobileOpen(false);
@@ -319,7 +315,7 @@ export function TableOfContents({
             </>
           )}
         </AnimatePresence>,
-        document.body
+        document.body,
       )}
     </>
   );
@@ -529,7 +525,11 @@ const TOCItem = styled.li<{ $level: 2 | 3; $isActive: boolean }>`
   font-size: 13px;
   font-weight: ${(props) => (props.$level === 2 ? 500 : 400)};
   color: ${(props) =>
-    props.$isActive ? "#9074f2" : props.$level === 2 ? "rgba(255, 255, 255, 0.9)" : "rgba(255, 255, 255, 0.6)"};
+    props.$isActive
+      ? "#9074f2"
+      : props.$level === 2
+        ? "rgba(255, 255, 255, 0.9)"
+        : "rgba(255, 255, 255, 0.6)"};
   cursor: pointer;
   border-radius: 6px;
   border-left: 2px solid ${(props) => (props.$isActive ? "#9074f2" : "transparent")};

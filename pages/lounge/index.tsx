@@ -1,9 +1,9 @@
-import { useEffect, useState } from "react";
-import { useRouter } from "next/router";
+import { useAction, useQuery } from "convex/react";
 import Head from "next/head";
-import { useQuery, useMutation, useAction } from "convex/react";
-import { api } from "../../convex/_generated/api";
+import { useRouter } from "next/router";
+import { useEffect, useState } from "react";
 import { LoungeLayout } from "../../components/lounge/layout/LoungeLayout";
+import { api } from "../../convex/_generated/api";
 import { useTierAccess } from "../../hooks/lounge/useTierAccess";
 import type { ChannelWithAccess } from "../../types/lounge";
 
@@ -14,7 +14,7 @@ export default function LoungePage() {
   const [mounted, setMounted] = useState(false);
   const [userReady, setUserReady] = useState(false);
   const router = useRouter();
-  const { isLoading, user, tier, displayName, avatarUrl } = useTierAccess();
+  const { isLoading, user, displayName, avatarUrl } = useTierAccess();
 
   const getOrCreateUser = useAction(api.users.getOrCreateUser);
 
@@ -30,19 +30,20 @@ export default function LoungePage() {
     getOrCreateUser({
       displayName: displayName || "Anonymous",
       avatarUrl: avatarUrl,
-    }).then(() => {
-      setUserReady(true);
-    }).catch((err) => {
-      console.error("Failed to create user:", err);
-      setUserReady(true);
-    });
+    })
+      .then(() => {
+        setUserReady(true);
+      })
+      .catch((err) => {
+        console.error("Failed to create user:", err);
+        setUserReady(true);
+      });
   }, [mounted, isLoading, user, displayName, avatarUrl, userReady, getOrCreateUser]);
 
   // Only query after user is ready
-  const channels = useQuery(
-    api.channels.list,
-    userReady ? {} : "skip"
-  ) as ChannelWithAccess[] | undefined;
+  const channels = useQuery(api.channels.list, userReady ? {} : "skip") as
+    | ChannelWithAccess[]
+    | undefined;
 
   // Redirect to first accessible channel
   useEffect(() => {
@@ -59,7 +60,10 @@ export default function LoungePage() {
     <>
       <Head>
         <title>nevulounge</title>
-        <meta name="description" content="Exclusive member-only lounge for Super Legend supporters" />
+        <meta
+          name="description"
+          content="Exclusive member-only lounge for Super Legend supporters"
+        />
       </Head>
 
       <LoungeLayout>
@@ -83,7 +87,6 @@ const WelcomeContainer = styled.div`
   text-align: center;
 `;
 
-
 const WelcomeTitle = styled.h1`
   font-size: 1.75rem;
   font-weight: 700;
@@ -91,4 +94,3 @@ const WelcomeTitle = styled.h1`
   margin: 0 0 0.75rem;
   font-family: var(--font-display);
 `;
-

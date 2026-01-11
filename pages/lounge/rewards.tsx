@@ -1,22 +1,22 @@
-import Head from "next/head";
-import styled from "styled-components";
-import { useQuery, useMutation, useAction } from "convex/react";
-import { useEffect, useState, useMemo } from "react";
+import { useAction, useMutation, useQuery } from "convex/react";
 import { AnimatePresence } from "framer-motion";
-import { Gift, Package, Lock } from "lucide-react";
-import { api } from "../../convex/_generated/api";
+import { Gift, Lock, Package } from "lucide-react";
+import Head from "next/head";
+import { useEffect, useMemo, useState } from "react";
+import styled from "styled-components";
 import { LoungeLayout } from "../../components/lounge/layout/LoungeLayout";
-import { useTierAccess } from "../../hooks/lounge/useTierAccess";
-import { LOUNGE_COLORS, RARITY_COLORS, RARITY_ORDER } from "../../constants/lounge";
+import type { ClaimData } from "../../components/lounge/rewards";
 import {
+  ClaimModal,
+  InventoryItem,
   MysteryBoxAnimation,
   UnopenedBoxCard,
-  InventoryItem,
-  ClaimModal,
 } from "../../components/lounge/rewards";
-import type { ClaimData } from "../../components/lounge/rewards";
-import type { Reward, InventoryItem as InventoryItemType, ItemRarity } from "../../types/lounge";
+import { LOUNGE_COLORS, RARITY_COLORS, RARITY_ORDER } from "../../constants/lounge";
+import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
+import { useTierAccess } from "../../hooks/lounge/useTierAccess";
+import type { InventoryItem as InventoryItemType, ItemRarity, Reward } from "../../types/lounge";
 
 export const getServerSideProps = () => ({ props: {} });
 
@@ -29,22 +29,21 @@ export default function RewardsPage() {
   const [filter, setFilter] = useState<FilterType>("all");
   const [claimingItem, setClaimingItem] = useState<InventoryItemType | null>(null);
 
-  const { isLoading, user, tier, displayName, avatarUrl, isFreeUser, isSupporter } = useTierAccess();
+  const { isLoading, user, displayName, avatarUrl, isFreeUser, isSupporter } =
+    useTierAccess();
 
   const getOrCreateUser = useAction(api.users.getOrCreateUser);
   const revealReward = useMutation(api.rewards.revealReward);
   const claimItem = useMutation(api.rewards.claimItem);
 
   // Queries
-  const unopenedBoxes = useQuery(
-    api.rewards.getUnopenedBoxes,
-    userReady ? {} : "skip"
-  ) as Reward[] | undefined;
+  const unopenedBoxes = useQuery(api.rewards.getUnopenedBoxes, userReady ? {} : "skip") as
+    | Reward[]
+    | undefined;
 
-  const inventory = useQuery(
-    api.rewards.getInventory,
-    userReady ? {} : "skip"
-  ) as InventoryItemType[] | undefined;
+  const inventory = useQuery(api.rewards.getInventory, userReady ? {} : "skip") as
+    | InventoryItemType[]
+    | undefined;
 
   useEffect(() => {
     setMounted(true);
@@ -145,129 +144,118 @@ export default function RewardsPage() {
       <LoungeLayout channelName="Rewards" customIcon={Gift}>
         <Container>
           <ContentWrapper>
-          {/* Unopened Boxes Section */}
-          <Section>
-            <SectionHeader>
-              <SectionIcon>
-                <Package size={20} />
-              </SectionIcon>
-              <SectionTitle>Mystery Boxes</SectionTitle>
-              {hasUnopenedBoxes && (
-                <Badge>{unopenedBoxes.length} unopened</Badge>
-              )}
-            </SectionHeader>
+            {/* Unopened Boxes Section */}
+            <Section>
+              <SectionHeader>
+                <SectionIcon>
+                  <Package size={20} />
+                </SectionIcon>
+                <SectionTitle>Mystery Boxes</SectionTitle>
+                {hasUnopenedBoxes && <Badge>{unopenedBoxes.length} unopened</Badge>}
+              </SectionHeader>
 
-            {hasUnopenedBoxes ? (
-              <BoxesGrid>
-                {unopenedBoxes.map((box) => (
-                  <UnopenedBoxCard
-                    key={box._id}
-                    reward={box}
-                    onClick={() => handleOpenBox(box)}
-                  />
-                ))}
-              </BoxesGrid>
-            ) : (
-              <EmptyState>
-                <EmptyIcon>
-                  <Package size={48} />
-                </EmptyIcon>
-                <EmptyTitle>No mystery boxes</EmptyTitle>
-                <EmptyText>
-                  When you receive new mystery boxes, they'll appear here.
-                  Stay tuned for monthly drops!
-                </EmptyText>
-              </EmptyState>
-            )}
-          </Section>
-
-          {/* Inventory Section */}
-          <Section>
-            <SectionHeader>
-              <SectionIcon>
-                <Gift size={20} />
-              </SectionIcon>
-              <SectionTitle>Inventory</SectionTitle>
-              {hasInventory && isSupporter && (
-                <Badge>{inventory.length} items</Badge>
+              {hasUnopenedBoxes ? (
+                <BoxesGrid>
+                  {unopenedBoxes.map((box) => (
+                    <UnopenedBoxCard
+                      key={box._id}
+                      reward={box}
+                      onClick={() => handleOpenBox(box)}
+                    />
+                  ))}
+                </BoxesGrid>
+              ) : (
+                <EmptyState>
+                  <EmptyIcon>
+                    <Package size={48} />
+                  </EmptyIcon>
+                  <EmptyTitle>No mystery boxes</EmptyTitle>
+                  <EmptyText>
+                    When you receive new mystery boxes, they'll appear here. Stay tuned for monthly
+                    drops!
+                  </EmptyText>
+                </EmptyState>
               )}
-              {isFreeUser && (
-                <LockedBadge>
-                  <Lock size={12} />
-                  Supporters Only
-                </LockedBadge>
-              )}
-            </SectionHeader>
+            </Section>
 
-            {/* Free users see locked inventory */}
-            {isFreeUser ? (
-              <LockedState>
-                <LockedIcon>
-                  <Lock size={48} />
-                </LockedIcon>
-                <LockedTitle>Inventory Locked</LockedTitle>
-                <LockedText>
-                  Free members can claim rewards instantly when received, but can't store items in inventory.
-                  Upgrade to Super Legend to save items and access them anytime!
-                </LockedText>
-                <UpgradeHint>
-                  Your claimed items are delivered immediately via email or direct download.
-                </UpgradeHint>
-              </LockedState>
-            ) : (
-              <>
-                {hasInventory && (
-                  <FilterBar>
-                    <FilterButton
-                      $active={filter === "all"}
-                      onClick={() => setFilter("all")}
-                    >
-                      All
-                    </FilterButton>
-                    {(["legendary", "epic", "rare", "uncommon", "common"] as ItemRarity[]).map(
-                      (rarity) => {
-                        const count = inventory.filter((i) => i.rarity === rarity).length;
-                        if (count === 0) return null;
-                        const colors = RARITY_COLORS[rarity];
-                        return (
-                          <FilterButton
-                            key={rarity}
-                            $active={filter === rarity}
-                            $color={colors.color}
-                            onClick={() => setFilter(rarity)}
-                          >
-                            {colors.label} ({count})
-                          </FilterButton>
-                        );
-                      }
-                    )}
-                  </FilterBar>
+            {/* Inventory Section */}
+            <Section>
+              <SectionHeader>
+                <SectionIcon>
+                  <Gift size={20} />
+                </SectionIcon>
+                <SectionTitle>Inventory</SectionTitle>
+                {hasInventory && isSupporter && <Badge>{inventory.length} items</Badge>}
+                {isFreeUser && (
+                  <LockedBadge>
+                    <Lock size={12} />
+                    Supporters Only
+                  </LockedBadge>
                 )}
+              </SectionHeader>
 
-                {hasInventory ? (
-                  <InventoryGrid>
-                    {filteredInventory.map((item) => (
-                      <InventoryItem
-                        key={item.id}
-                        item={item}
-                        onClaim={handleStartClaim}
-                      />
-                    ))}
-                  </InventoryGrid>
-                ) : (
-                  <EmptyState>
-                    <EmptyIcon>
-                      <Gift size={48} />
-                    </EmptyIcon>
-                    <EmptyTitle>Inventory is empty</EmptyTitle>
-                    <EmptyText>
-                      Open mystery boxes to earn exclusive items that will be stored here.
-                    </EmptyText>
-                  </EmptyState>
-                )}
-              </>
-            )}
-          </Section>
+              {/* Free users see locked inventory */}
+              {isFreeUser ? (
+                <LockedState>
+                  <LockedIcon>
+                    <Lock size={48} />
+                  </LockedIcon>
+                  <LockedTitle>Inventory Locked</LockedTitle>
+                  <LockedText>
+                    Free members can claim rewards instantly when received, but can't store items in
+                    inventory. Upgrade to Super Legend to save items and access them anytime!
+                  </LockedText>
+                  <UpgradeHint>
+                    Your claimed items are delivered immediately via email or direct download.
+                  </UpgradeHint>
+                </LockedState>
+              ) : (
+                <>
+                  {hasInventory && (
+                    <FilterBar>
+                      <FilterButton $active={filter === "all"} onClick={() => setFilter("all")}>
+                        All
+                      </FilterButton>
+                      {(["legendary", "epic", "rare", "uncommon", "common"] as ItemRarity[]).map(
+                        (rarity) => {
+                          const count = inventory.filter((i) => i.rarity === rarity).length;
+                          if (count === 0) return null;
+                          const colors = RARITY_COLORS[rarity];
+                          return (
+                            <FilterButton
+                              key={rarity}
+                              $active={filter === rarity}
+                              $color={colors.color}
+                              onClick={() => setFilter(rarity)}
+                            >
+                              {colors.label} ({count})
+                            </FilterButton>
+                          );
+                        },
+                      )}
+                    </FilterBar>
+                  )}
+
+                  {hasInventory ? (
+                    <InventoryGrid>
+                      {filteredInventory.map((item) => (
+                        <InventoryItem key={item.id} item={item} onClaim={handleStartClaim} />
+                      ))}
+                    </InventoryGrid>
+                  ) : (
+                    <EmptyState>
+                      <EmptyIcon>
+                        <Gift size={48} />
+                      </EmptyIcon>
+                      <EmptyTitle>Inventory is empty</EmptyTitle>
+                      <EmptyText>
+                        Open mystery boxes to earn exclusive items that will be stored here.
+                      </EmptyText>
+                    </EmptyState>
+                  )}
+                </>
+              )}
+            </Section>
           </ContentWrapper>
         </Container>
 
@@ -399,9 +387,7 @@ const FilterButton = styled.button<{ $active: boolean; $color?: string }>`
       : "rgba(255, 255, 255, 0.05)"};
   border: 1px solid
     ${(props) =>
-      props.$active
-        ? props.$color || LOUNGE_COLORS.tier1
-        : "rgba(255, 255, 255, 0.1)"};
+      props.$active ? props.$color || LOUNGE_COLORS.tier1 : "rgba(255, 255, 255, 0.1)"};
   color: ${(props) =>
     props.$active ? props.$color || LOUNGE_COLORS.tier1 : "rgba(255, 255, 255, 0.6)"};
   font-size: 0.8rem;
@@ -411,8 +397,7 @@ const FilterButton = styled.button<{ $active: boolean; $color?: string }>`
   transition: all 0.2s;
 
   &:hover {
-    background: ${(props) =>
-      props.$color ? `${props.$color}22` : "rgba(144, 116, 242, 0.1)"};
+    background: ${(props) => (props.$color ? `${props.$color}22` : "rgba(144, 116, 242, 0.1)")};
   }
 `;
 

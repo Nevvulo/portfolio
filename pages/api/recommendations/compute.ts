@@ -30,7 +30,7 @@ function calculateRecencyBoost(publishedAt: number | undefined, halfLifeDays = 3
   const ageDays = ageMs / (24 * 60 * 60 * 1000);
 
   // Exponential decay with very long half-life
-  const decay = Math.exp(-0.693 * ageDays / halfLifeDays);
+  const decay = Math.exp((-0.693 * ageDays) / halfLifeDays);
 
   // Minimum boost of 0.4 for old content (educational content stays relevant)
   return Math.max(0.4, decay);
@@ -49,10 +49,7 @@ function parseZrangeWithScores(arr: string[] | null): [string, number][] {
   return pairs;
 }
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
@@ -104,22 +101,18 @@ export default async function handler(
     // FACTOR 2: CO-VIEWING SIMILARITY (35% weight - increased)
     // Posts that users commonly view together - this is real engagement signal
     // =============================================================
-    const userViews = await redis.zrange<string[]>(
-      `user:views:${clerkId}`,
-      0,
-      9,
-      { rev: true, withScores: true }
-    );
+    const userViews = await redis.zrange<string[]>(`user:views:${clerkId}`, 0, 9, {
+      rev: true,
+      withScores: true,
+    });
 
     const userViewPairs = parseZrangeWithScores(userViews);
 
     for (const [postSlug, viewScore] of userViewPairs) {
-      const coViewed = await redis.zrange<string[]>(
-        `post:coviewed:${postSlug}`,
-        0,
-        4,
-        { rev: true, withScores: true }
-      );
+      const coViewed = await redis.zrange<string[]>(`post:coviewed:${postSlug}`, 0, 4, {
+        rev: true,
+        withScores: true,
+      });
 
       const coViewedPairs = parseZrangeWithScores(coViewed);
 
@@ -159,22 +152,17 @@ export default async function handler(
     const similarityScores = new Map<string, number>();
 
     for (const [postSlug, score] of userViewPairs.slice(0, 5)) {
-      const viewers = await redis.zrange<string[]>(
-        `post:viewers:${postSlug}`,
-        0,
-        19,
-        { rev: true, withScores: true }
-      );
+      const viewers = await redis.zrange<string[]>(`post:viewers:${postSlug}`, 0, 19, {
+        rev: true,
+        withScores: true,
+      });
 
       const viewerPairs = parseZrangeWithScores(viewers);
 
       for (const [viewerId, viewScore] of viewerPairs) {
         if (viewerId !== clerkId) {
           const contribution = Math.min(score, viewScore);
-          similarityScores.set(
-            viewerId,
-            (similarityScores.get(viewerId) ?? 0) + contribution
-          );
+          similarityScores.set(viewerId, (similarityScores.get(viewerId) ?? 0) + contribution);
         }
       }
     }
@@ -185,21 +173,16 @@ export default async function handler(
       .map(([id]) => id);
 
     for (const similarUserId of similarUsers) {
-      const theirViews = await redis.zrange<string[]>(
-        `user:views:${similarUserId}`,
-        0,
-        9,
-        { rev: true, withScores: true }
-      );
+      const theirViews = await redis.zrange<string[]>(`user:views:${similarUserId}`, 0, 9, {
+        rev: true,
+        withScores: true,
+      });
 
       const theirViewPairs = parseZrangeWithScores(theirViews);
 
       for (const [postSlug, score] of theirViewPairs) {
         if (scores.has(postSlug)) {
-          scores.set(
-            postSlug,
-            (scores.get(postSlug) ?? 0) + Math.log10(score + 1) * 0.15
-          );
+          scores.set(postSlug, (scores.get(postSlug) ?? 0) + Math.log10(score + 1) * 0.15);
         }
       }
     }

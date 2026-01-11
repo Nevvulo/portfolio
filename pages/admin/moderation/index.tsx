@@ -1,28 +1,28 @@
-import Head from "next/head";
-import styled from "styled-components";
-import { useQuery, useMutation } from "convex/react";
-import { useEffect, useState } from "react";
-import { api } from "../../../convex/_generated/api";
-import { BlogView } from "../../../components/layout/blog";
-import { SimpleNavbar } from "../../../components/navbar/simple";
-import { useTierAccess } from "../../../hooks/lounge/useTierAccess";
+import { useMutation, useQuery } from "convex/react";
+import { formatDistanceToNow } from "date-fns";
 import {
-  Shield,
   AlertTriangle,
   CheckCircle,
-  XCircle,
-  Trash2,
-  Eye,
   Clock,
-  User,
-  MessageSquare,
+  ExternalLink,
+  Eye,
   FileText,
   Filter,
-  ExternalLink,
+  MessageSquare,
+  Shield,
+  Trash2,
+  User,
+  XCircle,
 } from "lucide-react";
-import type { Id } from "../../../convex/_generated/dataModel";
-import { formatDistanceToNow } from "date-fns";
+import Head from "next/head";
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import styled from "styled-components";
+import { BlogView } from "../../../components/layout/blog";
+import { SimpleNavbar } from "../../../components/navbar/simple";
+import { api } from "../../../convex/_generated/api";
+import type { Id } from "../../../convex/_generated/dataModel";
+import { useTierAccess } from "../../../hooks/lounge/useTierAccess";
 
 export const getServerSideProps = () => ({ props: {} });
 
@@ -38,14 +38,14 @@ export default function ModerationPage() {
   // Comment reports
   const commentReports = useQuery(
     api.blogComments.getReports,
-    statusFilter === "all" ? {} : { status: statusFilter as ReportStatus }
+    statusFilter === "all" ? {} : { status: statusFilter as ReportStatus },
   );
   const resolveCommentReport = useMutation(api.blogComments.resolveReport);
 
   // Content reports (from learn posts)
   const contentReports = useQuery(
     api.contentReports.getReports,
-    statusFilter === "all" ? {} : { status: statusFilter as ReportStatus }
+    statusFilter === "all" ? {} : { status: statusFilter as ReportStatus },
   );
   const resolveContentReport = useMutation(api.contentReports.resolve);
 
@@ -56,7 +56,7 @@ export default function ModerationPage() {
   const handleResolveComment = async (
     reportId: Id<"blogCommentReports">,
     status: "reviewed" | "dismissed",
-    deleteComment = false
+    deleteComment = false,
   ) => {
     try {
       await resolveCommentReport({ reportId, status, deleteComment });
@@ -68,7 +68,7 @@ export default function ModerationPage() {
 
   const handleResolveContent = async (
     reportId: Id<"contentReports">,
-    status: "reviewed" | "dismissed"
+    status: "reviewed" | "dismissed",
   ) => {
     try {
       await resolveContentReport({ reportId, status });
@@ -137,18 +137,12 @@ export default function ModerationPage() {
           </Header>
 
           <TypeTabs>
-            <TypeTab
-              $active={reportType === "content"}
-              onClick={() => setReportType("content")}
-            >
+            <TypeTab $active={reportType === "content"} onClick={() => setReportType("content")}>
               <FileText size={16} />
               Content Reports
               {pendingContentCount > 0 && <TabBadge>{pendingContentCount}</TabBadge>}
             </TypeTab>
-            <TypeTab
-              $active={reportType === "comments"}
-              onClick={() => setReportType("comments")}
-            >
+            <TypeTab $active={reportType === "comments"} onClick={() => setReportType("comments")}>
               <MessageSquare size={16} />
               Comment Reports
               {pendingCommentCount > 0 && <TabBadge>{pendingCommentCount}</TabBadge>}
@@ -157,10 +151,7 @@ export default function ModerationPage() {
 
           <FilterBar>
             <Filter size={16} />
-            <FilterButton
-              $active={statusFilter === "all"}
-              onClick={() => setStatusFilter("all")}
-            >
+            <FilterButton $active={statusFilter === "all"} onClick={() => setStatusFilter("all")}>
               All
             </FilterButton>
             <FilterButton
@@ -234,11 +225,8 @@ export default function ModerationPage() {
 
                   <ReporterInfo>
                     <AlertTriangle size={12} />
-                    Reported by:{" "}
-                    <strong>{report.reporter?.displayName || "Unknown"}</strong>
-                    {report.reporter?.username && (
-                      <Username>@{report.reporter.username}</Username>
-                    )}
+                    Reported by: <strong>{report.reporter?.displayName || "Unknown"}</strong>
+                    {report.reporter?.username && <Username>@{report.reporter.username}</Username>}
                   </ReporterInfo>
 
                   {report.reason && (
@@ -327,11 +315,8 @@ export default function ModerationPage() {
 
                   <ReporterInfo>
                     <AlertTriangle size={12} />
-                    Reported by:{" "}
-                    <strong>{report.reporter?.displayName || "Unknown"}</strong>
-                    {report.reporter?.username && (
-                      <Username>@{report.reporter.username}</Username>
-                    )}
+                    Reported by: <strong>{report.reporter?.displayName || "Unknown"}</strong>
+                    {report.reporter?.username && <Username>@{report.reporter.username}</Username>}
                   </ReporterInfo>
 
                   {report.reason && (
@@ -452,8 +437,7 @@ const TypeTab = styled.button<{ $active: boolean }>`
   border: 1px solid
     ${(props) => (props.$active ? props.theme.linkColor + "44" : "rgba(255, 255, 255, 0.08)")};
   border-radius: 10px;
-  color: ${(props) =>
-    props.$active ? props.theme.linkColor : props.theme.textColor};
+  color: ${(props) => (props.$active ? props.theme.linkColor : props.theme.textColor)};
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
@@ -461,9 +445,7 @@ const TypeTab = styled.button<{ $active: boolean }>`
 
   &:hover {
     background: ${(props) =>
-      props.$active
-        ? props.theme.linkColor + "33"
-        : "rgba(255, 255, 255, 0.05)"};
+      props.$active ? props.theme.linkColor + "33" : "rgba(255, 255, 255, 0.05)"};
   }
 `;
 
@@ -559,13 +541,11 @@ const FilterButton = styled.button<{ $active: boolean }>`
   align-items: center;
   gap: 6px;
   padding: 8px 14px;
-  background: ${(props) =>
-    props.$active ? props.theme.linkColor + "22" : "transparent"};
+  background: ${(props) => (props.$active ? props.theme.linkColor + "22" : "transparent")};
   border: 1px solid
     ${(props) => (props.$active ? props.theme.linkColor + "44" : "transparent")};
   border-radius: 6px;
-  color: ${(props) =>
-    props.$active ? props.theme.linkColor : props.theme.textColor};
+  color: ${(props) => (props.$active ? props.theme.linkColor : props.theme.textColor)};
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
@@ -573,9 +553,7 @@ const FilterButton = styled.button<{ $active: boolean }>`
 
   &:hover {
     background: ${(props) =>
-      props.$active
-        ? props.theme.linkColor + "33"
-        : "rgba(255, 255, 255, 0.05)"};
+      props.$active ? props.theme.linkColor + "33" : "rgba(255, 255, 255, 0.05)"};
   }
 `;
 

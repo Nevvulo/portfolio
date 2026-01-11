@@ -1,12 +1,12 @@
-import { useState, useCallback, useEffect, useRef } from "react";
-import styled from "styled-components";
-import { m, AnimatePresence } from "framer-motion";
-import { Loader2, MessageSquare, ChevronLeft } from "lucide-react";
 import { useQuery } from "convex/react";
+import { AnimatePresence, m } from "framer-motion";
+import { ChevronLeft, Loader2, MessageSquare } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import styled from "styled-components";
 import { api } from "@/convex/_generated/api";
-import { FeedPost, FeedPostData } from "./FeedPost";
-import { FeedComposer } from "./FeedComposer";
 import type { Id } from "@/convex/_generated/dataModel";
+import { FeedComposer } from "./FeedComposer";
+import { FeedPost, type FeedPostData } from "./FeedPost";
 
 interface FeedListProps {
   profileUserId: Id<"users">;
@@ -77,7 +77,7 @@ export function FeedList({
           handleLoadMore();
         }
       },
-      { threshold: 0.1 }
+      { threshold: 0.1 },
     );
 
     observer.observe(loadMoreRef.current);
@@ -123,7 +123,7 @@ export function FeedList({
 
   // If we have a focused thread, render it at full width instead of the feed
   if (currentFocus) {
-    const fullBreadcrumb = focusStack.flatMap(f => f.breadcrumb);
+    const fullBreadcrumb = focusStack.flatMap((f) => f.breadcrumb);
     return (
       <FeedContainer>
         <FocusedThreadView
@@ -137,9 +137,7 @@ export function FeedList({
               Back
             </BackButton>
             {focusStack.length > 1 && (
-              <BackToRootButton onClick={handleBackToRoot}>
-                Back to feed
-              </BackToRootButton>
+              <BackToRootButton onClick={handleBackToRoot}>Back to feed</BackToRootButton>
             )}
             <Breadcrumb>
               {fullBreadcrumb.slice(-3).map((name, i) => (

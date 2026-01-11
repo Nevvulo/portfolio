@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { MessageEmbed } from "../../types/lounge";
 
 // URL detection regex

@@ -1,6 +1,6 @@
-import { createContext, useContext, useState, useCallback, ReactNode } from "react";
+import { createContext, type ReactNode, useCallback, useContext, useState } from "react";
 import type { Id } from "../../convex/_generated/dataModel";
-import type { UserPopoutState, UserPopoutContextValue } from "../../types/user-popout";
+import type { UserPopoutContextValue, UserPopoutState } from "../../types/user-popout";
 
 // Initial state
 const initialState: UserPopoutState = {

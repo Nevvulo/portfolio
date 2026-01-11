@@ -1,7 +1,7 @@
 import { v } from "convex/values";
+import type { Id } from "./_generated/dataModel";
 import { mutation, query } from "./_generated/server";
 import { getCurrentUser } from "./auth";
-import { Id } from "./_generated/dataModel";
 
 // ============================================
 // LEVELING FORMULA
@@ -13,7 +13,7 @@ import { Id } from "./_generated/dataModel";
  * Level 1: 10, Level 2: 28, Level 5: 112, Level 10: 316, Level 20: 894
  */
 export function xpRequiredForLevel(level: number): number {
-  return Math.floor(10 * Math.pow(level, 1.5));
+  return Math.floor(10 * level ** 1.5);
 }
 
 /**
@@ -30,7 +30,11 @@ export function totalXpForLevel(level: number): number {
 /**
  * Calculate level from total XP
  */
-export function levelFromTotalXp(totalXp: number): { level: number; currentXp: number; xpForNextLevel: number } {
+export function levelFromTotalXp(totalXp: number): {
+  level: number;
+  currentXp: number;
+  xpForNextLevel: number;
+} {
   let level = 1;
   let xpRemaining = totalXp;
 
@@ -115,7 +119,7 @@ async function grantXp(
   userId: Id<"users">,
   amount: number,
   type: "post_view" | "news_read" | "reaction" | "comment" | "time_on_site",
-  referenceId?: string
+  referenceId?: string,
 ) {
   const user = await ctx.db.get(userId);
   if (!user) return { success: false, reason: "User not found" };
@@ -165,7 +169,7 @@ export const grantPostViewXp = mutation({
     const existing = await ctx.db
       .query("experienceEvents")
       .withIndex("by_user_type_ref", (q) =>
-        q.eq("userId", user._id).eq("type", "post_view").eq("referenceId", refId)
+        q.eq("userId", user._id).eq("type", "post_view").eq("referenceId", refId),
       )
       .filter((q) => q.eq(q.field("date"), today))
       .first();
@@ -197,7 +201,7 @@ export const grantReactionXp = mutation({
     const existing = await ctx.db
       .query("experienceEvents")
       .withIndex("by_user_type_ref", (q) =>
-        q.eq("userId", user._id).eq("type", "reaction").eq("referenceId", refId)
+        q.eq("userId", user._id).eq("type", "reaction").eq("referenceId", refId),
       )
       .first();
 
@@ -224,7 +228,7 @@ export const grantCommentXp = mutation({
     const todayComments = await ctx.db
       .query("experienceEvents")
       .withIndex("by_user_type_date", (q) =>
-        q.eq("userId", user._id).eq("type", "comment").eq("date", today)
+        q.eq("userId", user._id).eq("type", "comment").eq("date", today),
       )
       .collect();
 
@@ -251,7 +255,7 @@ export const trackTimeHeartbeat = mutation({
     const today = getTodayString();
 
     // Find or create session
-    let session = await ctx.db
+    const session = await ctx.db
       .query("timeTrackingSessions")
       .withIndex("by_user_date", (q) => q.eq("userId", user._id).eq("date", today))
       .first();

@@ -11,13 +11,13 @@ import type { AppProps } from "next/app";
 import Head from "next/head";
 import Router from "next/router";
 import NProgress from "nprogress";
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { createGlobalStyle, ThemeProvider } from "styled-components";
+import { JungleMiniPlayer } from "../components/lounge/JungleMiniPlayer";
 import { DarkTheme, LightTheme } from "../constants/theme";
 import { useTheme } from "../hooks/useTheme";
 import { ConvexClientProvider } from "../lib/convex";
 import { LiveKitProvider } from "../lib/lounge/LiveKitContext";
-import { JungleMiniPlayer } from "../components/lounge/JungleMiniPlayer";
 import "../styles/globals.css"; // Tailwind CSS
 import "./nprogress.css"; //styles for nprogress
 
@@ -90,7 +90,7 @@ const clerkAppearance = {
     billingTabsListTabActive: {
       color: "#fff",
     },
-    "billingTabsListTab__selected": {
+    billingTabsListTab__selected: {
       color: "#fff",
     },
     profileSectionContent: {
@@ -102,14 +102,17 @@ const clerkAppearance = {
 export default function MyApp({ Component, router, pageProps }: AppProps) {
   const [userTheme] = useTheme();
   const theme = userTheme === "light" ? LightTheme : DarkTheme;
-  const [queryClient] = useState(() => new QueryClient({
-    defaultOptions: {
-      queries: {
-        staleTime: 60 * 1000,
-        refetchOnWindowFocus: false,
-      },
-    },
-  }));
+  const [queryClient] = useState(
+    () =>
+      new QueryClient({
+        defaultOptions: {
+          queries: {
+            staleTime: 60 * 1000,
+            refetchOnWindowFocus: false,
+          },
+        },
+      }),
+  );
 
   // FOUC prevention - mark fonts as loaded
   useEffect(() => {

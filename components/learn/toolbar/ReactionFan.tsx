@@ -1,12 +1,13 @@
-import React, { useState, useRef } from "react";
-import styled from "styled-components";
-import { m, AnimatePresence } from "framer-motion";
-import { Heart, ThumbsUp, Lightbulb, Smile } from "lucide-react";
-import { LOUNGE_COLORS } from "@/constants/lounge";
+import { useUser } from "@clerk/nextjs";
 import { useMutation, useQuery } from "convex/react";
+import { AnimatePresence, m } from "framer-motion";
+import { Heart, Lightbulb, Smile, ThumbsUp } from "lucide-react";
+import type React from "react";
+import { useEffect, useRef, useState } from "react";
+import styled, { css, keyframes } from "styled-components";
+import { LOUNGE_COLORS } from "@/constants/lounge";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
-import { useUser } from "@clerk/nextjs";
 
 type ReactionType = "like" | "helpful" | "insightful";
 
@@ -23,28 +24,126 @@ interface ReactionFanProps {
   expandDirection?: "right" | "left";
 }
 
-export function ReactionFan({ postId, isExpanded, onToggle, expandDirection = "right" }: ReactionFanProps) {
+// Track recent reactions for animation intensity
+interface ReactionTracker {
+  timestamps: number[];
+  lastCount: Record<ReactionType, number>;
+}
+
+// Calculate animation intensity based on recent reaction velocity (0-1)
+function getAnimationIntensity(timestamps: number[]): number {
+  const now = Date.now();
+  const windowMs = 3000; // 3 second window
+  const recentCount = timestamps.filter((t) => now - t < windowMs).length;
+  // Normalize: 1 reaction = 0.3, 5+ reactions = 1.0
+  return Math.min(1, 0.3 + (recentCount - 1) * 0.175);
+}
+
+export function ReactionFan({
+  postId,
+  isExpanded,
+  onToggle,
+  expandDirection = "right",
+}: ReactionFanProps) {
   const { isSignedIn } = useUser();
   const [isLoading, setIsLoading] = useState(false);
+  const [clientIp, setClientIp] = useState<string | null>(null);
   const hasGrantedXp = useRef(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
+  // Track reaction animations
+  const [punchingTypes, setPunchingTypes] = useState<Record<ReactionType, number>>({
+    like: 0,
+    helpful: 0,
+    insightful: 0,
+  });
+  const reactionTracker = useRef<ReactionTracker>({
+    timestamps: [],
+    lastCount: { like: 0, helpful: 0, insightful: 0 },
+  });
+
+  // Fetch client IP for anonymous reactions
+  useEffect(() => {
+    if (!isSignedIn) {
+      fetch("/api/client-ip")
+        .then((res) => res.json())
+        .then((data) => setClientIp(data.ip))
+        .catch(() => setClientIp(null));
+    }
+  }, [isSignedIn]);
+
   const counts = useQuery(api.blogReactions.getCounts, { postId });
   const myReaction = useQuery(api.blogReactions.getMyReaction, { postId });
+  const anonymousReactions = useQuery(
+    api.blogReactions.getAnonymousReactions,
+    !isSignedIn && clientIp ? { postId, ip: clientIp } : "skip",
+  );
   const react = useMutation(api.blogReactions.react);
   const grantReactionXp = useMutation(api.experience.grantReactionXp);
 
   const totalReactions = counts ? counts.like + counts.helpful + counts.insightful : 0;
 
+  // Detect count changes and trigger punch animation
+  useEffect(() => {
+    if (!counts) return;
+
+    const tracker = reactionTracker.current;
+    const types: ReactionType[] = ["like", "helpful", "insightful"];
+
+    for (const type of types) {
+      const newCount = counts[type];
+      const oldCount = tracker.lastCount[type];
+
+      if (newCount > oldCount) {
+        // Count increased - trigger punch animation
+        tracker.timestamps.push(Date.now());
+        // Keep only recent timestamps
+        tracker.timestamps = tracker.timestamps.filter((t) => Date.now() - t < 5000);
+
+        const intensity = getAnimationIntensity(tracker.timestamps);
+        setPunchingTypes((prev) => ({ ...prev, [type]: intensity }));
+
+        // Clear animation after duration
+        setTimeout(() => {
+          setPunchingTypes((prev) => ({ ...prev, [type]: 0 }));
+        }, 500);
+      }
+
+      tracker.lastCount[type] = newCount;
+    }
+  }, [counts]);
+
+  // Allow reactions - backend handles rate limiting
+  // For anonymous: check if we have remaining budget (or haven't loaded yet, optimistically allow)
+  const anonHasBudget = !anonymousReactions || anonymousReactions.postRemaining > 0;
+  const canReact = isSignedIn || anonHasBudget;
+
   const handleReact = async (type: ReactionType) => {
-    if (!isSignedIn || isLoading) return;
+    if (isLoading) return;
 
     const hadNoReaction = !myReaction;
 
     setIsLoading(true);
     try {
-      await react({ postId, type });
-      if (hadNoReaction && !hasGrantedXp.current) {
+      // For anonymous users, fetch IP on-demand if not already loaded
+      let ip = clientIp;
+      if (!isSignedIn && !ip) {
+        try {
+          const res = await fetch("/api/client-ip");
+          const data = await res.json();
+          ip = data.ip;
+          setClientIp(ip);
+        } catch {
+          // If IP fetch fails, still try (backend will handle)
+        }
+      }
+
+      await react({
+        postId,
+        type,
+        ip: isSignedIn ? undefined : (ip ?? undefined),
+      });
+      if (isSignedIn && hadNoReaction && !hasGrantedXp.current) {
         hasGrantedXp.current = true;
         grantReactionXp({ postId }).catch(console.error);
       }
@@ -62,15 +161,15 @@ export function ReactionFan({ postId, isExpanded, onToggle, expandDirection = "r
         onClick={onToggle}
         onMouseEnter={() => !isExpanded && onToggle()}
         $hasReaction={!!myReaction}
-        $reactionColor={myReaction ? REACTIONS.find(r => r.type === myReaction)?.color : undefined}
+        $reactionColor={
+          myReaction ? REACTIONS.find((r) => r.type === myReaction)?.color : undefined
+        }
         whileHover={{ scale: 1.08 }}
         whileTap={{ scale: 0.95 }}
-        title={isSignedIn ? "React to this post" : "Sign in to react"}
+        title="React to this post"
       >
         <Smile size={18} />
-        {totalReactions > 0 && (
-          <Badge>{totalReactions > 99 ? "99+" : totalReactions}</Badge>
-        )}
+        {totalReactions > 0 && <Badge>{totalReactions > 99 ? "99+" : totalReactions}</Badge>}
       </TriggerButton>
 
       <AnimatePresence>
@@ -87,11 +186,13 @@ export function ReactionFan({ postId, isExpanded, onToggle, expandDirection = "r
               const isActive = myReaction === reaction.type;
               const xOffset = expandDirection === "left" ? -(index * 44) : index * 44;
 
+              const punchIntensity = punchingTypes[reaction.type];
+
               return (
                 <ReactionButton
                   key={reaction.type}
                   onClick={() => handleReact(reaction.type)}
-                  disabled={!isSignedIn || isLoading}
+                  disabled={!canReact || isLoading}
                   $color={reaction.color}
                   $isActive={isActive}
                   $expandDirection={expandDirection}
@@ -114,7 +215,15 @@ export function ReactionFan({ postId, isExpanded, onToggle, expandDirection = "r
                   title={`${reaction.label}${count > 0 ? ` (${count})` : ""}`}
                 >
                   {reaction.icon}
-                  {count > 0 && <ReactionCount $color={reaction.color}>{count}</ReactionCount>}
+                  {count > 0 && (
+                    <ReactionCount
+                      $color={reaction.color}
+                      $isPunching={punchIntensity > 0}
+                      $intensity={punchIntensity}
+                    >
+                      {count}
+                    </ReactionCount>
+                  )}
                 </ReactionButton>
               );
             })}
@@ -139,9 +248,7 @@ const HoverArea = styled.div<{ $expandDirection: "right" | "left"; $isExpanded: 
   height: 48px;
   pointer-events: ${(props) => (props.$isExpanded ? "auto" : "none")};
   ${(props) =>
-    props.$expandDirection === "left"
-      ? `right: 0; width: 200px;`
-      : `left: 0; width: 200px;`}
+    props.$expandDirection === "left" ? `right: 0; width: 200px;` : `left: 0; width: 200px;`}
 `;
 
 const TriggerButton = styled(m.button)<{
@@ -174,9 +281,7 @@ const TriggerButton = styled(m.button)<{
         : LOUNGE_COLORS.glassBorder};
 
   color: ${(props) =>
-    props.$hasReaction && props.$reactionColor
-      ? props.$reactionColor
-      : "rgba(255, 255, 255, 0.7)"};
+    props.$hasReaction && props.$reactionColor ? props.$reactionColor : "rgba(255, 255, 255, 0.7)"};
 
   &:hover {
     background: rgba(144, 116, 242, 0.15);
@@ -204,12 +309,12 @@ const Badge = styled.span`
 
 const FanContainer = styled(m.div)<{ $expandDirection: "right" | "left" }>`
   position: absolute;
-  ${(props) => props.$expandDirection === "left" ? "right: 100%;" : "left: 100%;"}
+  ${(props) => (props.$expandDirection === "left" ? "right: 100%;" : "left: 100%;")}
   top: 50%;
   transform: translateY(-50%);
   display: flex;
   align-items: center;
-  ${(props) => props.$expandDirection === "left" ? "margin-right: 8px;" : "margin-left: 8px;"}
+  ${(props) => (props.$expandDirection === "left" ? "margin-right: 8px;" : "margin-left: 8px;")}
   padding: 6px 10px;
   background: rgba(16, 13, 27, 0.95);
   backdrop-filter: blur(12px);
@@ -228,7 +333,7 @@ const ReactionButton = styled(m.button)<{
   align-items: center;
   justify-content: center;
   position: absolute;
-  ${(props) => props.$expandDirection === "left" ? "right: 10px;" : "left: 10px;"}
+  ${(props) => (props.$expandDirection === "left" ? "right: 10px;" : "left: 10px;")}
   width: 36px;
   height: 36px;
   border: none;
@@ -236,8 +341,7 @@ const ReactionButton = styled(m.button)<{
   cursor: pointer;
   transition: background 0.15s ease, border-color 0.15s ease;
 
-  background: ${(props) =>
-    props.$isActive ? `${props.$color}33` : "rgba(255, 255, 255, 0.08)"};
+  background: ${(props) => (props.$isActive ? `${props.$color}33` : "rgba(255, 255, 255, 0.08)")};
   border: 2px solid
     ${(props) => (props.$isActive ? props.$color : "transparent")};
   color: ${(props) => (props.$isActive ? props.$color : "rgba(255, 255, 255, 0.8)")};
@@ -253,7 +357,27 @@ const ReactionButton = styled(m.button)<{
   }
 `;
 
-const ReactionCount = styled.span<{ $color: string }>`
+// Punch animation keyframes - scales up and moves up, then settles back
+const punchAnimation = keyframes`
+  0% {
+    transform: scale(1) translateY(0);
+  }
+  25% {
+    transform: scale(var(--punch-scale)) translateY(var(--punch-y));
+  }
+  50% {
+    transform: scale(calc(var(--punch-scale) * 0.9)) translateY(calc(var(--punch-y) * 0.6));
+  }
+  100% {
+    transform: scale(1) translateY(0);
+  }
+`;
+
+const ReactionCount = styled.span<{
+  $color: string;
+  $isPunching?: boolean;
+  $intensity?: number;
+}>`
   position: absolute;
   bottom: -2px;
   right: -2px;
@@ -268,6 +392,16 @@ const ReactionCount = styled.span<{ $color: string }>`
   display: flex;
   align-items: center;
   justify-content: center;
+
+  /* Punch animation with intensity-based values */
+  --punch-scale: ${(props) => 1 + (props.$intensity || 0) * 0.5};
+  --punch-y: ${(props) => -4 - (props.$intensity || 0) * 8}px;
+
+  ${(props) =>
+    props.$isPunching &&
+    css`
+      animation: ${punchAnimation} 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    `}
 `;
 
 export default ReactionFan;

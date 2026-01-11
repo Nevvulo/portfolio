@@ -35,7 +35,16 @@ export interface CachedMessage {
   isEdited: boolean;
   isPinned: boolean;
   discordAuthor?: { username: string; avatarUrl?: string };
-  messageType?: "default" | "system" | "emoji_blast" | "join" | "leave" | "boost" | "giveaway" | "poll" | "content";
+  messageType?:
+    | "default"
+    | "system"
+    | "emoji_blast"
+    | "join"
+    | "leave"
+    | "boost"
+    | "giveaway"
+    | "poll"
+    | "content";
   embeds?: CachedEmbed[];
   replyTo?: unknown;
   reactions?: unknown;
@@ -130,7 +139,11 @@ export function setCachedMessages(channelId: string, messages: CachedMessage[]):
 
 export function addMessageToCache(channelId: string, message: CachedMessage): void {
   const cache = getCache();
-  const channelCache = cache.channels[channelId] ?? { messages: [], lastUpdated: 0, hasFetched: false };
+  const channelCache = cache.channels[channelId] ?? {
+    messages: [],
+    lastUpdated: 0,
+    hasFetched: false,
+  };
 
   // Check if message already exists (by ID)
   const existingIndex = channelCache.messages.findIndex((m) => m._id === message._id);
@@ -158,7 +171,7 @@ export function addMessageToCache(channelId: string, message: CachedMessage): vo
 export function updateMessageInCache(
   channelId: string,
   messageId: string,
-  updates: Partial<CachedMessage>
+  updates: Partial<CachedMessage>,
 ): void {
   const cache = getCache();
   const channelCache = cache.channels[channelId];
@@ -176,7 +189,8 @@ export function updateMessageInCache(
       createdAt: updates.createdAt ?? existing.createdAt,
       isEdited: updates.isEdited ?? existing.isEdited,
       isPinned: updates.isPinned ?? existing.isPinned,
-      discordAuthor: updates.discordAuthor !== undefined ? updates.discordAuthor : existing.discordAuthor,
+      discordAuthor:
+        updates.discordAuthor !== undefined ? updates.discordAuthor : existing.discordAuthor,
       messageType: updates.messageType !== undefined ? updates.messageType : existing.messageType,
       embeds: updates.embeds !== undefined ? updates.embeds : existing.embeds,
       replyTo: updates.replyTo !== undefined ? updates.replyTo : existing.replyTo,

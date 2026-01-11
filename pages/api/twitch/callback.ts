@@ -8,59 +8,56 @@ import type { NextApiRequest, NextApiResponse } from "next";
  * Copy the refresh_token and add it to your environment variables as:
  * TWITCH_BROADCASTER_REFRESH_TOKEN
  */
-export default async function handler(
-	req: NextApiRequest,
-	res: NextApiResponse,
-) {
-	const { code, error, error_description } = req.query;
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  const { code, error, error_description } = req.query;
 
-	if (error) {
-		return res.status(400).json({
-			error,
-			error_description,
-		});
-	}
+  if (error) {
+    return res.status(400).json({
+      error,
+      error_description,
+    });
+  }
 
-	if (!code || typeof code !== "string") {
-		return res.status(400).json({ error: "No code provided" });
-	}
+  if (!code || typeof code !== "string") {
+    return res.status(400).json({ error: "No code provided" });
+  }
 
-	const clientId = process.env.TWITCH_CLIENT_ID;
-	const clientSecret = process.env.TWITCH_CLIENT_SECRET;
+  const clientId = process.env.TWITCH_CLIENT_ID;
+  const clientSecret = process.env.TWITCH_CLIENT_SECRET;
 
-	if (!clientId || !clientSecret) {
-		return res.status(500).json({
-			error: "TWITCH_CLIENT_ID or TWITCH_CLIENT_SECRET not configured",
-		});
-	}
+  if (!clientId || !clientSecret) {
+    return res.status(500).json({
+      error: "TWITCH_CLIENT_ID or TWITCH_CLIENT_SECRET not configured",
+    });
+  }
 
-	const redirectUri = `${req.headers.host?.includes("localhost") ? "http" : "https"}://${req.headers.host}/api/twitch/callback`;
+  const redirectUri = `${req.headers.host?.includes("localhost") ? "http" : "https"}://${req.headers.host}/api/twitch/callback`;
 
-	try {
-		const tokenResponse = await fetch("https://id.twitch.tv/oauth2/token", {
-			method: "POST",
-			headers: { "Content-Type": "application/x-www-form-urlencoded" },
-			body: new URLSearchParams({
-				client_id: clientId,
-				client_secret: clientSecret,
-				code,
-				grant_type: "authorization_code",
-				redirect_uri: redirectUri,
-			}),
-		});
+  try {
+    const tokenResponse = await fetch("https://id.twitch.tv/oauth2/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        client_id: clientId,
+        client_secret: clientSecret,
+        code,
+        grant_type: "authorization_code",
+        redirect_uri: redirectUri,
+      }),
+    });
 
-		const tokenData = await tokenResponse.json();
+    const tokenData = await tokenResponse.json();
 
-		if (!tokenResponse.ok) {
-			return res.status(400).json({
-				error: "Failed to exchange code for tokens",
-				details: tokenData,
-			});
-		}
+    if (!tokenResponse.ok) {
+      return res.status(400).json({
+        error: "Failed to exchange code for tokens",
+        details: tokenData,
+      });
+    }
 
-		// Return HTML page with the tokens for easy copying
-		res.setHeader("Content-Type", "text/html");
-		res.send(`
+    // Return HTML page with the tokens for easy copying
+    res.setHeader("Content-Type", "text/html");
+    res.send(`
 <!DOCTYPE html>
 <html>
 <head>
@@ -134,10 +131,10 @@ export default async function handler(
 </body>
 </html>
 		`);
-	} catch (err) {
-		return res.status(500).json({
-			error: "Failed to exchange code",
-			details: err instanceof Error ? err.message : String(err),
-		});
-	}
+  } catch (err) {
+    return res.status(500).json({
+      error: "Failed to exchange code",
+      details: err instanceof Error ? err.message : String(err),
+    });
+  }
 }

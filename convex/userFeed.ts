@@ -1,18 +1,20 @@
 import { v } from "convex/values";
+import type { Id } from "./_generated/dataModel";
 import { mutation, query } from "./_generated/server";
-import { requireUser, getCurrentUser, requireNotBanned } from "./auth";
-import type { Id, Doc } from "./_generated/dataModel";
+import { getCurrentUser, requireNotBanned, requireUser } from "./auth";
 
 // Media object validator (reused across mutations)
-const mediaValidator = v.array(v.object({
-  type: v.union(v.literal("image"), v.literal("video")),
-  url: v.string(),
-  filename: v.string(),
-  mimeType: v.string(),
-  fileSize: v.number(),
-  width: v.optional(v.number()),
-  height: v.optional(v.number()),
-}));
+const mediaValidator = v.array(
+  v.object({
+    type: v.union(v.literal("image"), v.literal("video")),
+    url: v.string(),
+    filename: v.string(),
+    mimeType: v.string(),
+    fileSize: v.number(),
+    width: v.optional(v.number()),
+    height: v.optional(v.number()),
+  }),
+);
 
 // ===========================================
 // Queries
@@ -35,9 +37,7 @@ export const list = query({
     let postsQuery = ctx.db
       .query("userFeedPosts")
       .withIndex("by_profile_root", (q) =>
-        q.eq("profileUserId", args.profileUserId)
-          .eq("parentId", undefined)
-          .eq("isDeleted", false)
+        q.eq("profileUserId", args.profileUserId).eq("parentId", undefined).eq("isDeleted", false),
       )
       .order("desc");
 
@@ -45,9 +45,7 @@ export const list = query({
     if (args.cursor) {
       const cursorPost = await ctx.db.get(args.cursor);
       if (cursorPost) {
-        postsQuery = postsQuery.filter((q) =>
-          q.lt(q.field("createdAt"), cursorPost.createdAt)
-        );
+        postsQuery = postsQuery.filter((q) => q.lt(q.field("createdAt"), cursorPost.createdAt));
       }
     }
 
@@ -97,49 +95,59 @@ export const list = query({
 
             return {
               ...reply,
-              author: replyAuthor ? {
-                _id: replyAuthor._id,
-                displayName: replyAuthor.displayName,
-                username: replyAuthor.username,
-                avatarUrl: replyAuthor.avatarUrl,
-                tier: replyAuthor.tier,
-                isCreator: replyAuthor.isCreator,
-              } : null,
+              author: replyAuthor
+                ? {
+                    _id: replyAuthor._id,
+                    displayName: replyAuthor.displayName,
+                    username: replyAuthor.username,
+                    avatarUrl: replyAuthor.avatarUrl,
+                    tier: replyAuthor.tier,
+                    isCreator: replyAuthor.isCreator,
+                  }
+                : null,
               reactions: {
                 total: replyReactions.length,
-                byType: replyReactions.reduce((acc, r) => {
-                  acc[r.type] = (acc[r.type] || 0) + 1;
-                  return acc;
-                }, {} as Record<string, number>),
+                byType: replyReactions.reduce(
+                  (acc, r) => {
+                    acc[r.type] = (acc[r.type] || 0) + 1;
+                    return acc;
+                  },
+                  {} as Record<string, number>,
+                ),
               },
               replies: [], // Nested replies loaded on demand
             };
-          })
+          }),
         );
 
         return {
           ...post,
-          author: author ? {
-            _id: author._id,
-            displayName: author.displayName,
-            username: author.username,
-            avatarUrl: author.avatarUrl,
-            tier: author.tier,
-            isCreator: author.isCreator,
-          } : null,
+          author: author
+            ? {
+                _id: author._id,
+                displayName: author.displayName,
+                username: author.username,
+                avatarUrl: author.avatarUrl,
+                tier: author.tier,
+                isCreator: author.isCreator,
+              }
+            : null,
           reactions: {
             total: reactionCount.length,
-            byType: reactionCount.reduce((acc, r) => {
-              acc[r.type] = (acc[r.type] || 0) + 1;
-              return acc;
-            }, {} as Record<string, number>),
+            byType: reactionCount.reduce(
+              (acc, r) => {
+                acc[r.type] = (acc[r.type] || 0) + 1;
+                return acc;
+              },
+              {} as Record<string, number>,
+            ),
           },
           replies: repliesWithAuthors,
           hasMoreReplies: post.replyCount > replies.length,
           repostedPost,
           repostedFeedPost,
         };
-      })
+      }),
     );
 
     return {
@@ -171,9 +179,7 @@ export const getReplies = query({
     if (args.cursor) {
       const cursorPost = await ctx.db.get(args.cursor);
       if (cursorPost) {
-        repliesQuery = repliesQuery.filter((q) =>
-          q.gt(q.field("createdAt"), cursorPost.createdAt)
-        );
+        repliesQuery = repliesQuery.filter((q) => q.gt(q.field("createdAt"), cursorPost.createdAt));
       }
     }
 
@@ -191,23 +197,28 @@ export const getReplies = query({
 
         return {
           ...reply,
-          author: author ? {
-            _id: author._id,
-            displayName: author.displayName,
-            username: author.username,
-            avatarUrl: author.avatarUrl,
-            tier: author.tier,
-            isCreator: author.isCreator,
-          } : null,
+          author: author
+            ? {
+                _id: author._id,
+                displayName: author.displayName,
+                username: author.username,
+                avatarUrl: author.avatarUrl,
+                tier: author.tier,
+                isCreator: author.isCreator,
+              }
+            : null,
           reactions: {
             total: reactionCount.length,
-            byType: reactionCount.reduce((acc, r) => {
-              acc[r.type] = (acc[r.type] || 0) + 1;
-              return acc;
-            }, {} as Record<string, number>),
+            byType: reactionCount.reduce(
+              (acc, r) => {
+                acc[r.type] = (acc[r.type] || 0) + 1;
+                return acc;
+              },
+              {} as Record<string, number>,
+            ),
           },
         };
-      })
+      }),
     );
 
     return {
@@ -236,10 +247,7 @@ export const getThread = query({
     }
 
     // Recursive function to build thread tree
-    async function buildThread(
-      postId: Id<"userFeedPosts">,
-      currentDepth: number
-    ): Promise<any> {
+    async function buildThread(postId: Id<"userFeedPosts">, currentDepth: number): Promise<any> {
       const post = await ctx.db.get(postId);
       if (!post || post.isDeleted) return null;
 
@@ -251,20 +259,25 @@ export const getThread = query({
 
       const postWithAuthor = {
         ...post,
-        author: author ? {
-          _id: author._id,
-          displayName: author.displayName,
-          username: author.username,
-          avatarUrl: author.avatarUrl,
-          tier: author.tier,
-          isCreator: author.isCreator,
-        } : null,
+        author: author
+          ? {
+              _id: author._id,
+              displayName: author.displayName,
+              username: author.username,
+              avatarUrl: author.avatarUrl,
+              tier: author.tier,
+              isCreator: author.isCreator,
+            }
+          : null,
         reactions: {
           total: reactionCount.length,
-          byType: reactionCount.reduce((acc, r) => {
-            acc[r.type] = (acc[r.type] || 0) + 1;
-            return acc;
-          }, {} as Record<string, number>),
+          byType: reactionCount.reduce(
+            (acc, r) => {
+              acc[r.type] = (acc[r.type] || 0) + 1;
+              return acc;
+            },
+            {} as Record<string, number>,
+          ),
         },
         replies: [] as any[],
         hasMoreReplies: false,
@@ -316,7 +329,7 @@ export const getPendingPosts = query({
     const pendingPosts = await ctx.db
       .query("pendingFeedPosts")
       .withIndex("by_profile_status", (q) =>
-        q.eq("profileUserId", args.profileUserId).eq("status", "pending")
+        q.eq("profileUserId", args.profileUserId).eq("status", "pending"),
       )
       .order("desc")
       .collect();
@@ -327,14 +340,16 @@ export const getPendingPosts = query({
         const author = await ctx.db.get(post.authorId);
         return {
           ...post,
-          author: author ? {
-            _id: author._id,
-            displayName: author.displayName,
-            username: author.username,
-            avatarUrl: author.avatarUrl,
-          } : null,
+          author: author
+            ? {
+                _id: author._id,
+                displayName: author.displayName,
+                username: author.username,
+                avatarUrl: author.avatarUrl,
+              }
+            : null,
         };
-      })
+      }),
     );
 
     return postsWithAuthors;
@@ -424,7 +439,7 @@ export const create = mutation({
 
     // Handle threading
     let replyDepth = 0;
-    let rootId: Id<"userFeedPosts"> | undefined = undefined;
+    let rootId: Id<"userFeedPosts"> | undefined;
 
     if (args.parentId) {
       const parentPost = await ctx.db.get(args.parentId);
@@ -549,9 +564,8 @@ export const deletePost = mutation({
 
     // Author or profile owner can delete
     const profileUser = await ctx.db.get(post.profileUserId);
-    const canDelete = post.authorId === user._id ||
-      post.profileUserId === user._id ||
-      user.isCreator;
+    const canDelete =
+      post.authorId === user._id || post.profileUserId === user._id || user.isCreator;
 
     if (!canDelete) {
       throw new Error("You don't have permission to delete this post.");
@@ -601,7 +615,7 @@ export const approvePendingPost = mutation({
 
     // Handle threading
     let replyDepth = 0;
-    let rootId: Id<"userFeedPosts"> | undefined = undefined;
+    let rootId: Id<"userFeedPosts"> | undefined;
 
     if (pendingPost.parentId) {
       const parentPost = await ctx.db.get(pendingPost.parentId);
@@ -700,9 +714,7 @@ export const toggleReaction = mutation({
     // Check for existing reaction
     const existing = await ctx.db
       .query("userFeedReactions")
-      .withIndex("by_user_post", (q) =>
-        q.eq("userId", user._id).eq("postId", args.postId)
-      )
+      .withIndex("by_user_post", (q) => q.eq("userId", user._id).eq("postId", args.postId))
       .unique();
 
     if (existing) {
@@ -752,11 +764,7 @@ export const toggleReaction = mutation({
  */
 export const updateFeedPrivacy = mutation({
   args: {
-    privacy: v.union(
-      v.literal("everyone"),
-      v.literal("approval"),
-      v.literal("owner_only")
-    ),
+    privacy: v.union(v.literal("everyone"), v.literal("approval"), v.literal("owner_only")),
   },
   handler: async (ctx, args) => {
     const user = await requireUser(ctx);
@@ -782,9 +790,7 @@ export const getUserReaction = query({
 
     const reaction = await ctx.db
       .query("userFeedReactions")
-      .withIndex("by_user_post", (q) =>
-        q.eq("userId", user._id).eq("postId", args.postId)
-      )
+      .withIndex("by_user_post", (q) => q.eq("userId", user._id).eq("postId", args.postId))
       .unique();
 
     return reaction?.type ?? null;
@@ -818,9 +824,7 @@ export const repost = mutation({
     const existingRepost = await ctx.db
       .query("userFeedPosts")
       .withIndex("by_profile_root", (q) =>
-        q.eq("profileUserId", user._id)
-          .eq("parentId", undefined)
-          .eq("isDeleted", false)
+        q.eq("profileUserId", user._id).eq("parentId", undefined).eq("isDeleted", false),
       )
       .filter((q) => q.eq(q.field("repostOfFeedId"), args.originalPostId))
       .first();
@@ -857,10 +861,7 @@ export const getRepostCount = query({
     const reposts = await ctx.db
       .query("userFeedPosts")
       .filter((q) =>
-        q.and(
-          q.eq(q.field("repostOfFeedId"), args.postId),
-          q.eq(q.field("isDeleted"), false)
-        )
+        q.and(q.eq(q.field("repostOfFeedId"), args.postId), q.eq(q.field("isDeleted"), false)),
       )
       .collect();
 
@@ -882,9 +883,7 @@ export const hasUserReposted = query({
     const repost = await ctx.db
       .query("userFeedPosts")
       .withIndex("by_profile_root", (q) =>
-        q.eq("profileUserId", user._id)
-          .eq("parentId", undefined)
-          .eq("isDeleted", false)
+        q.eq("profileUserId", user._id).eq("parentId", undefined).eq("isDeleted", false),
       )
       .filter((q) => q.eq(q.field("repostOfFeedId"), args.postId))
       .first();
@@ -919,9 +918,7 @@ export const repostBlogPost = mutation({
     const existingRepost = await ctx.db
       .query("userFeedPosts")
       .withIndex("by_profile_root", (q) =>
-        q.eq("profileUserId", user._id)
-          .eq("parentId", undefined)
-          .eq("isDeleted", false)
+        q.eq("profileUserId", user._id).eq("parentId", undefined).eq("isDeleted", false),
       )
       .filter((q) => q.eq(q.field("repostOfPostId"), args.blogPostId))
       .first();
@@ -961,9 +958,7 @@ export const hasUserRepostedBlogPost = query({
     const repost = await ctx.db
       .query("userFeedPosts")
       .withIndex("by_profile_root", (q) =>
-        q.eq("profileUserId", user._id)
-          .eq("parentId", undefined)
-          .eq("isDeleted", false)
+        q.eq("profileUserId", user._id).eq("parentId", undefined).eq("isDeleted", false),
       )
       .filter((q) => q.eq(q.field("repostOfPostId"), args.blogPostId))
       .first();

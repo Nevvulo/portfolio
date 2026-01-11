@@ -1,9 +1,9 @@
 import Head from "next/head";
 import Image from "next/image";
 import styled from "styled-components";
-import { SimpleNavbar } from "../../components/navbar/simple";
 import GolfquestBanner from "../../assets/img/games/golfquest.png";
 import { StrippedLink } from "../../components/generics";
+import { SimpleNavbar } from "../../components/navbar/simple";
 
 export default function GamesPage() {
   return (
@@ -32,8 +32,8 @@ export default function GamesPage() {
               </GameBadgeRow>
               <GameTitle>Golfquest</GameTitle>
               <GameDescription>
-                A golf adventure game combining precision mechanics with exploration
-                through beautifully crafted courses.
+                A golf adventure game combining precision mechanics with exploration through
+                beautifully crafted courses.
               </GameDescription>
               <GameTags>
                 <GameTag $color="#10b981">Golf</GameTag>
@@ -79,10 +79,7 @@ export default function GamesPage() {
         />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="Games by Nevulo" />
-        <meta
-          name="twitter:description"
-          content="Explore games I'm developing."
-        />
+        <meta name="twitter:description" content="Explore games I'm developing." />
         <meta
           name="twitter:image"
           content="https://nev.so/api/og?title=My%20Games&subtitle=Roblox%20%26%20Game%20Development"
@@ -120,31 +117,6 @@ const MainContent = styled.main`
   @media (max-width: 768px) {
     padding: 1.5rem 1rem 3rem;
   }
-`;
-
-const PageHeader = styled.header`
-  margin-bottom: 2.5rem;
-`;
-
-const PageTitle = styled.h1`
-  font-family: var(--font-sans);
-  font-size: 2.5rem;
-  font-weight: 800;
-  color: ${(props) => props.theme.contrast};
-  margin: 0 0 0.5rem 0;
-  letter-spacing: -0.02em;
-
-  @media (max-width: 768px) {
-    font-size: 2rem;
-  }
-`;
-
-const PageDescription = styled.p`
-  font-family: var(--font-sans);
-  font-size: 1.125rem;
-  color: ${(props) => props.theme.contrast}99;
-  margin: 0;
-  line-height: 1.5;
 `;
 
 const GamesGrid = styled.div`
@@ -207,9 +179,9 @@ const ComingSoonBadge = styled.span<{ $variant?: string }>`
   text-transform: uppercase;
   letter-spacing: 0.5px;
   border-radius: 4px;
-  background: ${(props) => props.$variant === "secret" ? "rgba(168, 85, 247, 0.15)" : "rgba(16, 185, 129, 0.15)"};
-  color: ${(props) => props.$variant === "secret" ? "#a855f7" : "#10b981"};
-  border: 1px solid ${(props) => props.$variant === "secret" ? "rgba(168, 85, 247, 0.3)" : "rgba(16, 185, 129, 0.3)"};
+  background: ${(props) => (props.$variant === "secret" ? "rgba(168, 85, 247, 0.15)" : "rgba(16, 185, 129, 0.15)")};
+  color: ${(props) => (props.$variant === "secret" ? "#a855f7" : "#10b981")};
+  border: 1px solid ${(props) => (props.$variant === "secret" ? "rgba(168, 85, 247, 0.3)" : "rgba(16, 185, 129, 0.3)")};
 `;
 
 const PlatformBadge = styled.span`

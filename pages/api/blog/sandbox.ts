@@ -24,7 +24,7 @@ const SUPPORTED_LANGUAGES = ["javascript", "typescript", "python"];
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<SandboxResponse | SandboxErrorResponse>
+  res: NextApiResponse<SandboxResponse | SandboxErrorResponse>,
 ) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });

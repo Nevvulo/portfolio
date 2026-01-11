@@ -1,7 +1,7 @@
-import { useEffect, useState, useCallback, RefObject } from "react";
-import styled from "styled-components";
+import { AnimatePresence, m } from "framer-motion";
+import { type RefObject, useCallback, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { m, AnimatePresence } from "framer-motion";
+import styled from "styled-components";
 
 const TOAST_HEIGHT = 60;
 const TOAST_WIDTH = 280;
@@ -92,7 +92,7 @@ export function ReactionToast({ show, onHide, title, subtitle, anchorRef }: Reac
           transition={{
             type: "spring",
             damping: 25,
-            stiffness: 400
+            stiffness: 400,
           }}
           style={{
             top: position.top,
@@ -109,7 +109,7 @@ export function ReactionToast({ show, onHide, title, subtitle, anchorRef }: Reac
         </ToastContainer>
       )}
     </AnimatePresence>,
-    document.body
+    document.body,
   );
 }
 

@@ -1,6 +1,6 @@
-import React, { useMemo, useState } from "react";
+import { AnimatePresence, m } from "framer-motion";
+import { useMemo, useState } from "react";
 import styled from "styled-components";
-import { m, AnimatePresence } from "framer-motion";
 
 // Emoji mapping for reaction types
 const REACTION_EMOJI: Record<string, string> = {
@@ -127,30 +127,30 @@ export function InlineReactionsGutter({
               onMouseLeave={() => setHoveredClusterIndex(null)}
               onClick={() => {
                 // Click the first highlight in the cluster
-                if (onReactionClick && cluster.highlights.length > 0) {
-                  onReactionClick(cluster.highlights[0].id);
+                const firstHighlight = cluster.highlights[0];
+                if (onReactionClick && firstHighlight) {
+                  onReactionClick(firstHighlight.id);
                 }
               }}
               title={`${totalReactions} reaction${totalReactions !== 1 ? "s" : ""}`}
             >
               <EmojiStack $isHovered={isHovered} $count={displayEmojis.length}>
-                {displayEmojis.map((type, index) => (
-                  <EmojiCard
-                    key={type}
-                    $index={index}
-                    $total={displayEmojis.length}
-                    $isHovered={isHovered}
-                  >
-                    {REACTION_EMOJI[type]}
-                    {isHovered && mergedCounts[type] > 1 && (
-                      <EmojiCount>{mergedCounts[type]}</EmojiCount>
-                    )}
-                  </EmojiCard>
-                ))}
+                {displayEmojis.map((type, index) => {
+                  const count = mergedCounts[type] ?? 0;
+                  return (
+                    <EmojiCard
+                      key={type}
+                      $index={index}
+                      $total={displayEmojis.length}
+                      $isHovered={isHovered}
+                    >
+                      {REACTION_EMOJI[type]}
+                      {isHovered && count > 1 && <EmojiCount>{count}</EmojiCount>}
+                    </EmojiCard>
+                  );
+                })}
               </EmojiStack>
-              {!isHovered && totalReactions > 1 && (
-                <TotalCount>{totalReactions}</TotalCount>
-              )}
+              {!isHovered && totalReactions > 1 && <TotalCount>{totalReactions}</TotalCount>}
             </ClusterWrapper>
           );
         })}
@@ -200,8 +200,7 @@ const EmojiStack = styled.div<{ $isHovered: boolean; $count: number }>`
   width: ${({ $isHovered, $count }) =>
     $isHovered
       ? `${Math.max(24, ($count - 1) * 20 + 24)}px`
-      : `${Math.max(24, ($count - 1) * -4 + 24)}px`
-  };
+      : `${Math.max(24, ($count - 1) * -4 + 24)}px`};
   transition: width 0.2s ease;
 `;
 

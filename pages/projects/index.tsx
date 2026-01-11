@@ -1,13 +1,13 @@
-import Head from "next/head";
-import { useState, useEffect, useCallback, useRef } from "react";
-import styled from "styled-components";
-import dynamic from "next/dynamic";
 import { useQuery } from "convex/react";
 import { AnimatePresence } from "framer-motion";
-import { api } from "../../convex/_generated/api";
-import { Doc } from "../../convex/_generated/dataModel";
-import { ProjectExpanded } from "../../components/project/ProjectExpanded";
+import dynamic from "next/dynamic";
+import Head from "next/head";
+import { useCallback, useEffect, useRef, useState } from "react";
+import styled from "styled-components";
 import { BackButton } from "../../components/generics";
+import { ProjectExpanded } from "../../components/project/ProjectExpanded";
+import { api } from "../../convex/_generated/api";
+import type { Doc } from "../../convex/_generated/dataModel";
 
 // Hook to detect mobile and orientation
 function useViewport() {
@@ -44,7 +44,7 @@ function useViewport() {
 // Dynamically import Three.js scene to avoid SSR issues
 const TimelineScene = dynamic(
   () => import("../../components/project/timeline/TimelineScene").then((mod) => mod.TimelineScene),
-  { ssr: false }
+  { ssr: false },
 );
 
 export default function ProjectsPage() {
@@ -67,7 +67,7 @@ export default function ProjectsPage() {
   // Calculate current year from scroll
   const currentYearIndex = Math.min(
     Math.floor(scrollProgress * yearsList.length),
-    Math.max(0, yearsList.length - 1)
+    Math.max(0, yearsList.length - 1),
   );
   const currentYear = yearsList[currentYearIndex] || new Date().getFullYear();
 
@@ -92,40 +92,49 @@ export default function ProjectsPage() {
   }, [targetProgress]);
 
   // Handle wheel for smooth scrolling through timeline
-  const handleWheel = useCallback((e: WheelEvent) => {
-    // Don't scroll if a project is expanded
-    if (expandedProject) return;
+  const handleWheel = useCallback(
+    (e: WheelEvent) => {
+      // Don't scroll if a project is expanded
+      if (expandedProject) return;
 
-    e.preventDefault();
-    setTargetProgress((prev) => {
-      const delta = e.deltaY * 0.0008;
-      return Math.max(0, Math.min(1, prev + delta));
-    });
-  }, [expandedProject]);
+      e.preventDefault();
+      setTargetProgress((prev) => {
+        const delta = e.deltaY * 0.0008;
+        return Math.max(0, Math.min(1, prev + delta));
+      });
+    },
+    [expandedProject],
+  );
 
   // Touch handlers for mobile
-  const handleTouchStart = useCallback((e: TouchEvent) => {
-    if (expandedProject) return;
-    const touch = e.touches[0];
-    if (!touch) return;
-    touchStartRef.current = {
-      y: touch.clientY,
-      progress: targetProgress,
-    };
-  }, [expandedProject, targetProgress]);
+  const handleTouchStart = useCallback(
+    (e: TouchEvent) => {
+      if (expandedProject) return;
+      const touch = e.touches[0];
+      if (!touch) return;
+      touchStartRef.current = {
+        y: touch.clientY,
+        progress: targetProgress,
+      };
+    },
+    [expandedProject, targetProgress],
+  );
 
-  const handleTouchMove = useCallback((e: TouchEvent) => {
-    if (expandedProject || !touchStartRef.current) return;
-    e.preventDefault();
+  const handleTouchMove = useCallback(
+    (e: TouchEvent) => {
+      if (expandedProject || !touchStartRef.current) return;
+      e.preventDefault();
 
-    const touch = e.touches[0];
-    if (!touch) return;
-    const deltaY = touchStartRef.current.y - touch.clientY;
-    // Adjust sensitivity based on screen height for consistent feel
-    const sensitivity = 0.002 * (800 / window.innerHeight);
-    const newProgress = touchStartRef.current.progress + deltaY * sensitivity;
-    setTargetProgress(Math.max(0, Math.min(1, newProgress)));
-  }, [expandedProject]);
+      const touch = e.touches[0];
+      if (!touch) return;
+      const deltaY = touchStartRef.current.y - touch.clientY;
+      // Adjust sensitivity based on screen height for consistent feel
+      const sensitivity = 0.002 * (800 / window.innerHeight);
+      const newProgress = touchStartRef.current.progress + deltaY * sensitivity;
+      setTargetProgress(Math.max(0, Math.min(1, newProgress)));
+    },
+    [expandedProject],
+  );
 
   const handleTouchEnd = useCallback(() => {
     touchStartRef.current = null;
@@ -250,28 +259,33 @@ export default function ProjectsPage() {
           {yearsList.length > 0 && (
             <ProgressContainer>
               <ProgressTrack>
-                <ProgressFill style={{
-                  height: `${scrollProgress * 100}%`,
-                  "--progress": `${scrollProgress * 100}%`
-                } as React.CSSProperties} />
+                <ProgressFill
+                  style={
+                    {
+                      height: `${scrollProgress * 100}%`,
+                      "--progress": `${scrollProgress * 100}%`,
+                    } as React.CSSProperties
+                  }
+                />
               </ProgressTrack>
               <ProgressYears>
-                {yearsList.filter((_, i) => i % 2 === 0).map((year) => (
-                  <ProgressYear
-                    key={year}
-                    $active={year === currentYear}
-                    onClick={() => {
-                      const index = yearsList.indexOf(year);
-                      setTargetProgress(index / (yearsList.length - 1));
-                    }}
-                  >
-                    {year}
-                  </ProgressYear>
-                ))}
+                {yearsList
+                  .filter((_, i) => i % 2 === 0)
+                  .map((year) => (
+                    <ProgressYear
+                      key={year}
+                      $active={year === currentYear}
+                      onClick={() => {
+                        const index = yearsList.indexOf(year);
+                        setTargetProgress(index / (yearsList.length - 1));
+                      }}
+                    >
+                      {year}
+                    </ProgressYear>
+                  ))}
               </ProgressYears>
             </ProgressContainer>
           )}
-
 
           {/* Scroll hint */}
           {scrollProgress < 0.1 && !expandedProject && (
@@ -284,7 +298,9 @@ export default function ProjectsPage() {
           {/* Instructions - hidden on mobile portrait to save space */}
           {(!viewport.isMobile || viewport.isLandscape) && (
             <Instructions $isMobile={viewport.isMobile}>
-              <InstructionItem>{viewport.isMobile ? "Swipe to navigate" : "Scroll to travel through time"}</InstructionItem>
+              <InstructionItem>
+                {viewport.isMobile ? "Swipe to navigate" : "Scroll to travel through time"}
+              </InstructionItem>
               <InstructionItem>Tap cards to view projects</InstructionItem>
             </Instructions>
           )}
@@ -292,9 +308,7 @@ export default function ProjectsPage() {
 
         {/* Expanded Project Overlay */}
         <AnimatePresence>
-          {expandedProject && (
-            <ProjectExpanded project={expandedProject} onClose={handleClose} />
-          )}
+          {expandedProject && <ProjectExpanded project={expandedProject} onClose={handleClose} />}
         </AnimatePresence>
       </PageContainer>
     </>
@@ -480,7 +494,6 @@ const ProgressYear = styled.button<{ $active?: boolean }>`
     padding: 0.15rem 0.25rem;
   }
 `;
-
 
 const ScrollHint = styled.div<{ $isMobile?: boolean }>`
   position: absolute;

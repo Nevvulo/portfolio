@@ -1,17 +1,17 @@
-import { useRouter } from "next/router";
+import { useAction, useMutation, useQuery } from "convex/react";
+import { XCircleIcon } from "lucide-react";
 import Head from "next/head";
+import { useRouter } from "next/router";
+import { useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
-import { useQuery, useMutation, useAction } from "convex/react";
-import { useEffect, useState, useMemo } from "react";
-import { api } from "../../convex/_generated/api";
-import { LoungeLayout } from "../../components/lounge/layout/LoungeLayout";
 import { ChatView } from "../../components/lounge/chat/ChatView";
+import { LoungeLayout } from "../../components/lounge/layout/LoungeLayout";
+import { LOUNGE_COLORS, TIER_INFO } from "../../constants/lounge";
+import { api } from "../../convex/_generated/api";
+import type { Id } from "../../convex/_generated/dataModel";
 import { useTierAccess } from "../../hooks/lounge/useTierAccess";
 import { getCachedChannel, setCachedChannel } from "../../lib/lounge/channelCache";
-import { LOUNGE_COLORS, TIER_INFO } from "../../constants/lounge";
 import type { ChannelWithAccess, Tier } from "../../types/lounge";
-import type { Id } from "../../convex/_generated/dataModel";
-import { XCircleIcon } from "lucide-react";
 
 // Use getServerSideProps to prevent static generation
 export const getServerSideProps = () => ({ props: {} });
@@ -39,18 +39,20 @@ export default function ChannelPage() {
     getOrCreateUser({
       displayName: displayName || "Anonymous",
       avatarUrl: avatarUrl,
-    }).then(() => {
-      setUserReady(true);
-    }).catch((err) => {
-      console.error("Failed to create user:", err);
-      setUserReady(true); // Continue anyway
-    });
+    })
+      .then(() => {
+        setUserReady(true);
+      })
+      .catch((err) => {
+        console.error("Failed to create user:", err);
+        setUserReady(true); // Continue anyway
+      });
   }, [mounted, isLoading, user, displayName, avatarUrl, userReady, getOrCreateUser]);
 
   // Get channel details - only query after user is ready
   const serverChannel = useQuery(
     api.channels.getBySlug,
-    userReady && channelSlug ? { slug: channelSlug as string } : "skip"
+    userReady && channelSlug ? { slug: channelSlug as string } : "skip",
   ) as ChannelWithAccess | null | undefined;
 
   // Load cached channel immediately
@@ -98,7 +100,7 @@ export default function ChannelPage() {
   if (isLoading || !userReady || (serverChannel === undefined && !cachedChannel)) {
     return (
       <LoungeLayout
-        channelSlug={cachedChannel?.slug ?? channelSlug as string}
+        channelSlug={cachedChannel?.slug ?? (channelSlug as string)}
         channelName={cachedChannel?.name}
         channelType={cachedChannel?.type as "chat" | "announcements" | "content" | undefined}
       >
@@ -121,9 +123,7 @@ export default function ChannelPage() {
           <ErrorContainer>
             <XCircleIcon size={32} style={{ marginBottom: 16 }} />
             <ErrorTitle>channel not found</ErrorTitle>
-            <ErrorText>
-              This channel doesn't exist or has been removed.
-            </ErrorText>
+            <ErrorText>This channel doesn't exist or has been removed.</ErrorText>
           </ErrorContainer>
         </LoungeLayout>
       </>
@@ -150,9 +150,7 @@ export default function ChannelPage() {
             <LockedText>
               This channel requires <TierHighlight>{requiredTierInfo.name}</TierHighlight> access.
             </LockedText>
-            <UpgradeButton href="/support">
-              Upgrade to {requiredTierInfo.name}
-            </UpgradeButton>
+            <UpgradeButton href="/support">Upgrade to {requiredTierInfo.name}</UpgradeButton>
           </LockedContainer>
         </LoungeLayout>
       </>

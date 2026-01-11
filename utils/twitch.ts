@@ -42,7 +42,7 @@ async function getTwitchAccessToken(): Promise<string> {
     // Cache the token (expires_in is in seconds, convert to milliseconds)
     cachedToken = {
       access_token: data.access_token,
-      expires_at: Date.now() + (data.expires_in * 1000) - 60000, // Subtract 1 minute for safety
+      expires_at: Date.now() + data.expires_in * 1000 - 60000, // Subtract 1 minute for safety
     };
 
     return data.access_token;
@@ -57,9 +57,7 @@ export async function checkTwitchLiveStatus(): Promise<boolean> {
     if (!TWITCH_CLIENT_ID || !TWITCH_CLIENT_SECRET) {
       console.warn("Twitch credentials not configured, using fallback method");
       // Fallback to decapi.me if credentials aren't configured
-      const response = await fetch(
-        `https://decapi.me/twitch/uptime/${TWITCH_USERNAME}`,
-      );
+      const response = await fetch(`https://decapi.me/twitch/uptime/${TWITCH_USERNAME}`);
       const text = await response.text();
       return !text.includes("offline");
     }
@@ -67,15 +65,12 @@ export async function checkTwitchLiveStatus(): Promise<boolean> {
     const accessToken = await getTwitchAccessToken();
 
     // Check if the user is currently streaming
-    const response = await fetch(
-      `https://api.twitch.tv/helix/streams?user_id=${TWITCH_USER_ID}`,
-      {
-        headers: {
-          "Client-ID": TWITCH_CLIENT_ID,
-          "Authorization": `Bearer ${accessToken}`,
-        },
-      }
-    );
+    const response = await fetch(`https://api.twitch.tv/helix/streams?user_id=${TWITCH_USER_ID}`, {
+      headers: {
+        "Client-ID": TWITCH_CLIENT_ID,
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
 
     if (!response.ok) {
       throw new Error(`Twitch API error: ${response.statusText}`);
@@ -123,7 +118,7 @@ async function getBroadcasterAccessToken(): Promise<string> {
   const data: TwitchTokenResponse = await response.json();
   broadcasterToken = {
     access_token: data.access_token,
-    expires_at: Date.now() + (data.expires_in * 1000) - 60000,
+    expires_at: Date.now() + data.expires_in * 1000 - 60000,
   };
 
   return data.access_token;
@@ -138,9 +133,7 @@ export interface UserSubscriptionResult {
  * Check if a user is subscribed to the broadcaster's channel.
  * Requires broadcaster OAuth token with channel:read:subscriptions scope.
  */
-export async function checkUserSubscription(
-  userId: string,
-): Promise<UserSubscriptionResult> {
+export async function checkUserSubscription(userId: string): Promise<UserSubscriptionResult> {
   if (!TWITCH_CLIENT_ID) {
     throw new Error("Twitch client ID not configured");
   }
@@ -152,7 +145,7 @@ export async function checkUserSubscription(
     {
       headers: {
         "Client-ID": TWITCH_CLIENT_ID,
-        "Authorization": `Bearer ${accessToken}`,
+        Authorization: `Bearer ${accessToken}`,
       },
     },
   );

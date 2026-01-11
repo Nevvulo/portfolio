@@ -12,7 +12,11 @@ export default function Contact() {
 
       <ContactBox>
         <Subtitle color="white">Socials</Subtitle>
-        <SocialLinks color="white" include={{ linkedIn: true, email: true, tiktok: true }} direction="row" />
+        <SocialLinks
+          color="white"
+          include={{ linkedIn: true, email: true, tiktok: true }}
+          direction="row"
+        />
         <Subtitle color="white">Security & Privacy</Subtitle>
         <Notice>
           Reporting a potential security vulnerability or privacy concern regarding one of my

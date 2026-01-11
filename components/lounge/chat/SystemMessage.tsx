@@ -1,7 +1,7 @@
+import { formatDistanceToNow } from "date-fns";
+import { ArrowRight, Sparkles, Zap } from "lucide-react";
 import { memo } from "react";
 import styled, { keyframes } from "styled-components";
-import { ArrowRight, Sparkles, Zap } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
 import { LOUNGE_COLORS } from "../../../constants/lounge";
 
 // Remove "about" prefix from relative time
@@ -21,7 +21,11 @@ interface SystemMessageProps {
 /**
  * Parse emoji blast content format: "title|description|emoji"
  */
-function parseEmojiBlastContent(content: string): { title: string; description: string; emoji: string } {
+function parseEmojiBlastContent(content: string): {
+  title: string;
+  description: string;
+  emoji: string;
+} {
   const parts = content.split("|");
   return {
     title: parts[0] || "",
@@ -71,11 +75,7 @@ export const SystemMessage = memo(function SystemMessage({
   return (
     <Container $type={type}>
       <IconWrapper $type={type}>
-        {type === "boost" ? (
-          <Zap size={14} />
-        ) : (
-          <ArrowRight size={14} />
-        )}
+        {type === "boost" ? <Zap size={14} /> : <ArrowRight size={14} />}
       </IconWrapper>
 
       <MessageContent>
@@ -93,7 +93,8 @@ export const SystemMessage = memo(function SystemMessage({
  */
 function extractEmojiFromContent(content: string): string | undefined {
   // Match emoji at the end of the string (including custom Discord emojis)
-  const emojiRegex = /(?:<a?:\w+:\d+>|[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]|[\u{1F600}-\u{1F64F}]|[\u{1F680}-\u{1F6FF}])\s*$/u;
+  const emojiRegex =
+    /(?:<a?:\w+:\d+>|[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]|[\u{1F600}-\u{1F64F}]|[\u{1F680}-\u{1F6FF}])\s*$/u;
   const match = content.match(emojiRegex);
   return match ? match[0].trim() : undefined;
 }
@@ -102,13 +103,16 @@ function extractEmojiFromContent(content: string): string | undefined {
  * Clean content by removing markdown formatting and emoji
  */
 function cleanMessageContent(content: string, _emoji?: string): string {
-  let cleaned = content
+  const cleaned = content
     // Remove markdown headers (# ## ###)
     .replace(/^#+\s*/gm, "")
     // Remove bold markers
     .replace(/\*\*/g, "")
     // Remove the emoji from the end if present
-    .replace(/(?:<a?:\w+:\d+>|[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]|[\u{1F600}-\u{1F64F}]|[\u{1F680}-\u{1F6FF}])\s*$/u, "")
+    .replace(
+      /(?:<a?:\w+:\d+>|[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]|[\u{1F600}-\u{1F64F}]|[\u{1F680}-\u{1F6FF}])\s*$/u,
+      "",
+    )
     .trim();
 
   return cleaned;

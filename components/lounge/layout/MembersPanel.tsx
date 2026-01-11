@@ -1,10 +1,10 @@
-import styled, { keyframes } from "styled-components";
-import { Crown, Star, Circle, User } from "lucide-react";
 import { useQuery } from "convex/react";
-import { api } from "../../../convex/_generated/api";
+import { Circle, Crown, Star, User } from "lucide-react";
+import styled, { keyframes } from "styled-components";
 import { LOUNGE_COLORS, TIER_INFO } from "../../../constants/lounge";
-import { useUserPopout } from "../../../hooks/lounge/useUserPopout";
+import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
+import { useUserPopout } from "../../../hooks/lounge/useUserPopout";
 import type { Tier } from "../../../types/lounge";
 
 interface OnlineMember {
@@ -48,10 +48,7 @@ export function MembersPanel() {
             <span>SUPER LEGEND II — {tier2Members.length}</span>
           </GroupHeader>
           {tier2Members.map((member) => (
-            <MemberItem
-              key={member._id}
-              onClick={(e) => handleMemberClick(member, e)}
-            >
+            <MemberItem key={member._id} onClick={(e) => handleMemberClick(member, e)}>
               <AvatarWrapper>
                 <Avatar src={member.avatarUrl} alt={member.displayName} />
                 <StatusIndicator $status={member.status} />
@@ -72,10 +69,7 @@ export function MembersPanel() {
             <span>SUPER LEGEND I — {tier1Members.length}</span>
           </GroupHeader>
           {tier1Members.map((member) => (
-            <MemberItem
-              key={member._id}
-              onClick={(e) => handleMemberClick(member, e)}
-            >
+            <MemberItem key={member._id} onClick={(e) => handleMemberClick(member, e)}>
               <AvatarWrapper>
                 <Avatar src={member.avatarUrl} alt={member.displayName} />
                 <StatusIndicator $status={member.status} />
@@ -97,14 +91,12 @@ export function MembersPanel() {
           </GroupHeader>
           {freeMembers.map((member) => {
             // Free members get their Discord role color if they have one, otherwise grey
-            const customColor = member.discordHighestRole?.color && member.discordHighestRole.color !== 0
-              ? `#${member.discordHighestRole.color.toString(16).padStart(6, "0")}`
-              : undefined;
+            const customColor =
+              member.discordHighestRole?.color && member.discordHighestRole.color !== 0
+                ? `#${member.discordHighestRole.color.toString(16).padStart(6, "0")}`
+                : undefined;
             return (
-              <MemberItem
-                key={member._id}
-                onClick={(e) => handleMemberClick(member, e)}
-              >
+              <MemberItem key={member._id} onClick={(e) => handleMemberClick(member, e)}>
                 <AvatarWrapper>
                   <Avatar src={member.avatarUrl} alt={member.displayName} />
                   <StatusIndicator $status={member.status} />
@@ -163,8 +155,8 @@ const PanelHeader = styled.div`
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: ${(props) => props.theme.background === "#fff" ? "rgba(0,0,0,0.6)" : "rgba(255, 255, 255, 0.6)"};
-  border-bottom: 1px solid ${(props) => props.theme.background === "#fff" ? "rgba(0,0,0,0.08)" : LOUNGE_COLORS.glassBorder};
+  color: ${(props) => (props.theme.background === "#fff" ? "rgba(0,0,0,0.6)" : "rgba(255, 255, 255, 0.6)")};
+  border-bottom: 1px solid ${(props) => (props.theme.background === "#fff" ? "rgba(0,0,0,0.08)" : LOUNGE_COLORS.glassBorder)};
 `;
 
 const MemberGroup = styled.div`
@@ -180,7 +172,7 @@ const GroupHeader = styled.div`
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: ${(props) => props.theme.background === "#fff" ? "rgba(0,0,0,0.5)" : "rgba(255, 255, 255, 0.5)"};
+  color: ${(props) => (props.theme.background === "#fff" ? "rgba(0,0,0,0.5)" : "rgba(255, 255, 255, 0.5)")};
 `;
 
 const MemberItem = styled.div`
@@ -193,7 +185,7 @@ const MemberItem = styled.div`
   transition: background 0.15s ease;
 
   &:hover {
-    background: ${(props) => props.theme.background === "#fff" ? "rgba(0,0,0,0.04)" : LOUNGE_COLORS.channelHover};
+    background: ${(props) => (props.theme.background === "#fff" ? "rgba(0,0,0,0.04)" : LOUNGE_COLORS.channelHover)};
   }
 `;
 
@@ -229,7 +221,7 @@ const StatusIndicator = styled.div<{ $status: "online" | "offline" | "away" }>`
         return LOUNGE_COLORS.offline;
     }
   }};
-  border: 2px solid ${(props) => props.theme.background === "#fff" ? "#f5f3fa" : LOUNGE_COLORS.glassBackground};
+  border: 2px solid ${(props) => (props.theme.background === "#fff" ? "#f5f3fa" : LOUNGE_COLORS.glassBackground)};
 `;
 
 const MemberInfo = styled.div`
@@ -256,7 +248,7 @@ const EmptyState = styled.div`
   justify-content: center;
   gap: 0.75rem;
   padding: 2rem;
-  color: ${(props) => props.theme.background === "#fff" ? "rgba(0,0,0,0.4)" : "rgba(255, 255, 255, 0.4)"};
+  color: ${(props) => (props.theme.background === "#fff" ? "rgba(0,0,0,0.4)" : "rgba(255, 255, 255, 0.4)")};
   font-size: 0.85rem;
 `;
 

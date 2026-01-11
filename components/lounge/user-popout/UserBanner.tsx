@@ -1,6 +1,6 @@
-import { useState, useRef } from "react";
+import { Camera, Check, X } from "lucide-react";
+import { useRef, useState } from "react";
 import styled from "styled-components";
-import { Camera, X, Check } from "lucide-react";
 import { LOUNGE_COLORS } from "../../../constants/lounge";
 import { useBannerUpload } from "../../../hooks/lounge/useBannerUpload";
 import { BannerFocalSlider } from "./BannerFocalSlider";
@@ -77,11 +77,7 @@ export function UserBanner({
   return (
     <BannerContainer>
       {displayUrl ? (
-        <BannerImage
-          src={displayUrl}
-          alt="Profile banner"
-          $focalY={displayFocalY}
-        />
+        <BannerImage src={displayUrl} alt="Profile banner" $focalY={displayFocalY} />
       ) : (
         <BannerPlaceholder />
       )}
@@ -100,20 +96,13 @@ export function UserBanner({
       {isEditing && (
         <EditingOverlay>
           <FocalSliderContainer>
-            <BannerFocalSlider
-              focalY={focalY}
-              onChange={setFocalY}
-            />
+            <BannerFocalSlider focalY={focalY} onChange={setFocalY} />
           </FocalSliderContainer>
           <EditActions>
             <ActionButton onClick={handleCancel} $variant="cancel">
               <X size={16} />
             </ActionButton>
-            <ActionButton
-              onClick={handleSave}
-              $variant="save"
-              disabled={isUploading}
-            >
+            <ActionButton onClick={handleSave} $variant="save" disabled={isUploading}>
               {isUploading ? "..." : <Check size={16} />}
             </ActionButton>
           </EditActions>

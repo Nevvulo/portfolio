@@ -17,7 +17,7 @@ export interface ArticleMetadata {
 export async function upsertArticleWithEmbedding(
   slug: string,
   textToEmbed: string,
-  metadata: ArticleMetadata
+  metadata: ArticleMetadata,
 ): Promise<void> {
   await vectorIndex.upsert({
     id: slug,
@@ -28,7 +28,7 @@ export async function upsertArticleWithEmbedding(
 
 export async function findSimilarArticles(
   queryText: string,
-  options?: { topK?: number; filter?: string }
+  options?: { topK?: number; filter?: string },
 ): Promise<{ id: string; score: number; metadata?: ArticleMetadata }[]> {
   const results = await vectorIndex.query({
     data: queryText,
@@ -46,7 +46,7 @@ export async function findSimilarArticles(
 
 export async function findSimilarByVector(
   vector: number[],
-  options?: { topK?: number; filter?: string }
+  options?: { topK?: number; filter?: string },
 ): Promise<{ id: string; score: number; metadata?: ArticleMetadata }[]> {
   const results = await vectorIndex.query({
     vector,

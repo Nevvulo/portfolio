@@ -1,5 +1,5 @@
+import { Hash, type LucideIcon, Megaphone, Sparkles, Users } from "lucide-react";
 import styled from "styled-components";
-import { Hash, Megaphone, Sparkles, Users, type LucideIcon } from "lucide-react";
 import { LOUNGE_COLORS, LOUNGE_LAYOUT } from "../../../constants/lounge";
 
 interface TopBarProps {
@@ -28,7 +28,7 @@ export function TopBar({
   return (
     <TopBarContainer>
       <ChannelInfo>
-        <Icon style={{ marginLeft: '8px', marginRight: '2px' }} size={14} />
+        <Icon style={{ marginLeft: "8px", marginRight: "2px" }} size={14} />
         <ChannelName>{channelName || "\u00A0"}</ChannelName>
       </ChannelInfo>
 
@@ -53,8 +53,8 @@ const TopBarContainer = styled.div`
   height: ${LOUNGE_LAYOUT.headerHeight};
   min-height: ${LOUNGE_LAYOUT.headerHeight};
   padding: 0 1rem;
-  background: ${(props) => props.theme.background === "#fff" ? "#f5f3fa" : LOUNGE_COLORS.glassBackground};
-  border-bottom: 1px solid ${(props) => props.theme.background === "#fff" ? "rgba(0,0,0,0.08)" : LOUNGE_COLORS.glassBorder};
+  background: ${(props) => (props.theme.background === "#fff" ? "#f5f3fa" : LOUNGE_COLORS.glassBackground)};
+  border-bottom: 1px solid ${(props) => (props.theme.background === "#fff" ? "rgba(0,0,0,0.08)" : LOUNGE_COLORS.glassBorder)};
   flex-shrink: 0;
 
   @media (max-width: ${LOUNGE_LAYOUT.mobileBreakpoint}px) {
@@ -101,16 +101,24 @@ const TopBarButton = styled.button<{ $isActive?: boolean }>`
   justify-content: center;
   padding: 0.5rem;
   background: ${(props) =>
-    props.$isActive ? (props.theme.background === "#fff" ? "rgba(144, 116, 242, 0.12)" : LOUNGE_COLORS.channelActive) : "transparent"};
+    props.$isActive
+      ? (
+          props.theme.background === "#fff"
+            ? "rgba(144, 116, 242, 0.12)"
+            : LOUNGE_COLORS.channelActive
+        )
+      : "transparent"};
   border: none;
   border-radius: 6px;
   color: ${(props) =>
-    props.$isActive ? LOUNGE_COLORS.tier1 : (props.theme.background === "#fff" ? "rgba(0,0,0,0.5)" : "rgba(255, 255, 255, 0.6)")};
+    props.$isActive
+      ? LOUNGE_COLORS.tier1
+      : (props.theme.background === "#fff" ? "rgba(0,0,0,0.5)" : "rgba(255, 255, 255, 0.6)")};
   cursor: pointer;
   transition: all 0.15s ease;
 
   &:hover {
-    background: ${(props) => props.theme.background === "#fff" ? "rgba(0,0,0,0.06)" : LOUNGE_COLORS.channelHover};
+    background: ${(props) => (props.theme.background === "#fff" ? "rgba(0,0,0,0.06)" : LOUNGE_COLORS.channelHover)};
     color: ${(props) => props.theme.foreground};
   }
 `;

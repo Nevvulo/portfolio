@@ -1,12 +1,12 @@
-import { type Identify, dedupe, flag } from "flags/next";
-import { createHypertuneAdapter } from "@flags-sdk/hypertune";
 import { auth, currentUser } from "@clerk/nextjs/server";
+import { createHypertuneAdapter } from "@flags-sdk/hypertune";
+import { dedupe, flag, type Identify } from "flags/next";
 import {
-  createSource,
-  flagFallbacks,
-  vercelFlagDefinitions as flagDefinitions,
   type Context,
+  createSource,
   type FlagValues,
+  vercelFlagDefinitions as flagDefinitions,
+  flagFallbacks,
 } from "../generated/hypertune";
 
 // Identify function that integrates with Clerk

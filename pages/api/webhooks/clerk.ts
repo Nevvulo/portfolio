@@ -1,8 +1,8 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { Webhook } from "svix";
-import { syncDiscordRoles } from "../discord/roles";
 import { PLANS } from "../../../lib/clerk";
 import { getSupporterKey, redis } from "../../../lib/redis";
+import { syncDiscordRoles } from "../discord/roles";
 
 // Disable body parsing - we need the raw body for signature verification
 export const config = {
@@ -34,10 +34,7 @@ type WebhookEvent = {
   };
 };
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
@@ -94,9 +91,12 @@ export default async function handler(
 
       // Update Redis cache with subscription status
       const key = getSupporterKey(userId);
-      const clerkPlan = planId === PLANS.SUPER_LEGEND ? "super_legend"
-        : planId === PLANS.SUPER_LEGEND_2 ? "super_legend_2"
-        : null;
+      const clerkPlan =
+        planId === PLANS.SUPER_LEGEND
+          ? "super_legend"
+          : planId === PLANS.SUPER_LEGEND_2
+            ? "super_legend_2"
+            : null;
 
       await redis.hset(key, {
         clerkPlan: clerkPlan ?? "",

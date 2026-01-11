@@ -1,9 +1,15 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
-import { requireUser, requireChannelAccess, isCreator, requireNotBanned, hasAccessToTier } from "./auth";
-import { Id } from "./_generated/dataModel";
 import { internal } from "./_generated/api";
+import type { Id } from "./_generated/dataModel";
+import { mutation, query } from "./_generated/server";
+import {
+  hasAccessToTier,
+  isCreator,
+  requireChannelAccess,
+  requireNotBanned,
+  requireUser,
+} from "./auth";
 
 /**
  * List messages for a channel (paginated)
@@ -30,7 +36,7 @@ export const list = query({
       const cursorMessage = await ctx.db.get(args.cursor);
       if (cursorMessage) {
         messagesQuery = messagesQuery.filter((q) =>
-          q.lt(q.field("createdAt"), cursorMessage.createdAt)
+          q.lt(q.field("createdAt"), cursorMessage.createdAt),
         );
       }
     }
@@ -93,7 +99,9 @@ export const list = query({
               if (!linkedReplyUser) {
                 const replyMapping = await ctx.db
                   .query("discordClerkMapping")
-                  .withIndex("by_discordId", (q) => q.eq("discordId", replyMessage.discordAuthor!.id))
+                  .withIndex("by_discordId", (q) =>
+                    q.eq("discordId", replyMessage.discordAuthor!.id),
+                  )
                   .unique();
 
                 if (replyMapping) {
@@ -107,26 +115,32 @@ export const list = query({
 
             replyTo = {
               _id: replyMessage._id,
-              content: replyMessage.isDeleted ? "[Message deleted]" : replyMessage.content.slice(0, 100),
+              content: replyMessage.isDeleted
+                ? "[Message deleted]"
+                : replyMessage.content.slice(0, 100),
               // Discord wormhole replies: prefer linked user, fall back to Discord author
-              author: replyMessage.discordAuthor ? (
-                linkedReplyUser ? {
-                  _id: linkedReplyUser._id,
-                  displayName: linkedReplyUser.displayName,
-                  // Use Clerk avatar if available, otherwise fall back to Discord avatar
-                  avatarUrl: linkedReplyUser.avatarUrl || replyMessage.discordAuthor.avatarUrl,
-                  tier: linkedReplyUser.tier,
-                  isDiscord: true,
-                } : {
-                  displayName: replyMessage.discordAuthor.username,
-                  avatarUrl: replyMessage.discordAuthor.avatarUrl,
-                  isDiscord: true,
-                }
-              ) : replyAuthor ? {
-                _id: replyAuthor._id,
-                displayName: replyAuthor.displayName,
-                avatarUrl: replyAuthor.avatarUrl,
-              } : null,
+              author: replyMessage.discordAuthor
+                ? linkedReplyUser
+                  ? {
+                      _id: linkedReplyUser._id,
+                      displayName: linkedReplyUser.displayName,
+                      // Use Clerk avatar if available, otherwise fall back to Discord avatar
+                      avatarUrl: linkedReplyUser.avatarUrl || replyMessage.discordAuthor.avatarUrl,
+                      tier: linkedReplyUser.tier,
+                      isDiscord: true,
+                    }
+                  : {
+                      displayName: replyMessage.discordAuthor.username,
+                      avatarUrl: replyMessage.discordAuthor.avatarUrl,
+                      isDiscord: true,
+                    }
+                : replyAuthor
+                  ? {
+                      _id: replyAuthor._id,
+                      displayName: replyAuthor.displayName,
+                      avatarUrl: replyAuthor.avatarUrl,
+                    }
+                  : null,
             };
           }
         }
@@ -138,15 +152,18 @@ export const list = query({
           .collect();
 
         // Group reactions by emoji
-        const reactionGroups = reactions.reduce((acc, reaction) => {
-          if (!acc[reaction.emoji]) {
-            acc[reaction.emoji] = { emoji: reaction.emoji, count: 0, userIds: [] };
-          }
-          const group = acc[reaction.emoji]!;
-          group.count++;
-          group.userIds.push(reaction.userId);
-          return acc;
-        }, {} as Record<string, { emoji: string; count: number; userIds: Id<"users">[] }>);
+        const reactionGroups = reactions.reduce(
+          (acc, reaction) => {
+            if (!acc[reaction.emoji]) {
+              acc[reaction.emoji] = { emoji: reaction.emoji, count: 0, userIds: [] };
+            }
+            const group = acc[reaction.emoji]!;
+            group.count++;
+            group.userIds.push(reaction.userId);
+            return acc;
+          },
+          {} as Record<string, { emoji: string; count: number; userIds: Id<"users">[] }>,
+        );
 
         // Fetch linked content post if available
         let contentPost = null;
@@ -173,34 +190,38 @@ export const list = query({
         return {
           ...message,
           // Discord wormhole messages: prefer linked Convex user, fall back to Discord author
-          author: message.discordAuthor ? (
-            linkedUser ? {
-              _id: linkedUser._id,
-              clerkId: linkedUser.clerkId,
-              displayName: linkedUser.displayName,
-              // Use Clerk avatar if available, otherwise fall back to Discord avatar
-              avatarUrl: linkedUser.avatarUrl || message.discordAuthor.avatarUrl,
-              tier: linkedUser.tier,
-              isCreator: linkedUser.isCreator,
-              isDiscord: true,
-            } : {
-              displayName: message.discordAuthor.username,
-              avatarUrl: message.discordAuthor.avatarUrl,
-              isDiscord: true,
-            }
-          ) : author ? {
-            _id: author._id,
-            clerkId: author.clerkId,
-            displayName: author.displayName,
-            avatarUrl: author.avatarUrl,
-            tier: author.tier,
-            isCreator: author.isCreator,
-          } : null,
+          author: message.discordAuthor
+            ? linkedUser
+              ? {
+                  _id: linkedUser._id,
+                  clerkId: linkedUser.clerkId,
+                  displayName: linkedUser.displayName,
+                  // Use Clerk avatar if available, otherwise fall back to Discord avatar
+                  avatarUrl: linkedUser.avatarUrl || message.discordAuthor.avatarUrl,
+                  tier: linkedUser.tier,
+                  isCreator: linkedUser.isCreator,
+                  isDiscord: true,
+                }
+              : {
+                  displayName: message.discordAuthor.username,
+                  avatarUrl: message.discordAuthor.avatarUrl,
+                  isDiscord: true,
+                }
+            : author
+              ? {
+                  _id: author._id,
+                  clerkId: author.clerkId,
+                  displayName: author.displayName,
+                  avatarUrl: author.avatarUrl,
+                  tier: author.tier,
+                  isCreator: author.isCreator,
+                }
+              : null,
           replyTo,
           reactions: Object.values(reactionGroups),
           contentPost,
         };
-      })
+      }),
     );
 
     return {
@@ -219,27 +240,31 @@ export const send = mutation({
     channelId: v.id("channels"),
     content: v.string(),
     replyToId: v.optional(v.id("messages")),
-    embeds: v.optional(v.array(v.object({
-      type: v.union(
-        v.literal("link"),
-        v.literal("image"),
-        v.literal("video"),
-        v.literal("audio"),
-        v.literal("youtube")
+    embeds: v.optional(
+      v.array(
+        v.object({
+          type: v.union(
+            v.literal("link"),
+            v.literal("image"),
+            v.literal("video"),
+            v.literal("audio"),
+            v.literal("youtube"),
+          ),
+          url: v.optional(v.string()),
+          title: v.optional(v.string()),
+          description: v.optional(v.string()),
+          thumbnail: v.optional(v.string()),
+          filename: v.optional(v.string()),
+          mimeType: v.optional(v.string()),
+          fileSize: v.optional(v.number()),
+          width: v.optional(v.number()),
+          height: v.optional(v.number()),
+          duration: v.optional(v.number()),
+          embedUrl: v.optional(v.string()),
+          siteName: v.optional(v.string()),
+        }),
       ),
-      url: v.optional(v.string()),
-      title: v.optional(v.string()),
-      description: v.optional(v.string()),
-      thumbnail: v.optional(v.string()),
-      filename: v.optional(v.string()),
-      mimeType: v.optional(v.string()),
-      fileSize: v.optional(v.number()),
-      width: v.optional(v.number()),
-      height: v.optional(v.number()),
-      duration: v.optional(v.number()),
-      embedUrl: v.optional(v.string()),
-      siteName: v.optional(v.string()),
-    }))),
+    ),
   },
   handler: async (ctx, args) => {
     // Check if user is banned before allowing message send
@@ -272,9 +297,7 @@ export const send = mutation({
     // Update read state
     const existingReadState = await ctx.db
       .query("readStates")
-      .withIndex("by_user_channel", (q) =>
-        q.eq("userId", user._id).eq("channelId", args.channelId)
-      )
+      .withIndex("by_user_channel", (q) => q.eq("userId", user._id).eq("channelId", args.channelId))
       .unique();
 
     if (existingReadState) {
@@ -416,10 +439,7 @@ export const getPinned = query({
     const pinnedMessages = await ctx.db
       .query("messages")
       .withIndex("by_channel", (q) => q.eq("channelId", args.channelId))
-      .filter((q) => q.and(
-        q.eq(q.field("isPinned"), true),
-        q.eq(q.field("isDeleted"), false)
-      ))
+      .filter((q) => q.and(q.eq(q.field("isPinned"), true), q.eq(q.field("isDeleted"), false)))
       .collect();
 
     // Get author info
@@ -428,13 +448,15 @@ export const getPinned = query({
         const author = await ctx.db.get(message.authorId);
         return {
           ...message,
-          author: author ? {
-            _id: author._id,
-            displayName: author.displayName,
-            avatarUrl: author.avatarUrl,
-          } : null,
+          author: author
+            ? {
+                _id: author._id,
+                displayName: author.displayName,
+                avatarUrl: author.avatarUrl,
+              }
+            : null,
         };
-      })
+      }),
     );
 
     return messagesWithAuthors;
@@ -463,9 +485,7 @@ export const addReaction = mutation({
     // Check if user already reacted with this emoji
     const existingReaction = await ctx.db
       .query("reactions")
-      .withIndex("by_user_message", (q) =>
-        q.eq("userId", user._id).eq("messageId", args.messageId)
-      )
+      .withIndex("by_user_message", (q) => q.eq("userId", user._id).eq("messageId", args.messageId))
       .filter((q) => q.eq(q.field("emoji"), args.emoji))
       .unique();
 
@@ -495,9 +515,7 @@ export const removeReaction = mutation({
 
     const reaction = await ctx.db
       .query("reactions")
-      .withIndex("by_user_message", (q) =>
-        q.eq("userId", user._id).eq("messageId", args.messageId)
-      )
+      .withIndex("by_user_message", (q) => q.eq("userId", user._id).eq("messageId", args.messageId))
       .filter((q) => q.eq(q.field("emoji"), args.emoji))
       .unique();
 
@@ -524,9 +542,7 @@ export const markChannelRead = mutation({
 
     const existingReadState = await ctx.db
       .query("readStates")
-      .withIndex("by_user_channel", (q) =>
-        q.eq("userId", user._id).eq("channelId", args.channelId)
-      )
+      .withIndex("by_user_channel", (q) => q.eq("userId", user._id).eq("channelId", args.channelId))
       .unique();
 
     if (existingReadState) {
@@ -579,10 +595,12 @@ export const getUnreadCounts = query({
       const unreadMessages = await ctx.db
         .query("messages")
         .withIndex("by_channel", (q) => q.eq("channelId", readState.channelId))
-        .filter((q) => q.and(
-          q.gt(q.field("createdAt"), readState.lastReadAt),
-          q.eq(q.field("isDeleted"), false)
-        ))
+        .filter((q) =>
+          q.and(
+            q.gt(q.field("createdAt"), readState.lastReadAt),
+            q.eq(q.field("isDeleted"), false),
+          ),
+        )
         .collect();
 
       // Count mentions within unread messages
@@ -605,7 +623,7 @@ export const getUnreadCounts = query({
     // Also check channels without read states (user hasn't visited yet)
     // These should show as fully unread
     const allChannels = await ctx.db.query("channels").collect();
-    const visitedChannelIds = new Set(readStates.map(rs => rs.channelId.toString()));
+    const visitedChannelIds = new Set(readStates.map((rs) => rs.channelId.toString()));
 
     for (const channel of allChannels) {
       if (channel.isArchived) continue;
@@ -670,9 +688,7 @@ export const sendAnnouncement = mutation({
       if (!channel) continue;
 
       // Format announcement content
-      const formattedContent = args.title
-        ? `**${args.title}**\n\n${args.content}`
-        : args.content;
+      const formattedContent = args.title ? `**${args.title}**\n\n${args.content}` : args.content;
 
       const messageId = await ctx.db.insert("messages", {
         channelId,
@@ -713,7 +729,7 @@ async function createMentionNotifications(
   content: string,
   messageId: Id<"messages">,
   channelId: Id<"channels">,
-  sender: { _id: Id<"users">; displayName: string }
+  sender: { _id: Id<"users">; displayName: string },
 ) {
   // Parse Discord-style mentions: <@123456789>
   const discordMentionRegex = /<@(\d+)>/g;
@@ -824,9 +840,7 @@ export const shareLearnPost = mutation({
     // Update read state
     const existingReadState = await ctx.db
       .query("readStates")
-      .withIndex("by_user_channel", (q) =>
-        q.eq("userId", user._id).eq("channelId", args.channelId)
-      )
+      .withIndex("by_user_channel", (q) => q.eq("userId", user._id).eq("channelId", args.channelId))
       .unique();
 
     if (existingReadState) {

@@ -1,59 +1,66 @@
-import Head from "next/head";
-import styled from "styled-components";
-import { useQuery, useMutation, useAction } from "convex/react";
-import { useEffect, useState, useMemo, useRef, useCallback } from "react";
+import { useAction, useMutation, useQuery } from "convex/react";
 import dynamic from "next/dynamic";
+import Head from "next/head";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import styled from "styled-components";
 import { api } from "../../../convex/_generated/api";
 
 // Dynamically import MDXEditor to avoid SSR issues with TipTap
 const MDXEditor = dynamic(
   () => import("../../../components/editor/MDXEditor").then((mod) => mod.MDXEditor),
-  { ssr: false, loading: () => <div style={{ padding: "20px", color: "#888" }}>Loading editor...</div> }
+  {
+    ssr: false,
+    loading: () => <div style={{ padding: "20px", color: "#888" }}>Loading editor...</div>,
+  },
 );
-import { BlogView } from "../../../components/layout/blog";
-import { SimpleNavbar } from "../../../components/navbar/simple";
-import { useTierAccess } from "../../../hooks/lounge/useTierAccess";
-import { DraggableBentoGrid, type AdminBentoCardProps } from "../../../components/learn/DraggableBentoGrid";
+
 import {
-  FileText,
-  TrendingUp,
-  Plus,
-  Eye,
-  EyeOff,
-  RefreshCw,
-  ArrowUp,
+  AlertCircle,
   ArrowDown,
-  Heart,
-  ThumbsUp,
-  Lightbulb,
-  MessageCircle,
-  MessageSquare,
+  ArrowUp,
   BarChart3,
   Calendar,
+  Check,
+  Eye,
+  EyeOff,
+  FileText,
+  Heart,
+  Lightbulb,
   Loader2,
-  Trash2,
+  MessageCircle,
+  MessageSquare,
   Newspaper,
   Play,
-  X,
-  UserPlus,
+  Plus,
+  RefreshCw,
   Search,
+  ThumbsUp,
+  Trash2,
+  TrendingUp,
+  UserPlus,
   Users,
-  Check,
-  AlertCircle,
+  X,
 } from "lucide-react";
-import type { Id, Doc } from "../../../convex/_generated/dataModel";
 import {
-  AreaChart,
   Area,
-  BarChart,
+  AreaChart,
   Bar,
+  BarChart,
+  CartesianGrid,
+  Legend,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Legend,
 } from "recharts";
+import { BlogView } from "../../../components/layout/blog";
+import {
+  type AdminBentoCardProps,
+  DraggableBentoGrid,
+} from "../../../components/learn/DraggableBentoGrid";
+import { SimpleNavbar } from "../../../components/navbar/simple";
+import type { Doc, Id } from "../../../convex/_generated/dataModel";
+import { useTierAccess } from "../../../hooks/lounge/useTierAccess";
 
 export const getServerSideProps = () => ({ props: {} });
 
@@ -201,11 +208,7 @@ function AnalyticsTab() {
         <TimePeriodSelector>
           <Calendar size={14} />
           {([7, 30, 90, 180, 365] as TimePeriod[]).map((period) => (
-            <PeriodButton
-              key={period}
-              $active={days === period}
-              onClick={() => setDays(period)}
-            >
+            <PeriodButton key={period} $active={days === period} onClick={() => setDays(period)}>
               {period === 365 ? "1Y" : `${period}D`}
             </PeriodButton>
           ))}
@@ -231,9 +234,7 @@ function AnalyticsTab() {
       {subTab === "comments" && (
         <CommentsTab commentsData={commentsOverTime} analytics={detailedAnalytics} days={days} />
       )}
-      {subTab === "posts" && (
-        <PostsAnalyticsTab postsData={allPostsAnalytics} days={days} />
-      )}
+      {subTab === "posts" && <PostsAnalyticsTab postsData={allPostsAnalytics} days={days} />}
     </TabPanel>
   );
 }
@@ -706,9 +707,15 @@ function ReactionsTab({
         <ChartHeader>
           <ChartTitle>Reactions Over Time</ChartTitle>
           <ChartLegend>
-            <LegendItem><LegendDot style={{ background: CHART_COLORS.like }} /> Likes</LegendItem>
-            <LegendItem><LegendDot style={{ background: CHART_COLORS.helpful }} /> Helpful</LegendItem>
-            <LegendItem><LegendDot style={{ background: CHART_COLORS.insightful }} /> Insightful</LegendItem>
+            <LegendItem>
+              <LegendDot style={{ background: CHART_COLORS.like }} /> Likes
+            </LegendItem>
+            <LegendItem>
+              <LegendDot style={{ background: CHART_COLORS.helpful }} /> Helpful
+            </LegendItem>
+            <LegendItem>
+              <LegendDot style={{ background: CHART_COLORS.insightful }} /> Insightful
+            </LegendItem>
           </ChartLegend>
         </ChartHeader>
         <LargeChartContainer>
@@ -726,9 +733,24 @@ function ReactionsTab({
                     fontSize: "12px",
                   }}
                 />
-                <Bar dataKey="like" stackId="reactions" fill={CHART_COLORS.like} radius={[0, 0, 0, 0]} />
-                <Bar dataKey="helpful" stackId="reactions" fill={CHART_COLORS.helpful} radius={[0, 0, 0, 0]} />
-                <Bar dataKey="insightful" stackId="reactions" fill={CHART_COLORS.insightful} radius={[4, 4, 0, 0]} />
+                <Bar
+                  dataKey="like"
+                  stackId="reactions"
+                  fill={CHART_COLORS.like}
+                  radius={[0, 0, 0, 0]}
+                />
+                <Bar
+                  dataKey="helpful"
+                  stackId="reactions"
+                  fill={CHART_COLORS.helpful}
+                  radius={[0, 0, 0, 0]}
+                />
+                <Bar
+                  dataKey="insightful"
+                  stackId="reactions"
+                  fill={CHART_COLORS.insightful}
+                  radius={[4, 4, 0, 0]}
+                />
               </BarChart>
             </ResponsiveContainer>
           ) : (
@@ -782,9 +804,7 @@ function CommentsTab({
   }, [commentsData]);
 
   const totalComments = analytics.summary.comments.current;
-  const avgComments = commentsData?.length
-    ? Math.round(totalComments / commentsData.length)
-    : 0;
+  const avgComments = commentsData?.length ? Math.round(totalComments / commentsData.length) : 0;
 
   return (
     <>
@@ -876,27 +896,31 @@ function CommentsTab({
 }
 
 // Posts Analytics Tab
-function PostsAnalyticsTab({
-  postsData,
-  days,
-}: {
-  postsData: any;
-  days: number;
-}) {
+function PostsAnalyticsTab({ postsData, days }: { postsData: any; days: number }) {
   const [sortBy, setSortBy] = useState<"views" | "reactions" | "comments">("views");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
   if (!postsData) {
-    return <LoadingContainer><LoadingText>Loading posts...</LoadingText></LoadingContainer>;
+    return (
+      <LoadingContainer>
+        <LoadingText>Loading posts...</LoadingText>
+      </LoadingContainer>
+    );
   }
 
   const sortedPosts = [...postsData].sort((a, b) => {
-    const aVal = sortBy === "views" ? a.views.period :
-                 sortBy === "reactions" ? a.reactions.period :
-                 a.comments.period;
-    const bVal = sortBy === "views" ? b.views.period :
-                 sortBy === "reactions" ? b.reactions.period :
-                 b.comments.period;
+    const aVal =
+      sortBy === "views"
+        ? a.views.period
+        : sortBy === "reactions"
+          ? a.reactions.period
+          : a.comments.period;
+    const bVal =
+      sortBy === "views"
+        ? b.views.period
+        : sortBy === "reactions"
+          ? b.reactions.period
+          : b.comments.period;
     return sortOrder === "desc" ? bVal - aVal : aVal - bVal;
   });
 
@@ -917,26 +941,26 @@ function PostsAnalyticsTab({
             <tr>
               <TableHeader style={{ width: "40%" }}>Post</TableHeader>
               <TableHeader style={{ width: "12%" }}>Status</TableHeader>
-              <SortableHeader
-                onClick={() => toggleSort("views")}
-                $active={sortBy === "views"}
-              >
+              <SortableHeader onClick={() => toggleSort("views")} $active={sortBy === "views"}>
                 Views ({days}d)
-                {sortBy === "views" && (sortOrder === "desc" ? <ArrowDown size={12} /> : <ArrowUp size={12} />)}
+                {sortBy === "views" &&
+                  (sortOrder === "desc" ? <ArrowDown size={12} /> : <ArrowUp size={12} />)}
               </SortableHeader>
               <SortableHeader
                 onClick={() => toggleSort("reactions")}
                 $active={sortBy === "reactions"}
               >
                 Reactions ({days}d)
-                {sortBy === "reactions" && (sortOrder === "desc" ? <ArrowDown size={12} /> : <ArrowUp size={12} />)}
+                {sortBy === "reactions" &&
+                  (sortOrder === "desc" ? <ArrowDown size={12} /> : <ArrowUp size={12} />)}
               </SortableHeader>
               <SortableHeader
                 onClick={() => toggleSort("comments")}
                 $active={sortBy === "comments"}
               >
                 Comments ({days}d)
-                {sortBy === "comments" && (sortOrder === "desc" ? <ArrowDown size={12} /> : <ArrowUp size={12} />)}
+                {sortBy === "comments" &&
+                  (sortOrder === "desc" ? <ArrowDown size={12} /> : <ArrowUp size={12} />)}
               </SortableHeader>
               <TableHeader>Reaction Breakdown</TableHeader>
             </tr>
@@ -1075,9 +1099,7 @@ function PostsTab() {
   };
 
   const handleSizeChange = (postId: string, size: AdminBentoCardProps["bentoSize"]) => {
-    const newPosts = localPosts.map((p) =>
-      p._id === postId ? { ...p, bentoSize: size } : p
-    );
+    const newPosts = localPosts.map((p) => (p._id === postId ? { ...p, bentoSize: size } : p));
     setLocalPosts(newPosts);
     autoSave(newPosts);
   };
@@ -1182,11 +1204,15 @@ function PostsTab() {
               onArchive={handleArchive}
               emptyMessage={
                 <>
-                  <h2 style={{ margin: "0 0 8px", fontSize: "24px", fontFamily: "var(--font-sans)" }}>
+                  <h2
+                    style={{ margin: "0 0 8px", fontSize: "24px", fontFamily: "var(--font-sans)" }}
+                  >
                     No {filter === "all" ? "" : filter} content
                   </h2>
                   <p style={{ margin: 0, fontSize: "16px", opacity: 0.7 }}>
-                    {filter === "all" ? "Create your first post to get started" : `No ${filter} posts found`}
+                    {filter === "all"
+                      ? "Create your first post to get started"
+                      : `No ${filter} posts found`}
                   </p>
                 </>
               }
@@ -1199,13 +1225,7 @@ function PostsTab() {
 }
 
 // Post Editor Component
-export function PostEditor({
-  post,
-  onClose,
-}: {
-  post: BlogPost | null;
-  onClose: () => void;
-}) {
+export function PostEditor({ post, onClose }: { post: BlogPost | null; onClose: () => void }) {
   const { isCreator } = useTierAccess();
   const createPost = useMutation(api.blogPosts.create);
   const updatePost = useMutation(api.blogPosts.update);
@@ -1214,8 +1234,8 @@ export function PostEditor({
   // Collaborators state - extract IDs from collaborator objects
   const [collaboratorIds, setCollaboratorIds] = useState<Id<"users">[]>(
     (post?.collaborators?.map((c: { _id: Id<"users"> } | Id<"users">) =>
-      typeof c === 'object' && c !== null && '_id' in c ? c._id : c
-    ) as Id<"users">[]) || []
+      typeof c === "object" && c !== null && "_id" in c ? c._id : c,
+    ) as Id<"users">[]) || [],
   );
   const [collaboratorSearch, setCollaboratorSearch] = useState("");
   const [showCollaboratorPicker, setShowCollaboratorPicker] = useState(false);
@@ -1225,67 +1245,71 @@ export function PostEditor({
   // Search users query
   const searchResults = useQuery(
     api.users.searchUsers,
-    collaboratorSearch.length > 0 ? { query: collaboratorSearch, limit: 10 } : "skip"
+    collaboratorSearch.length > 0 ? { query: collaboratorSearch, limit: 10 } : "skip",
   );
 
   // Get collaborator details for display
   const collaboratorDetails = useQuery(
     api.users.getUsersByIds,
-    collaboratorIds.length > 0 ? { userIds: collaboratorIds } : "skip"
+    collaboratorIds.length > 0 ? { userIds: collaboratorIds } : "skip",
   );
 
   // Filter out already selected collaborators and the post author from search results
   const filteredSearchResults = useMemo(() => {
     if (!searchResults) return [];
     return searchResults.filter(
-      (user) =>
-        !collaboratorIds.includes(user._id) &&
-        user._id !== post?.authorId
+      (user) => !collaboratorIds.includes(user._id) && user._id !== post?.authorId,
     );
   }, [searchResults, collaboratorIds, post?.authorId]);
 
   // Add collaborator
-  const handleAddCollaborator = useCallback(async (userId: Id<"users">) => {
-    if (!post) return;
-    const newIds = [...collaboratorIds, userId];
-    setCollaboratorIds(newIds);
-    setCollaboratorSearch("");
-    setShowCollaboratorPicker(false);
+  const handleAddCollaborator = useCallback(
+    async (userId: Id<"users">) => {
+      if (!post) return;
+      const newIds = [...collaboratorIds, userId];
+      setCollaboratorIds(newIds);
+      setCollaboratorSearch("");
+      setShowCollaboratorPicker(false);
 
-    setSavingCollaborators(true);
-    try {
-      await updateCollaborators({ postId: post._id, collaborators: newIds });
-    } catch (error) {
-      console.error("Failed to add collaborator:", error);
-      setCollaboratorIds(collaboratorIds); // Revert on error
-    } finally {
-      setSavingCollaborators(false);
-    }
-  }, [post, collaboratorIds, updateCollaborators]);
+      setSavingCollaborators(true);
+      try {
+        await updateCollaborators({ postId: post._id, collaborators: newIds });
+      } catch (error) {
+        console.error("Failed to add collaborator:", error);
+        setCollaboratorIds(collaboratorIds); // Revert on error
+      } finally {
+        setSavingCollaborators(false);
+      }
+    },
+    [post, collaboratorIds, updateCollaborators],
+  );
 
   // Remove collaborator
-  const handleRemoveCollaborator = useCallback(async (userId: Id<"users">) => {
-    if (!post) return;
-    const newIds = collaboratorIds.filter((id) => id !== userId);
-    setCollaboratorIds(newIds);
+  const handleRemoveCollaborator = useCallback(
+    async (userId: Id<"users">) => {
+      if (!post) return;
+      const newIds = collaboratorIds.filter((id) => id !== userId);
+      setCollaboratorIds(newIds);
 
-    setSavingCollaborators(true);
-    try {
-      await updateCollaborators({ postId: post._id, collaborators: newIds });
-    } catch (error) {
-      console.error("Failed to remove collaborator:", error);
-      setCollaboratorIds(collaboratorIds); // Revert on error
-    } finally {
-      setSavingCollaborators(false);
-    }
-  }, [post, collaboratorIds, updateCollaborators]);
+      setSavingCollaborators(true);
+      try {
+        await updateCollaborators({ postId: post._id, collaborators: newIds });
+      } catch (error) {
+        console.error("Failed to remove collaborator:", error);
+        setCollaboratorIds(collaboratorIds); // Revert on error
+      } finally {
+        setSavingCollaborators(false);
+      }
+    },
+    [post, collaboratorIds, updateCollaborators],
+  );
 
   const [form, setForm] = useState({
     title: post?.title || "",
     slug: post?.slug || "",
     description: post?.description || "",
     content: post?.content || "",
-    contentType: post?.contentType || "article" as const,
+    contentType: post?.contentType || ("article" as const),
     coverImage: post?.coverImage || "",
     coverAuthor: post?.coverAuthor || "",
     coverAuthorUrl: post?.coverAuthorUrl || "",
@@ -1294,8 +1318,8 @@ export function PostEditor({
     labels: post?.labels?.join(", ") || "",
     difficulty: post?.difficulty || "",
     readTimeMins: post?.readTimeMins?.toString() || "",
-    visibility: post?.visibility || "public" as const,
-    bentoSize: post?.bentoSize || "medium" as const,
+    visibility: post?.visibility || ("public" as const),
+    bentoSize: post?.bentoSize || ("medium" as const),
     aiDisclosureStatus: post?.aiDisclosureStatus || "",
   });
 
@@ -1348,12 +1372,23 @@ export function PostEditor({
         coverAuthorUrl: form.coverAuthorUrl || undefined,
         coverGradientIntensity: form.coverGradientIntensity,
         youtubeId: form.youtubeId || undefined,
-        labels: form.labels.split(",").map((l) => l.trim()).filter(Boolean),
-        difficulty: (form.difficulty || undefined) as "beginner" | "intermediate" | "advanced" | undefined,
+        labels: form.labels
+          .split(",")
+          .map((l) => l.trim())
+          .filter(Boolean),
+        difficulty: (form.difficulty || undefined) as
+          | "beginner"
+          | "intermediate"
+          | "advanced"
+          | undefined,
         readTimeMins: form.readTimeMins ? Number.parseInt(form.readTimeMins) : undefined,
         visibility: form.visibility as "public" | "members" | "tier1" | "tier2",
         bentoSize: form.bentoSize as "small" | "medium" | "large" | "banner" | "featured",
-        aiDisclosureStatus: (form.aiDisclosureStatus || undefined) as "none" | "llm-assisted" | "llm-reviewed" | undefined,
+        aiDisclosureStatus: (form.aiDisclosureStatus || undefined) as
+          | "none"
+          | "llm-assisted"
+          | "llm-reviewed"
+          | undefined,
       };
 
       if (post) {
@@ -1485,7 +1520,9 @@ export function PostEditor({
                   alignItems: "center",
                   justifyContent: "center",
                   padding: "0 16px",
-                  background: uploadingCover ? "rgba(165, 163, 245, 0.1)" : "rgba(165, 163, 245, 0.15)",
+                  background: uploadingCover
+                    ? "rgba(165, 163, 245, 0.1)"
+                    : "rgba(165, 163, 245, 0.15)",
                   color: "#a5a3f5",
                   borderRadius: "6px",
                   cursor: uploadingCover ? "not-allowed" : "pointer",
@@ -1506,7 +1543,14 @@ export function PostEditor({
               </label>
             </div>
             {form.coverImage && (
-              <div style={{ marginTop: "8px", borderRadius: "6px", overflow: "hidden", maxHeight: "120px" }}>
+              <div
+                style={{
+                  marginTop: "8px",
+                  borderRadius: "6px",
+                  overflow: "hidden",
+                  maxHeight: "120px",
+                }}
+              >
                 <img
                   src={form.coverImage}
                   alt="Cover preview"
@@ -1582,7 +1626,9 @@ export function PostEditor({
             </Select>
             <FieldHint>
               Posts before Nov 30, 2022 default to &quot;No AI&quot;.{" "}
-              <a href="/ai-disclosure" target="_blank" rel="noopener noreferrer">Learn more</a>
+              <a href="/ai-disclosure" target="_blank" rel="noopener noreferrer">
+                Learn more
+              </a>
             </FieldHint>
           </FormGroup>
         </FormRow>
@@ -1662,7 +1708,9 @@ export function PostEditor({
                         <CollaboratorOptionInfo>
                           <CollaboratorOptionName>{user.displayName}</CollaboratorOptionName>
                           {user.username && (
-                            <CollaboratorOptionUsername>@{user.username}</CollaboratorOptionUsername>
+                            <CollaboratorOptionUsername>
+                              @{user.username}
+                            </CollaboratorOptionUsername>
                           )}
                         </CollaboratorOptionInfo>
                         <UserPlus size={16} />
@@ -1723,9 +1771,7 @@ function MigrationTab() {
   return (
     <TabPanel>
       <SectionTitle>Migration from GitHub</SectionTitle>
-      <Text>
-        Migrate your existing blog posts from the GitHub repository to Convex.
-      </Text>
+      <Text>Migrate your existing blog posts from the GitHub repository to Convex.</Text>
 
       {status && (
         <StatsGrid>
@@ -1760,14 +1806,15 @@ function DiscordTab() {
   return (
     <TabPanel>
       <SectionTitle>Discord Comment Sync</SectionTitle>
-      <Text>
-        Comments from your website are automatically synced to Discord article threads.
-      </Text>
+      <Text>Comments from your website are automatically synced to Discord article threads.</Text>
 
       <InfoBox>
         <strong>How it works:</strong>
         <ul>
-          <li>When a user comments on a blog post, it&apos;s posted to the article&apos;s Discord thread</li>
+          <li>
+            When a user comments on a blog post, it&apos;s posted to the article&apos;s Discord
+            thread
+          </li>
           <li>Comments appear with the user&apos;s display name and avatar via webhook</li>
           <li>Configure the webhook URL in each channel&apos;s settings (article, video, news)</li>
           <li>The bot creates threads when publishing, webhooks post comments to those threads</li>
@@ -2028,11 +2075,7 @@ const StatusBadge = styled.span<{ $status: string }>`
   font-weight: 500;
   text-transform: uppercase;
   background: ${(p) =>
-    p.$status === "published"
-      ? "#22c55e"
-      : p.$status === "draft"
-        ? "#f59e0b"
-        : "#6b7280"};
+    p.$status === "published" ? "#22c55e" : p.$status === "draft" ? "#f59e0b" : "#6b7280"};
   color: white;
 `;
 

@@ -1,6 +1,6 @@
 import { useUser } from "@clerk/nextjs";
-import { useSupporterStatus } from "../useSupporterStatus";
 import type { Tier } from "../../types/lounge";
+import { useSupporterStatus } from "../useSupporterStatus";
 
 /**
  * Hook to check user's tier access for the lounge
@@ -94,12 +94,12 @@ export function useTierAccess() {
   const isCreator = (): boolean => {
     if (!user) return false;
     // Check Discord connection for creator ID
-    const discordAccount = user.externalAccounts?.find(
-      (account) => account.provider === "discord"
-    );
+    const discordAccount = user.externalAccounts?.find((account) => account.provider === "discord");
     // Clerk stores Discord ID in providerUserId (preferred) or externalId
-    return (discordAccount as any)?.providerUserId === "246574843460321291" ||
-           (discordAccount as any)?.externalId === "246574843460321291";
+    return (
+      (discordAccount as any)?.providerUserId === "246574843460321291" ||
+      (discordAccount as any)?.externalId === "246574843460321291"
+    );
   };
 
   return {

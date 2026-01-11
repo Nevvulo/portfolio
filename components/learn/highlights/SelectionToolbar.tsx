@@ -1,10 +1,10 @@
-import React, { useState, useCallback, useEffect, useRef } from "react";
-import styled from "styled-components";
+import { AnimatePresence, m } from "framer-motion";
+import { ChevronDown, Highlighter, MessageSquare, Smile } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { m, AnimatePresence } from "framer-motion";
-import { MessageSquare, Highlighter, Smile } from "lucide-react";
+import styled from "styled-components";
 import { LOUNGE_COLORS } from "@/constants/lounge";
-import { TextAnchor } from "./textAnchor";
+import type { TextAnchor } from "./textAnchor";
 
 // Reaction emojis for inline reactions
 const REACTION_EMOJIS = [
@@ -47,7 +47,7 @@ export function SelectionToolbar({
   onHighlight,
   onComment,
   onReact,
-  onDismiss,
+  onDismiss: _onDismiss,
   isHighlighting = false,
 }: SelectionToolbarProps) {
   const [showReactions, setShowReactions] = useState(false);
@@ -93,7 +93,7 @@ export function SelectionToolbar({
       onReact(anchor, type);
       setShowReactions(false);
     },
-    [anchor, isSignedIn, onReact]
+    [anchor, isSignedIn, onReact],
   );
 
   // Calculate position (viewport coordinates for fixed positioning)
@@ -202,7 +202,9 @@ export function SelectionToolbar({
                   whileTap={{ scale: 0.98 }}
                 >
                   <Smile size={14} />
-                  <DropdownArrow $isOpen={showReactions}>▾</DropdownArrow>
+                  <DropdownArrow $isOpen={showReactions}>
+                    <ChevronDown size={14} />
+                  </DropdownArrow>
                 </ToolbarButton>
 
                 <AnimatePresence>
@@ -233,7 +235,7 @@ export function SelectionToolbar({
         </ToolbarContainer>
       )}
     </AnimatePresence>,
-    document.body
+    document.body,
   );
 }
 
@@ -283,12 +285,9 @@ const ToolbarButton = styled(m.button)<{
   padding: 8px 12px;
   border-radius: 6px;
   border: none;
-  background: ${(props) =>
-    props.$isActive ? "rgba(144, 116, 242, 0.2)" : "transparent"};
+  background: ${(props) => (props.$isActive ? "rgba(144, 116, 242, 0.2)" : "transparent")};
   color: ${(props) =>
-    props.$isActive || props.$isHighlighting
-      ? LOUNGE_COLORS.tier1
-      : "rgba(255, 255, 255, 0.85)"};
+    props.$isActive || props.$isHighlighting ? LOUNGE_COLORS.tier1 : "rgba(255, 255, 255, 0.85)"};
   font-family: var(--font-display);
   font-size: 0.6rem;
   letter-spacing: 0.02em;
@@ -323,7 +322,8 @@ const ReactionWrapper = styled.div`
 `;
 
 const DropdownArrow = styled.span<{ $isOpen: boolean }>`
-  font-size: 10px;
+  display: flex;
+  align-items: center;
   transition: transform 0.15s ease;
   transform: ${(props) => (props.$isOpen ? "rotate(180deg)" : "rotate(0)")};
   margin-left: 2px;

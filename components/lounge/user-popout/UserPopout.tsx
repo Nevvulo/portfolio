@@ -1,17 +1,17 @@
-import { useEffect, useRef, useCallback } from "react";
-import styled from "styled-components";
-import { m, AnimatePresence } from "framer-motion";
+import { AnimatePresence, m } from "framer-motion";
 import { X } from "lucide-react";
+import { useCallback, useEffect, useRef } from "react";
+import styled from "styled-components";
 import { LOUNGE_COLORS } from "../../../constants/lounge";
 import { useUserPopout } from "../../../hooks/lounge/useUserPopout";
 import { useUserProfile } from "../../../hooks/lounge/useUserProfile";
 import { SupporterBadges } from "../../badges/supporter-badges";
 import { UserAvatar } from "./UserAvatar";
-import { UserName } from "./UserName";
 import { UserBanner } from "./UserBanner";
 import { UserBio } from "./UserBio";
 import { UserConnections } from "./UserConnections";
 import { UserMetadata } from "./UserMetadata";
+import { UserName } from "./UserName";
 
 /**
  * Main UserPopout component
@@ -44,7 +44,7 @@ export function UserPopout() {
         close();
       }
     },
-    [anchorEl, close]
+    [anchorEl, close],
   );
 
   // Handle escape key to close
@@ -54,7 +54,7 @@ export function UserPopout() {
         close();
       }
     },
-    [close]
+    [close],
   );
 
   // Add event listeners
@@ -173,11 +173,7 @@ export function UserPopout() {
 
                 {/* Bio */}
                 <Section>
-                  <UserBio
-                    bio={profile.bio}
-                    isEditable={isOwnProfile}
-                    onSave={updateBio}
-                  />
+                  <UserBio bio={profile.bio} isEditable={isOwnProfile} onSave={updateBio} />
                 </Section>
 
                 {/* Connections */}

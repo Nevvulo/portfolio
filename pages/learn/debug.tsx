@@ -1,11 +1,11 @@
-import Head from "next/head";
-import styled from "styled-components";
-import { useQuery } from "convex/react";
 import { useUser } from "@clerk/nextjs";
-import { useState, useEffect } from "react";
-import { api } from "../../convex/_generated/api";
-import { SimpleNavbar } from "../../components/navbar/simple";
+import { useQuery } from "convex/react";
+import Head from "next/head";
+import { useEffect, useState } from "react";
+import styled from "styled-components";
 import { BlogView } from "../../components/layout/blog";
+import { SimpleNavbar } from "../../components/navbar/simple";
+import { api } from "../../convex/_generated/api";
 
 interface RecommendationScore {
   slug: string;
@@ -55,7 +55,7 @@ export default function LearnDebug() {
   const basePosts = useQuery(api.blogPosts.getForBento, { excludeNews: true });
   const watchHistory = useQuery(
     api.articleWatchTime.getUserWatchHistory,
-    isSignedIn ? { limit: 50 } : "skip"
+    isSignedIn ? { limit: 50 } : "skip",
   );
 
   useEffect(() => {
@@ -103,7 +103,7 @@ export default function LearnDebug() {
           excludeNews: true,
           recommendationScores: recScores.length > 0 && !simulateNoHistory ? recScores : undefined,
         }
-      : "skip"
+      : "skip",
   ) as DebugResponse | undefined;
 
   if (!isSignedIn) {
@@ -186,7 +186,9 @@ export default function LearnDebug() {
                   <DebugInfo>
                     <DebugRow>
                       <DebugLabel>Bento Order:</DebugLabel>
-                      <DebugValue>{post.bentoOrder} (index: {post.bentoIndex})</DebugValue>
+                      <DebugValue>
+                        {post.bentoOrder} (index: {post.bentoIndex})
+                      </DebugValue>
                     </DebugRow>
                     <DebugRow>
                       <DebugLabel>Rec Score:</DebugLabel>
@@ -215,9 +217,7 @@ export default function LearnDebug() {
                         {post.debug.rankChange > 0 ? " ↑" : post.debug.rankChange < 0 ? " ↓" : ""}
                       </RankChange>
                     </DebugRow>
-                    <ReasonBox $isFeatured={post.debug.isFeatured}>
-                      {post.debug.reason}
-                    </ReasonBox>
+                    <ReasonBox $isFeatured={post.debug.isFeatured}>{post.debug.reason}</ReasonBox>
                   </DebugInfo>
                 </PostCard>
               ))}

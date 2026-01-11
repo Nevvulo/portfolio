@@ -1,11 +1,11 @@
+import { faClock, faPlay, faTimes } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Link from "next/link";
 import { useState } from "react";
 import styled from "styled-components";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faClock, faPlay, faTimes } from "@fortawesome/free-solid-svg-icons";
-import { SkeletonImage } from "../blog/skeleton-image";
+import type { Id } from "../../convex/_generated/dataModel";
 import { Label } from "../blog/labels";
-import { Id } from "../../convex/_generated/dataModel";
+import { SkeletonImage } from "../blog/skeleton-image";
 
 // Types
 type BentoSize = "small" | "medium" | "large" | "banner" | "featured";
@@ -33,14 +33,24 @@ export interface BentoCardProps {
 }
 
 export function BentoCard(props: BentoCardProps) {
-  const { bentoSize, slug, title, description, coverImage, contentType, youtubeId, labels, readTimeMins, difficulty, publishedAt } = props;
+  const {
+    bentoSize,
+    slug,
+    title,
+    description,
+    coverImage,
+    contentType,
+    youtubeId,
+    labels,
+    readTimeMins,
+    publishedAt,
+  } = props;
   const [isPlaying, setIsPlaying] = useState(false);
 
   const isVideo = contentType === "video";
   const isNews = contentType === "news";
-  const thumbnail = isVideo && youtubeId
-    ? `https://img.youtube.com/vi/${youtubeId}/maxresdefault.jpg`
-    : coverImage;
+  const thumbnail =
+    isVideo && youtubeId ? `https://img.youtube.com/vi/${youtubeId}/maxresdefault.jpg` : coverImage;
 
   const handleVideoClick = (e: React.MouseEvent) => {
     if (isVideo && youtubeId) {
@@ -71,7 +81,13 @@ export function BentoCard(props: BentoCardProps) {
             <NewsTitle $size={bentoSize}>{title}</NewsTitle>
             <NewsDesc $size={bentoSize}>{description}</NewsDesc>
             {newsDate && (
-              <NewsDate>{newsDate.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</NewsDate>
+              <NewsDate>
+                {newsDate.toLocaleDateString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                  year: "numeric",
+                })}
+              </NewsDate>
             )}
           </NewsContent>
         </NewsCard>
@@ -99,8 +115,20 @@ export function BentoCard(props: BentoCardProps) {
               </>
             ) : (
               <>
-                {thumbnail && <SkeletonImage alt={title} fill style={{ objectFit: "cover" }} src={thumbnail} priority />}
-                {isVideo && <PlayButton $large><FontAwesomeIcon icon={faPlay} size="2x" /></PlayButton>}
+                {thumbnail && (
+                  <SkeletonImage
+                    alt={title}
+                    fill
+                    style={{ objectFit: "cover" }}
+                    src={thumbnail}
+                    priority
+                  />
+                )}
+                {isVideo && (
+                  <PlayButton $large>
+                    <FontAwesomeIcon icon={faPlay} size="2x" />
+                  </PlayButton>
+                )}
                 <FeaturedGradient />
               </>
             )}
@@ -112,7 +140,11 @@ export function BentoCard(props: BentoCardProps) {
               <FeaturedDesc>{description}</FeaturedDesc>
               <CardMeta>
                 {labels[0] && <Label>{labels[0].replace(/-/g, " ")}</Label>}
-                {readTimeMins && <ReadTime><FontAwesomeIcon icon={faClock} size="xs" /> {readTimeMins} min</ReadTime>}
+                {readTimeMins && (
+                  <ReadTime>
+                    <FontAwesomeIcon icon={faClock} size="xs" /> {readTimeMins} min
+                  </ReadTime>
+                )}
               </CardMeta>
             </FeaturedContent>
           )}
@@ -140,15 +172,25 @@ export function BentoCard(props: BentoCardProps) {
           ) : (
             <>
               <LargeImage>
-                {thumbnail && <SkeletonImage alt={title} fill style={{ objectFit: "cover" }} src={thumbnail} />}
-                {isVideo && <PlayButton><FontAwesomeIcon icon={faPlay} /></PlayButton>}
+                {thumbnail && (
+                  <SkeletonImage alt={title} fill style={{ objectFit: "cover" }} src={thumbnail} />
+                )}
+                {isVideo && (
+                  <PlayButton>
+                    <FontAwesomeIcon icon={faPlay} />
+                  </PlayButton>
+                )}
               </LargeImage>
               <LargeContent>
                 <CardTitle>{title}</CardTitle>
                 <CardDesc>{description}</CardDesc>
                 <CardMeta>
                   {labels[0] && <Label>{labels[0].replace(/-/g, " ")}</Label>}
-                  {readTimeMins && <ReadTime><FontAwesomeIcon icon={faClock} size="xs" /> {readTimeMins} min</ReadTime>}
+                  {readTimeMins && (
+                    <ReadTime>
+                      <FontAwesomeIcon icon={faClock} size="xs" /> {readTimeMins} min
+                    </ReadTime>
+                  )}
                 </CardMeta>
               </LargeContent>
             </>
@@ -177,15 +219,25 @@ export function BentoCard(props: BentoCardProps) {
           ) : (
             <>
               <BannerImage>
-                {thumbnail && <SkeletonImage alt={title} fill style={{ objectFit: "cover" }} src={thumbnail} />}
-                {isVideo && <PlayButton><FontAwesomeIcon icon={faPlay} /></PlayButton>}
+                {thumbnail && (
+                  <SkeletonImage alt={title} fill style={{ objectFit: "cover" }} src={thumbnail} />
+                )}
+                {isVideo && (
+                  <PlayButton>
+                    <FontAwesomeIcon icon={faPlay} />
+                  </PlayButton>
+                )}
               </BannerImage>
               <BannerContent>
                 <CardTitle>{title}</CardTitle>
                 <CardDesc>{description}</CardDesc>
                 <CardMeta>
                   {labels[0] && <Label>{labels[0].replace(/-/g, " ")}</Label>}
-                  {readTimeMins && <ReadTime><FontAwesomeIcon icon={faClock} size="xs" /> {readTimeMins} min</ReadTime>}
+                  {readTimeMins && (
+                    <ReadTime>
+                      <FontAwesomeIcon icon={faClock} size="xs" /> {readTimeMins} min
+                    </ReadTime>
+                  )}
                 </CardMeta>
               </BannerContent>
             </>
@@ -214,8 +266,14 @@ export function BentoCard(props: BentoCardProps) {
           ) : (
             <>
               <SmallImage>
-                {thumbnail && <SkeletonImage alt={title} fill style={{ objectFit: "cover" }} src={thumbnail} />}
-                {isVideo && <PlayButton $small><FontAwesomeIcon icon={faPlay} /></PlayButton>}
+                {thumbnail && (
+                  <SkeletonImage alt={title} fill style={{ objectFit: "cover" }} src={thumbnail} />
+                )}
+                {isVideo && (
+                  <PlayButton $small>
+                    <FontAwesomeIcon icon={faPlay} />
+                  </PlayButton>
+                )}
               </SmallImage>
               <SmallOverlay>
                 <SmallTitle>{title}</SmallTitle>
@@ -246,15 +304,25 @@ export function BentoCard(props: BentoCardProps) {
         ) : (
           <>
             <MediumImage>
-              {thumbnail && <SkeletonImage alt={title} fill style={{ objectFit: "cover" }} src={thumbnail} />}
-              {isVideo && <PlayButton><FontAwesomeIcon icon={faPlay} /></PlayButton>}
+              {thumbnail && (
+                <SkeletonImage alt={title} fill style={{ objectFit: "cover" }} src={thumbnail} />
+              )}
+              {isVideo && (
+                <PlayButton>
+                  <FontAwesomeIcon icon={faPlay} />
+                </PlayButton>
+              )}
             </MediumImage>
             <MediumContent>
               <CardTitle $small>{title}</CardTitle>
               <CardDesc $clamp={2}>{description}</CardDesc>
               <CardMeta>
                 {labels[0] && <Label>{labels[0].replace(/-/g, " ")}</Label>}
-                {readTimeMins && <ReadTime><FontAwesomeIcon icon={faClock} size="xs" /> {readTimeMins} min</ReadTime>}
+                {readTimeMins && (
+                  <ReadTime>
+                    <FontAwesomeIcon icon={faClock} size="xs" /> {readTimeMins} min
+                  </ReadTime>
+                )}
               </CardMeta>
             </MediumContent>
           </>
@@ -411,7 +479,9 @@ const NewsCard = styled(CardBase)<{ $featured?: boolean }>`
   height: 100%;
   border-radius: 10px;
 
-  ${(p) => p.$featured && `
+  ${(p) =>
+    p.$featured &&
+    `
     background: linear-gradient(135deg, rgba(231, 76, 60, 0.15) 0%, rgba(192, 57, 43, 0.08) 100%);
     border: 1px solid rgba(231, 76, 60, 0.4);
     box-shadow: 0 4px 20px rgba(231, 76, 60, 0.15);
@@ -455,35 +525,6 @@ const NewsContent = styled.div<{ $hasImage: boolean }>`
   flex: 1;
   min-width: 0;
   overflow: hidden;
-`;
-
-const NewsBadge = styled.span`
-  display: inline-block;
-  width: fit-content;
-  font-size: 8px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
-  color: #fff;
-  background: linear-gradient(135deg, #e74c3c, #c0392b);
-  padding: 2px 6px;
-  border-radius: 3px;
-  margin-bottom: 4px;
-`;
-
-const FeaturedNewsBadge = styled.span`
-  display: inline-block;
-  width: fit-content;
-  font-size: 9px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  color: #fff;
-  background: linear-gradient(135deg, #f39c12, #e74c3c);
-  padding: 3px 8px;
-  border-radius: 4px;
-  margin-bottom: 6px;
-  box-shadow: 0 2px 8px rgba(243, 156, 18, 0.3);
 `;
 
 const NewsTitle = styled.h3<{ $size: BentoSize }>`

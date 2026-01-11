@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { AnimatePresence, m } from "framer-motion";
+import { Radio, TreePalm, Volume2, VolumeX, X } from "lucide-react";
 import { useRouter } from "next/router";
+import { useState } from "react";
 import styled from "styled-components";
-import { m, AnimatePresence } from "framer-motion";
-import { TreePalm, Volume2, VolumeX, X, Radio } from "lucide-react";
-import { useLiveKitContextOptional } from "../../lib/lounge/LiveKitContext";
 import { LOUNGE_COLORS } from "../../constants/lounge";
+import { useLiveKitContextOptional } from "../../lib/lounge/LiveKitContext";
 
 export function JungleMiniPlayer() {
   const router = useRouter();

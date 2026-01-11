@@ -1,7 +1,7 @@
 import { PricingTable } from "@clerk/nextjs";
 import Head from "next/head";
 import Image from "next/image";
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import styled, { keyframes } from "styled-components";
 import NevuloLogo from "../../assets/svg/nevulo-huge-bold-svg.svg";
 import { BackButton, SectionTitle } from "../../components/generics";
@@ -52,7 +52,9 @@ export default function Support() {
     const checkForContent = () => {
       if (pricingRef.current) {
         // Look for actual pricing card content (buttons, prices, etc)
-        const clerkCards = pricingRef.current.querySelectorAll('[class*="cl-pricingTable"] button, [class*="cl-card"]');
+        const clerkCards = pricingRef.current.querySelectorAll(
+          '[class*="cl-pricingTable"] button, [class*="cl-card"]',
+        );
         if (clerkCards.length > 0) {
           setIsLoaded(true);
           return true;
@@ -95,12 +97,7 @@ export default function Support() {
             <span>support</span>
             <NevuloGroup>
               <LogoWrapper>
-                <Image
-                  src={NevuloLogo}
-                  alt="Nevulo Logo"
-                  width={48}
-                  height={48}
-                />
+                <Image src={NevuloLogo} alt="Nevulo Logo" width={48} height={48} />
               </LogoWrapper>
               nevulo
             </NevuloGroup>

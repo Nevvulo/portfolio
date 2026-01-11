@@ -32,9 +32,7 @@ export const getUnreadCount = query({
 
     const unreadNotifications = await ctx.db
       .query("notifications")
-      .withIndex("by_user_unread", (q) =>
-        q.eq("userId", user._id).eq("isRead", false)
-      )
+      .withIndex("by_user_unread", (q) => q.eq("userId", user._id).eq("isRead", false))
       .collect();
 
     return unreadNotifications.length;
@@ -66,9 +64,7 @@ export const markAllAsRead = mutation({
 
     const unreadNotifications = await ctx.db
       .query("notifications")
-      .withIndex("by_user_unread", (q) =>
-        q.eq("userId", user._id).eq("isRead", false)
-      )
+      .withIndex("by_user_unread", (q) => q.eq("userId", user._id).eq("isRead", false))
       .collect();
 
     for (const notification of unreadNotifications) {
@@ -127,15 +123,13 @@ export const create = mutation({
       v.literal("new_content"),
       v.literal("reward"),
       v.literal("giveaway_win"),
-      v.literal("channel_message")
+      v.literal("channel_message"),
     ),
     title: v.string(),
     body: v.string(),
-    referenceType: v.optional(v.union(
-      v.literal("message"),
-      v.literal("contentPost"),
-      v.literal("reward")
-    )),
+    referenceType: v.optional(
+      v.union(v.literal("message"), v.literal("contentPost"), v.literal("reward")),
+    ),
     referenceId: v.optional(v.string()),
     channelId: v.optional(v.id("channels")),
   },

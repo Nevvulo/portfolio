@@ -1,7 +1,7 @@
 import { v } from "convex/values";
-import { mutation, query, internalMutation } from "./_generated/server";
-import { requireUser, requireCreator } from "./auth";
 import type { Id } from "./_generated/dataModel";
+import { internalMutation, mutation, query } from "./_generated/server";
+import { requireCreator, requireUser } from "./auth";
 
 // Rarity validator for reuse
 const rarityValidator = v.union(
@@ -9,7 +9,7 @@ const rarityValidator = v.union(
   v.literal("uncommon"),
   v.literal("rare"),
   v.literal("epic"),
-  v.literal("legendary")
+  v.literal("legendary"),
 );
 
 // =============================================================================
@@ -86,7 +86,7 @@ export const getInventory = query({
           rewardId: reward._id,
           rewardMonth: reward.month,
           rewardType: reward.type,
-        }))
+        })),
       );
 
     return inventory;
@@ -192,7 +192,9 @@ export const claimItem = mutation({
 
     // Free users can only use email delivery, not inventory storage
     if (user.tier === "free" && args.deliveryMethod === "inventory") {
-      throw new Error("Free members cannot save to inventory. Please use email delivery or upgrade to Super Legend!");
+      throw new Error(
+        "Free members cannot save to inventory. Please use email delivery or upgrade to Super Legend!",
+      );
     }
 
     const itemIndex = reward.items.findIndex((i: any) => i.id === args.itemId);
@@ -214,7 +216,7 @@ export const claimItem = mutation({
           c.name?.toLowerCase() === "shoutouts" ||
           c.name?.toLowerCase() === "shoutout" ||
           c.slug === "shoutouts" ||
-          c.slug === "shoutout"
+          c.slug === "shoutout",
       );
 
       if (shoutoutsChannel) {
@@ -366,7 +368,7 @@ export const getAllRewards = query({
               }
             : null,
         };
-      })
+      }),
     );
 
     return rewardsWithUsers;
@@ -405,7 +407,7 @@ export const createTemplate = mutation({
         assetUrl: v.optional(v.string()),
         code: v.optional(v.string()),
         expiresAfterDays: v.optional(v.number()),
-      })
+      }),
     ),
     targetTiers: v.array(v.string()),
   },
@@ -445,8 +447,8 @@ export const updateTemplate = mutation({
           assetUrl: v.optional(v.string()),
           code: v.optional(v.string()),
           expiresAfterDays: v.optional(v.number()),
-        })
-      )
+        }),
+      ),
     ),
     targetTiers: v.optional(v.array(v.string())),
     isActive: v.optional(v.boolean()),
@@ -456,7 +458,7 @@ export const updateTemplate = mutation({
 
     const { templateId, ...updates } = args;
     const filteredUpdates = Object.fromEntries(
-      Object.entries(updates).filter(([_, value]) => value !== undefined)
+      Object.entries(updates).filter(([_, value]) => value !== undefined),
     );
 
     await ctx.db.patch(templateId, filteredUpdates);
@@ -491,8 +493,8 @@ export const shipRewards = mutation({
           assetUrl: v.optional(v.string()),
           code: v.optional(v.string()),
           expiresAfterDays: v.optional(v.number()),
-        })
-      )
+        }),
+      ),
     ),
     type: v.union(v.literal("monthly_drop"), v.literal("special")),
     revealType: v.union(v.literal("scratch"), v.literal("mystery_box")),

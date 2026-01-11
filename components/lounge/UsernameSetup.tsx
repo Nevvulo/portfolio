@@ -1,9 +1,9 @@
-import { useState, useEffect } from "react";
+import { useMutation, useQuery } from "convex/react";
+import { AtSign, Check, Loader2, X } from "lucide-react";
+import { useEffect, useState } from "react";
 import styled from "styled-components";
-import { useQuery, useMutation } from "convex/react";
-import { Check, X, Loader2, AtSign } from "lucide-react";
-import { api } from "../../convex/_generated/api";
 import { LOUNGE_COLORS } from "../../constants/lounge";
+import { api } from "../../convex/_generated/api";
 import { useDebounce } from "../../hooks/useDebounce";
 
 interface UsernameSetupProps {
@@ -23,7 +23,7 @@ export function UsernameSetup({ onComplete, onSkip }: UsernameSetupProps) {
   // Check username availability
   const availability = useQuery(
     api.users.checkUsername,
-    debouncedUsername.length >= 3 ? { username: debouncedUsername } : "skip"
+    debouncedUsername.length >= 3 ? { username: debouncedUsername } : "skip",
   );
 
   useEffect(() => {
@@ -70,9 +70,7 @@ export function UsernameSetup({ onComplete, onSkip }: UsernameSetupProps) {
     <Container>
       <Header>
         <Title>Choose your username</Title>
-        <Subtitle>
-          This will be your unique profile URL and how others can find you.
-        </Subtitle>
+        <Subtitle>This will be your unique profile URL and how others can find you.</Subtitle>
       </Header>
 
       <Form onSubmit={handleSubmit}>
@@ -95,15 +93,9 @@ export function UsernameSetup({ onComplete, onSkip }: UsernameSetupProps) {
           </StatusIcon>
         </InputWrapper>
 
-        {username && (
-          <Preview>
-            nev.so/@{username || "username"}
-          </Preview>
-        )}
+        {username && <Preview>nev.so/@{username || "username"}</Preview>}
 
-        {error && username.length >= 3 && (
-          <ErrorMessage>{error}</ErrorMessage>
-        )}
+        {error && username.length >= 3 && <ErrorMessage>{error}</ErrorMessage>}
 
         {username.length > 0 && username.length < 3 && (
           <HintMessage>Username must be at least 3 characters</HintMessage>

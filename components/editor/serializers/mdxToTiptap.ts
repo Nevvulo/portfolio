@@ -1,20 +1,18 @@
 import type { JSONContent } from "@tiptap/react";
-import { unified } from "unified";
-import remarkParse from "remark-parse";
-import remarkMdx from "remark-mdx";
-import { visit } from "unist-util-visit";
-import type { Root, Content, PhrasingContent, Text as MdastText, InlineCode } from "mdast";
+import type { Content, InlineCode, Text as MdastText, PhrasingContent, Root } from "mdast";
 import type { MdxJsxFlowElement, MdxJsxTextElement } from "mdast-util-mdx-jsx";
+import remarkMdx from "remark-mdx";
+import remarkParse from "remark-parse";
+import { unified } from "unified";
+import { visit } from "unist-util-visit";
 
 type MdastNode = Content | Root;
 
 function getJsxAttribute(
   node: MdxJsxFlowElement | MdxJsxTextElement,
-  name: string
+  name: string,
 ): string | undefined {
-  const attr = node.attributes.find(
-    (a) => a.type === "mdxJsxAttribute" && a.name === name
-  );
+  const attr = node.attributes.find((a) => a.type === "mdxJsxAttribute" && a.name === name);
   if (attr && attr.type === "mdxJsxAttribute") {
     if (typeof attr.value === "string") {
       return attr.value;
@@ -101,8 +99,7 @@ function convertNode(node: MdastNode): JSONContent | JSONContent[] | null {
       return {
         type: "doc",
         content: (node as Root).children
-          .map(convertNode)
-          .flat()
+          .flatMap(convertNode)
           .filter((n): n is JSONContent => n !== null),
       };
 
@@ -130,8 +127,7 @@ function convertNode(node: MdastNode): JSONContent | JSONContent[] | null {
       return {
         type: "blockquote",
         content: (node.children || [])
-          .map(convertNode)
-          .flat()
+          .flatMap(convertNode)
           .filter((n): n is JSONContent => n !== null),
       };
 
@@ -139,8 +135,7 @@ function convertNode(node: MdastNode): JSONContent | JSONContent[] | null {
       return {
         type: node.ordered ? "orderedList" : "bulletList",
         content: (node.children || [])
-          .map(convertNode)
-          .flat()
+          .flatMap(convertNode)
           .filter((n): n is JSONContent => n !== null),
       };
 
@@ -148,8 +143,7 @@ function convertNode(node: MdastNode): JSONContent | JSONContent[] | null {
       return {
         type: "listItem",
         content: (node.children || [])
-          .map(convertNode)
-          .flat()
+          .flatMap(convertNode)
           .filter((n): n is JSONContent => n !== null),
       };
 
@@ -190,8 +184,7 @@ function convertNode(node: MdastNode): JSONContent | JSONContent[] | null {
             attrs: { type: getJsxAttribute(jsxNode, "type") || "info" },
             content: jsxNode.children
               ? (jsxNode.children as Content[])
-                  .map(convertNode)
-                  .flat()
+                  .flatMap(convertNode)
                   .filter((n): n is JSONContent => n !== null)
               : [{ type: "paragraph" }],
           };

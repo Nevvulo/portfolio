@@ -1,22 +1,22 @@
+import { useAction, useMutation, useQuery } from "convex/react";
+import {
+  AlertCircle,
+  Check,
+  ExternalLink,
+  Hash,
+  MessageCircle,
+  MessagesSquare,
+  RefreshCw,
+  Settings,
+  Youtube,
+} from "lucide-react";
 import Head from "next/head";
-import styled from "styled-components";
-import { useQuery, useMutation, useAction } from "convex/react";
 import { useEffect, useState } from "react";
-import { api } from "../../../convex/_generated/api";
+import styled from "styled-components";
 import { BlogView } from "../../../components/layout/blog";
 import { SimpleNavbar } from "../../../components/navbar/simple";
+import { api } from "../../../convex/_generated/api";
 import { useTierAccess } from "../../../hooks/lounge/useTierAccess";
-import {
-  Youtube,
-  Settings,
-  RefreshCw,
-  Check,
-  AlertCircle,
-  ExternalLink,
-  MessageCircle,
-  Hash,
-  MessagesSquare,
-} from "lucide-react";
 
 export const getServerSideProps = () => ({ props: {} });
 
@@ -194,9 +194,7 @@ function YouTubeSection() {
             onChange={(e) => setForm({ ...form, channelId: e.target.value })}
             placeholder="UC..."
           />
-          <HelpText>
-            Find your channel ID in YouTube Studio → Settings → Advanced settings
-          </HelpText>
+          <HelpText>Find your channel ID in YouTube Studio → Settings → Advanced settings</HelpText>
         </FormGroup>
 
         <FormGroup>
@@ -283,7 +281,9 @@ function YouTubeSection() {
             </a>
           </li>
           <li>Enable YouTube Data API v3</li>
-          <li>Add <code>YOUTUBE_API_KEY</code> to your environment variables</li>
+          <li>
+            Add <code>YOUTUBE_API_KEY</code> to your environment variables
+          </li>
           <li>Enter your channel ID above and save</li>
           <li>Click "Subscribe Now" to start receiving notifications</li>
         </ol>
@@ -401,7 +401,8 @@ function DiscordBlogSection() {
       </SectionHeader>
 
       <SectionDescription>
-        Automatically publish blog posts to Discord and sync comments bidirectionally with forum threads.
+        Automatically publish blog posts to Discord and sync comments bidirectionally with forum
+        threads.
       </SectionDescription>
 
       {message && (
@@ -436,9 +437,7 @@ function DiscordBlogSection() {
             <ToggleLabel>
               <span>Post as User Account</span>
               <ToggleHelpText>
-                {form.useUserToken
-                  ? "Uses DISCORD_USER_TOKEN env var"
-                  : "Posts via bot account"}
+                {form.useUserToken ? "Uses DISCORD_USER_TOKEN env var" : "Posts via bot account"}
               </ToggleHelpText>
             </ToggleLabel>
             <Toggle

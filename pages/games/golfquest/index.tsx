@@ -30,7 +30,13 @@ const Golfquest: React.FC = () => {
           <TitleRow>
             <GameTitle>Golfquest</GameTitle>
             <RobloxLogoWrapper>
-              <Image src={RobloxLogo} alt="Roblox" width={100} height={28} style={{ filter: "brightness(0) invert(1)" }} />
+              <Image
+                src={RobloxLogo}
+                alt="Roblox"
+                width={100}
+                height={28}
+                style={{ filter: "brightness(0) invert(1)" }}
+              />
             </RobloxLogoWrapper>
           </TitleRow>
         </ProjectTitleContainer>
@@ -47,8 +53,8 @@ const Golfquest: React.FC = () => {
             <ProjectContentHeader>⛳ Golf meets adventure</ProjectContentHeader>
             <ProjectContentText>
               Golfquest is an exciting golf adventure game built on Roblox. Combining the precision
-              of golf with the thrill of exploration, players embark on a journey through beautifully
-              crafted courses filled with challenges and hidden secrets.
+              of golf with the thrill of exploration, players embark on a journey through
+              beautifully crafted courses filled with challenges and hidden secrets.
             </ProjectContentText>
           </FadeAnimatedContainer>
 
@@ -56,8 +62,8 @@ const Golfquest: React.FC = () => {
             <ProjectContentHeader>🎮 Features</ProjectContentHeader>
             <ProjectContentText>
               Refined physics and controls for an authentic golf experience. Explore diverse
-              environments, play with friends, compete on leaderboards, and unlock cosmetics
-              to personalize your player.
+              environments, play with friends, compete on leaderboards, and unlock cosmetics to
+              personalize your player.
             </ProjectContentText>
           </FadeAnimatedContainer>
         </ProjectContentContainer>

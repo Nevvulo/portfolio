@@ -20,7 +20,7 @@ interface UploadResponse {
 
 function sanitizeFilename(filename: string): string {
   return filename
-    .replace(/[\/\\]/g, "")
+    .replace(/[/\\]/g, "")
     .replace(/\0/g, "")
     .replace(/[^a-zA-Z0-9.\-_]/g, "_")
     .slice(0, 100);
@@ -28,7 +28,7 @@ function sanitizeFilename(filename: string): string {
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<UploadResponse | { error: string }>
+  res: NextApiResponse<UploadResponse | { error: string }>,
 ) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
@@ -47,7 +47,7 @@ export default async function handler(
     }
 
     // Parse base64 file
-    const matches = file.match(/^data:([A-Za-z0-9\-+\/\.]+);base64,([\s\S]+)$/);
+    const matches = file.match(/^data:([A-Za-z0-9\-+/.]+);base64,([\s\S]+)$/);
     if (!matches || matches.length !== 3) {
       return res.status(400).json({ error: "Invalid file format. Expected base64 data URL." });
     }

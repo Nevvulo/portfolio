@@ -1,6 +1,13 @@
 import { v } from "convex/values";
-import { action, internalAction, internalMutation, internalQuery, mutation, query } from "./_generated/server";
 import { internal } from "./_generated/api";
+import {
+  action,
+  internalAction,
+  internalMutation,
+  internalQuery,
+  mutation,
+  query,
+} from "./_generated/server";
 
 // Get admin settings (or create default if none exists)
 export const getSettings = query({
@@ -30,7 +37,7 @@ export const updateYouTubeSettings = mutation({
       v.literal("public"),
       v.literal("members"),
       v.literal("tier1"),
-      v.literal("tier2")
+      v.literal("tier2"),
     ),
   },
   handler: async (ctx, args) => {
@@ -187,7 +194,7 @@ export const processVideoNotification = action({
     }
 
     const videoResponse = await fetch(
-      `https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails&id=${args.videoId}&key=${apiKey}`
+      `https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails&id=${args.videoId}&key=${apiKey}`,
     );
 
     if (!videoResponse.ok) {
@@ -214,9 +221,11 @@ export const processVideoNotification = action({
       videoId: args.videoId,
       title: video.snippet.title,
       description: video.snippet.description || "",
-      thumbnail: video.snippet.thumbnails?.maxres?.url ||
+      thumbnail:
+        video.snippet.thumbnails?.maxres?.url ||
         video.snippet.thumbnails?.high?.url ||
-        video.snippet.thumbnails?.default?.url || "",
+        video.snippet.thumbnails?.default?.url ||
+        "",
       durationMins: totalMinutes,
       autoPublish: settings.youtube.autoPublish,
       labels: settings.youtube.defaultLabels,
@@ -244,7 +253,7 @@ export const createVideoPost = internalMutation({
       v.literal("public"),
       v.literal("members"),
       v.literal("tier1"),
-      v.literal("tier2")
+      v.literal("tier2"),
     ),
   },
   handler: async (ctx, args) => {
@@ -268,7 +277,12 @@ export const createVideoPost = internalMutation({
     // Check for existing slug and make unique if needed
     let slug = baseSlug;
     let counter = 1;
-    while (await ctx.db.query("blogPosts").withIndex("by_slug", (q) => q.eq("slug", slug)).first()) {
+    while (
+      await ctx.db
+        .query("blogPosts")
+        .withIndex("by_slug", (q) => q.eq("slug", slug))
+        .first()
+    ) {
       slug = `${baseSlug}-${counter}`;
       counter++;
     }
@@ -416,7 +430,10 @@ export const getChannelIdFromHandle = action({
     title: v.string(),
     subscriberCount: v.string(),
   }),
-  handler: async (_ctx, args): Promise<{ channelId: string; title: string; subscriberCount: string }> => {
+  handler: async (
+    _ctx,
+    args,
+  ): Promise<{ channelId: string; title: string; subscriberCount: string }> => {
     const apiKey = process.env.YOUTUBE_API_KEY;
     if (!apiKey) {
       throw new Error("YOUTUBE_API_KEY not configured");
@@ -427,7 +444,7 @@ export const getChannelIdFromHandle = action({
 
     // Search for channel by handle
     const response = await fetch(
-      `https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&forHandle=${handle}&key=${apiKey}`
+      `https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&forHandle=${handle}&key=${apiKey}`,
     );
 
     if (!response.ok) {
@@ -457,7 +474,7 @@ async function fetchAllChannelVideos(channelId: string, apiKey: string): Promise
 
   // First, get the uploads playlist ID
   const channelResponse = await fetch(
-    `https://www.googleapis.com/youtube/v3/channels?part=contentDetails&id=${channelId}&key=${apiKey}`
+    `https://www.googleapis.com/youtube/v3/channels?part=contentDetails&id=${channelId}&key=${apiKey}`,
   );
 
   if (!channelResponse.ok) {
@@ -536,9 +553,7 @@ export const getExistingYouTubeIds = internalQuery({
       .filter((q) => q.eq(q.field("contentType"), "video"))
       .collect();
 
-    return posts
-      .filter((p) => p.youtubeId)
-      .map((p) => p.youtubeId as string);
+    return posts.filter((p) => p.youtubeId).map((p) => p.youtubeId as string);
   },
 });
 
@@ -549,12 +564,7 @@ export const syncAllVideos = action({
     autoPublish: v.optional(v.boolean()),
     defaultLabels: v.optional(v.array(v.string())),
     visibility: v.optional(
-      v.union(
-        v.literal("public"),
-        v.literal("members"),
-        v.literal("tier1"),
-        v.literal("tier2")
-      )
+      v.union(v.literal("public"), v.literal("members"), v.literal("tier1"), v.literal("tier2")),
     ),
   },
   returns: v.object({
@@ -564,7 +574,10 @@ export const syncAllVideos = action({
     skipped: v.number(),
     errors: v.array(v.string()),
   }),
-  handler: async (ctx, args): Promise<{
+  handler: async (
+    ctx,
+    args,
+  ): Promise<{
     success: boolean;
     totalVideos: number;
     newVideos: number;
@@ -668,7 +681,10 @@ export const syncFromHandle = action({
     skipped: v.number(),
     errors: v.array(v.string()),
   }),
-  handler: async (ctx, args): Promise<{
+  handler: async (
+    ctx,
+    args,
+  ): Promise<{
     success: boolean;
     channelId: string;
     totalVideos: number;
@@ -701,7 +717,10 @@ export const getChannelIdFromHandleInternal = internalAction({
   args: {
     handle: v.string(),
   },
-  handler: async (_ctx, args): Promise<{ channelId: string; title: string; subscriberCount: string }> => {
+  handler: async (
+    _ctx,
+    args,
+  ): Promise<{ channelId: string; title: string; subscriberCount: string }> => {
     const apiKey = process.env.YOUTUBE_API_KEY;
     if (!apiKey) {
       throw new Error("YOUTUBE_API_KEY not configured");
@@ -710,7 +729,7 @@ export const getChannelIdFromHandleInternal = internalAction({
     const handle = args.handle.startsWith("@") ? args.handle.slice(1) : args.handle;
 
     const response = await fetch(
-      `https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&forHandle=${handle}&key=${apiKey}`
+      `https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&forHandle=${handle}&key=${apiKey}`,
     );
 
     if (!response.ok) {
@@ -771,7 +790,10 @@ export const reorderPosts = action({
     videos: v.number(),
     nonVideos: v.number(),
   }),
-  handler: async (ctx, _args): Promise<{ reordered: number; videos: number; nonVideos: number }> => {
+  handler: async (
+    ctx,
+    _args,
+  ): Promise<{ reordered: number; videos: number; nonVideos: number }> => {
     return await ctx.runMutation(internal.youtube.reorderPostsVideosFirst);
   },
 });
@@ -782,15 +804,13 @@ export const syncAllVideosInternal = internalAction({
     autoPublish: v.optional(v.boolean()),
     defaultLabels: v.optional(v.array(v.string())),
     visibility: v.optional(
-      v.union(
-        v.literal("public"),
-        v.literal("members"),
-        v.literal("tier1"),
-        v.literal("tier2")
-      )
+      v.union(v.literal("public"), v.literal("members"), v.literal("tier1"), v.literal("tier2")),
     ),
   },
-  handler: async (ctx, args): Promise<{
+  handler: async (
+    ctx,
+    args,
+  ): Promise<{
     success: boolean;
     totalVideos: number;
     newVideos: number;

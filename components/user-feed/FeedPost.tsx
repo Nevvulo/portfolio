@@ -1,29 +1,29 @@
-import { useState, useCallback } from "react";
-import styled from "styled-components";
-import { m, AnimatePresence } from "framer-motion";
+import { useMutation, useQuery } from "convex/react";
+import { formatDistanceToNow } from "date-fns";
+import { AnimatePresence, m } from "framer-motion";
 import {
-  Heart,
-  MessageCircle,
-  MoreHorizontal,
-  Trash2,
-  Edit3,
   ChevronDown,
   ChevronUp,
-  CornerDownRight,
-  Repeat2,
-  Loader2,
   Clock,
+  CornerDownRight,
+  Edit3,
   FileText,
-  Play,
+  Heart,
+  Loader2,
+  MessageCircle,
+  MoreHorizontal,
   Newspaper,
+  Play,
+  Repeat2,
+  Trash2,
 } from "lucide-react";
-import { useMutation, useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
-import { LOUNGE_COLORS } from "@/constants/lounge";
-import { renderSafeMarkdown } from "@/lib/safeMd";
-import { formatDistanceToNow } from "date-fns";
 import Link from "next/link";
+import { useCallback, useState } from "react";
+import styled from "styled-components";
+import { LOUNGE_COLORS } from "@/constants/lounge";
+import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
+import { renderSafeMarkdown } from "@/lib/safeMd";
 import { FeedComposer } from "./FeedComposer";
 
 interface Author {
@@ -74,7 +74,7 @@ export interface FeedPostData {
   replies?: FeedPostData[];
   hasMoreReplies?: boolean;
   repostOfFeedId?: Id<"userFeedPosts">;
-  repostedFeedPost?: FeedPostData & { author: Author | null } | null;
+  repostedFeedPost?: (FeedPostData & { author: Author | null }) | null;
   repostOfPostId?: Id<"blogPosts">;
   repostedPost?: RepostedBlogPost | null;
 }
@@ -126,25 +126,27 @@ export function FeedPost({
   const needsRepliesFetch = post.replyCount > 0 && (!post.replies || post.replies.length === 0);
   const fetchedReplies = useQuery(
     api.userFeed.getReplies,
-    needsRepliesFetch ? { parentId: post._id, limit: 20 } : "skip"
+    needsRepliesFetch ? { parentId: post._id, limit: 20 } : "skip",
   );
 
   // Use fetched replies if we don't have them inline
-  const effectiveReplies = post.replies && post.replies.length > 0
-    ? post.replies
-    : fetchedReplies?.replies ?? [];
+  const effectiveReplies =
+    post.replies && post.replies.length > 0 ? post.replies : (fetchedReplies?.replies ?? []);
 
   const canDelete = currentUserId === post.authorId || isProfileOwner;
   const canEdit = currentUserId === post.authorId;
   const visualDepth = Math.min(depth, maxVisualDepth);
 
-  const handleReaction = useCallback(async (type: "like" | "heart" | "fire") => {
-    try {
-      await toggleReaction({ postId: post._id, type });
-    } catch (err) {
-      console.error("Failed to toggle reaction:", err);
-    }
-  }, [toggleReaction, post._id]);
+  const handleReaction = useCallback(
+    async (type: "like" | "heart" | "fire") => {
+      try {
+        await toggleReaction({ postId: post._id, type });
+      } catch (err) {
+        console.error("Failed to toggle reaction:", err);
+      }
+    },
+    [toggleReaction, post._id],
+  );
 
   const handleDelete = useCallback(async () => {
     if (!confirm("Are you sure you want to delete this post?")) return;
@@ -181,7 +183,15 @@ export function FeedPost({
     } finally {
       setIsReposting(false);
     }
-  }, [currentUserId, isReposting, hasReposted, post.authorId, post._id, post.repostOfFeedId, repostMutation]);
+  }, [
+    currentUserId,
+    isReposting,
+    hasReposted,
+    post.authorId,
+    post._id,
+    post.repostOfFeedId,
+    repostMutation,
+  ]);
 
   const handleReplySuccessInternal = useCallback(() => {
     setIsReplying(false);
@@ -192,22 +202,24 @@ export function FeedPost({
   const shouldNestInline = depth < THREAD_FOCUS_DEPTH;
 
   // Handler to focus a thread - bubbles up to FeedList with breadcrumb
-  const handleThreadClick = useCallback((reply: FeedPostData) => {
-    if (onFocusThread) {
-      // Build breadcrumb from current post + reply author
-      const breadcrumb = [
-        post.author?.displayName || "Unknown",
-        reply.author?.displayName || "Unknown"
-      ];
-      onFocusThread(reply, breadcrumb);
-    }
-  }, [onFocusThread, post.author?.displayName]);
+  const handleThreadClick = useCallback(
+    (reply: FeedPostData) => {
+      if (onFocusThread) {
+        // Build breadcrumb from current post + reply author
+        const breadcrumb = [
+          post.author?.displayName || "Unknown",
+          reply.author?.displayName || "Unknown",
+        ];
+        onFocusThread(reply, breadcrumb);
+      }
+    },
+    [onFocusThread, post.author?.displayName],
+  );
 
   const timeAgo = formatDistanceToNow(new Date(post.createdAt), { addSuffix: true });
 
   return (
     <PostContainer $depth={visualDepth}>
-
       <PostContent $isRepost={isRepost}>
         {/* Repost indicator */}
         {isRepost && (
@@ -223,20 +235,14 @@ export function FeedPost({
         <PostHeader>
           <AuthorSection>
             {post.author?.avatarUrl ? (
-              <AuthorAvatar
-                as={Link}
-                href={`/@${post.author.username || post.author._id}`}
-              >
+              <AuthorAvatar as={Link} href={`/@${post.author.username || post.author._id}`}>
                 <AvatarImg src={post.author.avatarUrl} alt={post.author.displayName} />
               </AuthorAvatar>
             ) : (
               <AvatarPlaceholder />
             )}
             <AuthorInfo>
-              <AuthorName
-                as={Link}
-                href={`/@${post.author?.username || post.author?._id}`}
-              >
+              <AuthorName as={Link} href={`/@${post.author?.username || post.author?._id}`}>
                 {post.author?.displayName || "Unknown"}
                 {post.author?.isCreator && <CreatorBadge>Creator</CreatorBadge>}
               </AuthorName>
@@ -305,7 +311,10 @@ export function FeedPost({
                   as={Link}
                   href={`/@${post.repostedFeedPost.author.username || post.repostedFeedPost.author._id}`}
                 >
-                  <img src={post.repostedFeedPost.author.avatarUrl} alt={post.repostedFeedPost.author.displayName} />
+                  <img
+                    src={post.repostedFeedPost.author.avatarUrl}
+                    alt={post.repostedFeedPost.author.displayName}
+                  />
                 </RepostedAvatar>
               ) : (
                 <RepostedAvatarPlaceholder />
@@ -318,11 +327,15 @@ export function FeedPost({
                   {post.repostedFeedPost.author?.displayName || "Unknown"}
                 </RepostedAuthorName>
                 <RepostedMeta>
-                  {formatDistanceToNow(new Date(post.repostedFeedPost.createdAt), { addSuffix: true })}
+                  {formatDistanceToNow(new Date(post.repostedFeedPost.createdAt), {
+                    addSuffix: true,
+                  })}
                 </RepostedMeta>
               </RepostedAuthorInfo>
             </RepostedHeader>
-            <RepostedBody dangerouslySetInnerHTML={renderSafeMarkdown(post.repostedFeedPost.content)} />
+            <RepostedBody
+              dangerouslySetInnerHTML={renderSafeMarkdown(post.repostedFeedPost.content)}
+            />
             {post.repostedFeedPost.media && post.repostedFeedPost.media.length > 0 && (
               <MediaGrid $count={post.repostedFeedPost.media.length}>
                 {post.repostedFeedPost.media.map((media, index) => (
@@ -418,11 +431,7 @@ export function FeedPost({
                 disabled={hasReposted === true || isReposting}
                 title={hasReposted ? "Already reposted" : "Repost to your feed"}
               >
-                {isReposting ? (
-                  <Loader2 size={16} className="spin" />
-                ) : (
-                  <Repeat2 size={16} />
-                )}
+                {isReposting ? <Loader2 size={16} className="spin" /> : <Repeat2 size={16} />}
                 {hasReposted ? "Reposted" : isReposting ? "Reposting..." : "Repost"}
               </RepostButton>
             )}
@@ -471,53 +480,53 @@ export function FeedPost({
               exit={{ height: 0, opacity: 0 }}
               transition={{ duration: 0.2 }}
             >
-              {shouldNestInline ? (
-                // Render nested inline for shallow depths
-                effectiveReplies.map((reply) => (
-                  <FeedPost
-                    key={reply._id}
-                    post={reply}
-                    depth={depth + 1}
-                    maxVisualDepth={maxVisualDepth}
-                    onReply={onReply}
-                    currentUserId={currentUserId}
-                    isProfileOwner={isProfileOwner}
-                    profileUserId={profileUserId}
-                    onReplySuccess={onReplySuccess}
-                    onFocusThread={onFocusThread}
-                  />
-                ))
-              ) : (
-                // At depth limit - show expandable thread previews (clickable cards)
-                effectiveReplies.map((reply) => (
-                  <ThreadPreview
-                    key={reply._id}
-                    onClick={() => handleThreadClick(reply)}
-                  >
-                    <ThreadPreviewAvatar>
-                      {reply.author?.avatarUrl ? (
-                        <img src={reply.author.avatarUrl} alt={reply.author.displayName} />
-                      ) : (
-                        <AvatarPlaceholder style={{ width: 24, height: 24 }} />
-                      )}
-                    </ThreadPreviewAvatar>
-                    <ThreadPreviewContent>
-                      <ThreadPreviewAuthor>{reply.author?.displayName || "Unknown"}</ThreadPreviewAuthor>
-                      <ThreadPreviewText>{reply.content.slice(0, 80)}{reply.content.length > 80 ? "..." : ""}</ThreadPreviewText>
-                    </ThreadPreviewContent>
-                    <ThreadPreviewExpand>
-                      {reply.replyCount > 0 && (
-                        <span>{reply.replyCount} {reply.replyCount === 1 ? "reply" : "replies"}</span>
-                      )}
-                      <CornerDownRight size={14} />
-                    </ThreadPreviewExpand>
-                  </ThreadPreview>
-                ))
-              )}
+              {shouldNestInline
+                ? // Render nested inline for shallow depths
+                  effectiveReplies.map((reply) => (
+                    <FeedPost
+                      key={reply._id}
+                      post={reply}
+                      depth={depth + 1}
+                      maxVisualDepth={maxVisualDepth}
+                      onReply={onReply}
+                      currentUserId={currentUserId}
+                      isProfileOwner={isProfileOwner}
+                      profileUserId={profileUserId}
+                      onReplySuccess={onReplySuccess}
+                      onFocusThread={onFocusThread}
+                    />
+                  ))
+                : // At depth limit - show expandable thread previews (clickable cards)
+                  effectiveReplies.map((reply) => (
+                    <ThreadPreview key={reply._id} onClick={() => handleThreadClick(reply)}>
+                      <ThreadPreviewAvatar>
+                        {reply.author?.avatarUrl ? (
+                          <img src={reply.author.avatarUrl} alt={reply.author.displayName} />
+                        ) : (
+                          <AvatarPlaceholder style={{ width: 24, height: 24 }} />
+                        )}
+                      </ThreadPreviewAvatar>
+                      <ThreadPreviewContent>
+                        <ThreadPreviewAuthor>
+                          {reply.author?.displayName || "Unknown"}
+                        </ThreadPreviewAuthor>
+                        <ThreadPreviewText>
+                          {reply.content.slice(0, 80)}
+                          {reply.content.length > 80 ? "..." : ""}
+                        </ThreadPreviewText>
+                      </ThreadPreviewContent>
+                      <ThreadPreviewExpand>
+                        {reply.replyCount > 0 && (
+                          <span>
+                            {reply.replyCount} {reply.replyCount === 1 ? "reply" : "replies"}
+                          </span>
+                        )}
+                        <CornerDownRight size={14} />
+                      </ThreadPreviewExpand>
+                    </ThreadPreview>
+                  ))}
               {(post.hasMoreReplies || fetchedReplies?.hasMore) && (
-                <LoadMoreReplies>
-                  Load more replies...
-                </LoadMoreReplies>
+                <LoadMoreReplies>Load more replies...</LoadMoreReplies>
               )}
             </RepliesContainer>
           )}
@@ -534,22 +543,9 @@ const PostContainer = styled.div<{ $depth: number }>`
   margin-bottom: 16px;
 `;
 
-const ThreadLine = styled.div<{ $depth: number }>`
-  position: absolute;
-  left: ${(p) => (p.$depth - 1) * 20 + 16}px;
-  top: 0;
-  bottom: 0;
-  width: 2px;
-  background: rgba(144, 116, 242, 0.2);
-
-  &:hover {
-    background: rgba(144, 116, 242, 0.4);
-  }
-`;
-
 const PostContent = styled.div<{ $isRepost?: boolean }>`
-  background: ${(p) => p.$isRepost ? "rgba(144, 116, 242, 0.03)" : "rgba(255, 255, 255, 0.03)"};
-  border: 1px solid ${(p) => p.$isRepost ? "rgba(144, 116, 242, 0.15)" : "rgba(255, 255, 255, 0.08)"};
+  background: ${(p) => (p.$isRepost ? "rgba(144, 116, 242, 0.03)" : "rgba(255, 255, 255, 0.03)")};
+  border: 1px solid ${(p) => (p.$isRepost ? "rgba(144, 116, 242, 0.15)" : "rgba(255, 255, 255, 0.08)")};
   border-radius: 12px;
   padding: 16px;
 `;
@@ -1058,18 +1054,14 @@ const BlogPostTypeTag = styled.div<{ $type: string }>`
     p.$type === "video"
       ? "rgba(255, 87, 87, 0.15)"
       : p.$type === "news"
-      ? "rgba(255, 193, 7, 0.15)"
-      : "rgba(144, 116, 242, 0.15)"};
+        ? "rgba(255, 193, 7, 0.15)"
+        : "rgba(144, 116, 242, 0.15)"};
   border-radius: 4px;
   font-size: 11px;
   font-weight: 600;
   text-transform: capitalize;
   color: ${(p) =>
-    p.$type === "video"
-      ? "#ff5757"
-      : p.$type === "news"
-      ? "#ffc107"
-      : LOUNGE_COLORS.tier1};
+    p.$type === "video" ? "#ff5757" : p.$type === "news" ? "#ffc107" : LOUNGE_COLORS.tier1};
   margin-bottom: 8px;
 `;
 

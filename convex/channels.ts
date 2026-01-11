@@ -1,6 +1,6 @@
 import { v } from "convex/values";
-import { mutation, query, internalQuery } from "./_generated/server";
-import { getCurrentUser, requireCreator, hasAccessToTier } from "./auth";
+import { internalQuery, mutation, query } from "./_generated/server";
+import { getCurrentUser, hasAccessToTier, requireCreator } from "./auth";
 
 /**
  * List all channels the user has access to
@@ -146,7 +146,7 @@ export const update = mutation({
 
     const { channelId, ...updates } = args;
     const filteredUpdates = Object.fromEntries(
-      Object.entries(updates).filter(([_, value]) => value !== undefined)
+      Object.entries(updates).filter(([_, value]) => value !== undefined),
     );
 
     await ctx.db.patch(channelId, filteredUpdates);
@@ -178,12 +178,54 @@ export const seedDefaultChannels = mutation({
     // Only allow seeding when no channels exist (initial setup)
 
     const defaultChannels = [
-      { name: "lobby", slug: "lobby", type: "chat" as const, requiredTier: "free" as const, icon: "message-circle", order: 1 },
-      { name: "announcements", slug: "announcements", type: "announcements" as const, requiredTier: "free" as const, icon: "megaphone", order: 2 },
-      { name: "general", slug: "general", type: "chat" as const, requiredTier: "tier1" as const, icon: "message-circle", order: 3 },
-      { name: "content-drops", slug: "content-drops", type: "content" as const, requiredTier: "tier1" as const, icon: "sparkles", order: 4 },
-      { name: "vip-lounge", slug: "vip-lounge", type: "chat" as const, requiredTier: "tier2" as const, icon: "crown", order: 5 },
-      { name: "exclusive-content", slug: "exclusive-content", type: "content" as const, requiredTier: "tier2" as const, icon: "star", order: 6 },
+      {
+        name: "lobby",
+        slug: "lobby",
+        type: "chat" as const,
+        requiredTier: "free" as const,
+        icon: "message-circle",
+        order: 1,
+      },
+      {
+        name: "announcements",
+        slug: "announcements",
+        type: "announcements" as const,
+        requiredTier: "free" as const,
+        icon: "megaphone",
+        order: 2,
+      },
+      {
+        name: "general",
+        slug: "general",
+        type: "chat" as const,
+        requiredTier: "tier1" as const,
+        icon: "message-circle",
+        order: 3,
+      },
+      {
+        name: "content-drops",
+        slug: "content-drops",
+        type: "content" as const,
+        requiredTier: "tier1" as const,
+        icon: "sparkles",
+        order: 4,
+      },
+      {
+        name: "vip-lounge",
+        slug: "vip-lounge",
+        type: "chat" as const,
+        requiredTier: "tier2" as const,
+        icon: "crown",
+        order: 5,
+      },
+      {
+        name: "exclusive-content",
+        slug: "exclusive-content",
+        type: "content" as const,
+        requiredTier: "tier2" as const,
+        icon: "star",
+        order: 6,
+      },
     ];
 
     for (const channel of defaultChannels) {

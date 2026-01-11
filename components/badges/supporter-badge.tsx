@@ -1,72 +1,61 @@
+import { faDiscord, faTwitch } from "@fortawesome/free-brands-svg-icons";
+import { faCrown, faStar } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-	faTwitch,
-	faDiscord,
-} from "@fortawesome/free-brands-svg-icons";
-import { faStar, faCrown } from "@fortawesome/free-solid-svg-icons";
 import styled from "styled-components";
-import {
-	BadgeType,
-	BadgeNames,
-	BadgeColors,
-	BadgeDescriptions,
-} from "../../constants/badges";
+import { BadgeColors, BadgeDescriptions, BadgeNames, BadgeType } from "../../constants/badges";
 
 interface SupporterBadgeProps {
-	type: BadgeType;
-	size?: "small" | "medium";
-	showLabel?: boolean;
-	expandOnHover?: boolean;
-	customColor?: string;
-	customLabel?: string;
+  type: BadgeType;
+  size?: "small" | "medium";
+  showLabel?: boolean;
+  expandOnHover?: boolean;
+  customColor?: string;
+  customLabel?: string;
 }
 
 function getBadgeIcon(type: BadgeType) {
-	switch (type) {
-		case BadgeType.TWITCH_SUB_T1:
-		case BadgeType.TWITCH_SUB_T2:
-		case BadgeType.TWITCH_SUB_T3:
-			return faTwitch;
-		case BadgeType.DISCORD_BOOSTER:
-		case BadgeType.DISCORD_ROLE:
-			return faDiscord;
-		case BadgeType.SUPER_LEGEND:
-			return faStar;
-		case BadgeType.SUPER_LEGEND_2:
-			return faCrown;
-		default:
-			return faStar;
-	}
+  switch (type) {
+    case BadgeType.TWITCH_SUB_T1:
+    case BadgeType.TWITCH_SUB_T2:
+    case BadgeType.TWITCH_SUB_T3:
+      return faTwitch;
+    case BadgeType.DISCORD_BOOSTER:
+    case BadgeType.DISCORD_ROLE:
+      return faDiscord;
+    case BadgeType.SUPER_LEGEND:
+      return faStar;
+    case BadgeType.SUPER_LEGEND_2:
+      return faCrown;
+    default:
+      return faStar;
+  }
 }
 
 export function SupporterBadge({
-	type,
-	size = "small",
-	showLabel = false,
-	expandOnHover = false,
-	customColor,
-	customLabel,
+  type,
+  size = "small",
+  showLabel = false,
+  expandOnHover = false,
+  customColor,
+  customLabel,
 }: SupporterBadgeProps) {
-	const color = customColor || BadgeColors[type];
-	const icon = getBadgeIcon(type);
-	const label = customLabel || BadgeNames[type];
+  const color = customColor || BadgeColors[type];
+  const icon = getBadgeIcon(type);
+  const label = customLabel || BadgeNames[type];
 
-	return (
-		<BadgeContainer
-			$color={color}
-			$size={size}
-			$expandOnHover={expandOnHover}
-			title={!expandOnHover ? (customLabel || BadgeDescriptions[type]) : undefined}
-		>
-			<FontAwesomeIcon
-				icon={icon}
-				style={{ width: size === "small" ? 12 : 14, flexShrink: 0 }}
-			/>
-			{(showLabel || expandOnHover) && (
-				<BadgeLabel $expandOnHover={expandOnHover}>{label}</BadgeLabel>
-			)}
-		</BadgeContainer>
-	);
+  return (
+    <BadgeContainer
+      $color={color}
+      $size={size}
+      $expandOnHover={expandOnHover}
+      title={!expandOnHover ? customLabel || BadgeDescriptions[type] : undefined}
+    >
+      <FontAwesomeIcon icon={icon} style={{ width: size === "small" ? 12 : 14, flexShrink: 0 }} />
+      {(showLabel || expandOnHover) && (
+        <BadgeLabel $expandOnHover={expandOnHover}>{label}</BadgeLabel>
+      )}
+    </BadgeContainer>
+  );
 }
 
 const BadgeContainer = styled.div<{ $color: string; $size: string; $expandOnHover: boolean }>`
@@ -96,7 +85,9 @@ const BadgeLabel = styled.span<{ $expandOnHover: boolean }>`
 	letter-spacing: 0.5px;
 	white-space: nowrap;
 
-	${(p) => p.$expandOnHover && `
+	${(p) =>
+    p.$expandOnHover &&
+    `
 		max-width: 0;
 		opacity: 0;
 		transition: max-width 0.3s cubic-bezier(0.4, 0, 0.2, 1),

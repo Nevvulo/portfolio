@@ -49,7 +49,7 @@ function getFileCategory(mimeType: string): FileCategory | null {
 function sanitizeFilename(filename: string): string {
   // Remove path separators and null bytes, keep alphanumeric, dots, hyphens, underscores
   return filename
-    .replace(/[\/\\]/g, "")
+    .replace(/[/\\]/g, "")
     .replace(/\0/g, "")
     .replace(/[^a-zA-Z0-9.\-_]/g, "_")
     .slice(0, 100); // Limit length
@@ -57,7 +57,7 @@ function sanitizeFilename(filename: string): string {
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<UploadResponse | { error: string }>
+  res: NextApiResponse<UploadResponse | { error: string }>,
 ) {
   // Only allow POST
   if (req.method !== "POST") {
@@ -88,7 +88,7 @@ export default async function handler(
     const config = FILE_CONFIGS[category];
 
     // Parse base64 file - handle various MIME type formats
-    const matches = file.match(/^data:([A-Za-z0-9\-+\/\.]+);base64,([\s\S]+)$/);
+    const matches = file.match(/^data:([A-Za-z0-9\-+/.]+);base64,([\s\S]+)$/);
     if (!matches || matches.length !== 3) {
       return res.status(400).json({ error: "Invalid file format. Expected base64 data URL." });
     }
@@ -145,7 +145,10 @@ export default async function handler(
 
 // Simple image dimension extraction without external dependencies
 // Works for JPEG, PNG, GIF, WebP
-function getImageDimensions(buffer: Buffer, mimeType: string): { width: number; height: number } | null {
+function getImageDimensions(
+  buffer: Buffer,
+  mimeType: string,
+): { width: number; height: number } | null {
   try {
     if (mimeType === "image/png") {
       // PNG: width at bytes 16-19, height at bytes 20-23 (big endian)

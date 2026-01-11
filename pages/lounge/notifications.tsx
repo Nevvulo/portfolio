@@ -1,29 +1,29 @@
-import Head from "next/head";
-import Link from "next/link";
-import styled from "styled-components";
-import { useQuery, useMutation, useAction } from "convex/react";
-import { useEffect, useState } from "react";
+import { useAction, useMutation, useQuery } from "convex/react";
 import { formatDistanceToNow } from "date-fns";
 import {
+  AtSign,
   Bell,
   BellOff,
-  AtSign,
-  Reply,
-  Gift,
-  MessageCircle,
-  Sparkles,
-  Trophy,
   Check,
   CheckCheck,
-  Trash2,
+  Gift,
   Heart,
+  MessageCircle,
+  Reply,
+  Sparkles,
+  Trash2,
+  Trophy,
   UserPlus,
 } from "lucide-react";
-import { api } from "../../convex/_generated/api";
+import Head from "next/head";
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import styled from "styled-components";
 import { LoungeLayout } from "../../components/lounge/layout/LoungeLayout";
-import { useTierAccess } from "../../hooks/lounge/useTierAccess";
 import { LOUNGE_COLORS } from "../../constants/lounge";
+import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
+import { useTierAccess } from "../../hooks/lounge/useTierAccess";
 
 export const getServerSideProps = () => ({ props: {} });
 
@@ -73,18 +73,18 @@ const NOTIFICATION_COLORS: Record<NotificationType, string> = {
   reward: "#f97316",
   giveaway_win: "#eab308",
   channel_message: "rgba(255, 255, 255, 0.5)",
-  comment_reply: "#60a5fa",      // Blue
+  comment_reply: "#60a5fa", // Blue
   collaborator_added: "#34d399", // Green
-  comment_reaction: "#f472b6",   // Pink
-  feed_reply: "#a78bfa",         // Purple
-  feed_reaction: "#fb923c",      // Orange
+  comment_reaction: "#f472b6", // Pink
+  feed_reply: "#a78bfa", // Purple
+  feed_reaction: "#fb923c", // Orange
 };
 
 export default function NotificationsPage() {
   const [mounted, setMounted] = useState(false);
   const [userReady, setUserReady] = useState(false);
 
-  const { isLoading, user, tier, displayName, avatarUrl } = useTierAccess();
+  const { isLoading, user, displayName, avatarUrl } = useTierAccess();
 
   const getOrCreateUser = useAction(api.users.getOrCreateUser);
   const markAsRead = useMutation(api.notifications.markAsRead);
@@ -92,15 +92,13 @@ export default function NotificationsPage() {
   const removeNotification = useMutation(api.notifications.remove);
   const clearAll = useMutation(api.notifications.clearAll);
 
-  const notifications = useQuery(
-    api.notifications.list,
-    userReady ? { limit: 100 } : "skip"
-  ) as Notification[] | undefined;
+  const notifications = useQuery(api.notifications.list, userReady ? { limit: 100 } : "skip") as
+    | Notification[]
+    | undefined;
 
-  const unreadCount = useQuery(
-    api.notifications.getUnreadCount,
-    userReady ? {} : "skip"
-  ) as number | undefined;
+  const unreadCount = useQuery(api.notifications.getUnreadCount, userReady ? {} : "skip") as
+    | number
+    | undefined;
 
   useEffect(() => {
     setMounted(true);
@@ -176,71 +174,71 @@ export default function NotificationsPage() {
       <LoungeLayout channelName="Notifications" customIcon={Bell}>
         <Container>
           <ContentWrapper>
-          <Header>
-            <HeaderTitle>
-              <Bell size={24} />
-              Notifications
-              {unreadCount !== undefined && unreadCount > 0 && (
-                <UnreadBadge>{unreadCount}</UnreadBadge>
-              )}
-            </HeaderTitle>
-            {hasNotifications && (
-              <HeaderActions>
-                {unreadNotifications.length > 0 && (
-                  <ActionButton onClick={handleMarkAllAsRead}>
-                    <CheckCheck size={16} />
-                    Mark all read
-                  </ActionButton>
+            <Header>
+              <HeaderTitle>
+                <Bell size={24} />
+                Notifications
+                {unreadCount !== undefined && unreadCount > 0 && (
+                  <UnreadBadge>{unreadCount}</UnreadBadge>
                 )}
-                <ActionButton onClick={handleClearAll} $danger>
-                  <Trash2 size={16} />
-                  Clear all
-                </ActionButton>
-              </HeaderActions>
+              </HeaderTitle>
+              {hasNotifications && (
+                <HeaderActions>
+                  {unreadNotifications.length > 0 && (
+                    <ActionButton onClick={handleMarkAllAsRead}>
+                      <CheckCheck size={16} />
+                      Mark all read
+                    </ActionButton>
+                  )}
+                  <ActionButton onClick={handleClearAll} $danger>
+                    <Trash2 size={16} />
+                    Clear all
+                  </ActionButton>
+                </HeaderActions>
+              )}
+            </Header>
+
+            {hasNotifications ? (
+              <NotificationList>
+                {/* Unread notifications */}
+                {unreadNotifications.length > 0 && (
+                  <Section>
+                    <SectionHeader>New</SectionHeader>
+                    {unreadNotifications.map((notification) => (
+                      <NotificationItem
+                        key={notification._id}
+                        notification={notification}
+                        onMarkRead={handleMarkAsRead}
+                        onRemove={handleRemove}
+                      />
+                    ))}
+                  </Section>
+                )}
+
+                {/* Read notifications */}
+                {readNotifications.length > 0 && (
+                  <Section>
+                    <SectionHeader>Earlier</SectionHeader>
+                    {readNotifications.map((notification) => (
+                      <NotificationItem
+                        key={notification._id}
+                        notification={notification}
+                        onMarkRead={handleMarkAsRead}
+                        onRemove={handleRemove}
+                      />
+                    ))}
+                  </Section>
+                )}
+              </NotificationList>
+            ) : (
+              <EmptyState>
+                <BellOff size={48} />
+                <EmptyTitle>No notifications</EmptyTitle>
+                <EmptyText>
+                  When you receive mentions, replies, or rewards, they'll appear here.
+                </EmptyText>
+              </EmptyState>
             )}
-          </Header>
-
-          {hasNotifications ? (
-            <NotificationList>
-              {/* Unread notifications */}
-              {unreadNotifications.length > 0 && (
-                <Section>
-                  <SectionHeader>New</SectionHeader>
-                  {unreadNotifications.map((notification) => (
-                    <NotificationItem
-                      key={notification._id}
-                      notification={notification}
-                      onMarkRead={handleMarkAsRead}
-                      onRemove={handleRemove}
-                    />
-                  ))}
-                </Section>
-              )}
-
-              {/* Read notifications */}
-              {readNotifications.length > 0 && (
-                <Section>
-                  <SectionHeader>Earlier</SectionHeader>
-                  {readNotifications.map((notification) => (
-                    <NotificationItem
-                      key={notification._id}
-                      notification={notification}
-                      onMarkRead={handleMarkAsRead}
-                      onRemove={handleRemove}
-                    />
-                  ))}
-                </Section>
-              )}
-            </NotificationList>
-          ) : (
-            <EmptyState>
-              <BellOff size={48} />
-              <EmptyTitle>No notifications</EmptyTitle>
-              <EmptyText>
-                When you receive mentions, replies, or rewards, they'll appear here.
-              </EmptyText>
-            </EmptyState>
-          )}
           </ContentWrapper>
         </Container>
       </LoungeLayout>

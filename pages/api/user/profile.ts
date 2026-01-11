@@ -1,16 +1,13 @@
-import { getAuth, clerkClient } from "@clerk/nextjs/server";
-import type { NextApiRequest, NextApiResponse } from "next";
+import { clerkClient, getAuth } from "@clerk/nextjs/server";
 import { ConvexHttpClient } from "convex/browser";
+import type { NextApiRequest, NextApiResponse } from "next";
 import { api } from "../../../convex/_generated/api";
 import { filterBio } from "../../../lib/word-filter";
 
 // Initialize Convex client
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   // Only allow PATCH
   if (req.method !== "PATCH") {
     return res.status(405).json({ error: "Method not allowed" });

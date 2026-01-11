@@ -1,16 +1,6 @@
-import { NodeViewContent, NodeViewWrapper } from "@tiptap/react";
+import { NodeViewContent, type NodeViewProps, NodeViewWrapper } from "@tiptap/react";
 import type { CalloutType } from "../extensions/Callout";
 import { CalloutWrapper, ComponentWrapper } from "../styles";
-
-interface EditorCalloutProps {
-  node: {
-    attrs: {
-      type: CalloutType;
-    };
-  };
-  selected: boolean;
-  updateAttributes: (attrs: Record<string, unknown>) => void;
-}
 
 const CALLOUT_ICONS: Record<CalloutType, JSX.Element> = {
   info: (
@@ -36,8 +26,8 @@ const CALLOUT_LABELS: Record<CalloutType, string> = {
   tip: "Tip",
 };
 
-export function EditorCallout({ node, selected, updateAttributes }: EditorCalloutProps) {
-  const { type } = node.attrs;
+export function EditorCallout({ node, selected, updateAttributes }: NodeViewProps) {
+  const type = (node.attrs.type || "info") as CalloutType;
 
   const cycleType = () => {
     const types: CalloutType[] = ["info", "warning", "tip"];

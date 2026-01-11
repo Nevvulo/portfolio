@@ -1,6 +1,6 @@
+import { ExternalLink } from "lucide-react";
 import { memo } from "react";
 import styled from "styled-components";
-import { ExternalLink } from "lucide-react";
 import { LOUNGE_COLORS } from "../../../../constants/lounge";
 
 interface LinkEmbedProps {

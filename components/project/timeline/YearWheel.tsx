@@ -1,6 +1,6 @@
-import { useRef, useMemo } from "react";
+import { RoundedBox, Text } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
-import { Text, RoundedBox } from "@react-three/drei";
+import { useMemo, useRef } from "react";
 import * as THREE from "three";
 
 interface YearWheelProps {
@@ -19,13 +19,13 @@ export function YearWheel({ years, currentYearIndex, scrollProgress }: YearWheel
     return scrollProgress * Math.PI * 2 * ((years.length - 1) / years.length);
   }, [scrollProgress, years.length]);
 
-  useFrame((state, delta) => {
+  useFrame((_, delta) => {
     if (groupRef.current) {
       // Smooth rotation towards target
       groupRef.current.rotation.x = THREE.MathUtils.lerp(
         groupRef.current.rotation.x,
         -targetRotation,
-        delta * 3
+        delta * 3,
       );
     }
   });
@@ -47,11 +47,7 @@ export function YearWheel({ years, currentYearIndex, scrollProgress }: YearWheel
       {/* Inner ring */}
       <mesh rotation={[0, Math.PI / 2, 0]}>
         <torusGeometry args={[wheelRadius - 0.5, 0.08, 16, 64]} />
-        <meshStandardMaterial
-          color="#16213e"
-          metalness={0.9}
-          roughness={0.1}
-        />
+        <meshStandardMaterial color="#16213e" metalness={0.9} roughness={0.1} />
       </mesh>
 
       {/* Year segments on the wheel */}
@@ -92,11 +88,7 @@ export function YearWheel({ years, currentYearIndex, scrollProgress }: YearWheel
       {/* Center hub */}
       <mesh rotation={[0, Math.PI / 2, 0]}>
         <cylinderGeometry args={[0.4, 0.4, 0.3, 32]} />
-        <meshStandardMaterial
-          color="#0f0f23"
-          metalness={0.9}
-          roughness={0.1}
-        />
+        <meshStandardMaterial color="#0f0f23" metalness={0.9} roughness={0.1} />
       </mesh>
 
       {/* Glowing center accent */}
@@ -125,13 +117,13 @@ export function TickerDigit({ value, position }: TickerDigitProps) {
   const digits = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
   const digitHeight = 0.6;
 
-  useFrame((state, delta) => {
+  useFrame((_, delta) => {
     if (groupRef.current) {
       const targetY = -value * digitHeight;
       groupRef.current.position.y = THREE.MathUtils.lerp(
         groupRef.current.position.y,
         targetY,
-        delta * 5
+        delta * 5,
       );
     }
   });
@@ -175,11 +167,7 @@ export function YearTicker({ year, position }: YearTickerProps) {
     <group position={position}>
       {/* Background panel */}
       <RoundedBox args={[2.8, 1, 0.15]} radius={0.08} position={[0, 0, -0.1]}>
-        <meshStandardMaterial
-          color="#0f0f23"
-          metalness={0.7}
-          roughness={0.3}
-        />
+        <meshStandardMaterial color="#0f0f23" metalness={0.7} roughness={0.3} />
       </RoundedBox>
 
       {/* Border glow */}
@@ -190,11 +178,7 @@ export function YearTicker({ year, position }: YearTickerProps) {
 
       {/* Individual digit tickers */}
       {digits.map((digit, i) => (
-        <TickerDigit
-          key={i}
-          value={digit}
-          position={[(i - 1.5) * 0.6, 0, 0]}
-        />
+        <TickerDigit key={i} value={digit} position={[(i - 1.5) * 0.6, 0, 0]} />
       ))}
     </group>
   );

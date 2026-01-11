@@ -1,18 +1,18 @@
-import { useState } from "react";
+import { useUser } from "@clerk/nextjs";
+import { useMutation, useQuery } from "convex/react";
+import { ArrowLeft, Calendar, ExternalLink, FileText, MessageSquare, Settings } from "lucide-react";
 import Head from "next/head";
 import Link from "next/link";
 import { useRouter } from "next/router";
+import { useState } from "react";
 import styled from "styled-components";
-import { useQuery, useMutation } from "convex/react";
-import { useUser } from "@clerk/nextjs";
-import { Calendar, ExternalLink, ArrowLeft, Settings, MessageSquare, FileText } from "lucide-react";
-import { api } from "../../convex/_generated/api";
-import { LOUNGE_COLORS, TIER_INFO } from "../../constants/lounge";
-import { SupporterBadges } from "../../components/badges/supporter-badges";
-import { FeedList } from "../../components/user-feed/FeedList";
-import { ContributionsModal } from "../../components/profile/ContributionsModal";
-import type { Tier } from "../../types/lounge";
 import { SimpleNavbar } from "@/components/navbar/simple";
+import { SupporterBadges } from "../../components/badges/supporter-badges";
+import { ContributionsModal } from "../../components/profile/ContributionsModal";
+import { FeedList } from "../../components/user-feed/FeedList";
+import { LOUNGE_COLORS, TIER_INFO } from "../../constants/lounge";
+import { api } from "../../convex/_generated/api";
+import type { Tier } from "../../types/lounge";
 
 export const getServerSideProps = () => ({ props: {} });
 
@@ -26,7 +26,7 @@ export default function ProfilePage() {
   // Get profile user
   const user = useQuery(
     api.users.getByUsername,
-    typeof username === "string" ? { username } : "skip"
+    typeof username === "string" ? { username } : "skip",
   );
 
   // Get current user
@@ -35,7 +35,7 @@ export default function ProfilePage() {
   // Check if can post on this profile's feed
   const canPostResult = useQuery(
     api.userFeed.canPost,
-    user?._id ? { profileUserId: user._id } : "skip"
+    user?._id ? { profileUserId: user._id } : "skip",
   );
 
   // Update feed privacy mutation
@@ -47,7 +47,7 @@ export default function ProfilePage() {
   // Get user's article contributions
   const contributions = useQuery(
     api.blogPosts.getByUserContributions,
-    user?._id ? { userId: user._id } : "skip"
+    user?._id ? { userId: user._id } : "skip",
   );
 
   if (!username || typeof username !== "string") {
@@ -103,11 +103,10 @@ export default function ProfilePage() {
   return (
     <>
       <Head>
-        <title>{user.displayName} (@{user.username}) | nevulo</title>
-        <meta
-          name="description"
-          content={user.bio || `${user.displayName}'s profile on nevulo`}
-        />
+        <title>
+          {user.displayName} (@{user.username}) | nevulo
+        </title>
+        <meta name="description" content={user.bio || `${user.displayName}'s profile on nevulo`} />
         <meta property="og:title" content={`${user.displayName} | nevulo`} />
         <meta property="og:description" content={user.bio || `${user.displayName}'s profile`} />
         {user.avatarUrl && <meta property="og:image" content={user.avatarUrl} />}
@@ -133,9 +132,7 @@ export default function ProfilePage() {
             </NameRow>
             <Username>@{user.username}</Username>
 
-            <TierBadge $tier={user.tier as Tier}>
-              {tierName}
-            </TierBadge>
+            <TierBadge $tier={user.tier as Tier}>{tierName}</TierBadge>
 
             <BadgesRow>
               <SupporterBadges
@@ -171,7 +168,9 @@ export default function ProfilePage() {
           <ContributionsSection>
             <ContributionsButton onClick={() => setShowContributions(true)}>
               <FileText size={18} />
-              <span>{contributions.length} article contribution{contributions.length !== 1 ? "s" : ""}</span>
+              <span>
+                {contributions.length} article contribution{contributions.length !== 1 ? "s" : ""}
+              </span>
             </ContributionsButton>
           </ContributionsSection>
         )}
@@ -304,9 +303,7 @@ const ProfileCard = styled.div`
 const Banner = styled.div<{ $url?: string; $focalY: number }>`
   height: 120px;
   background: ${(props) =>
-    props.$url
-      ? `url(${props.$url}) center ${props.$focalY}% / cover no-repeat`
-      : "transparent"};
+    props.$url ? `url(${props.$url}) center ${props.$focalY}% / cover no-repeat` : "transparent"};
   position: relative;
 `;
 

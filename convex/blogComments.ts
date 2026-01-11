@@ -1,15 +1,23 @@
 import { v } from "convex/values";
-import { query, mutation } from "./_generated/server";
 import { internal } from "./_generated/api";
-import { getCurrentUser, requireUser, requireCreator, hasAccessToTier, isCreator, isStaff, requireNotBanned } from "./auth";
-import { Doc, Id } from "./_generated/dataModel";
+import type { Doc, Id } from "./_generated/dataModel";
+import { mutation, query } from "./_generated/server";
+import {
+  getCurrentUser,
+  hasAccessToTier,
+  isCreator,
+  isStaff,
+  requireCreator,
+  requireNotBanned,
+  requireUser,
+} from "./auth";
 
 /**
  * Check if user can access a post's comments
  */
 async function canAccessPost(
   ctx: any,
-  postId: Id<"blogPosts">
+  postId: Id<"blogPosts">,
 ): Promise<{ post: Doc<"blogPosts">; user: Doc<"users"> | null }> {
   const post = await ctx.db.get(postId);
   if (!post) {
@@ -99,7 +107,7 @@ export const list = query({
             .map(async (reply) => ({
               ...reply,
               author: await getAuthorInfo(ctx, reply.authorId),
-            }))
+            })),
         );
 
         return {
@@ -107,7 +115,7 @@ export const list = query({
           author,
           replies: repliesWithAuthors,
         };
-      })
+      }),
     );
 
     return commentsWithReplies;
@@ -141,10 +149,7 @@ export const listAll = query({
     await requireCreator(ctx);
     const limit = args.limit ?? 100;
 
-    const comments = await ctx.db
-      .query("blogComments")
-      .order("desc")
-      .take(limit);
+    const comments = await ctx.db.query("blogComments").order("desc").take(limit);
 
     // Filter deleted if needed
     let filtered = comments;
@@ -160,11 +165,9 @@ export const listAll = query({
         return {
           ...comment,
           author,
-          post: post
-            ? { _id: post._id, title: post.title, slug: post.slug }
-            : null,
+          post: post ? { _id: post._id, title: post.title, slug: post.slug } : null,
         };
-      })
+      }),
     );
 
     return commentsWithInfo;
@@ -418,15 +421,14 @@ export const report = mutation({
  */
 export const getReports = query({
   args: {
-    status: v.optional(v.union(v.literal("pending"), v.literal("reviewed"), v.literal("dismissed"))),
+    status: v.optional(
+      v.union(v.literal("pending"), v.literal("reviewed"), v.literal("dismissed")),
+    ),
   },
   handler: async (ctx, args) => {
     await requireCreator(ctx);
 
-    let reports = await ctx.db
-      .query("blogCommentReports")
-      .order("desc")
-      .collect();
+    let reports = await ctx.db.query("blogCommentReports").order("desc").collect();
 
     if (args.status) {
       reports = reports.filter((r) => r.status === args.status);
@@ -437,9 +439,7 @@ export const getReports = query({
       reports.map(async (report) => {
         const comment = await ctx.db.get(report.commentId);
         const reporter = await ctx.db.get(report.reporterId);
-        const commentAuthor = comment?.authorId
-          ? await ctx.db.get(comment.authorId)
-          : null;
+        const commentAuthor = comment?.authorId ? await ctx.db.get(comment.authorId) : null;
 
         return {
           ...report,
@@ -470,7 +470,7 @@ export const getReports = query({
               }
             : null,
         };
-      })
+      }),
     );
 
     return reportsWithInfo;
@@ -517,12 +517,7 @@ export const resolveReport = mutation({
 /**
  * Helper to update interaction score
  */
-async function updateInteractionScore(
-  ctx: any,
-  postId: any,
-  userId: any,
-  points: number
-) {
+async function updateInteractionScore(ctx: any, postId: any, userId: any, points: number) {
   const existing = await ctx.db
     .query("blogInteractions")
     .withIndex("by_user", (q: any) => q.eq("userId", userId))

@@ -1,6 +1,6 @@
-import { useState, useRef, useCallback } from "react";
-import styled, { keyframes } from "styled-components";
+import { useCallback, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import styled, { keyframes } from "styled-components";
 
 interface TooltipProps {
   content: string;
@@ -15,12 +15,7 @@ interface TooltipState {
   y: number;
 }
 
-export function Tooltip({
-  content,
-  children,
-  position = "top",
-  delay = 400,
-}: TooltipProps) {
+export function Tooltip({ content, children, position = "top", delay = 400 }: TooltipProps) {
   const [state, setState] = useState<TooltipState>({ visible: false, x: 0, y: 0 });
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const triggerRef = useRef<HTMLDivElement>(null);
@@ -63,7 +58,7 @@ export function Tooltip({
       clearTimeout(timeoutRef.current);
       timeoutRef.current = null;
     }
-    setState(s => ({ ...s, visible: false }));
+    setState((s) => ({ ...s, visible: false }));
   }, []);
 
   return (
@@ -84,7 +79,7 @@ export function Tooltip({
             {content}
             <TooltipArrow $position={position} />
           </TooltipContent>,
-          document.body
+          document.body,
         )}
     </>
   );

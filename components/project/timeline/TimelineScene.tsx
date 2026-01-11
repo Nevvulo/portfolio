@@ -1,14 +1,9 @@
-import { Suspense, useRef } from "react";
+import { Html, PerspectiveCamera, Sparkles, Text } from "@react-three/drei";
 import { Canvas, useFrame } from "@react-three/fiber";
-import {
-  PerspectiveCamera,
-  Text,
-  Sparkles,
-  Html,
-} from "@react-three/drei";
-import * as THREE from "three";
-import styled from "styled-components";
 import Image from "next/image";
+import { Suspense, useRef } from "react";
+import styled from "styled-components";
+import * as THREE from "three";
 import type { Doc } from "../../../convex/_generated/dataModel";
 
 // Convex project type
@@ -66,9 +61,13 @@ function HtmlProjectCard({
 
       // Smooth position lerp
       const posSpeed = 12;
-      groupRef.current.position.x += (targetPos.current.x - groupRef.current.position.x) * Math.min(1, delta * posSpeed);
-      groupRef.current.position.y += (targetPos.current.y + floatY - groupRef.current.position.y) * Math.min(1, delta * posSpeed);
-      groupRef.current.position.z += (targetPos.current.z - groupRef.current.position.z) * Math.min(1, delta * posSpeed);
+      groupRef.current.position.x +=
+        (targetPos.current.x - groupRef.current.position.x) * Math.min(1, delta * posSpeed);
+      groupRef.current.position.y +=
+        (targetPos.current.y + floatY - groupRef.current.position.y) *
+        Math.min(1, delta * posSpeed);
+      groupRef.current.position.z +=
+        (targetPos.current.z - groupRef.current.position.z) * Math.min(1, delta * posSpeed);
 
       // Keep scale constant - only use opacity for transitions
       groupRef.current.scale.set(1, 1, 1);
@@ -91,11 +90,7 @@ function HtmlProjectCard({
           opacity: animationProgress,
         }}
       >
-        <CardContainer
-          $background={project.background}
-          $isActive={isActive}
-          onClick={onClick}
-        >
+        <CardContainer $background={project.background} $isActive={isActive} onClick={onClick}>
           <CardContent>
             {project.logoUrl && project.logoWidth && project.logoHeight ? (
               project.logoIncludesName ? (
@@ -134,9 +129,7 @@ function HtmlProjectCard({
               <TimelineBadge>{timelineText}</TimelineBadge>
             </CardBottomRow>
           </CardContent>
-          {project.maintained && (
-            <MaintainedBadge>MAINTAINED</MaintainedBadge>
-          )}
+          {project.maintained && <MaintainedBadge>MAINTAINED</MaintainedBadge>}
         </CardContainer>
       </Html>
     </group>
@@ -364,9 +357,9 @@ function YearWheel3D({
 }) {
   // Responsive position - on mobile portrait, position at top-left but pushed right
   const basePosition: [number, number, number] = isPortrait
-    ? [-1.1, -2.0, 0]  // Bottom-left on mobile portrait
+    ? [-1.1, -2.0, 0] // Bottom-left on mobile portrait
     : isMobile
-      ? [-2.5, -1.5, 0]  // Left side on mobile landscape
+      ? [-2.5, -1.5, 0] // Left side on mobile landscape
       : [-3.5, -2.2, 0]; // Left side on desktop
   const fontSize = isPortrait ? 0.3 : isMobile ? 0.35 : 0.5;
   const activeScale = isPortrait ? 0.75 : isMobile ? 0.9 : 1;
@@ -463,12 +456,12 @@ function YearWheel3D({
       groupRef.current.rotation.y = THREE.MathUtils.lerp(
         groupRef.current.rotation.y,
         0.3 + tiltY,
-        delta * 2
+        delta * 2,
       );
       groupRef.current.rotation.x = THREE.MathUtils.lerp(
         groupRef.current.rotation.x,
         tiltX,
-        delta * 2
+        delta * 2,
       );
     }
   });
@@ -580,7 +573,15 @@ function smoothstep(t: number): number {
   return t * t * (3 - 2 * t);
 }
 
-function TimelineContent({ projects, timelineYears, scrollProgress, onProjectClick, onScrollChange, isMobile = false, isLandscape = false }: TimelineSceneProps) {
+function TimelineContent({
+  projects,
+  timelineYears,
+  scrollProgress,
+  onProjectClick,
+  onScrollChange,
+  isMobile = false,
+  isLandscape = false,
+}: TimelineSceneProps) {
   const currentRealYear = new Date().getFullYear();
   // Responsive card spacing - tighter on mobile
   const cardSpacing = isMobile ? (isLandscape ? 1.4 : 1.2) : 2.0;
@@ -650,13 +651,7 @@ function TimelineContent({ projects, timelineYears, scrollProgress, onProjectCli
       <ambientLight intensity={0.5} />
       <pointLight position={[10, 10, 10]} intensity={0.8} color="#ffffff" />
       <pointLight position={[-5, 5, 5]} intensity={0.2} color="#6366f1" />
-      <spotLight
-        position={[0, 8, 8]}
-        angle={0.4}
-        penumbra={1}
-        intensity={0.3}
-        color="#4f46e5"
-      />
+      <spotLight position={[0, 8, 8]} angle={0.4} penumbra={1} intensity={0.3} color="#4f46e5" />
 
       {/* Persona-style Year wheel */}
       <YearWheel3D
@@ -668,7 +663,9 @@ function TimelineContent({ projects, timelineYears, scrollProgress, onProjectCli
       />
 
       {/* Project cards - adjust position based on viewport */}
-      <group position={[isMobile ? (isLandscape ? 0.5 : 0) : 1, isMobile && !isLandscape ? 0.3 : 0, 0]}>
+      <group
+        position={[isMobile ? (isLandscape ? 0.5 : 0) : 1, isMobile && !isLandscape ? 0.3 : 0, 0]}
+      >
         {visibleProjects.map(({ project, y, opacity }, index) => (
           <HtmlProjectCard
             key={project.slug}
@@ -703,7 +700,15 @@ function TimelineContent({ projects, timelineYears, scrollProgress, onProjectCli
   );
 }
 
-export function TimelineScene({ projects, timelineYears, scrollProgress, onProjectClick, onScrollChange, isMobile = false, isLandscape = false }: TimelineSceneProps) {
+export function TimelineScene({
+  projects,
+  timelineYears,
+  scrollProgress,
+  onProjectClick,
+  onScrollChange,
+  isMobile = false,
+  isLandscape = false,
+}: TimelineSceneProps) {
   // Responsive camera settings
   const cameraZ = isMobile ? (isLandscape ? 7 : 6) : 8;
   const cameraY = isMobile && !isLandscape ? 0.5 : 0;

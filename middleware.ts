@@ -1,6 +1,6 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
-import { createSource, type Context } from "./lib/generated/hypertune";
+import { type Context, createSource } from "./lib/generated/hypertune";
 
 // Routes that require authentication
 const isProtectedRoute = createRouteMatcher([

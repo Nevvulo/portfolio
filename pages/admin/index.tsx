@@ -1,22 +1,13 @@
+import { useMutation, useQuery } from "convex/react";
+import { Check, Crown, Search, Shield, Trash2, UserPlus, Users, X } from "lucide-react";
 import Head from "next/head";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import styled from "styled-components";
-import { useQuery, useMutation } from "convex/react";
-import { useEffect, useState, useMemo, useRef, useCallback } from "react";
-import { api } from "../../convex/_generated/api";
 import { BlogView } from "../../components/layout/blog";
 import { SimpleNavbar } from "../../components/navbar/simple";
-import { useTierAccess } from "../../hooks/lounge/useTierAccess";
-import {
-  Shield,
-  UserPlus,
-  Search,
-  X,
-  Trash2,
-  Crown,
-  Users,
-  Check,
-} from "lucide-react";
+import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
+import { useTierAccess } from "../../hooks/lounge/useTierAccess";
 
 export const getServerSideProps = () => ({ props: {} });
 
@@ -118,7 +109,7 @@ function StaffManagement() {
   // Search users
   const searchResults = useQuery(
     api.users.searchUsers,
-    searchQuery.length > 0 ? { query: searchQuery, limit: 10 } : "skip"
+    searchQuery.length > 0 ? { query: searchQuery, limit: 10 } : "skip",
   );
 
   // Filter out users who are already staff
@@ -142,7 +133,7 @@ function StaffManagement() {
         setIsAdding(false);
       }
     },
-    [addStaff]
+    [addStaff],
   );
 
   const handleRemoveStaff = useCallback(
@@ -155,7 +146,7 @@ function StaffManagement() {
         alert(error.message || "Failed to remove staff member");
       }
     },
-    [removeStaff]
+    [removeStaff],
   );
 
   // Focus input when picker opens
@@ -184,9 +175,7 @@ function StaffManagement() {
               {member.avatarUrl ? (
                 <Avatar src={member.avatarUrl} alt={member.displayName} />
               ) : (
-                <AvatarPlaceholder>
-                  {member.displayName?.charAt(0) || "?"}
-                </AvatarPlaceholder>
+                <AvatarPlaceholder>{member.displayName?.charAt(0) || "?"}</AvatarPlaceholder>
               )}
             </StaffAvatar>
             <StaffInfo>
@@ -197,17 +186,12 @@ function StaffManagement() {
                     <Crown size={12} /> Creator
                   </CreatorBadge>
                 )}
-                {!member.isCreator && member.role === ROLE_STAFF && (
-                  <RoleBadge>Staff</RoleBadge>
-                )}
+                {!member.isCreator && member.role === ROLE_STAFF && <RoleBadge>Staff</RoleBadge>}
               </StaffName>
               {member.username && <StaffUsername>@{member.username}</StaffUsername>}
             </StaffInfo>
             {!member.isCreator && (
-              <RemoveButton
-                onClick={() => handleRemoveStaff(member._id)}
-                title="Remove from staff"
-              >
+              <RemoveButton onClick={() => handleRemoveStaff(member._id)} title="Remove from staff">
                 <Trash2 size={16} />
               </RemoveButton>
             )}

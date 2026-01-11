@@ -38,8 +38,8 @@ function levenshteinDistance(a: string, b: string): number {
       } else {
         matrix[i][j] = Math.min(
           matrix[i - 1][j - 1] + 1, // substitution
-          matrix[i][j - 1] + 1,     // insertion
-          matrix[i - 1][j] + 1      // deletion
+          matrix[i][j - 1] + 1, // insertion
+          matrix[i - 1][j] + 1, // deletion
         );
       }
     }
@@ -66,7 +66,7 @@ function similarity(a: string, b: string): number {
 function fuzzyFind(
   text: string,
   pattern: string,
-  threshold: number = 0.75
+  threshold: number = 0.75,
 ): { start: number; end: number; score: number } | null {
   if (pattern.length === 0) return null;
   if (text.length === 0) return null;
@@ -101,7 +101,7 @@ function fuzzyFind(
  */
 export function extractAnchor(
   selection: Selection,
-  containerElement: HTMLElement
+  containerElement: HTMLElement,
 ): TextAnchor | null {
   if (selection.isCollapsed || selection.rangeCount === 0) {
     return null;
@@ -141,7 +141,7 @@ export function extractAnchor(
  */
 export function findHighlightPosition(
   fullText: string,
-  anchor: TextAnchor
+  anchor: TextAnchor,
 ): HighlightPosition | null {
   const { highlightedText, prefix, suffix } = anchor;
 
@@ -171,7 +171,7 @@ export function findHighlightPosition(
       const actualPrefix = fullText.slice(Math.max(0, idx - prefix.length), idx);
       const actualSuffix = fullText.slice(
         idx + highlightedText.length,
-        idx + highlightedText.length + suffix.length
+        idx + highlightedText.length + suffix.length,
       );
 
       const prefixScore = prefix.length > 0 ? similarity(actualPrefix, prefix) : 1;
@@ -229,7 +229,7 @@ export function findHighlightPosition(
  */
 export function findAllHighlightPositions(
   fullText: string,
-  highlights: Array<{ _id: string } & TextAnchor>
+  highlights: Array<{ _id: string } & TextAnchor>,
 ): Map<string, HighlightPosition> {
   const positions = new Map<string, HighlightPosition>();
 
@@ -251,10 +251,7 @@ export function findAllHighlightPositions(
 /**
  * Check if two highlight positions overlap.
  */
-export function positionsOverlap(
-  a: HighlightPosition,
-  b: HighlightPosition
-): boolean {
+export function positionsOverlap(a: HighlightPosition, b: HighlightPosition): boolean {
   return a.start < b.end && b.start < a.end;
 }
 
@@ -263,7 +260,7 @@ export function positionsOverlap(
  * Returns non-overlapping segments with references to original highlights.
  */
 export function mergeOverlappingPositions(
-  positions: Array<{ id: string; position: HighlightPosition }>
+  positions: Array<{ id: string; position: HighlightPosition }>,
 ): Array<{ ids: string[]; start: number; end: number }> {
   if (positions.length === 0) return [];
 

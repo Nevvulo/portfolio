@@ -40,10 +40,7 @@ export type DiscordMessage = PublishPostMessage | SyncCommentMessage;
  * Publish a message to a Redis channel
  * Bot subscribes to these channels and handles Discord operations
  */
-export async function publishToChannel(
-  channel: string,
-  message: DiscordMessage
-): Promise<number> {
+export async function publishToChannel(channel: string, message: DiscordMessage): Promise<number> {
   const result = await redis.publish(channel, JSON.stringify(message));
   console.log(`Published to ${channel}:`, message.type);
   return result;
@@ -56,7 +53,7 @@ export async function publishToChannel(
 export async function publishPostToDiscord(
   postId: string,
   channelConfig: PublishPostMessage["channelConfig"],
-  useUserToken: boolean
+  useUserToken: boolean,
 ): Promise<number> {
   return publishToChannel(DISCORD_CHANNELS.PUBLISH, {
     type: "publish_post",
@@ -74,7 +71,7 @@ export async function publishPostToDiscord(
 export async function syncCommentToDiscord(
   commentId: string,
   postId: string,
-  threadId: string
+  threadId: string,
 ): Promise<number> {
   return publishToChannel(DISCORD_CHANNELS.SYNC_COMMENT, {
     type: "sync_comment",

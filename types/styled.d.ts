@@ -3,10 +3,13 @@ import "styled-components";
 
 interface GenericTheme {
   background: string;
+  backgroundSecondary: string;
   foreground: string;
   contrast: string;
   pure: string;
   textColor: string;
+  textMuted: string;
+  border: string;
   linkColor: string;
   postBackground: string;
   postImageLoadingBackground: string;

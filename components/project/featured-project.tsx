@@ -1,10 +1,10 @@
 import Image from "next/image";
 import styled from "styled-components";
+import GolfquestBanner from "../../assets/img/games/golfquest.png";
 import FluxBanner from "../../assets/img/projects/banner/flux.png";
 import UnloanBanner from "../../assets/img/projects/banner/unloan.png";
-import GolfquestBanner from "../../assets/img/games/golfquest.png";
-import { StrippedLink } from "../generics";
 import type { Doc } from "../../convex/_generated/dataModel";
+import { StrippedLink } from "../generics";
 
 const projectBanners = {
   flux: FluxBanner,
@@ -37,7 +37,7 @@ export function FeaturedProjectCard({
             src={banner}
             alt={`${project.name} project banner`}
             fill
-            style={{ objectFit: 'cover' }}
+            style={{ objectFit: "cover" }}
             priority
           />
         </ImageWrapper>
@@ -123,7 +123,7 @@ const ColorGradient = styled.div<{ $gradient?: string }>`
   width: 100%;
   height: 135%;
   background: rgba(0, 0, 0, 0.3);
-  background-image: ${props => props.$gradient || 'none'};
+  background-image: ${(props) => props.$gradient || "none"};
   -webkit-mask-image: linear-gradient(180deg, transparent 0%, rgb(0, 0, 0) 100%);
   mask-image: linear-gradient(180deg, transparent 0%, rgb(0, 0, 0) 100%);
   z-index: 1;
@@ -193,14 +193,12 @@ export function FeaturedProjectPreview({
             src={banner}
             alt={`${projectId} project banner`}
             fill
-            style={{ objectFit: 'cover' }}
+            style={{ objectFit: "cover" }}
             priority
           />
         </ImageWrapper>
         <ColorGradient $gradient={background} />
-        <ContentWrapper>
-          {Preview && <Preview />}
-        </ContentWrapper>
+        <ContentWrapper>{Preview && <Preview />}</ContentWrapper>
       </Container>
     </LinkWrapper>
   );

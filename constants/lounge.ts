@@ -378,15 +378,15 @@ export const RARITY_ORDER: Record<string, number> = {
 
 // Channel icons mapping (Lucide icon names)
 export const CHANNEL_ICONS: Record<string, string> = {
-  "megaphone": "Megaphone",
+  megaphone: "Megaphone",
   "message-circle": "MessageCircle",
-  "sparkles": "Sparkles",
-  "crown": "Crown",
-  "star": "Star",
-  "hash": "Hash",
+  sparkles: "Sparkles",
+  crown: "Crown",
+  star: "Star",
+  hash: "Hash",
   "volume-2": "Volume2",
-  "book": "Book",
-  "code": "Code",
+  book: "Book",
+  code: "Code",
   "gamepad-2": "Gamepad2",
 } as const;
 

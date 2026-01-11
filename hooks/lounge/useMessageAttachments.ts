@@ -1,5 +1,5 @@
-import { useState, useCallback } from "react";
-import type { MessageEmbed, EmbedType } from "../../types/lounge";
+import { useCallback, useState } from "react";
+import type { EmbedType, MessageEmbed } from "../../types/lounge";
 
 export interface PendingAttachment {
   id: string;
@@ -53,26 +53,29 @@ export function useMessageAttachments() {
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const validateFile = useCallback((file: File): { valid: boolean; type?: EmbedType; error?: string } => {
-    const embedType = ALLOWED_TYPES[file.type];
-    if (!embedType) {
-      return {
-        valid: false,
-        error: `Unsupported file type: ${file.type || "unknown"}. Allowed: images, videos, audio.`,
-      };
-    }
+  const validateFile = useCallback(
+    (file: File): { valid: boolean; type?: EmbedType; error?: string } => {
+      const embedType = ALLOWED_TYPES[file.type];
+      if (!embedType) {
+        return {
+          valid: false,
+          error: `Unsupported file type: ${file.type || "unknown"}. Allowed: images, videos, audio.`,
+        };
+      }
 
-    const maxSize = MAX_SIZES[embedType];
-    if (file.size > maxSize) {
-      const maxMB = maxSize / (1024 * 1024);
-      return {
-        valid: false,
-        error: `${file.name} is too large. Maximum size for ${embedType} is ${maxMB}MB.`,
-      };
-    }
+      const maxSize = MAX_SIZES[embedType];
+      if (file.size > maxSize) {
+        const maxMB = maxSize / (1024 * 1024);
+        return {
+          valid: false,
+          error: `${file.name} is too large. Maximum size for ${embedType} is ${maxMB}MB.`,
+        };
+      }
 
-    return { valid: true, type: embedType };
-  }, []);
+      return { valid: true, type: embedType };
+    },
+    [],
+  );
 
   const addFiles = useCallback(
     (files: FileList | File[]) => {
@@ -109,7 +112,7 @@ export function useMessageAttachments() {
         setError(null);
       }
     },
-    [attachments.length, validateFile]
+    [attachments.length, validateFile],
   );
 
   const removeAttachment = useCallback((id: string) => {
@@ -182,7 +185,7 @@ export function useMessageAttachments() {
 
         // Update status to uploading
         setAttachments((prev) =>
-          prev.map((a) => (a.id === attachment.id ? { ...a, status: "uploading" as const } : a))
+          prev.map((a) => (a.id === attachment.id ? { ...a, status: "uploading" as const } : a)),
         );
 
         try {
@@ -191,8 +194,8 @@ export function useMessageAttachments() {
           // Update status to complete
           setAttachments((prev) =>
             prev.map((a) =>
-              a.id === attachment.id ? { ...a, status: "complete" as const, result } : a
-            )
+              a.id === attachment.id ? { ...a, status: "complete" as const, result } : a,
+            ),
           );
 
           embeds.push(resultToEmbed(result));
@@ -200,8 +203,8 @@ export function useMessageAttachments() {
           const errorMessage = err instanceof Error ? err.message : "Upload failed";
           setAttachments((prev) =>
             prev.map((a) =>
-              a.id === attachment.id ? { ...a, status: "error" as const, error: errorMessage } : a
-            )
+              a.id === attachment.id ? { ...a, status: "error" as const, error: errorMessage } : a,
+            ),
           );
           throw err;
         }

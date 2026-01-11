@@ -25,6 +25,6 @@ export const useSidebarStore = create<SidebarState>()(
     }),
     {
       name: "lounge-sidebar-state",
-    }
-  )
+    },
+  ),
 );

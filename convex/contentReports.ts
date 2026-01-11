@@ -1,7 +1,6 @@
 import { v } from "convex/values";
-import { query, mutation } from "./_generated/server";
-import { requireUser, requireCreator } from "./auth";
-import type { Id } from "./_generated/dataModel";
+import { mutation, query } from "./_generated/server";
+import { requireCreator, requireUser } from "./auth";
 
 // Report categories matching schema
 const REPORT_CATEGORIES = v.union(
@@ -11,7 +10,7 @@ const REPORT_CATEGORIES = v.union(
   v.literal("infringement"),
   v.literal("contact_request"),
   v.literal("mention_removal"),
-  v.literal("other")
+  v.literal("other"),
 );
 
 /**
@@ -80,7 +79,9 @@ export const hasReported = query({
  */
 export const getReports = query({
   args: {
-    status: v.optional(v.union(v.literal("pending"), v.literal("reviewed"), v.literal("dismissed"))),
+    status: v.optional(
+      v.union(v.literal("pending"), v.literal("reviewed"), v.literal("dismissed")),
+    ),
   },
   handler: async (ctx, args) => {
     await requireCreator(ctx);
@@ -120,7 +121,7 @@ export const getReports = query({
               }
             : null,
         };
-      })
+      }),
     );
 
     return reportsWithInfo;

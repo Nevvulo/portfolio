@@ -15,13 +15,13 @@
  * Designed for performance - no heavy dependencies, just regex parsing.
  */
 
-import { memo, useMemo, useState, useRef, useCallback, useEffect } from "react";
-import styled from "styled-components";
-import { Highlight, themes } from "prism-react-renderer";
 import { useQuery } from "convex/react";
+import { Highlight, themes } from "prism-react-renderer";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import styled from "styled-components";
+import { LOUNGE_COLORS } from "../../../constants/lounge";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
-import { LOUNGE_COLORS } from "../../../constants/lounge";
 import { UserPopoutTrigger } from "../user-popout/UserPopoutTrigger";
 
 // Discord emoji regex
@@ -96,7 +96,14 @@ interface UserMentionToken extends BaseToken {
   userId: string; // Discord ID or Clerk ID
 }
 
-type Token = TextToken | CodeBlockToken | LinkToken | AudioToken | VideoToken | DiscordEmojiToken | UserMentionToken;
+type Token =
+  | TextToken
+  | CodeBlockToken
+  | LinkToken
+  | AudioToken
+  | VideoToken
+  | DiscordEmojiToken
+  | UserMentionToken;
 
 // Audio file extensions to detect
 const AUDIO_EXTENSIONS = /\.(mp3|wav|ogg|m4a|flac)$/i;
@@ -251,7 +258,7 @@ function parseMarkdown(text: string): Token[] {
 
     // Plain text - consume until next special character
     if (!matched) {
-      const nextSpecial = remaining.search(/[*_~`<\[\n]|https?:\/\//);
+      const nextSpecial = remaining.search(/[*_~`<[\n]|https?:\/\//);
       if (nextSpecial === -1) {
         tokens.push({ type: "text", content: remaining });
         remaining = "";
@@ -345,13 +352,17 @@ interface UserMentionProps {
   rawContent: string;
 }
 
-const UserMention = memo(function UserMention({ mentionType, userId, rawContent }: UserMentionProps) {
+const UserMention = memo(function UserMention({
+  mentionType,
+  userId,
+  rawContent,
+}: UserMentionProps) {
   // Query to resolve the mention
   const resolved = useQuery(
     api.users.resolveMentions,
     mentionType === "discord"
       ? { discordIds: [userId], clerkIds: [] }
-      : { discordIds: [], clerkIds: [userId] }
+      : { discordIds: [], clerkIds: [userId] },
   );
 
   // Get the resolved user
@@ -371,9 +382,7 @@ const UserMention = memo(function UserMention({ mentionType, userId, rawContent 
   // Render as clickable mention with popout
   return (
     <UserPopoutTrigger userId={user._id as Id<"users">}>
-      <MentionSpan $tier={user.tier as "tier1" | "tier2"}>
-        @{user.displayName}
-      </MentionSpan>
+      <MentionSpan $tier={user.tier as "tier1" | "tier2"}>@{user.displayName}</MentionSpan>
     </UserPopoutTrigger>
   );
 });
@@ -542,7 +551,16 @@ const VideoPlayer = memo(function VideoPlayer({ url }: VideoPlayerProps) {
 
 // Download icon SVG
 const DownloadIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
     <polyline points="7 10 12 15 17 10" />
     <line x1="12" y1="15" x2="12" y2="3" />
@@ -552,18 +570,12 @@ const DownloadIcon = () => (
 // SoundCloud icon SVG
 const SoundCloudIcon = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-    <path d="M1.175 12.225c-.051 0-.094.046-.101.1l-.233 2.154.233 2.105c.007.058.05.098.101.098.05 0 .09-.04.099-.098l.255-2.105-.27-2.154c-.009-.06-.052-.1-.1-.1m-.899.828c-.06 0-.091.037-.104.094L0 14.479l.165 1.308c.014.057.045.094.09.094s.089-.037.099-.094l.19-1.308-.19-1.334c-.01-.057-.054-.09-.09-.09m1.83-1.229c-.061 0-.12.045-.12.104l-.21 2.563.225 2.458c0 .06.045.104.106.104.061 0 .12-.044.12-.104l.24-2.458-.24-2.563c0-.06-.059-.104-.12-.104m.945-.089c-.075 0-.135.06-.15.135l-.193 2.64.21 2.544c.016.077.075.138.149.138.075 0 .135-.061.15-.138l.24-2.544-.24-2.64c-.015-.074-.074-.135-.149-.135l-.017-.001m.93-.104c-.09 0-.165.074-.18.164l-.18 2.73.195 2.563c.014.091.09.164.18.164.089 0 .164-.074.179-.164l.21-2.563-.21-2.73c-.015-.091-.09-.164-.18-.164m.96-.073c-.105 0-.195.09-.195.195l-.165 2.79.18 2.534c0 .104.09.194.194.194.104 0 .194-.09.194-.194l.195-2.534-.195-2.79c0-.105-.089-.195-.194-.195m.974-.06c-.119 0-.209.09-.224.21l-.165 2.834.165 2.519c.015.12.105.21.224.21.12 0 .21-.09.225-.21l.18-2.519-.18-2.834c-.015-.12-.105-.21-.225-.21m.99-.03c-.135 0-.24.105-.24.24l-.149 2.849.149 2.504c0 .135.105.24.24.24.135 0 .24-.105.255-.24l.165-2.504-.165-2.849c-.015-.135-.12-.24-.255-.24m1.005-.015c-.15 0-.27.12-.27.27l-.135 2.85.135 2.489c0 .149.12.27.27.27.149 0 .27-.12.27-.27l.165-2.489-.165-2.85c0-.15-.12-.27-.27-.27m1.02 0c-.164 0-.3.135-.3.3l-.119 2.835.119 2.474c0 .165.135.3.3.3.164 0 .3-.135.3-.3l.135-2.474-.135-2.835c0-.165-.135-.3-.3-.3m1.006.015c-.18 0-.315.135-.315.315l-.105 2.82.105 2.46c0 .18.135.315.315.315.18 0 .33-.135.33-.315l.12-2.46-.12-2.82c0-.18-.15-.315-.33-.315m1.02.03c-.195 0-.345.15-.36.345l-.09 2.789.09 2.43c.015.195.165.345.36.345.194 0 .345-.15.359-.345l.105-2.43-.105-2.79c-.015-.195-.165-.345-.36-.345m1.036.045c-.21 0-.375.165-.375.375l-.075 2.76.075 2.414c0 .21.165.375.375.375.21 0 .375-.165.39-.375l.09-2.414-.09-2.76c-.015-.21-.18-.375-.39-.375m1.021.061c-.225 0-.405.18-.405.405l-.06 2.73.06 2.399c0 .225.18.405.405.405.225 0 .405-.18.42-.405l.075-2.399-.075-2.73c-.015-.225-.195-.405-.42-.405m1.036.075c-.24 0-.435.195-.435.435l-.045 2.685.045 2.37c0 .24.195.435.435.435.24 0 .435-.195.45-.435l.06-2.37-.06-2.685c-.015-.24-.21-.435-.45-.435m1.02.09c-.256 0-.45.195-.465.45l-.03 2.64.03 2.34c.015.255.21.45.465.45.255 0 .45-.195.465-.45l.045-2.34-.045-2.64c-.015-.255-.21-.45-.465-.45m1.021.105c-.27 0-.48.21-.495.48l-.015 2.58.015 2.31c.015.27.225.48.495.48.269 0 .48-.21.494-.48l.03-2.31-.03-2.58c-.015-.27-.225-.48-.494-.48m1.875-.39c-.33 0-.66.135-.9.375-.135-2.955-2.595-5.295-5.595-5.295-.705 0-1.395.135-2.01.375-.255.105-.33.21-.345.405v10.56c.015.21.165.375.375.39h8.475c1.425 0 2.58-1.155 2.58-2.595 0-1.425-1.155-2.595-2.58-2.595"/>
+    <path d="M1.175 12.225c-.051 0-.094.046-.101.1l-.233 2.154.233 2.105c.007.058.05.098.101.098.05 0 .09-.04.099-.098l.255-2.105-.27-2.154c-.009-.06-.052-.1-.1-.1m-.899.828c-.06 0-.091.037-.104.094L0 14.479l.165 1.308c.014.057.045.094.09.094s.089-.037.099-.094l.19-1.308-.19-1.334c-.01-.057-.054-.09-.09-.09m1.83-1.229c-.061 0-.12.045-.12.104l-.21 2.563.225 2.458c0 .06.045.104.106.104.061 0 .12-.044.12-.104l.24-2.458-.24-2.563c0-.06-.059-.104-.12-.104m.945-.089c-.075 0-.135.06-.15.135l-.193 2.64.21 2.544c.016.077.075.138.149.138.075 0 .135-.061.15-.138l.24-2.544-.24-2.64c-.015-.074-.074-.135-.149-.135l-.017-.001m.93-.104c-.09 0-.165.074-.18.164l-.18 2.73.195 2.563c.014.091.09.164.18.164.089 0 .164-.074.179-.164l.21-2.563-.21-2.73c-.015-.091-.09-.164-.18-.164m.96-.073c-.105 0-.195.09-.195.195l-.165 2.79.18 2.534c0 .104.09.194.194.194.104 0 .194-.09.194-.194l.195-2.534-.195-2.79c0-.105-.089-.195-.194-.195m.974-.06c-.119 0-.209.09-.224.21l-.165 2.834.165 2.519c.015.12.105.21.224.21.12 0 .21-.09.225-.21l.18-2.519-.18-2.834c-.015-.12-.105-.21-.225-.21m.99-.03c-.135 0-.24.105-.24.24l-.149 2.849.149 2.504c0 .135.105.24.24.24.135 0 .24-.105.255-.24l.165-2.504-.165-2.849c-.015-.135-.12-.24-.255-.24m1.005-.015c-.15 0-.27.12-.27.27l-.135 2.85.135 2.489c0 .149.12.27.27.27.149 0 .27-.12.27-.27l.165-2.489-.165-2.85c0-.15-.12-.27-.27-.27m1.02 0c-.164 0-.3.135-.3.3l-.119 2.835.119 2.474c0 .165.135.3.3.3.164 0 .3-.135.3-.3l.135-2.474-.135-2.835c0-.165-.135-.3-.3-.3m1.006.015c-.18 0-.315.135-.315.315l-.105 2.82.105 2.46c0 .18.135.315.315.315.18 0 .33-.135.33-.315l.12-2.46-.12-2.82c0-.18-.15-.315-.33-.315m1.02.03c-.195 0-.345.15-.36.345l-.09 2.789.09 2.43c.015.195.165.345.36.345.194 0 .345-.15.359-.345l.105-2.43-.105-2.79c-.015-.195-.165-.345-.36-.345m1.036.045c-.21 0-.375.165-.375.375l-.075 2.76.075 2.414c0 .21.165.375.375.375.21 0 .375-.165.39-.375l.09-2.414-.09-2.76c-.015-.21-.18-.375-.39-.375m1.021.061c-.225 0-.405.18-.405.405l-.06 2.73.06 2.399c0 .225.18.405.405.405.225 0 .405-.18.42-.405l.075-2.399-.075-2.73c-.015-.225-.195-.405-.42-.405m1.036.075c-.24 0-.435.195-.435.435l-.045 2.685.045 2.37c0 .24.195.435.435.435.24 0 .435-.195.45-.435l.06-2.37-.06-2.685c-.015-.24-.21-.435-.45-.435m1.02.09c-.256 0-.45.195-.465.45l-.03 2.64.03 2.34c.015.255.21.45.465.45.255 0 .45-.195.465-.45l.045-2.34-.045-2.64c-.015-.255-.21-.45-.465-.45m1.021.105c-.27 0-.48.21-.495.48l-.015 2.58.015 2.31c.015.27.225.48.495.48.269 0 .48-.21.494-.48l.03-2.31-.03-2.58c-.015-.27-.225-.48-.494-.48m1.875-.39c-.33 0-.66.135-.9.375-.135-2.955-2.595-5.295-5.595-5.295-.705 0-1.395.135-2.01.375-.255.105-.33.21-.345.405v10.56c.015.21.165.375.375.39h8.475c1.425 0 2.58-1.155 2.58-2.595 0-1.425-1.155-2.595-2.58-2.595" />
   </svg>
 );
 
 // Simple code block with syntax highlighting
-const CodeBlock = memo(function CodeBlock({
-  code,
-  language,
-}: {
-  code: string;
-  language: string;
-}) {
+const CodeBlock = memo(function CodeBlock({ code, language }: { code: string; language: string }) {
   return (
     <Highlight theme={themes.shadesOfPurple} code={code.trim()} language={language}>
       {({ className, style, tokens, getLineProps, getTokenProps }) => (

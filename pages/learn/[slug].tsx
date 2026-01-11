@@ -1,42 +1,19 @@
-import {
-  faDev,
-  faHashnode,
-  faMedium,
-} from "@fortawesome/free-brands-svg-icons";
+import { useUser } from "@clerk/nextjs";
+import { faDev, faHashnode, faMedium } from "@fortawesome/free-brands-svg-icons";
 import { faExternalLinkAlt } from "@fortawesome/free-solid-svg-icons";
-import { Share2, FileText } from "lucide-react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { ConvexHttpClient } from "convex/browser";
+import { useMutation, useQuery } from "convex/react";
+import { m, useScroll, useSpring, useTransform } from "framer-motion";
+import { FileText, Share2 } from "lucide-react";
 import Head from "next/head";
 import Link from "next/link";
 import { MDXRemote, type MDXRemoteSerializeResult } from "next-mdx-remote";
 import { serialize } from "next-mdx-remote/serialize";
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import remarkGfm from "remark-gfm";
-import { createContext, useContext, useEffect, useState, useRef, useCallback } from "react";
 import styled, { createGlobalStyle } from "styled-components";
-import { m, useScroll, useTransform, useSpring } from "framer-motion";
-import { useMutation, useQuery } from "convex/react";
-import { useUser } from "@clerk/nextjs";
-import { api } from "../../convex/_generated/api";
-import { ReactionBar } from "../../components/learn/ReactionBar";
-import { CommentSection } from "../../components/learn/CommentSection";
-import { BentoCard } from "../../components/learn/BentoCard";
-import { TableOfContents, type TOCItem } from "../../components/learn/TableOfContents";
-import { FloatingToolbar, ReportModal } from "../../components/learn/toolbar";
-import { ShareModal, CreditsModal } from "../../components/learn/modals";
-import { useTimeTracking } from "../../components/learn/useTimeTracking";
-import { useArticleWatchTime } from "../../components/learn/useArticleWatchTime";
-import {
-  SelectionToolbar,
-  SelectionCommentInput,
-  HighlightOverlay,
-  HighlightCount,
-  HighlightModal,
-  InlineCommentBubble,
-  useTextSelection,
-  TextAnchor,
-} from "../../components/learn/highlights";
 import { CircleIndicator } from "../../components/blog/circle-indicator";
-import { UserPopoutProvider, UserPopout, UserPopoutTrigger } from "../../components/lounge/user-popout";
 import CodeBlock from "../../components/blog/codeblock";
 import { DiscordInviteLink, isDiscordInvite } from "../../components/blog/discord-invite-link";
 import { Label, Labels } from "../../components/blog/labels";
@@ -48,12 +25,35 @@ import { Container } from "../../components/container";
 import { IconLink } from "../../components/generics";
 import { Avatar } from "../../components/generics/avatar";
 import { BlogView } from "../../components/layout/blog";
+import { BentoCard } from "../../components/learn/BentoCard";
+import { CommentSection } from "../../components/learn/CommentSection";
+import {
+  HighlightCount,
+  HighlightModal,
+  HighlightOverlay,
+  InlineCommentBubble,
+  SelectionCommentInput,
+  SelectionToolbar,
+  type TextAnchor,
+  useTextSelection,
+} from "../../components/learn/highlights";
+import { CreditsModal, ShareModal } from "../../components/learn/modals";
+import { ReactionBar } from "../../components/learn/ReactionBar";
+import { TableOfContents, type TOCItem } from "../../components/learn/TableOfContents";
+import { FloatingToolbar, ReportModal } from "../../components/learn/toolbar";
+import { useArticleWatchTime } from "../../components/learn/useArticleWatchTime";
+import { useTimeTracking } from "../../components/learn/useTimeTracking";
+import {
+  UserPopout,
+  UserPopoutProvider,
+  UserPopoutTrigger,
+} from "../../components/lounge/user-popout";
 import { SimpleNavbar } from "../../components/navbar/simple";
-import type { DiscordWidget } from "../../types/discord";
-import { fetchDiscordWidget } from "../../utils/discord-widget";
-import { ConvexHttpClient } from "convex/browser";
+import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import { isLearnTitleAnimationEnabled } from "../../lib/flags";
+import type { DiscordWidget } from "../../types/discord";
+import { fetchDiscordWidget } from "../../utils/discord-widget";
 
 // Context for Discord widget data
 const DiscordWidgetContext = createContext<DiscordWidget | null>(null);
@@ -103,7 +103,14 @@ type LearnPostProps = {
   hasDuplicateDescription: boolean;
 };
 
-export default function LearnPost({ post, mdxSource, discordWidget, enableTitleAnimation, hasDuplicateTitle, hasDuplicateDescription }: LearnPostProps) {
+export default function LearnPost({
+  post,
+  mdxSource,
+  discordWidget,
+  enableTitleAnimation,
+  hasDuplicateTitle,
+  hasDuplicateDescription,
+}: LearnPostProps) {
   const [, setCompleted] = useState(false);
   const recordView = useMutation(api.blogViews.recordView);
   const grantPostViewXp = useMutation(api.experience.grantPostViewXp);
@@ -160,7 +167,7 @@ export default function LearnPost({ post, mdxSource, discordWidget, enableTitleA
 
   const similarArticles = useQuery(
     api.blogPosts.getPostsBySlugs,
-    similarSlugs.length > 0 ? { slugs: similarSlugs } : "skip"
+    similarSlugs.length > 0 ? { slugs: similarSlugs } : "skip",
   );
 
   // Record view and grant XP when post loads
@@ -188,7 +195,14 @@ export default function LearnPost({ post, mdxSource, discordWidget, enableTitleA
     <UserPopoutProvider>
       <DiscordWidgetContext.Provider value={discordWidget}>
         <CircleIndicator onComplete={() => setCompleted(true)} />
-        <PostBody post={post} mdxSource={mdxSource} similarArticles={similarArticles} enableTitleAnimation={enableTitleAnimation} hasDuplicateTitle={hasDuplicateTitle} hasDuplicateDescription={hasDuplicateDescription} />
+        <PostBody
+          post={post}
+          mdxSource={mdxSource}
+          similarArticles={similarArticles}
+          enableTitleAnimation={enableTitleAnimation}
+          hasDuplicateTitle={hasDuplicateTitle}
+          hasDuplicateDescription={hasDuplicateDescription}
+        />
         {/* UserPopout rendered at root level for portal positioning */}
         <UserPopout />
       </DiscordWidgetContext.Provider>
@@ -211,9 +225,24 @@ interface SimilarArticle {
   author?: { displayName: string; avatarUrl?: string } | null;
 }
 
-function PostBody({ post, mdxSource, similarArticles, enableTitleAnimation, hasDuplicateTitle, hasDuplicateDescription }: { post: PostData; mdxSource: MDXRemoteSerializeResult | null; similarArticles?: SimilarArticle[]; enableTitleAnimation: boolean; hasDuplicateTitle: boolean; hasDuplicateDescription: boolean }) {
+function PostBody({
+  post,
+  mdxSource,
+  similarArticles,
+  enableTitleAnimation,
+  hasDuplicateTitle,
+  hasDuplicateDescription,
+}: {
+  post: PostData;
+  mdxSource: MDXRemoteSerializeResult | null;
+  similarArticles?: SimilarArticle[];
+  enableTitleAnimation: boolean;
+  hasDuplicateTitle: boolean;
+  hasDuplicateDescription: boolean;
+}) {
   const location = `https://nev.so/learn/${post.slug}`;
-  const ogImage = post.coverImage || `https://nev.so/api/og?title=${encodeURIComponent(post.title)}`;
+  const ogImage =
+    post.coverImage || `https://nev.so/api/og?title=${encodeURIComponent(post.title)}`;
   const creationDate = post.publishedAt ? new Date(post.publishedAt) : new Date();
 
   // Auth state
@@ -252,13 +281,17 @@ function PostBody({ post, mdxSource, similarArticles, enableTitleAnimation, hasD
   // Highlight queries
   const highlights = useQuery(api.contentHighlights.getForPost, { postId: post._id });
   const highlightCounts = useQuery(api.contentHighlights.getCounts, { postId: post._id });
-  const highlightsWithDetails = useQuery(api.contentHighlights.getWithDetails, { postId: post._id });
+  const highlightsWithDetails = useQuery(api.contentHighlights.getWithDetails, {
+    postId: post._id,
+  });
 
   // Reactions query - for showing in modal
   const highlightReactions = useQuery(api.contentReactions.getForPost, { postId: post._id });
 
   // Comment counts for highlights
-  const highlightCommentCounts = useQuery(api.contentComments.getCountsForPost, { postId: post._id });
+  const highlightCommentCounts = useQuery(api.contentComments.getCountsForPost, {
+    postId: post._id,
+  });
 
   // State for viewing comments on a highlight
   const [activeHighlightId, setActiveHighlightId] = useState<string | null>(null);
@@ -299,11 +332,13 @@ function PostBody({ post, mdxSource, similarArticles, enableTitleAnimation, hasD
   // Query comments for active highlight
   const activeHighlightComments = useQuery(
     api.contentComments.getForHighlight,
-    activeHighlightId ? { highlightId: activeHighlightId as Id<"contentHighlights"> } : "skip"
+    activeHighlightId ? { highlightId: activeHighlightId as Id<"contentHighlights"> } : "skip",
   );
 
   // Get highlighted text for the active highlight (with user details)
-  const activeHighlight = highlightsWithDetails?.highlights?.find(h => h._id.toString() === activeHighlightId);
+  const activeHighlight = highlightsWithDetails?.highlights?.find(
+    (h) => h._id.toString() === activeHighlightId,
+  );
 
   // Highlight mutations
   const createHighlight = useMutation(api.contentHighlights.create);
@@ -318,103 +353,112 @@ function PostBody({ post, mdxSource, similarArticles, enableTitleAnimation, hasD
   });
 
   // Handle creating a highlight
-  const handleHighlight = useCallback(async (anchor: TextAnchor) => {
-    if (!isSignedIn) return;
-    setIsHighlighting(true);
-    try {
-      const highlightId = await createHighlight({
-        postId: post._id,
-        highlightedText: anchor.highlightedText,
-        prefix: anchor.prefix,
-        suffix: anchor.suffix,
-      });
-      // Mark as new for animation
-      setNewHighlightIds((prev) => new Set([...prev, highlightId]));
-      // Clear after animation
-      setTimeout(() => {
-        setNewHighlightIds((prev) => {
-          const next = new Set(prev);
-          next.delete(highlightId);
-          return next;
+  const handleHighlight = useCallback(
+    async (anchor: TextAnchor) => {
+      if (!isSignedIn) return;
+      setIsHighlighting(true);
+      try {
+        const highlightId = await createHighlight({
+          postId: post._id,
+          highlightedText: anchor.highlightedText,
+          prefix: anchor.prefix,
+          suffix: anchor.suffix,
         });
-      }, 1000);
-      selection.clearSelection();
-    } catch (error) {
-      console.error("Failed to create highlight:", error);
-    } finally {
-      setIsHighlighting(false);
-    }
-  }, [isSignedIn, createHighlight, post._id, selection]);
+        // Mark as new for animation
+        setNewHighlightIds((prev) => new Set([...prev, highlightId]));
+        // Clear after animation
+        setTimeout(() => {
+          setNewHighlightIds((prev) => {
+            const next = new Set(prev);
+            next.delete(highlightId);
+            return next;
+          });
+        }, 1000);
+        selection.clearSelection();
+      } catch (error) {
+        console.error("Failed to create highlight:", error);
+      } finally {
+        setIsHighlighting(false);
+      }
+    },
+    [isSignedIn, createHighlight, post._id, selection],
+  );
 
   // Handle comment button click - shows comment input
-  const handleComment = useCallback((anchor: TextAnchor) => {
-    if (!isSignedIn) return;
+  const handleComment = useCallback(
+    (anchor: TextAnchor) => {
+      if (!isSignedIn) return;
 
-    // Use selection.rect if available, otherwise calculate from anchor text position
-    const scrollY = window.scrollY;
-    let position: { top: number; left: number };
+      // Use selection.rect if available, otherwise calculate from anchor text position
+      const scrollY = window.scrollY;
+      let position: { top: number; left: number };
 
-    if (selection.rect) {
-      position = {
-        top: selection.rect.bottom + scrollY + 12,
-        left: selection.rect.left + selection.rect.width / 2,
-      };
-    } else {
-      // Fallback: center of viewport
-      position = {
-        top: scrollY + window.innerHeight / 3,
-        left: window.innerWidth / 2,
-      };
-    }
+      if (selection.rect) {
+        position = {
+          top: selection.rect.bottom + scrollY + 12,
+          left: selection.rect.left + selection.rect.width / 2,
+        };
+      } else {
+        // Fallback: center of viewport
+        position = {
+          top: scrollY + window.innerHeight / 3,
+          left: window.innerWidth / 2,
+        };
+      }
 
-    setPendingComment({
-      anchor,
-      position,
-      selectedText: anchor.highlightedText,
-    });
+      setPendingComment({
+        anchor,
+        position,
+        selectedText: anchor.highlightedText,
+      });
 
-    // Clear the text selection so toolbar hides
-    selection.clearSelection();
-  }, [isSignedIn, selection]);
+      // Clear the text selection so toolbar hides
+      selection.clearSelection();
+    },
+    [isSignedIn, selection],
+  );
 
   // Handle comment submission - creates highlight + comment
-  const handleCommentSubmit = useCallback(async (content: string) => {
-    if (!pendingComment || !isSignedIn) return;
+  const handleCommentSubmit = useCallback(
+    async (content: string) => {
+      if (!pendingComment || !isSignedIn) return;
 
-    setIsSubmittingComment(true);
-    try {
-      // First create the highlight
-      const highlightId = await createHighlight({
-        postId: post._id,
-        highlightedText: pendingComment.anchor.highlightedText,
-        prefix: pendingComment.anchor.prefix,
-        suffix: pendingComment.anchor.suffix,
-      });
-
-      // Then create the comment on that highlight
-      await createComment({
-        highlightId,
-        content,
-      });
-
-      // Mark as new for animation
-      setNewHighlightIds((prev) => new Set([...prev, highlightId]));
-      setTimeout(() => {
-        setNewHighlightIds((prev) => {
-          const next = new Set(prev);
-          next.delete(highlightId);
-          return next;
+      setIsSubmittingComment(true);
+      try {
+        // First create the highlight
+        const highlightId = await createHighlight({
+          postId: post._id,
+          highlightedText: pendingComment.anchor.highlightedText,
+          prefix: pendingComment.anchor.prefix,
+          suffix: pendingComment.anchor.suffix,
         });
-      }, 1000);
 
-      // Close the comment input
-      setPendingComment(null);
-    } catch (error) {
-      console.error("Failed to create comment:", error);
-    } finally {
-      setIsSubmittingComment(false);
-    }
-  }, [pendingComment, isSignedIn, createHighlight, createComment, post._id]);
+        // Then create the comment on that highlight
+        await createComment({
+          highlightId,
+          content,
+        });
+
+        // Mark as new for animation
+        setNewHighlightIds((prev) => new Set([...prev, highlightId]));
+        setTimeout(() => {
+          setNewHighlightIds((prev) => {
+            const next = new Set(prev);
+            next.delete(highlightId);
+            return next;
+          });
+        }, 1000);
+
+        // Close the comment input
+        setPendingComment(null);
+      } catch (error) {
+        console.error("Failed to create comment:", error);
+      } finally {
+        setIsSubmittingComment(false);
+      }
+    },
+    [pendingComment, isSignedIn, createHighlight, createComment, post._id],
+  );
 
   // Handle canceling comment
   const handleCommentCancel = useCallback(() => {
@@ -422,89 +466,98 @@ function PostBody({ post, mdxSource, similarArticles, enableTitleAnimation, hasD
   }, []);
 
   // Handle deleting a highlight
-  const handleDeleteHighlight = useCallback(async (highlightId: string) => {
-    if (!isSignedIn) return;
-    await removeHighlight({ highlightId: highlightId as Id<"contentHighlights"> });
-  }, [isSignedIn, removeHighlight]);
+  const handleDeleteHighlight = useCallback(
+    async (highlightId: string) => {
+      if (!isSignedIn) return;
+      await removeHighlight({ highlightId: highlightId as Id<"contentHighlights"> });
+    },
+    [isSignedIn, removeHighlight],
+  );
 
   // Handle reaction on highlight - creates reaction-only anchor then adds reaction
-  const handleReact = useCallback(async (anchor: TextAnchor, type: string) => {
-    if (!isSignedIn) return;
+  const handleReact = useCallback(
+    async (anchor: TextAnchor, type: string) => {
+      if (!isSignedIn) return;
 
-    try {
-      // Create a reaction-only anchor (no visible highlight mark)
-      const highlightId = await createHighlight({
-        postId: post._id,
-        highlightedText: anchor.highlightedText,
-        prefix: anchor.prefix,
-        suffix: anchor.suffix,
-        isReactionOnly: true,
-      });
-
-      // Then add the reaction
-      await reactToHighlight({
-        highlightId,
-        type: type as "fire" | "heart" | "plus1" | "eyes" | "question",
-      });
-
-      selection.clearSelection();
-    } catch (error) {
-      console.error("Failed to create reaction:", error);
-    }
-  }, [isSignedIn, createHighlight, reactToHighlight, post._id, selection]);
-
-  // Scroll to highlight - find the text in content and scroll to it
-  const scrollToHighlight = useCallback((highlightId: string) => {
-    // Small delay to allow modal to close and body overflow to reset
-    setTimeout(() => {
-      // First try to find the highlight mark overlay
-      const mark = document.querySelector(`[data-highlight-id="${highlightId}"]`);
-      if (mark) {
-        // Get the mark's position relative to the viewport
-        const markRect = mark.getBoundingClientRect();
-        const scrollTarget = window.scrollY + markRect.top - window.innerHeight / 2;
-
-        // Scroll to center the highlight in the viewport
-        window.scrollTo({
-          top: Math.max(0, scrollTarget),
-          behavior: "smooth"
+      try {
+        // Create a reaction-only anchor (no visible highlight mark)
+        const highlightId = await createHighlight({
+          postId: post._id,
+          highlightedText: anchor.highlightedText,
+          prefix: anchor.prefix,
+          suffix: anchor.suffix,
+          isReactionOnly: true,
         });
 
-        // Flash the highlight to make it more visible
-        mark.classList.add("highlight-flash");
-        setTimeout(() => mark.classList.remove("highlight-flash"), 2000);
-        return;
+        // Then add the reaction
+        await reactToHighlight({
+          highlightId,
+          type: type as "fire" | "heart" | "plus1" | "eyes" | "question",
+        });
+
+        selection.clearSelection();
+      } catch (error) {
+        console.error("Failed to create reaction:", error);
       }
+    },
+    [isSignedIn, createHighlight, reactToHighlight, post._id, selection],
+  );
 
-      // Fallback: find by searching in the content using the highlight data
-      const highlight = highlights?.find(h => h._id.toString() === highlightId);
-      if (highlight && contentRef.current) {
-        const container = contentRef.current;
-        const fullText = container.textContent || "";
-        const index = fullText.indexOf(highlight.highlightedText);
+  // Scroll to highlight - find the text in content and scroll to it
+  const scrollToHighlight = useCallback(
+    (highlightId: string) => {
+      // Small delay to allow modal to close and body overflow to reset
+      setTimeout(() => {
+        // First try to find the highlight mark overlay
+        const mark = document.querySelector(`[data-highlight-id="${highlightId}"]`);
+        if (mark) {
+          // Get the mark's position relative to the viewport
+          const markRect = mark.getBoundingClientRect();
+          const scrollTarget = window.scrollY + markRect.top - window.innerHeight / 2;
 
-        if (index !== -1) {
-          // Find the text node containing this text
-          const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, null);
-          let currentPos = 0;
-          let node: Text | null;
+          // Scroll to center the highlight in the viewport
+          window.scrollTo({
+            top: Math.max(0, scrollTarget),
+            behavior: "smooth",
+          });
 
-          while ((node = walker.nextNode() as Text | null)) {
-            const nodeLength = node.textContent?.length || 0;
-            if (currentPos + nodeLength > index) {
-              // Found the node, scroll to its parent element
-              const parentEl = node.parentElement;
-              if (parentEl) {
-                parentEl.scrollIntoView({ behavior: "smooth", block: "center" });
+          // Flash the highlight to make it more visible
+          mark.classList.add("highlight-flash");
+          setTimeout(() => mark.classList.remove("highlight-flash"), 2000);
+          return;
+        }
+
+        // Fallback: find by searching in the content using the highlight data
+        const highlight = highlights?.find((h) => h._id.toString() === highlightId);
+        if (highlight && contentRef.current) {
+          const container = contentRef.current;
+          const fullText = container.textContent || "";
+          const index = fullText.indexOf(highlight.highlightedText);
+
+          if (index !== -1) {
+            // Find the text node containing this text
+            const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, null);
+            let currentPos = 0;
+            let node: Text | null;
+
+            while ((node = walker.nextNode() as Text | null)) {
+              const nodeLength = node.textContent?.length || 0;
+              if (currentPos + nodeLength > index) {
+                // Found the node, scroll to its parent element
+                const parentEl = node.parentElement;
+                if (parentEl) {
+                  parentEl.scrollIntoView({ behavior: "smooth", block: "center" });
+                }
+                break;
               }
-              break;
+              currentPos += nodeLength;
             }
-            currentPos += nodeLength;
           }
         }
-      }
-    }, 150);
-  }, [highlights]);
+      }, 150);
+    },
+    [highlights],
+  );
 
   // Handle clicking on a highlight to view/add comments
   const handleHighlightClick = useCallback((highlightId: string) => {
@@ -521,19 +574,22 @@ function PostBody({ post, mdxSource, similarArticles, enableTitleAnimation, hasD
   }, []);
 
   // Handle submitting a comment on an existing highlight
-  const handleInlineCommentSubmit = useCallback(async (content: string) => {
-    if (!activeHighlightId || !isSignedIn) return;
+  const handleInlineCommentSubmit = useCallback(
+    async (content: string) => {
+      if (!activeHighlightId || !isSignedIn) return;
 
-    try {
-      await createComment({
-        highlightId: activeHighlightId as Id<"contentHighlights">,
-        content,
-      });
-    } catch (error) {
-      console.error("Failed to add comment:", error);
-      alert(`Failed to add comment: ${error instanceof Error ? error.message : "Unknown error"}`);
-    }
-  }, [activeHighlightId, isSignedIn, createComment]);
+      try {
+        await createComment({
+          highlightId: activeHighlightId as Id<"contentHighlights">,
+          content,
+        });
+      } catch (error) {
+        console.error("Failed to add comment:", error);
+        alert(`Failed to add comment: ${error instanceof Error ? error.message : "Unknown error"}`);
+      }
+    },
+    [activeHighlightId, isSignedIn, createComment],
+  );
 
   // Close inline comment bubble
   const handleCloseInlineComment = useCallback(() => {
@@ -573,20 +629,16 @@ function PostBody({ post, mdxSource, similarArticles, enableTitleAnimation, hasD
     };
 
     updateMeasurements();
-    window.addEventListener('resize', updateMeasurements);
+    window.addEventListener("resize", updateMeasurements);
     const timeout = setTimeout(updateMeasurements, 100);
     return () => {
-      window.removeEventListener('resize', updateMeasurements);
+      window.removeEventListener("resize", updateMeasurements);
       clearTimeout(timeout);
     };
   }, [enableTitleAnimation]);
 
   // Smooth progress from 0 to 1 based on scroll
-  const rawProgress = useTransform(
-    scrollY,
-    [triggerPoint, triggerPoint + transitionRange],
-    [0, 1]
-  );
+  const rawProgress = useTransform(scrollY, [triggerPoint, triggerPoint + transitionRange], [0, 1]);
 
   // Apply spring physics for iOS-like smoothness
   const progress = useSpring(rawProgress, {
@@ -616,8 +668,8 @@ function PostBody({ post, mdxSource, similarArticles, enableTitleAnimation, hasD
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
   }, []);
   const rawHeroExtraPadding = useTransform(scrollY, [0, 200], [isMobile ? 100 : 70, 24]);
   const heroExtraPaddingAnimated = useSpring(rawHeroExtraPadding, { stiffness: 300, damping: 30 });
@@ -626,7 +678,7 @@ function PostBody({ post, mdxSource, similarArticles, enableTitleAnimation, hasD
   const contentPullUpAnimated = useSpring(rawContentPullUp, { stiffness: 300, damping: 30 });
 
   // When animation is disabled, use static values
-  const heroExtraPadding = enableTitleAnimation ? heroExtraPaddingAnimated : (isMobile ? 100 : 70);
+  const heroExtraPadding = enableTitleAnimation ? heroExtraPaddingAnimated : isMobile ? 100 : 70;
   const contentPullUp = enableTitleAnimation ? contentPullUpAnimated : 0;
 
   return (
@@ -685,7 +737,10 @@ function PostBody({ post, mdxSource, similarArticles, enableTitleAnimation, hasD
                 {post.author?._id ? (
                   <AuthorTrigger userId={post.author._id}>
                     {post.author.avatarUrl ? (
-                      <AuthorAvatarInline src={post.author.avatarUrl} alt={post.author.displayName} />
+                      <AuthorAvatarInline
+                        src={post.author.avatarUrl}
+                        alt={post.author.displayName}
+                      />
                     ) : (
                       <Avatar width="18" height="18" />
                     )}
@@ -706,7 +761,10 @@ function PostBody({ post, mdxSource, similarArticles, enableTitleAnimation, hasD
                         </AuthorSeparator>
                         <AuthorTrigger userId={collaborator._id}>
                           {collaborator.avatarUrl ? (
-                            <AuthorAvatarInline src={collaborator.avatarUrl} alt={collaborator.displayName} />
+                            <AuthorAvatarInline
+                              src={collaborator.avatarUrl}
+                              alt={collaborator.displayName}
+                            />
                           ) : (
                             <Avatar width="18" height="18" />
                           )}
@@ -749,8 +807,6 @@ function PostBody({ post, mdxSource, similarArticles, enableTitleAnimation, hasD
             </Labels>
           ) : null}
 
-          
-
           {/* Reactions and Highlights */}
           <HeroActionsRow>
             <ReactionBar postId={post._id} variant="hero" />
@@ -764,16 +820,10 @@ function PostBody({ post, mdxSource, similarArticles, enableTitleAnimation, hasD
           </HeroActionsRow>
 
           <IconContainer direction="row">
-            <HeroActionButton
-              onClick={() => setShareModalOpen(true)}
-              title="Share this article"
-            >
+            <HeroActionButton onClick={() => setShareModalOpen(true)} title="Share this article">
               <Share2 />
             </HeroActionButton>
-            <HeroActionButton
-              onClick={() => setCreditsModalOpen(true)}
-              title="View credits"
-            >
+            <HeroActionButton onClick={() => setCreditsModalOpen(true)} title="View credits">
               <FileText />
             </HeroActionButton>
             {post.mediumUrl && (
@@ -795,13 +845,7 @@ function PostBody({ post, mdxSource, similarArticles, enableTitleAnimation, hasD
               />
             )}
             {post.devToUrl && (
-              <IconLink
-                icon={faDev}
-                target="_blank"
-                href={post.devToUrl}
-                width="24"
-                height="24"
-              />
+              <IconLink icon={faDev} target="_blank" href={post.devToUrl} width="24" height="24" />
             )}
           </IconContainer>
         </PostHeader>
@@ -832,9 +876,7 @@ function PostBody({ post, mdxSource, similarArticles, enableTitleAnimation, hasD
           >
             <ContentTitle>{post.title}</ContentTitle>
             {/* Only show description here if it also matches */}
-            {hasDuplicateDescription && (
-              <ContentDescription>{post.description}</ContentDescription>
-            )}
+            {hasDuplicateDescription && <ContentDescription>{post.description}</ContentDescription>}
           </ContentTitleWrapper>
         )}
 
@@ -913,15 +955,16 @@ function PostBody({ post, mdxSource, similarArticles, enableTitleAnimation, hasD
         <InfoBanner>
           <InfoLabel>INFO</InfoLabel>
           <InfoText>
-            Nevulo articles will always be ad-free, thanks to supporters and <SuperLegendText>Super Legends</SuperLegendText>. If you enjoy this work, you can become a supporter today and get benefits.{" "}
-            <InfoLink href="/support">Learn more</InfoLink>
+            Nevulo articles will always be ad-free, thanks to supporters and{" "}
+            <SuperLegendText>Super Legends</SuperLegendText>. If you enjoy this work, you can become
+            a supporter today and get benefits. <InfoLink href="/support">Learn more</InfoLink>
           </InfoText>
         </InfoBanner>
       )}
 
       {post.contentType === "article" && (
         <ThanksSection ref={thanksSectionRef}>
-          <ThanksTitle>Thanks for reading!</ThanksTitle>
+          <ThanksTitle>thanks for reading</ThanksTitle>
           <ThanksSubtitle>
             If you found this helpful, share it with others or leave a reaction above.
           </ThanksSubtitle>
@@ -950,9 +993,7 @@ function PostBody({ post, mdxSource, similarArticles, enableTitleAnimation, hasD
               </ShareButton>
             )}
           </ShareLinks>
-          <ReportLink onClick={() => setReportModalOpen(true)}>
-            Report an issue
-          </ReportLink>
+          <ReportLink onClick={() => setReportModalOpen(true)}>Report an issue</ReportLink>
         </ThanksSection>
       )}
 
@@ -1041,7 +1082,10 @@ function PostBody({ post, mdxSource, similarArticles, enableTitleAnimation, hasD
         <meta property="twitter:creator" content="@Nevvulo" />
         <meta property="creator" content={post.author?.displayName || "Nevulo"} />
         <meta property="og:article:published_time" content={creationDate.toISOString()} />
-        <meta property="og:article:author:username" content={post.author?.displayName || "Nevulo"} />
+        <meta
+          property="og:article:author:username"
+          content={post.author?.displayName || "Nevulo"}
+        />
         <meta property="og:article:section" content="Technology" />
         {post.labels?.map((tag) => (
           <meta key={tag} property="og:article:tag" content={tag} />
@@ -1618,7 +1662,10 @@ const NumberBadge = styled.span`
 
 // Helper to generate slug from heading text for TOC navigation
 const slugify = (text: string) =>
-  text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+  text
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
 
 const Subtitle = (props: any) => {
   const text = String(props.children || "");
@@ -1731,13 +1778,13 @@ const ThanksSection = styled.div`
 
 const ThanksTitle = styled.h2`
   margin: 0 0 12px;
-  font-size: 32px;
+  font-size: 26px;
   font-weight: 700;
   background: linear-gradient(135deg, #9074f2, #b794f6);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  font-family: var(--font-sans);
+  font-family: "Sixtyfour", var(--font-mono);
 `;
 
 const ThanksSubtitle = styled.p`
@@ -1938,7 +1985,16 @@ export async function getServerSideProps({ params }: { params: { slug: string } 
     const post = await convex.query(api.blogPosts.getBySlug, { slug });
 
     if (!post || post.status !== "published") {
-      return { props: { post: null, mdxSource: null, discordWidget: null, enableTitleAnimation, hasDuplicateTitle: false, hasDuplicateDescription: false } };
+      return {
+        props: {
+          post: null,
+          mdxSource: null,
+          discordWidget: null,
+          enableTitleAnimation,
+          hasDuplicateTitle: false,
+          hasDuplicateDescription: false,
+        },
+      };
     }
 
     // Detect if content starts with duplicate title/description
@@ -1946,19 +2002,24 @@ export async function getServerSideProps({ params }: { params: { slug: string } 
       return text
         .toLowerCase()
         .trim()
-        .replace(/[^\w\s]/g, '') // Remove punctuation
-        .replace(/\s+/g, ' '); // Normalize whitespace
+        .replace(/[^\w\s]/g, "") // Remove punctuation
+        .replace(/\s+/g, " "); // Normalize whitespace
     };
 
-    const detectDuplicates = (content: string, title: string, description: string): { hasDuplicateTitle: boolean; hasDuplicateDescription: boolean } => {
-      const lines = content.trim().split('\n');
+    const detectDuplicates = (
+      content: string,
+      title: string,
+      description: string,
+    ): { hasDuplicateTitle: boolean; hasDuplicateDescription: boolean } => {
+      const lines = content.trim().split("\n");
       if (lines.length < 1) return { hasDuplicateTitle: false, hasDuplicateDescription: false };
 
       // Check if first line is a markdown h1 matching the title
       const firstLine = lines[0];
       if (!firstLine) return { hasDuplicateTitle: false, hasDuplicateDescription: false };
       const firstLineTrimmed = firstLine.trim();
-      const hasDuplicateTitle = firstLineTrimmed.startsWith('# ') &&
+      const hasDuplicateTitle =
+        firstLineTrimmed.startsWith("# ") &&
         normalizeForComparison(firstLineTrimmed.slice(2)) === normalizeForComparison(title);
 
       // Look for description match in the first few paragraphs (skip empty lines)
@@ -1967,8 +2028,8 @@ export async function getServerSideProps({ params }: { params: { slug: string } 
         const line = lines[i];
         if (!line) continue;
         const lineTrimmed = line.trim();
-        if (lineTrimmed === '') continue;
-        if (lineTrimmed.startsWith('#')) break; // Hit another heading
+        if (lineTrimmed === "") continue;
+        if (lineTrimmed.startsWith("#")) break; // Hit another heading
         if (normalizeForComparison(lineTrimmed) === normalizeForComparison(description)) {
           hasDuplicateDescription = true;
         }
@@ -1978,19 +2039,23 @@ export async function getServerSideProps({ params }: { params: { slug: string } 
       return { hasDuplicateTitle, hasDuplicateDescription };
     };
 
-    const { hasDuplicateTitle, hasDuplicateDescription } = detectDuplicates(post.content, post.title, post.description);
+    const { hasDuplicateTitle, hasDuplicateDescription } = detectDuplicates(
+      post.content,
+      post.title,
+      post.description,
+    );
 
     // Strip duplicate title/description from content before MDX serialization
     let processedContent = post.content;
     if (hasDuplicateTitle || hasDuplicateDescription) {
-      const lines = processedContent.split('\n');
+      const lines = processedContent.split("\n");
       let linesToRemove = 0;
 
       // Remove first h1 if it matches title
-      if (hasDuplicateTitle && lines[0]?.trim().startsWith('# ')) {
+      if (hasDuplicateTitle && lines[0]?.trim().startsWith("# ")) {
         linesToRemove = 1;
         // Skip any empty lines after title
-        while (linesToRemove < lines.length && lines[linesToRemove]?.trim() === '') {
+        while (linesToRemove < lines.length && lines[linesToRemove]?.trim() === "") {
           linesToRemove++;
         }
       }
@@ -1998,16 +2063,20 @@ export async function getServerSideProps({ params }: { params: { slug: string } 
       // Remove first paragraph if it matches description
       if (hasDuplicateDescription && linesToRemove < lines.length) {
         const nextLine = lines[linesToRemove]?.trim();
-        if (nextLine && !nextLine.startsWith('#') && normalizeForComparison(nextLine) === normalizeForComparison(post.description)) {
+        if (
+          nextLine &&
+          !nextLine.startsWith("#") &&
+          normalizeForComparison(nextLine) === normalizeForComparison(post.description)
+        ) {
           linesToRemove++;
           // Skip any empty lines after description
-          while (linesToRemove < lines.length && lines[linesToRemove]?.trim() === '') {
+          while (linesToRemove < lines.length && lines[linesToRemove]?.trim() === "") {
             linesToRemove++;
           }
         }
       }
 
-      processedContent = lines.slice(linesToRemove).join('\n');
+      processedContent = lines.slice(linesToRemove).join("\n");
     }
 
     // Serialize MDX content
@@ -2023,12 +2092,13 @@ export async function getServerSideProps({ params }: { params: { slug: string } 
       });
 
       // Escape curly braces outside code blocks
-      const escaped = withPlaceholders
-        .replace(/\{/g, '\\{')
-        .replace(/\}/g, '\\}');
+      const escaped = withPlaceholders.replace(/\{/g, "\\{").replace(/\}/g, "\\}");
 
       // Restore code blocks
-      return escaped.replace(/__CODE_BLOCK_(\d+)__/g, (_, index) => codeBlocks[parseInt(index)] ?? '');
+      return escaped.replace(
+        /__CODE_BLOCK_(\d+)__/g,
+        (_, index) => codeBlocks[parseInt(index)] ?? "",
+      );
     };
 
     let mdxSource: MDXRemoteSerializeResult | null = null;
@@ -2060,6 +2130,15 @@ export async function getServerSideProps({ params }: { params: { slug: string } 
     };
   } catch (error) {
     console.error("Error fetching post:", error);
-    return { props: { post: null, mdxSource: null, discordWidget: null, enableTitleAnimation: false, hasDuplicateTitle: false, hasDuplicateDescription: false } };
+    return {
+      props: {
+        post: null,
+        mdxSource: null,
+        discordWidget: null,
+        enableTitleAnimation: false,
+        hasDuplicateTitle: false,
+        hasDuplicateDescription: false,
+      },
+    };
   }
 }

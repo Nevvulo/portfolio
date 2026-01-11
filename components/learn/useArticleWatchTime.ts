@@ -1,6 +1,6 @@
-import { useEffect, useRef } from "react";
 import { useUser } from "@clerk/nextjs";
-import { Id } from "../../convex/_generated/dataModel";
+import { useEffect, useRef } from "react";
+import type { Id } from "../../convex/_generated/dataModel";
 
 // Heartbeat interval in milliseconds (30 seconds)
 // Reduced from 5s to save function calls - uses Redis buffering

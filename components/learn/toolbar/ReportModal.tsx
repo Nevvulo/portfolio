@@ -1,27 +1,27 @@
-import React, { useState, useCallback } from "react";
-import styled from "styled-components";
-import { createPortal } from "react-dom";
-import { m, AnimatePresence } from "framer-motion";
+import { useMutation } from "convex/react";
+import { AnimatePresence, m } from "framer-motion";
 import {
-  X,
-  Flag,
-  ChevronRight,
   AlertCircle,
-  FileText,
-  ThumbsDown,
-  Scale,
-  Mail,
-  UserX,
-  HelpCircle,
-  ExternalLink,
   ArrowLeft,
   Check,
+  ChevronRight,
+  ExternalLink,
+  FileText,
+  Flag,
+  HelpCircle,
+  Mail,
+  Scale,
+  ThumbsDown,
+  UserX,
+  X,
 } from "lucide-react";
+import Link from "next/link";
+import React, { useCallback, useState } from "react";
+import { createPortal } from "react-dom";
+import styled from "styled-components";
 import { LOUNGE_COLORS } from "@/constants/lounge";
-import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
-import Link from "next/link";
 
 type ReportCategory =
   | "content_quality"
@@ -103,7 +103,7 @@ interface ReportModalProps {
 
 type ScreenState = "categories" | "text-input" | "success" | "already-reported";
 
-export function ReportModal({ isOpen, onClose, postId, postTitle }: ReportModalProps) {
+export function ReportModal({ isOpen, onClose, postId }: ReportModalProps) {
   const [mounted, setMounted] = useState(false);
   const [screen, setScreen] = useState<ScreenState>("categories");
   const [selectedCategory, setSelectedCategory] = useState<ReportOption | null>(null);
@@ -193,7 +193,7 @@ export function ReportModal({ isOpen, onClose, postId, postTitle }: ReportModalP
         setIsSubmitting(false);
       }
     },
-    [createReport, postId, selectedCategory, reason]
+    [createReport, postId, selectedCategory, reason],
   );
 
   const handleBack = useCallback(() => {
@@ -367,7 +367,7 @@ export function ReportModal({ isOpen, onClose, postId, postTitle }: ReportModalP
         </>
       )}
     </AnimatePresence>,
-    document.body
+    document.body,
   );
 }
 

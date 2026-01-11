@@ -70,9 +70,7 @@ function serializeNode(node: JSONContent, indent = ""): string {
     }
 
     case "blockquote": {
-      const content = (node.content || [])
-        .map((n) => serializeNode(n))
-        .join("\n\n");
+      const content = (node.content || []).map((n) => serializeNode(n)).join("\n\n");
       return content
         .split("\n")
         .map((line) => `> ${line}`)
@@ -127,9 +125,7 @@ function serializeNode(node: JSONContent, indent = ""): string {
 
     case "callout": {
       const type = node.attrs?.type || "info";
-      const content = (node.content || [])
-        .map((n) => serializeNode(n))
-        .join("\n\n");
+      const content = (node.content || []).map((n) => serializeNode(n)).join("\n\n");
       return `<Callout type="${type}">\n${content}\n</Callout>`;
     }
 

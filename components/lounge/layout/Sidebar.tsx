@@ -1,29 +1,29 @@
-import Link from "next/link";
-import Image from "next/image";
-import styled, { keyframes } from "styled-components";
+import { useClerk } from "@clerk/nextjs";
+import { useQuery } from "convex/react";
 import {
+  BellIcon,
+  ChevronDown,
+  Crown,
+  Gift,
+  Hash,
+  HelpCircle,
   Megaphone,
   MessageCircle,
-  Sparkles,
-  Crown,
-  Star,
-  Hash,
   Settings,
-  Gift,
-  BellIcon,
-  HelpCircle,
+  Sparkles,
+  Star,
   TreePalm,
-  ChevronDown,
 } from "lucide-react";
-import { useQuery } from "convex/react";
-import { useClerk } from "@clerk/nextjs";
-import { api } from "../../../convex/_generated/api";
+import Image from "next/image";
+import Link from "next/link";
+import styled, { keyframes } from "styled-components";
+import NevuloLogo from "../../../assets/svg/nevulo-huge-bold-svg.svg";
 import { LOUNGE_COLORS, TIER_INFO } from "../../../constants/lounge";
-import type { Tier, ChannelWithAccess } from "../../../types/lounge";
+import { api } from "../../../convex/_generated/api";
+import { useSidebarStore } from "../../../hooks/lounge/useSidebarStore";
+import type { ChannelWithAccess, Tier } from "../../../types/lounge";
 import { SupporterBadges } from "../../badges/supporter-badges";
 import { Tooltip } from "../ui/Tooltip";
-import { useSidebarStore } from "../../../hooks/lounge/useSidebarStore";
-import NevuloLogo from "../../../assets/svg/nevulo-huge-bold-svg.svg";
 
 interface SidebarProps {
   currentChannelSlug?: string;
@@ -79,24 +79,16 @@ export function Sidebar({
       {/* Header */}
       <SidebarHeader>
         <LogoImage>
-          <Image
-            src={NevuloLogo}
-            alt="Nevulo Logo"
-            width={16}
-            height={16}
-          />
+          <Image src={NevuloLogo} alt="Nevulo Logo" width={16} height={16} />
         </LogoImage>
         <LogoText>nevulounge</LogoText>
-        <LogoText style={{ color: '#d8bfff' }}>beta</LogoText>
+        <LogoText style={{ color: "#d8bfff" }}>beta</LogoText>
       </SidebarHeader>
 
       {/* Channel List */}
       <ChannelList>
         <ChannelGroup>
-          <ChannelGroupHeader
-            onClick={() => toggleCategory("channels")}
-            $isCollapsible
-          >
+          <ChannelGroupHeader onClick={() => toggleCategory("channels")} $isCollapsible>
             <CollapseIcon $isCollapsed={isCollapsed("channels")}>
               <ChevronDown size={12} />
             </CollapseIcon>
@@ -134,16 +126,18 @@ export function Sidebar({
                       <ChannelIcon channel={channel} />
                       <ChannelName $hasUnread={false}>{channel.name}</ChannelName>
                       <TierBadge $tier={channel.requiredTier}>
-                        {channel.requiredTier === "tier2" ? <Crown size={10} /> : <Star size={10} />}
+                        {channel.requiredTier === "tier2" ? (
+                          <Crown size={10} />
+                        ) : (
+                          <Star size={10} />
+                        )}
                       </TierBadge>
                     </LockedChannelContent>
                   ) : (
                     <ChannelLinkWrapper href={`/lounge/${channel.slug}`}>
                       <ChannelIcon channel={channel} />
                       <ChannelName $hasUnread={hasUnread}>{channel.name}</ChannelName>
-                      {hasMentions && (
-                        <MentionBadge>{unread.mentions}</MentionBadge>
-                      )}
+                      {hasMentions && <MentionBadge>{unread.mentions}</MentionBadge>}
                     </ChannelLinkWrapper>
                   )}
                 </ChannelItem>
@@ -175,7 +169,7 @@ export function Sidebar({
             <TreePalm size={16} />
           </QuickActionButton>
         </Tooltip>
-{/* Events - hidden for now
+        {/* Events - hidden for now
         <Tooltip content="Events" position="top">
           <QuickActionButton href="/lounge/events">
             <Calendar1Icon size={16} />
@@ -199,9 +193,7 @@ export function Sidebar({
             <UserName>{displayName}</UserName>
             <SupporterBadges size="small" />
           </UserNameRow>
-          <UserTier $tier={userTier ?? "tier1"}>
-            {TIER_INFO[userTier ?? "tier1"].name}
-          </UserTier>
+          <UserTier $tier={userTier ?? "tier1"}>{TIER_INFO[userTier ?? "tier1"].name}</UserTier>
         </UserInfo>
       </UserSection>
     </SidebarContainer>
@@ -227,21 +219,21 @@ const SidebarHeader = styled.div`
   align-items: center;
   justify-content: space-between;
   padding: 1rem;
-  border-bottom: 1px solid ${(props) => props.theme.background === "#fff" ? "rgba(0,0,0,0.08)" : LOUNGE_COLORS.glassBorder};
+  border-bottom: 1px solid ${(props) => (props.theme.background === "#fff" ? "rgba(0,0,0,0.08)" : LOUNGE_COLORS.glassBorder)};
 `;
 
 const LogoImage = styled.div`
   margin-right: 8px;
   display: flex;
   align-items: center;
-  filter: ${(props) => props.theme.background === "#fff" ? "invert(1)" : "none"};
+  filter: ${(props) => (props.theme.background === "#fff" ? "invert(1)" : "none")};
 `;
 
 const LogoText = styled.h2`
   font-family: var(--font-display);
   font-size: 0.75rem;
   font-weight: 400;
-  color: ${(props) => props.theme.background === "#fff" ? "rgba(0,0,0,0.6)" : "rgba(255, 255, 255, 0.6)"};
+  color: ${(props) => (props.theme.background === "#fff" ? "rgba(0,0,0,0.6)" : "rgba(255, 255, 255, 0.6)")};
   margin: 0;
   letter-spacing: -0.5px;
 `;
@@ -264,7 +256,7 @@ const ChannelGroupHeader = styled.div<{ $isCollapsible?: boolean }>`
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: ${(props) => props.theme.background === "#fff" ? "rgba(0,0,0,0.5)" : "rgba(255, 255, 255, 0.5)"};
+  color: ${(props) => (props.theme.background === "#fff" ? "rgba(0,0,0,0.5)" : "rgba(255, 255, 255, 0.5)")};
   cursor: ${(props) => (props.$isCollapsible ? "pointer" : "default")};
   user-select: none;
   border-radius: 4px;
@@ -272,7 +264,9 @@ const ChannelGroupHeader = styled.div<{ $isCollapsible?: boolean }>`
 
   &:hover {
     background: ${(props) =>
-      props.$isCollapsible ? (props.theme.background === "#fff" ? "rgba(0,0,0,0.04)" : "rgba(255, 255, 255, 0.05)") : "transparent"};
+      props.$isCollapsible
+        ? (props.theme.background === "#fff" ? "rgba(0,0,0,0.04)" : "rgba(255, 255, 255, 0.05)")
+        : "transparent"};
   }
 `;
 
@@ -297,7 +291,13 @@ const ChannelItem = styled.div<{ $isActive: boolean; $isLocked: boolean; $hasUnr
   border-radius: 6px;
   margin-bottom: 2px;
   background: ${(props) =>
-    props.$isActive ? (props.theme.background === "#fff" ? "rgba(144, 116, 242, 0.12)" : LOUNGE_COLORS.channelActive) : "transparent"};
+    props.$isActive
+      ? (
+          props.theme.background === "#fff"
+            ? "rgba(144, 116, 242, 0.12)"
+            : LOUNGE_COLORS.channelActive
+        )
+      : "transparent"};
   opacity: ${(props) => (props.$isLocked ? 0.5 : 1)};
   cursor: ${(props) => (props.$isLocked ? "not-allowed" : "pointer")};
   transition: all 0.15s ease;
@@ -307,8 +307,12 @@ const ChannelItem = styled.div<{ $isActive: boolean; $isLocked: boolean; $hasUnr
       props.$isLocked
         ? LOUNGE_COLORS.channelLocked
         : props.$isActive
-          ? (props.theme.background === "#fff" ? "rgba(144, 116, 242, 0.12)" : LOUNGE_COLORS.channelActive)
-          : (props.theme.background === "#fff" ? "rgba(0,0,0,0.04)" : LOUNGE_COLORS.channelHover)};
+          ? props.theme.background === "#fff"
+            ? "rgba(144, 116, 242, 0.12)"
+            : LOUNGE_COLORS.channelActive
+          : props.theme.background === "#fff"
+            ? "rgba(0,0,0,0.04)"
+            : LOUNGE_COLORS.channelHover};
   }
 `;
 
@@ -328,7 +332,7 @@ const ChannelLinkWrapper = styled(Link)`
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 0.75rem;
-  color: ${(props) => props.theme.background === "#fff" ? "rgba(0,0,0,0.7)" : "rgba(255, 255, 255, 0.8)"};
+  color: ${(props) => (props.theme.background === "#fff" ? "rgba(0,0,0,0.7)" : "rgba(255, 255, 255, 0.8)")};
   text-decoration: none;
 
   &:hover {
@@ -341,7 +345,7 @@ const LockedChannelContent = styled.div`
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 0.75rem;
-  color: ${(props) => props.theme.background === "#fff" ? "rgba(0,0,0,0.4)" : "rgba(255, 255, 255, 0.4)"};
+  color: ${(props) => (props.theme.background === "#fff" ? "rgba(0,0,0,0.4)" : "rgba(255, 255, 255, 0.4)")};
 `;
 
 const ChannelName = styled.span<{ $hasUnread?: boolean }>`
@@ -375,11 +379,8 @@ const TierBadge = styled.div<{ $tier: string }>`
   padding: 2px 6px;
   border-radius: 4px;
   background: ${(props) =>
-    props.$tier === "tier2"
-      ? `${LOUNGE_COLORS.tier2}20`
-      : `${LOUNGE_COLORS.tier1}20`};
-  color: ${(props) =>
-    props.$tier === "tier2" ? LOUNGE_COLORS.tier2 : LOUNGE_COLORS.tier1};
+    props.$tier === "tier2" ? `${LOUNGE_COLORS.tier2}20` : `${LOUNGE_COLORS.tier1}20`};
+  color: ${(props) => (props.$tier === "tier2" ? LOUNGE_COLORS.tier2 : LOUNGE_COLORS.tier1)};
   font-size: 0.6rem;
   font-weight: 600;
   text-transform: uppercase;
@@ -392,7 +393,7 @@ const QuickActions = styled.div`
   align-self: center;
   gap: 0.5rem;
   padding: 0.75rem;
-  border-top: 1px solid ${(props) => props.theme.background === "#fff" ? "rgba(0,0,0,0.08)" : LOUNGE_COLORS.glassBorder};
+  border-top: 1px solid ${(props) => (props.theme.background === "#fff" ? "rgba(0,0,0,0.08)" : LOUNGE_COLORS.glassBorder)};
 `;
 
 const QuickActionButton = styled(Link)`
@@ -401,16 +402,16 @@ const QuickActionButton = styled(Link)`
   gap: 0.5rem;
   flex: 0;
   padding: 0.5rem;
-  background: ${(props) => props.theme.background === "#fff" ? "rgba(144, 116, 242, 0.06)" : LOUNGE_COLORS.glassHighlight};
-  border: 1px solid ${(props) => props.theme.background === "#fff" ? "rgba(0,0,0,0.08)" : LOUNGE_COLORS.glassBorder};
+  background: ${(props) => (props.theme.background === "#fff" ? "rgba(144, 116, 242, 0.06)" : LOUNGE_COLORS.glassHighlight)};
+  border: 1px solid ${(props) => (props.theme.background === "#fff" ? "rgba(0,0,0,0.08)" : LOUNGE_COLORS.glassBorder)};
   border-radius: 6px;
-  color: ${(props) => props.theme.background === "#fff" ? "rgba(0,0,0,0.6)" : "rgba(255, 255, 255, 0.7)"};
+  color: ${(props) => (props.theme.background === "#fff" ? "rgba(0,0,0,0.6)" : "rgba(255, 255, 255, 0.7)")};
   font-size: 0.8rem;
   text-decoration: none;
   transition: all 0.15s ease;
 
   &:hover {
-    background: ${(props) => props.theme.background === "#fff" ? "rgba(144, 116, 242, 0.12)" : LOUNGE_COLORS.channelHover};
+    background: ${(props) => (props.theme.background === "#fff" ? "rgba(144, 116, 242, 0.12)" : LOUNGE_COLORS.channelHover)};
     color: ${(props) => props.theme.foreground};
   }
 `;
@@ -420,13 +421,13 @@ const UserSection = styled.div`
   align-items: center;
   gap: 0.75rem;
   padding: 0.75rem 1rem;
-  border-top: 1px solid ${(props) => props.theme.background === "#fff" ? "rgba(0,0,0,0.08)" : LOUNGE_COLORS.glassBorder};
-  background: ${(props) => props.theme.background === "#fff" ? "rgba(0,0,0,0.03)" : "rgba(0, 0, 0, 0.2)"};
+  border-top: 1px solid ${(props) => (props.theme.background === "#fff" ? "rgba(0,0,0,0.08)" : LOUNGE_COLORS.glassBorder)};
+  background: ${(props) => (props.theme.background === "#fff" ? "rgba(0,0,0,0.03)" : "rgba(0, 0, 0, 0.2)")};
   cursor: pointer;
   transition: background 0.15s ease;
 
   &:hover {
-    background: ${(props) => props.theme.background === "#fff" ? "rgba(0,0,0,0.06)" : "rgba(0, 0, 0, 0.35)"};
+    background: ${(props) => (props.theme.background === "#fff" ? "rgba(0,0,0,0.06)" : "rgba(0, 0, 0, 0.35)")};
   }
 `;
 

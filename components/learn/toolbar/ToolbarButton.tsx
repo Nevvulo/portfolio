@@ -1,8 +1,7 @@
-import React from "react";
-import styled from "styled-components";
 import { m } from "framer-motion";
-import { LOUNGE_COLORS } from "@/constants/lounge";
 import type { LucideIcon } from "lucide-react";
+import styled from "styled-components";
+import { LOUNGE_COLORS } from "@/constants/lounge";
 
 interface ToolbarButtonProps {
   icon: LucideIcon;
@@ -42,9 +41,7 @@ export function ToolbarButton({
       aria-disabled={disabled}
     >
       <Icon size={18} />
-      {badge !== undefined && badge > 0 && (
-        <Badge>{badge > 99 ? "99+" : badge}</Badge>
-      )}
+      {badge !== undefined && badge > 0 && <Badge>{badge > 99 ? "99+" : badge}</Badge>}
     </ButtonContainer>
   );
 }
@@ -68,9 +65,7 @@ const ButtonContainer = styled(m.button)<{
   background: ${(props) => {
     if (props.$disabled) return "rgba(16, 13, 27, 0.6)";
     if (props.$isActive) {
-      return props.$variant === "danger"
-        ? "rgba(239, 68, 68, 0.2)"
-        : `rgba(144, 116, 242, 0.2)`;
+      return props.$variant === "danger" ? "rgba(239, 68, 68, 0.2)" : `rgba(144, 116, 242, 0.2)`;
     }
     return "rgba(16, 13, 27, 0.92)";
   }};
@@ -81,9 +76,7 @@ const ButtonContainer = styled(m.button)<{
   border: 1px solid
     ${(props) => {
       if (props.$isActive) {
-        return props.$variant === "danger"
-          ? "rgba(239, 68, 68, 0.4)"
-          : "rgba(144, 116, 242, 0.4)";
+        return props.$variant === "danger" ? "rgba(239, 68, 68, 0.4)" : "rgba(144, 116, 242, 0.4)";
       }
       return LOUNGE_COLORS.glassBorder;
     }};
@@ -98,15 +91,10 @@ const ButtonContainer = styled(m.button)<{
 
   &:hover:not([aria-disabled="true"]) {
     background: ${(props) =>
-      props.$variant === "danger"
-        ? "rgba(239, 68, 68, 0.15)"
-        : "rgba(144, 116, 242, 0.15)"};
+      props.$variant === "danger" ? "rgba(239, 68, 68, 0.15)" : "rgba(144, 116, 242, 0.15)"};
     border-color: ${(props) =>
-      props.$variant === "danger"
-        ? "rgba(239, 68, 68, 0.3)"
-        : "rgba(144, 116, 242, 0.3)"};
-    color: ${(props) =>
-      props.$variant === "danger" ? "#ef4444" : LOUNGE_COLORS.tier1};
+      props.$variant === "danger" ? "rgba(239, 68, 68, 0.3)" : "rgba(144, 116, 242, 0.3)"};
+    color: ${(props) => (props.$variant === "danger" ? "#ef4444" : LOUNGE_COLORS.tier1)};
   }
 `;
 

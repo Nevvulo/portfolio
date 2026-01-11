@@ -1,12 +1,12 @@
-import type { PropsWithChildren, CSSProperties } from "react";
+import { type MotionStyle, m } from "framer-motion";
+import type { PropsWithChildren } from "react";
 import styled from "styled-components";
-import { m, type MotionStyle } from "framer-motion";
 
 // Base opacity values at 100% intensity
 const GRADIENT_BASE = {
-  start: 1,      // rgba(144, 116, 242, X)
-  middle: 0.88,  // rgb(38 23 90 / X%)
-  end: 0.96,     // rgb(61 38 38 / X%)
+  start: 1, // rgba(144, 116, 242, X)
+  middle: 0.88, // rgb(38 23 90 / X%)
+  end: 0.96, // rgb(61 38 38 / X%)
 };
 
 const PostHeroImgContainer = styled(m.div)<{ $img?: string; $intensity: number }>`

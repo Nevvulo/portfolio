@@ -37,7 +37,7 @@ export const getState = query({
           tier: listenerUser.tier,
           joinedAt: listener.joinedAt,
         };
-      })
+      }),
     );
 
     // Get jungle state (singleton)
@@ -151,7 +151,7 @@ export const addToQueue = mutation({
     }
 
     // Get or create jungle state
-    let jungleState = await ctx.db.query("jungleState").first();
+    const jungleState = await ctx.db.query("jungleState").first();
 
     const trackId = `track_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
@@ -387,7 +387,7 @@ export const startLiveStream = mutation({
       throw new Error("Only the creator can start live streaming");
     }
 
-    let jungleState = await ctx.db.query("jungleState").first();
+    const jungleState = await ctx.db.query("jungleState").first();
 
     if (!jungleState) {
       await ctx.db.insert("jungleState", {

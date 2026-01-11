@@ -1,8 +1,8 @@
 import { v } from "convex/values";
-import { action, internalMutation, mutation, query } from "./_generated/server";
 import { internal } from "./_generated/api";
-import { Id } from "./_generated/dataModel";
-import { getCurrentUser, requireUser, CREATOR_DISCORD_ID, requireCreator } from "./auth";
+import type { Id } from "./_generated/dataModel";
+import { action, internalMutation, mutation, query } from "./_generated/server";
+import { CREATOR_DISCORD_ID, getCurrentUser, requireCreator, requireUser } from "./auth";
 
 /**
  * Helper function to compute tier from supporter status (server-side)
@@ -66,14 +66,11 @@ export const getOrCreateUser = action({
     const clerkId = identity.subject;
 
     // Fetch verified user data from Clerk API
-    const clerkRes = await fetch(
-      `https://api.clerk.com/v1/users/${clerkId}`,
-      {
-        headers: {
-          Authorization: `Bearer ${process.env.CLERK_SECRET_KEY}`,
-        },
-      }
-    );
+    const clerkRes = await fetch(`https://api.clerk.com/v1/users/${clerkId}`, {
+      headers: {
+        Authorization: `Bearer ${process.env.CLERK_SECRET_KEY}`,
+      },
+    });
 
     if (!clerkRes.ok) {
       throw new Error(`Failed to fetch from Clerk: ${clerkRes.status}`);
@@ -83,7 +80,7 @@ export const getOrCreateUser = action({
 
     // Get verified Discord ID from Clerk's external accounts
     const discordAccount = clerkUser.external_accounts?.find(
-      (a: { provider: string }) => a.provider === "oauth_discord"
+      (a: { provider: string }) => a.provider === "oauth_discord",
     );
     const discordId = discordAccount?.provider_user_id || discordAccount?.external_id || undefined;
 
@@ -92,7 +89,7 @@ export const getOrCreateUser = action({
 
     // Get Twitch account
     const twitchAccount = clerkUser.external_accounts?.find(
-      (a: { provider: string }) => a.provider === "oauth_twitch"
+      (a: { provider: string }) => a.provider === "oauth_twitch",
     );
     const twitchUsername = twitchAccount?.username;
 
@@ -106,7 +103,7 @@ export const getOrCreateUser = action({
           headers: {
             Authorization: `Bearer ${process.env.CLERK_SECRET_KEY}`,
           },
-        }
+        },
       );
 
       if (billingRes.ok) {
@@ -118,7 +115,11 @@ export const getOrCreateUser = action({
 
         if (planSlug === "super_legend" || planName === "super_legend") {
           clerkPlan = "super_legend";
-        } else if (planSlug === "super_legend_2" || planName === "super_legend_ii" || planName === "super_legend_2") {
+        } else if (
+          planSlug === "super_legend_2" ||
+          planName === "super_legend_ii" ||
+          planName === "super_legend_2"
+        ) {
           clerkPlan = "super_legend_2";
         }
 
@@ -133,7 +134,9 @@ export const getOrCreateUser = action({
     }
 
     // Fetch Discord supporter status if we have a Discord ID
-    let discordHighestRole: { id: string; name: string; color: number; position: number } | undefined;
+    let discordHighestRole:
+      | { id: string; name: string; color: number; position: number }
+      | undefined;
     let discordBooster: boolean | undefined;
 
     if (discordId) {
@@ -148,7 +151,7 @@ export const getOrCreateUser = action({
               headers: {
                 Authorization: `Bot ${DISCORD_BOT_TOKEN}`,
               },
-            }
+            },
           );
 
           if (memberRes.ok) {
@@ -161,14 +164,16 @@ export const getOrCreateUser = action({
                 headers: {
                   Authorization: `Bot ${DISCORD_BOT_TOKEN}`,
                 },
-              }
+              },
             );
 
             if (rolesRes.ok) {
               const allRoles = await rolesRes.json();
               const memberRoles = allRoles
                 .filter((r: { id: string }) => member.roles.includes(r.id))
-                .sort((a: { position: number }, b: { position: number }) => b.position - a.position);
+                .sort(
+                  (a: { position: number }, b: { position: number }) => b.position - a.position,
+                );
 
               if (memberRoles.length > 0) {
                 const highest = memberRoles[0];
@@ -232,12 +237,14 @@ export const createOrUpdateUserInternal = internalMutation({
     twitchUsername: v.optional(v.string()),
     tier: v.union(v.literal("free"), v.literal("tier1"), v.literal("tier2")),
     isCreator: v.boolean(),
-    discordHighestRole: v.optional(v.object({
-      id: v.string(),
-      name: v.string(),
-      color: v.number(),
-      position: v.number(),
-    })),
+    discordHighestRole: v.optional(
+      v.object({
+        id: v.string(),
+        name: v.string(),
+        color: v.number(),
+        position: v.number(),
+      }),
+    ),
     discordBooster: v.optional(v.boolean()),
     clerkPlan: v.optional(v.string()),
     clerkPlanStatus: v.optional(v.string()),
@@ -435,10 +442,7 @@ export const listAll = query({
     await requireCreator(ctx);
 
     const limit = args.limit ?? 50;
-    const users = await ctx.db
-      .query("users")
-      .order("desc")
-      .take(limit);
+    const users = await ctx.db.query("users").order("desc").take(limit);
 
     return users.map((user) => ({
       _id: user._id,
@@ -558,14 +562,11 @@ export const refreshUser = action({
     // If not their own profile, check if they're the creator
     if (!isOwnProfile) {
       // Fetch caller's Discord ID to check if they're the creator
-      const callerClerkRes = await fetch(
-        `https://api.clerk.com/v1/users/${identity.subject}`,
-        {
-          headers: {
-            Authorization: `Bearer ${process.env.CLERK_SECRET_KEY}`,
-          },
-        }
-      );
+      const callerClerkRes = await fetch(`https://api.clerk.com/v1/users/${identity.subject}`, {
+        headers: {
+          Authorization: `Bearer ${process.env.CLERK_SECRET_KEY}`,
+        },
+      });
 
       if (!callerClerkRes.ok) {
         throw new Error("Failed to verify identity");
@@ -573,9 +574,10 @@ export const refreshUser = action({
 
       const callerClerkUser = await callerClerkRes.json();
       const callerDiscordAccount = callerClerkUser.external_accounts?.find(
-        (a: { provider: string }) => a.provider === "oauth_discord"
+        (a: { provider: string }) => a.provider === "oauth_discord",
       );
-      const callerDiscordId = callerDiscordAccount?.provider_user_id || callerDiscordAccount?.external_id;
+      const callerDiscordId =
+        callerDiscordAccount?.provider_user_id || callerDiscordAccount?.external_id;
 
       if (callerDiscordId !== CREATOR_DISCORD_ID) {
         throw new Error("You can only refresh your own profile");
@@ -583,14 +585,11 @@ export const refreshUser = action({
     }
 
     // Fetch from Clerk API
-    const clerkRes = await fetch(
-      `https://api.clerk.com/v1/users/${args.clerkId}`,
-      {
-        headers: {
-          Authorization: `Bearer ${process.env.CLERK_SECRET_KEY}`,
-        },
-      }
-    );
+    const clerkRes = await fetch(`https://api.clerk.com/v1/users/${args.clerkId}`, {
+      headers: {
+        Authorization: `Bearer ${process.env.CLERK_SECRET_KEY}`,
+      },
+    });
 
     if (!clerkRes.ok) {
       throw new Error(`Failed to fetch from Clerk: ${clerkRes.status}`);
@@ -600,14 +599,14 @@ export const refreshUser = action({
 
     // Find Discord external account
     const discordAccount = clerkUser.external_accounts?.find(
-      (a: { provider: string }) => a.provider === "oauth_discord"
+      (a: { provider: string }) => a.provider === "oauth_discord",
     );
     const discordId = discordAccount?.provider_user_id || discordAccount?.external_id;
     const discordUsername = discordAccount?.username;
 
     // Find Twitch external account
     const twitchAccount = clerkUser.external_accounts?.find(
-      (a: { provider: string }) => a.provider === "oauth_twitch"
+      (a: { provider: string }) => a.provider === "oauth_twitch",
     );
     const twitchUsername = twitchAccount?.username;
 
@@ -621,7 +620,7 @@ export const refreshUser = action({
           headers: {
             Authorization: `Bearer ${process.env.CLERK_SECRET_KEY}`,
           },
-        }
+        },
       );
 
       if (billingRes.ok) {
@@ -633,7 +632,11 @@ export const refreshUser = action({
 
         if (planSlug === "super_legend" || planName === "super_legend") {
           clerkPlan = "super_legend";
-        } else if (planSlug === "super_legend_2" || planName === "super_legend_ii" || planName === "super_legend_2") {
+        } else if (
+          planSlug === "super_legend_2" ||
+          planName === "super_legend_ii" ||
+          planName === "super_legend_2"
+        ) {
           clerkPlan = "super_legend_2";
         }
 
@@ -648,7 +651,9 @@ export const refreshUser = action({
     }
 
     // Fetch Discord supporter status if we have a Discord ID
-    let discordHighestRole: { id: string; name: string; color: number; position: number } | undefined;
+    let discordHighestRole:
+      | { id: string; name: string; color: number; position: number }
+      | undefined;
     let discordBooster: boolean | undefined;
 
     if (discordId) {
@@ -665,7 +670,7 @@ export const refreshUser = action({
               headers: {
                 Authorization: `Bot ${DISCORD_BOT_TOKEN}`,
               },
-            }
+            },
           );
 
           if (memberRes.ok) {
@@ -681,7 +686,7 @@ export const refreshUser = action({
                 headers: {
                   Authorization: `Bot ${DISCORD_BOT_TOKEN}`,
                 },
-              }
+              },
             );
 
             if (rolesRes.ok) {
@@ -689,7 +694,9 @@ export const refreshUser = action({
               // Filter to member's roles and find highest by position
               const memberRoles = allRoles
                 .filter((r: { id: string }) => member.roles.includes(r.id))
-                .sort((a: { position: number }, b: { position: number }) => b.position - a.position);
+                .sort(
+                  (a: { position: number }, b: { position: number }) => b.position - a.position,
+                );
 
               if (memberRoles.length > 0) {
                 const highest = memberRoles[0];
@@ -747,12 +754,14 @@ export const updateUserFromClerk = internalMutation({
     avatarUrl: v.optional(v.string()),
     discordId: v.optional(v.string()),
     // Supporter status fields
-    discordHighestRole: v.optional(v.object({
-      id: v.string(),
-      name: v.string(),
-      color: v.number(),
-      position: v.number(),
-    })),
+    discordHighestRole: v.optional(
+      v.object({
+        id: v.string(),
+        name: v.string(),
+        color: v.number(),
+        position: v.number(),
+      }),
+    ),
     twitchSubTier: v.optional(v.union(v.literal(1), v.literal(2), v.literal(3))),
     discordBooster: v.optional(v.boolean()),
     clerkPlan: v.optional(v.string()),
@@ -802,10 +811,12 @@ export const updateUserFromClerk = internalMutation({
     }
 
     // Mark supporter sync time if any supporter fields were updated
-    if (args.discordHighestRole !== undefined ||
-        args.twitchSubTier !== undefined ||
-        args.discordBooster !== undefined ||
-        args.clerkPlan !== undefined) {
+    if (
+      args.discordHighestRole !== undefined ||
+      args.twitchSubTier !== undefined ||
+      args.discordBooster !== undefined ||
+      args.clerkPlan !== undefined
+    ) {
       updates.supporterSyncedAt = Date.now();
     }
 
@@ -839,12 +850,14 @@ export const updateUserFromClerk = internalMutation({
 export const updateSupporterStatus = mutation({
   args: {
     clerkId: v.string(),
-    discordHighestRole: v.optional(v.object({
-      id: v.string(),
-      name: v.string(),
-      color: v.number(),
-      position: v.number(),
-    })),
+    discordHighestRole: v.optional(
+      v.object({
+        id: v.string(),
+        name: v.string(),
+        color: v.number(),
+        position: v.number(),
+      }),
+    ),
     twitchSubTier: v.optional(v.union(v.literal(1), v.literal(2), v.literal(3))),
     discordBooster: v.optional(v.boolean()),
     clerkPlan: v.optional(v.string()),
@@ -927,11 +940,14 @@ export const getAnalytics = query({
     const newUsersMonth = allUsers.filter((u) => u.createdAt && u.createdAt > oneMonthAgo).length;
 
     // Top contributors (most messages, excluding deleted)
-    const messageCounts = visibleMessages.reduce((acc, msg) => {
-      const authorId = msg.authorId?.toString() ?? "unknown";
-      acc[authorId] = (acc[authorId] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
+    const messageCounts = visibleMessages.reduce(
+      (acc, msg) => {
+        const authorId = msg.authorId?.toString() ?? "unknown";
+        acc[authorId] = (acc[authorId] || 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>,
+    );
 
     const topContributors = Object.entries(messageCounts)
       .sort(([, a], [, b]) => b - a)
@@ -985,11 +1001,23 @@ export const checkUsername = query({
       return { available: false, reason: "Username must be 20 characters or less" };
     }
     if (!/^[a-z0-9_]+$/.test(username)) {
-      return { available: false, reason: "Username can only contain letters, numbers, and underscores" };
+      return {
+        available: false,
+        reason: "Username can only contain letters, numbers, and underscores",
+      };
     }
 
     // Reserved usernames (excluding nevulo/nev since you're the owner)
-    const reserved = ["admin", "support", "help", "moderator", "mod", "staff", "official", "system"];
+    const reserved = [
+      "admin",
+      "support",
+      "help",
+      "moderator",
+      "mod",
+      "staff",
+      "official",
+      "system",
+    ];
     if (reserved.includes(username)) {
       return { available: false, reason: "This username is reserved" };
     }
@@ -1026,7 +1054,16 @@ export const setUsername = mutation({
     }
 
     // Check reserved (creator can use any username)
-    const reserved = ["admin", "support", "help", "moderator", "mod", "staff", "official", "system"];
+    const reserved = [
+      "admin",
+      "support",
+      "help",
+      "moderator",
+      "mod",
+      "staff",
+      "official",
+      "system",
+    ];
     if (reserved.includes(username) && !user.isCreator) {
       throw new Error("This username is reserved");
     }
@@ -1096,13 +1133,16 @@ export const resolveMentions = query({
     clerkIds: v.array(v.string()),
   },
   handler: async (ctx, args) => {
-    const results: Record<string, {
-      _id: string;
-      displayName: string;
-      avatarUrl: string | null;
-      tier: string;
-      isCreator: boolean;
-    }> = {};
+    const results: Record<
+      string,
+      {
+        _id: string;
+        displayName: string;
+        avatarUrl: string | null;
+        tier: string;
+        isCreator: boolean;
+      }
+    > = {};
 
     // Resolve Discord IDs
     for (const discordId of args.discordIds) {
@@ -1172,9 +1212,7 @@ export const searchUsers = query({
     let filteredUsers = allUsers;
     if (args.query && args.query.trim().length > 0) {
       const searchLower = args.query.toLowerCase().trim();
-      filteredUsers = allUsers.filter((u) =>
-        u.displayName.toLowerCase().startsWith(searchLower)
-      );
+      filteredUsers = allUsers.filter((u) => u.displayName.toLowerCase().startsWith(searchLower));
     }
 
     // Sort by displayName and limit
@@ -1205,9 +1243,7 @@ export const getUsersByIds = query({
     userIds: v.array(v.id("users")),
   },
   handler: async (ctx, args) => {
-    const users = await Promise.all(
-      args.userIds.map((id) => ctx.db.get(id))
-    );
+    const users = await Promise.all(args.userIds.map((id) => ctx.db.get(id)));
 
     return users
       .filter((u): u is NonNullable<typeof u> => u !== null)
@@ -1240,9 +1276,7 @@ export const getStaffMembers = query({
     const allUsers = await ctx.db.query("users").collect();
 
     // Filter to staff members (role >= 1 or isCreator)
-    const staffMembers = allUsers.filter(
-      (u) => u.isCreator || (u.role ?? 0) >= ROLE_STAFF
-    );
+    const staffMembers = allUsers.filter((u) => u.isCreator || (u.role ?? 0) >= ROLE_STAFF);
 
     return staffMembers.map((u) => ({
       _id: u._id,

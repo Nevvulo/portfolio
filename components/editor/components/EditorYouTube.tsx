@@ -1,19 +1,9 @@
-import { NodeViewWrapper } from "@tiptap/react";
+import { type NodeViewProps, NodeViewWrapper } from "@tiptap/react";
 import { useState } from "react";
 import { ComponentWrapper, YouTubeWrapper } from "../styles";
 
-interface EditorYouTubeProps {
-  node: {
-    attrs: {
-      id: string;
-    };
-  };
-  selected: boolean;
-  updateAttributes: (attrs: Record<string, unknown>) => void;
-}
-
-export function EditorYouTube({ node, selected, updateAttributes }: EditorYouTubeProps) {
-  const { id } = node.attrs;
+export function EditorYouTube({ node, selected, updateAttributes }: NodeViewProps) {
+  const id = (node.attrs.id || "") as string;
   const [inputValue, setInputValue] = useState(id);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -23,7 +13,7 @@ export function EditorYouTube({ node, selected, updateAttributes }: EditorYouTub
 
     // Handle full URLs
     const urlMatch = inputValue.match(
-      /(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/
+      /(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/,
     );
     if (urlMatch?.[1]) {
       videoId = urlMatch[1];

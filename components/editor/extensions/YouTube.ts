@@ -1,4 +1,4 @@
-import { Node, mergeAttributes } from "@tiptap/core";
+import { mergeAttributes, Node } from "@tiptap/core";
 import { ReactNodeViewRenderer } from "@tiptap/react";
 import { EditorYouTube } from "../components/EditorYouTube";
 
@@ -36,7 +36,7 @@ export const YouTube = Node.create<YouTubeOptions>({
   parseHTML() {
     return [
       {
-        tag: 'youtube-embed[data-id]',
+        tag: "youtube-embed[data-id]",
       },
     ];
   },

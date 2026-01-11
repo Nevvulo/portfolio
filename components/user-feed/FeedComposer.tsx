@@ -1,12 +1,12 @@
-import { useState, useCallback, useRef, useEffect } from "react";
-import styled from "styled-components";
-import { m, AnimatePresence } from "framer-motion";
-import { Image, X, Send, Loader2 } from "lucide-react";
 import { useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import { AnimatePresence, m } from "framer-motion";
+import { Image, Loader2, Send, X } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import styled from "styled-components";
 import { LOUNGE_COLORS } from "@/constants/lounge";
-import { validateContent } from "@/lib/safeMd";
+import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
+import { validateContent } from "@/lib/safeMd";
 
 interface MediaAttachment {
   file: File;
@@ -74,46 +74,49 @@ export function FeedComposer({
     }
   }, []);
 
-  const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files) return;
+  const handleFileSelect = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const files = e.target.files;
+      if (!files) return;
 
-    const newAttachments: MediaAttachment[] = [];
+      const newAttachments: MediaAttachment[] = [];
 
-    for (const file of Array.from(files)) {
-      if (attachments.length + newAttachments.length >= MAX_ATTACHMENTS) {
-        setError(`Maximum ${MAX_ATTACHMENTS} attachments allowed`);
-        break;
+      for (const file of Array.from(files)) {
+        if (attachments.length + newAttachments.length >= MAX_ATTACHMENTS) {
+          setError(`Maximum ${MAX_ATTACHMENTS} attachments allowed`);
+          break;
+        }
+
+        const isImage = file.type.startsWith("image/");
+        const isVideo = file.type.startsWith("video/");
+
+        if (!isImage && !isVideo) {
+          setError("Only images and videos are allowed");
+          continue;
+        }
+
+        const maxSize = isImage ? MAX_IMAGE_SIZE : MAX_VIDEO_SIZE;
+        if (file.size > maxSize) {
+          setError(`File too large. Max size: ${isImage ? "10MB" : "25MB"}`);
+          continue;
+        }
+
+        newAttachments.push({
+          file,
+          preview: URL.createObjectURL(file),
+          type: isImage ? "image" : "video",
+        });
       }
 
-      const isImage = file.type.startsWith("image/");
-      const isVideo = file.type.startsWith("video/");
+      setAttachments((prev) => [...prev, ...newAttachments]);
 
-      if (!isImage && !isVideo) {
-        setError("Only images and videos are allowed");
-        continue;
+      // Reset input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
       }
-
-      const maxSize = isImage ? MAX_IMAGE_SIZE : MAX_VIDEO_SIZE;
-      if (file.size > maxSize) {
-        setError(`File too large. Max size: ${isImage ? "10MB" : "25MB"}`);
-        continue;
-      }
-
-      newAttachments.push({
-        file,
-        preview: URL.createObjectURL(file),
-        type: isImage ? "image" : "video",
-      });
-    }
-
-    setAttachments((prev) => [...prev, ...newAttachments]);
-
-    // Reset input
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
-  }, [attachments.length]);
+    },
+    [attachments.length],
+  );
 
   const removeAttachment = useCallback((index: number) => {
     setAttachments((prev) => {
@@ -172,9 +175,7 @@ export function FeedComposer({
       // Upload attachments
       let uploadedMedia: UploadedMedia[] = [];
       if (attachments.length > 0) {
-        uploadedMedia = await Promise.all(
-          attachments.map((att) => uploadMedia(att.file))
-        );
+        uploadedMedia = await Promise.all(attachments.map((att) => uploadMedia(att.file)));
       }
 
       // Create post

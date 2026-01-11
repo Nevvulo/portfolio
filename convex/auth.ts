@@ -1,4 +1,4 @@
-import { QueryCtx, MutationCtx } from "./_generated/server";
+import type { MutationCtx, QueryCtx } from "./_generated/server";
 
 // Creator Discord ID for admin checks
 export const CREATOR_DISCORD_ID = "246574843460321291";
@@ -39,7 +39,7 @@ export async function requireUser(ctx: QueryCtx | MutationCtx) {
  */
 export function hasAccessToTier(
   userTier: "free" | "tier1" | "tier2",
-  requiredTier: "free" | "tier1" | "tier2"
+  requiredTier: "free" | "tier1" | "tier2",
 ): boolean {
   const tierLevels = { free: 0, tier1: 1, tier2: 2 };
   return tierLevels[userTier] >= tierLevels[requiredTier];
@@ -66,7 +66,11 @@ export const ROLE_CREATOR_ONLY = 2;
  * Check if user is staff or higher
  * Staff can moderate content, delete comments, etc.
  */
-export function isStaff(user: { role?: number | null; isCreator?: boolean; discordId?: string | null }): boolean {
+export function isStaff(user: {
+  role?: number | null;
+  isCreator?: boolean;
+  discordId?: string | null;
+}): boolean {
   // Creator is always considered staff
   if (user.isCreator || user.discordId === CREATOR_DISCORD_ID) {
     return true;
@@ -78,7 +82,11 @@ export function isStaff(user: { role?: number | null; isCreator?: boolean; disco
 /**
  * Check if user can moderate (staff or creator)
  */
-export function canModerate(user: { role?: number | null; isCreator?: boolean; discordId?: string | null }): boolean {
+export function canModerate(user: {
+  role?: number | null;
+  isCreator?: boolean;
+  discordId?: string | null;
+}): boolean {
   return isStaff(user);
 }
 
@@ -103,7 +111,7 @@ export async function requireNotBanned(ctx: QueryCtx | MutationCtx) {
     throw new Error(
       user.banReason
         ? `Your account has been suspended: ${user.banReason}`
-        : "Your account has been suspended from posting content."
+        : "Your account has been suspended from posting content.",
     );
   }
   return user;
@@ -112,12 +120,9 @@ export async function requireNotBanned(ctx: QueryCtx | MutationCtx) {
 /**
  * Require user to have access to a channel's tier
  */
-export async function requireChannelAccess(
-  ctx: QueryCtx | MutationCtx,
-  channelId: string
-) {
+export async function requireChannelAccess(ctx: QueryCtx | MutationCtx, channelId: string) {
   const user = await requireUser(ctx);
-  const channel = await ctx.db.get(channelId as any) as {
+  const channel = (await ctx.db.get(channelId as any)) as {
     _id: any;
     requiredTier: "tier1" | "tier2";
     [key: string]: any;

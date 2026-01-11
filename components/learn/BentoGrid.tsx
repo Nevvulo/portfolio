@@ -1,6 +1,6 @@
 import styled from "styled-components";
-import { BentoCard, BentoCardProps } from "./BentoCard";
 import { Skeleton } from "../generics/skeleton";
+import { BentoCard, type BentoCardProps } from "./BentoCard";
 
 interface BentoGridProps {
   posts: BentoCardProps[];

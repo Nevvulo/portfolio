@@ -13,7 +13,13 @@ export default function AccountPage() {
   const { isLoaded, isSignedIn, user } = useUser();
   const { signOut } = useClerk();
   const { data: subscription, isLoading: subLoading } = useSubscription();
-  const { status: supporterStatus, isSyncing: badgeSyncing, syncStatus: syncBadges, hasBadges, syncError: badgeSyncError } = useSupporterStatus();
+  const {
+    status: supporterStatus,
+    isSyncing: badgeSyncing,
+    syncStatus: syncBadges,
+    hasBadges,
+    syncError: badgeSyncError,
+  } = useSupporterStatus();
   const router = useRouter();
   const [syncStatus, setSyncStatus] = useState<"idle" | "syncing" | "success" | "error">("idle");
   const [syncError, setSyncError] = useState<string | null>(null);
@@ -38,15 +44,9 @@ export default function AccountPage() {
   }
 
   // Extract connected accounts
-  const discordAccount = user.externalAccounts.find(
-    (account) => account.provider === "discord"
-  );
-  const googleAccount = user.externalAccounts.find(
-    (account) => account.provider === "google"
-  );
-  const twitchAccount = user.externalAccounts.find(
-    (account) => account.provider === "twitch"
-  );
+  const discordAccount = user.externalAccounts.find((account) => account.provider === "discord");
+  const googleAccount = user.externalAccounts.find((account) => account.provider === "google");
+  const twitchAccount = user.externalAccounts.find((account) => account.provider === "twitch");
 
   const handleConnectDiscord = async () => {
     try {
@@ -134,12 +134,8 @@ export default function AccountPage() {
             <ProfileInfo>
               <Avatar src={user.imageUrl} alt={user.fullName || "User"} />
               <ProfileDetails>
-                <ProfileName>
-                  {user.fullName || user.username || "User"}
-                </ProfileName>
-                <ProfileEmail>
-                  {user.primaryEmailAddress?.emailAddress}
-                </ProfileEmail>
+                <ProfileName>{user.fullName || user.username || "User"}</ProfileName>
+                <ProfileEmail>{user.primaryEmailAddress?.emailAddress}</ProfileEmail>
               </ProfileDetails>
             </ProfileInfo>
           </ProfileCard>
@@ -183,9 +179,7 @@ export default function AccountPage() {
                         : "Sync Role"}
                 </SyncButton>
               ) : (
-                <ConnectButton onClick={handleConnectDiscord}>
-                  Connect
-                </ConnectButton>
+                <ConnectButton onClick={handleConnectDiscord}>Connect</ConnectButton>
               )}
             </ConnectionCard>
 
@@ -204,9 +198,7 @@ export default function AccountPage() {
                 )}
               </ConnectionInfo>
               {!googleAccount && (
-                <ConnectButton onClick={handleConnectGoogle}>
-                  Connect
-                </ConnectButton>
+                <ConnectButton onClick={handleConnectGoogle}>Connect</ConnectButton>
               )}
             </ConnectionCard>
 
@@ -225,9 +217,7 @@ export default function AccountPage() {
                 )}
               </ConnectionInfo>
               {!twitchAccount && (
-                <ConnectButton onClick={handleConnectTwitch}>
-                  Connect
-                </ConnectButton>
+                <ConnectButton onClick={handleConnectTwitch}>Connect</ConnectButton>
               )}
             </ConnectionCard>
           </ConnectionsGrid>
@@ -247,16 +237,11 @@ export default function AccountPage() {
               </NoBadgesMessage>
             )}
             <BadgesActions>
-              <SyncBadgesButton
-                onClick={syncBadges}
-                disabled={badgeSyncing}
-              >
+              <SyncBadgesButton onClick={syncBadges} disabled={badgeSyncing}>
                 {badgeSyncing ? "Syncing..." : "Refresh Badges"}
               </SyncBadgesButton>
               {supporterStatus?.lastSyncedAt && (
-                <LastSynced>
-                  Last synced: {formatDate(supporterStatus.lastSyncedAt)}
-                </LastSynced>
+                <LastSynced>Last synced: {formatDate(supporterStatus.lastSyncedAt)}</LastSynced>
               )}
             </BadgesActions>
             {badgeSyncError && <SyncError>{badgeSyncError}</SyncError>}
@@ -266,16 +251,12 @@ export default function AccountPage() {
         <Section>
           <SectionTitle>Subscription</SectionTitle>
           <SupporterCard $hasSubscription={!!subscription}>
-            <SupporterIcon>
-              {subscription ? <StarIcon /> : <SparklesIcon />}
-            </SupporterIcon>
+            <SupporterIcon>{subscription ? <StarIcon /> : <SparklesIcon />}</SupporterIcon>
             <SupporterInfo>
               {subLoading ? (
                 <>
                   <SupporterTitle>Loading...</SupporterTitle>
-                  <SupporterDescription>
-                    Checking your subscription status...
-                  </SupporterDescription>
+                  <SupporterDescription>Checking your subscription status...</SupporterDescription>
                 </>
               ) : subscription ? (
                 <>
@@ -305,15 +286,11 @@ export default function AccountPage() {
                 </>
               )}
             </SupporterInfo>
-            <SupporterLink href="/support">
-              {subscription ? "Manage" : "View Plans"}
-            </SupporterLink>
+            <SupporterLink href="/support">{subscription ? "Manage" : "View Plans"}</SupporterLink>
           </SupporterCard>
         </Section>
 
-        <SignOutButton onClick={() => signOut({ redirectUrl: "/" })}>
-          Sign Out
-        </SignOutButton>
+        <SignOutButton onClick={() => signOut({ redirectUrl: "/" })}>Sign Out</SignOutButton>
       </ContentContainer>
 
       <Head>
@@ -424,10 +401,7 @@ const ConnectionsGrid = styled.div`
 const ConnectionCard = styled.div<{ $connected?: boolean }>`
   background: ${(props) => props.theme.postBackground};
   border: 1.5px solid
-    ${(props) =>
-      props.$connected
-        ? "rgba(79, 77, 193, 0.5)"
-        : "rgba(79, 77, 193, 0.2)"};
+    ${(props) => (props.$connected ? "rgba(79, 77, 193, 0.5)" : "rgba(79, 77, 193, 0.2)")};
   border-radius: 12px;
   padding: 1.25rem;
   display: flex;
@@ -462,8 +436,7 @@ const ConnectionName = styled.div`
 const ConnectionStatus = styled.div<{ $connected?: boolean }>`
   font-family: var(--font-sans);
   font-size: 13px;
-  color: ${(props) =>
-    props.$connected ? "#4f4dc1" : props.theme.contrast};
+  color: ${(props) => (props.$connected ? "#4f4dc1" : props.theme.contrast)};
   opacity: ${(props) => (props.$connected ? 1 : 0.7)};
 `;
 
@@ -500,11 +473,7 @@ const SyncButton = styled.button<{ $status?: string }>`
           ? "rgba(239, 68, 68, 0.4)"
           : "rgba(88, 101, 242, 0.4)"};
   color: ${(props) =>
-    props.$status === "success"
-      ? "#22c55e"
-      : props.$status === "error"
-        ? "#ef4444"
-        : "#5865F2"};
+    props.$status === "success" ? "#22c55e" : props.$status === "error" ? "#ef4444" : "#5865F2"};
   padding: 8px 16px;
   border-radius: 8px;
   font-family: var(--font-mono);
@@ -534,10 +503,7 @@ const SyncError = styled.div`
 const SupporterCard = styled.div<{ $hasSubscription?: boolean }>`
   background: ${(props) => props.theme.postBackground};
   border: 1.5px solid
-    ${(props) =>
-      props.$hasSubscription
-        ? "rgba(79, 77, 193, 0.5)"
-        : "rgba(79, 77, 193, 0.2)"};
+    ${(props) => (props.$hasSubscription ? "rgba(79, 77, 193, 0.5)" : "rgba(79, 77, 193, 0.2)")};
   border-radius: 12px;
   padding: 1.5rem;
   display: flex;
@@ -599,11 +565,7 @@ const SubscriptionStatus = styled.span<{ $status?: string }>`
         ? "rgba(251, 191, 36, 0.2)"
         : "rgba(79, 77, 193, 0.2)"};
   color: ${(props) =>
-    props.$status === "active"
-      ? "#22c55e"
-      : props.$status === "past_due"
-        ? "#fbbf24"
-        : "#4f4dc1"};
+    props.$status === "active" ? "#22c55e" : props.$status === "past_due" ? "#fbbf24" : "#4f4dc1"};
 `;
 
 const NextPayment = styled.span`

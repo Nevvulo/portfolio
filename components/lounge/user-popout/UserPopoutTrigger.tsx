@@ -1,4 +1,4 @@
-import { ReactNode, useCallback } from "react";
+import { type ReactNode, useCallback } from "react";
 import styled from "styled-components";
 import type { Id } from "../../../convex/_generated/dataModel";
 import { useUserPopout } from "../../../hooks/lounge/useUserPopout";
@@ -12,11 +12,7 @@ interface UserPopoutTriggerProps {
 /**
  * Wrapper component that triggers the user popout when clicked
  */
-export function UserPopoutTrigger({
-  userId,
-  children,
-  className,
-}: UserPopoutTriggerProps) {
+export function UserPopoutTrigger({ userId, children, className }: UserPopoutTriggerProps) {
   const { open } = useUserPopout();
 
   const handleClick = useCallback(
@@ -25,7 +21,7 @@ export function UserPopoutTrigger({
       e.stopPropagation();
       open(userId, e.currentTarget);
     },
-    [userId, open]
+    [userId, open],
   );
 
   return (

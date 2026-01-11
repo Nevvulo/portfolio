@@ -1,7 +1,7 @@
 import { v } from "convex/values";
-import { internalAction, internalMutation, mutation, query } from "./_generated/server";
 import { internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
+import { internalAction, internalMutation, mutation, query } from "./_generated/server";
 
 // Embed validator for message attachments
 const embedValidator = v.object({
@@ -36,7 +36,9 @@ export const sendToDiscord = internalAction({
   },
   handler: async (ctx, args): Promise<string | null> => {
     // Get channel to find webhook URL (use internal query - no auth needed)
-    const channel = await ctx.runQuery(internal.channels.getInternal, { channelId: args.channelId }) as {
+    const channel = (await ctx.runQuery(internal.channels.getInternal, {
+      channelId: args.channelId,
+    })) as {
       discordWebhookUrl?: string;
     } | null;
 
@@ -99,7 +101,7 @@ export const sendToDiscord = internalAction({
         return null;
       }
 
-      const data = await response.json() as { id: string };
+      const data = (await response.json()) as { id: string };
       const discordMessageId = data.id;
 
       // Store the mapping for reply sync
@@ -132,7 +134,9 @@ export const sendAnnouncementToDiscord = internalAction({
   },
   handler: async (ctx, args): Promise<string | null> => {
     // Use internal query - no auth required for internal actions
-    const channel = await ctx.runQuery(internal.channels.getInternal, { channelId: args.channelId }) as {
+    const channel = (await ctx.runQuery(internal.channels.getInternal, {
+      channelId: args.channelId,
+    })) as {
       discordWebhookUrl?: string;
     } | null;
 
@@ -175,7 +179,7 @@ export const sendAnnouncementToDiscord = internalAction({
         return null;
       }
 
-      const data = await response.json() as { id: string };
+      const data = (await response.json()) as { id: string };
       return data.id;
     } catch (error) {
       console.error("Failed to send announcement to Discord:", error);
@@ -243,7 +247,7 @@ export const syncGuildEmojis = mutation({
         id: v.string(),
         name: v.string(),
         animated: v.boolean(),
-      })
+      }),
     ),
   },
   handler: async (ctx, args) => {
@@ -303,7 +307,7 @@ export const sendContentPostToDiscord = internalAction({
         duration: v.optional(v.number()),
         fileSize: v.optional(v.number()),
         platforms: v.optional(v.array(v.string())),
-      })
+      }),
     ),
     // Poll-specific data for native Discord polls
     pollData: v.optional(
@@ -311,21 +315,23 @@ export const sendContentPostToDiscord = internalAction({
         options: v.array(v.object({ id: v.string(), text: v.string() })),
         endsAt: v.optional(v.number()),
         allowMultiple: v.boolean(),
-      })
+      }),
     ),
     // Emoji blast data
     emojiData: v.optional(
       v.object({
         emoji: v.string(),
         message: v.optional(v.string()),
-      })
+      }),
     ),
     authorName: v.string(),
     authorAvatarUrl: v.optional(v.string()),
   },
   handler: async (ctx, args): Promise<string | null> => {
     // Use internal query - no auth required for internal actions
-    const channel = await ctx.runQuery(internal.channels.getInternal, { channelId: args.channelId }) as {
+    const channel = (await ctx.runQuery(internal.channels.getInternal, {
+      channelId: args.channelId,
+    })) as {
       discordWebhookUrl?: string;
     } | null;
 
@@ -365,7 +371,7 @@ export const sendContentPostToDiscord = internalAction({
           return null;
         }
 
-        const data = await response.json() as { id: string };
+        const data = (await response.json()) as { id: string };
         return data.id;
       } catch (error) {
         console.error("Failed to send emoji to Discord:", error);
@@ -416,7 +422,7 @@ export const sendContentPostToDiscord = internalAction({
           return await sendAsEmbed();
         }
 
-        const data = await response.json() as { id: string };
+        const data = (await response.json()) as { id: string };
         return data.id;
       } catch (error) {
         console.error("Failed to send poll to Discord:", error);
@@ -487,7 +493,7 @@ export const sendContentPostToDiscord = internalAction({
           return null;
         }
 
-        const data = await response.json() as { id: string };
+        const data = (await response.json()) as { id: string };
         return data.id;
       } catch (error) {
         console.error("Failed to send content post to Discord:", error);
@@ -526,8 +532,8 @@ export const createMessageFromDiscord = mutation({
           height: v.optional(v.number()),
           mimeType: v.optional(v.string()),
           fileSize: v.optional(v.number()),
-        })
-      )
+        }),
+      ),
     ),
   },
   handler: async (ctx, args) => {
@@ -569,7 +575,9 @@ export const createMessageFromDiscord = mutation({
     if (args.replyToDiscordMessageId) {
       const replyMapping = await ctx.db
         .query("wormholeMapping")
-        .withIndex("by_discordMessage", (q) => q.eq("discordMessageId", args.replyToDiscordMessageId!))
+        .withIndex("by_discordMessage", (q) =>
+          q.eq("discordMessageId", args.replyToDiscordMessageId!),
+        )
         .unique();
 
       if (replyMapping) {

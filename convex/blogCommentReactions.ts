@@ -1,7 +1,7 @@
 import { v } from "convex/values";
-import { query, mutation } from "./_generated/server";
+import type { Doc, Id } from "./_generated/dataModel";
+import { mutation, query } from "./_generated/server";
 import { getCurrentUser, requireNotBanned } from "./auth";
-import type { Id, Doc } from "./_generated/dataModel";
 
 // Reaction type validator
 const reactionTypeValidator = v.union(
@@ -10,7 +10,7 @@ const reactionTypeValidator = v.union(
   v.literal("eyes"),
   v.literal("fire"),
   v.literal("thinking"),
-  v.literal("laugh")
+  v.literal("laugh"),
 );
 
 // Emoji mapping for notification messages
@@ -64,10 +64,7 @@ export const getForPost = query({
       .collect();
 
     // Group by comment
-    const byComment = new Map<
-      string,
-      { counts: Record<string, number>; total: number }
-    >();
+    const byComment = new Map<string, { counts: Record<string, number>; total: number }>();
 
     for (const r of reactions) {
       const key = r.commentId.toString();
@@ -131,9 +128,7 @@ export const toggle = mutation({
     // Check for existing reaction
     const existing = await ctx.db
       .query("blogCommentReactions")
-      .withIndex("by_user_comment", (q) =>
-        q.eq("userId", user._id).eq("commentId", args.commentId)
-      )
+      .withIndex("by_user_comment", (q) => q.eq("userId", user._id).eq("commentId", args.commentId))
       .unique();
 
     if (existing) {
@@ -173,7 +168,7 @@ async function createCommentReactionNotification(
   ctx: any,
   comment: Doc<"blogComments">,
   reactor: { _id: Id<"users">; displayName: string },
-  reactionType: string
+  reactionType: string,
 ) {
   if (!comment.authorId) return;
 

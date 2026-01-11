@@ -1,27 +1,27 @@
-import { useState } from "react";
-import styled from "styled-components";
-import { useMutation, useQuery } from "convex/react";
-import { api } from "../../convex/_generated/api";
-import { Id } from "../../convex/_generated/dataModel";
 import { useUser } from "@clerk/nextjs";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faTrash,
+  faCrown,
+  faEye,
+  faFaceSmile,
+  faFire,
   faFlag,
-  faReply,
+  faHeart,
+  faLightbulb,
   faPaperPlane,
+  faReply,
   faSpinner,
   faStar,
-  faCrown,
-  faHeart,
   faThumbsUp,
-  faEye,
-  faFire,
-  faLightbulb,
-  faFaceSmile,
+  faTrash,
 } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { useMutation, useQuery } from "convex/react";
 import { formatDistanceToNow } from "date-fns";
+import { useState } from "react";
+import styled from "styled-components";
 import { LOUNGE_COLORS } from "../../constants/lounge";
+import { api } from "../../convex/_generated/api";
+import type { Id } from "../../convex/_generated/dataModel";
 import { UserPopoutTrigger } from "../lounge/user-popout";
 
 // Reaction types for comments
@@ -161,9 +161,7 @@ export function CommentSection({ postId }: CommentSectionProps) {
             maxLength={2000}
           />
           <FormActions>
-            <CharCount $warning={newComment.length > 1800}>
-              {newComment.length}/2000
-            </CharCount>
+            <CharCount $warning={newComment.length > 1800}>{newComment.length}/2000</CharCount>
             <SubmitButton type="submit" disabled={!newComment.trim() || isSubmitting}>
               {isSubmitting ? (
                 <FontAwesomeIcon icon={faSpinner} spin />
@@ -184,9 +182,7 @@ export function CommentSection({ postId }: CommentSectionProps) {
 
       {/* Comments list */}
       <CommentList>
-        {comments?.length === 0 && (
-          <EmptyState>Be the first to comment!</EmptyState>
-        )}
+        {comments?.length === 0 && <EmptyState>Be the first to comment!</EmptyState>}
         {comments?.map((comment) => (
           <CommentItem
             key={comment._id}
@@ -632,15 +628,15 @@ const TierBadge = styled.span<{ $tier: string }>`
   align-items: center;
   gap: 4px;
   padding: 2px 6px;
-  background: ${(props) => props.$tier === "tier2" ? LOUNGE_COLORS.tier2 : LOUNGE_COLORS.tier1}22;
-  border: 1px solid ${(props) => props.$tier === "tier2" ? LOUNGE_COLORS.tier2 : LOUNGE_COLORS.tier1}44;
+  background: ${(props) => (props.$tier === "tier2" ? LOUNGE_COLORS.tier2 : LOUNGE_COLORS.tier1)}22;
+  border: 1px solid ${(props) => (props.$tier === "tier2" ? LOUNGE_COLORS.tier2 : LOUNGE_COLORS.tier1)}44;
   border-radius: 4px;
   font-size: 10px;
   font-family: var(--font-mono);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: ${(props) => props.$tier === "tier2" ? LOUNGE_COLORS.tier2 : LOUNGE_COLORS.tier1};
+  color: ${(props) => (props.$tier === "tier2" ? LOUNGE_COLORS.tier2 : LOUNGE_COLORS.tier1)};
 
   svg {
     width: 10px;
@@ -671,8 +667,7 @@ const ActionButton = styled.button<{ $danger?: boolean }>`
   border-radius: 6px;
   border: none;
   background: rgba(255, 255, 255, 0.05);
-  color: ${(props) =>
-    props.$danger ? "#ff6b6b" : "rgba(255, 255, 255, 0.6)"};
+  color: ${(props) => (props.$danger ? "#ff6b6b" : "rgba(255, 255, 255, 0.6)")};
   font-size: 12px;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -680,8 +675,7 @@ const ActionButton = styled.button<{ $danger?: boolean }>`
   &:hover {
     background: ${(props) =>
       props.$danger ? "rgba(255, 107, 107, 0.15)" : "rgba(255, 255, 255, 0.1)"};
-    color: ${(props) =>
-      props.$danger ? "#ff6b6b" : "rgba(255, 255, 255, 0.9)"};
+    color: ${(props) => (props.$danger ? "#ff6b6b" : "rgba(255, 255, 255, 0.9)")};
   }
 `;
 
@@ -795,8 +789,7 @@ const ReactionChip = styled.button<{ $active: boolean }>`
     props.$active ? "rgba(144, 116, 242, 0.4)" : "rgba(255, 255, 255, 0.1)"};
   background: ${(props) =>
     props.$active ? "rgba(144, 116, 242, 0.15)" : "rgba(255, 255, 255, 0.03)"};
-  color: ${(props) =>
-    props.$active ? "#9074f2" : "rgba(255, 255, 255, 0.5)"};
+  color: ${(props) => (props.$active ? "#9074f2" : "rgba(255, 255, 255, 0.5)")};
   font-size: 12px;
   cursor: pointer;
   transition: all 0.15s ease;

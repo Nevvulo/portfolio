@@ -1,33 +1,33 @@
-import { useState, useCallback } from "react";
-import styled, { keyframes } from "styled-components";
-import { formatDistanceToNow } from "date-fns";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faGift,
-  faPoll,
-  faMusic,
-  faVideo,
-  faNewspaper,
-  faClock,
-  faUsers,
-  faTicket,
-  faTrophy,
-  faCheck,
-  faSpinner,
-  faThumbtack,
-  faTrash,
-  faCrown,
-  faStar,
-} from "@fortawesome/free-solid-svg-icons";
 import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
+import {
+  faCheck,
+  faClock,
+  faCrown,
+  faGift,
+  faMusic,
+  faNewspaper,
+  faPoll,
+  faSpinner,
+  faStar,
+  faThumbtack,
+  faTicket,
+  faTrash,
+  faTrophy,
+  faUsers,
+  faVideo,
+} from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useMutation, useQuery } from "convex/react";
-import { LOUNGE_COLORS, CONTENT_TYPES } from "../../../constants/lounge";
-import { MessageMarkdown } from "./MessageMarkdown";
+import { formatDistanceToNow } from "date-fns";
+import { useCallback, useState } from "react";
+import styled, { keyframes } from "styled-components";
+import { PostPreview } from "@/components/blog/post-preview";
+import { CONTENT_TYPES, LOUNGE_COLORS } from "../../../constants/lounge";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
-import type { Tier, ContentPostType } from "../../../types/lounge";
 import { useUserPopout } from "../../../hooks/lounge/useUserPopout";
-import { PostPreview } from "@/components/blog/post-preview";
+import type { ContentPostType, Tier } from "../../../types/lounge";
+import { MessageMarkdown } from "./MessageMarkdown";
 
 const formatRelativeTime = (date: number | Date) =>
   formatDistanceToNow(date, { addSuffix: true }).replace(/^about /, "");
@@ -113,7 +113,7 @@ export function EmbeddedContentPost({
         openPopout(author._id, e.currentTarget);
       }
     },
-    [author?._id, openPopout]
+    [author?._id, openPopout],
   );
 
   const isEligibleEmbeddable = ["giveaway", "poll", "music", "video", "news"].includes(post.type);
@@ -157,39 +157,41 @@ export function EmbeddedContentPost({
 
       {post.type === "writing" && post.content && (
         <Container style={{ marginInlineStart: 40 }}>
-          <PostPreview image={post.media?.thumbnail ?? ''} slug="" title={post.title} />
+          <PostPreview image={post.media?.thumbnail ?? ""} slug="" title={post.title} />
         </Container>
       )}
 
-      {isEligibleEmbeddable && <ContentCard $gradient={typeConfig.gradient} $borderColor={typeConfig.borderColor}>
-        {/* Type Badge */}
-        <TypeBadge $color={typeConfig.color}>
-          <FontAwesomeIcon icon={icon} />
-          <span>{typeConfig.badgeLabel}</span>
-        </TypeBadge>
+      {isEligibleEmbeddable && (
+        <ContentCard $gradient={typeConfig.gradient} $borderColor={typeConfig.borderColor}>
+          {/* Type Badge */}
+          <TypeBadge $color={typeConfig.color}>
+            <FontAwesomeIcon icon={icon} />
+            <span>{typeConfig.badgeLabel}</span>
+          </TypeBadge>
 
-        {/* Render based on type */}
+          {/* Render based on type */}
 
-        {post.type === "giveaway" && post.giveawayData && (
-          <GiveawayEmbed postId={post._id} data={post.giveawayData} title={post.title} />
-        )}
+          {post.type === "giveaway" && post.giveawayData && (
+            <GiveawayEmbed postId={post._id} data={post.giveawayData} title={post.title} />
+          )}
 
-        {post.type === "poll" && post.pollData && (
-          <PollEmbed postId={post._id} data={post.pollData} title={post.title} />
-        )}
+          {post.type === "poll" && post.pollData && (
+            <PollEmbed postId={post._id} data={post.pollData} title={post.title} />
+          )}
 
-        {/* For other content types, show title + content */}
-        {!["giveaway", "poll"].includes(post.type) && (
-          <>
-            <PostTitle>{post.title}</PostTitle>
-            {post.content && (
-              <PostContent>
-                <MessageMarkdown content={post.content} />
-              </PostContent>
-            )}
-          </>
-        )}
-      </ContentCard>}
+          {/* For other content types, show title + content */}
+          {!["giveaway", "poll"].includes(post.type) && (
+            <>
+              <PostTitle>{post.title}</PostTitle>
+              {post.content && (
+                <PostContent>
+                  <MessageMarkdown content={post.content} />
+                </PostContent>
+              )}
+            </>
+          )}
+        </ContentCard>
+      )}
 
       {/* Action menu */}
       {showMenu && (isOwnMessage || isCreator) && (
@@ -370,10 +372,7 @@ function PollEmbed({
       <PollMeta>
         {totalVotes} vote{totalVotes !== 1 ? "s" : ""}
         {data.endsAt && (
-          <span>
-            {" "}
-            | {isEnded ? "Ended" : `Ends ${formatRelativeTime(data.endsAt)}`}
-          </span>
+          <span> | {isEnded ? "Ended" : `Ends ${formatRelativeTime(data.endsAt)}`}</span>
         )}
       </PollMeta>
     </PollContainer>
@@ -655,9 +654,7 @@ const EnterButton = styled.button<{ $entered?: boolean }>`
   cursor: ${(p) => (p.$entered ? "default" : "pointer")};
   transition: all 0.2s ease;
   box-shadow: ${(p) =>
-    p.$entered
-      ? "0 3px 12px rgba(34, 197, 94, 0.35)"
-      : "0 3px 12px rgba(249, 115, 22, 0.35)"};
+    p.$entered ? "0 3px 12px rgba(34, 197, 94, 0.35)" : "0 3px 12px rgba(249, 115, 22, 0.35)"};
 
   &:hover:not(:disabled) {
     transform: ${(p) => (p.$entered ? "none" : "translateY(-1px)")};

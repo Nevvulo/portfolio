@@ -1,10 +1,10 @@
-import { m } from "framer-motion";
-import styled from "styled-components";
-import Image from "next/image";
-import { X, Github, ExternalLink } from "lucide-react";
-import { Doc } from "../../convex/_generated/dataModel";
 import { useQuery } from "convex/react";
+import { m } from "framer-motion";
+import { ExternalLink, Github, X } from "lucide-react";
+import Image from "next/image";
+import styled from "styled-components";
 import { api } from "../../convex/_generated/api";
+import type { Doc } from "../../convex/_generated/dataModel";
 import { useTheme } from "../../hooks/useTheme";
 
 interface ProjectExpandedProps {
@@ -20,10 +20,7 @@ export function ProjectExpanded({ project, onClose }: ProjectExpandedProps) {
   const roles = useQuery(api.roles.getByKeys, { keys: project.roles });
 
   // Use dark logo for light mode, regular logo for dark mode
-  const logoUrl =
-    theme === "light" && project.logoDarkUrl
-      ? project.logoDarkUrl
-      : project.logoUrl;
+  const logoUrl = theme === "light" && project.logoDarkUrl ? project.logoDarkUrl : project.logoUrl;
 
   const timelineText = project.timeline.endYear
     ? `${project.timeline.startYear} — ${project.timeline.endYear}`
@@ -59,9 +56,7 @@ export function ProjectExpanded({ project, onClose }: ProjectExpandedProps) {
             </LogoContainer>
           )}
           <TitleSection>
-            <ProjectName layoutId={`project-name-${project.slug}`}>
-              {project.name}
-            </ProjectName>
+            <ProjectName layoutId={`project-name-${project.slug}`}>{project.name}</ProjectName>
             <ProjectSubtitle layoutId={`project-subtitle-${project.slug}`}>
               {project.shortDescription}
             </ProjectSubtitle>
@@ -101,21 +96,13 @@ export function ProjectExpanded({ project, onClose }: ProjectExpandedProps) {
             transition={{ delay: 0.15 }}
           >
             {project.links.github && (
-              <LinkButton
-                href={project.links.github}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
+              <LinkButton href={project.links.github} target="_blank" rel="noopener noreferrer">
                 <Github size={16} />
                 GitHub
               </LinkButton>
             )}
             {project.links.website && (
-              <LinkButton
-                href={project.links.website}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
+              <LinkButton href={project.links.website} target="_blank" rel="noopener noreferrer">
                 <ExternalLink size={16} />
                 Website
               </LinkButton>

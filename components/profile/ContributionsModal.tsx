@@ -1,12 +1,12 @@
-import { useEffect, useCallback } from "react";
+import { useQuery } from "convex/react";
+import { AnimatePresence, m } from "framer-motion";
+import { Clock, FileText, Newspaper, Video, X } from "lucide-react";
+import Link from "next/link";
+import { useCallback, useEffect } from "react";
 import { createPortal } from "react-dom";
 import styled from "styled-components";
-import { m, AnimatePresence } from "framer-motion";
-import { X, FileText, Video, Newspaper, Clock } from "lucide-react";
-import { useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
 import { LOUNGE_COLORS } from "@/constants/lounge";
-import Link from "next/link";
+import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 
 interface ContributionsModalProps {
@@ -22,22 +22,17 @@ const contentTypeIcons = {
   news: Newspaper,
 };
 
-export function ContributionsModal({
-  isOpen,
-  onClose,
-  userId,
-  userName,
-}: ContributionsModalProps) {
+export function ContributionsModal({ isOpen, onClose, userId, userName }: ContributionsModalProps) {
   const contributions = useQuery(
     api.blogPosts.getByUserContributions,
-    isOpen ? { userId } : "skip"
+    isOpen ? { userId } : "skip",
   );
 
   const handleEscape = useCallback(
     (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
     },
-    [onClose]
+    [onClose],
   );
 
   useEffect(() => {
@@ -100,12 +95,7 @@ export function ContributionsModal({
                         href={`/learn/${post.slug}`}
                         onClick={onClose}
                       >
-                        {post.coverImage && (
-                          <CoverImage
-                            src={post.coverImage}
-                            alt={post.title}
-                          />
-                        )}
+                        {post.coverImage && <CoverImage src={post.coverImage} alt={post.title} />}
                         <CardContent $hasCover={!!post.coverImage}>
                           <ContentType>
                             <Icon size={14} />
@@ -133,14 +123,11 @@ export function ContributionsModal({
                             )}
                             {post.publishedAt && (
                               <MetaItem>
-                                {new Date(post.publishedAt).toLocaleDateString(
-                                  "en-US",
-                                  {
-                                    month: "short",
-                                    day: "numeric",
-                                    year: "numeric",
-                                  }
-                                )}
+                                {new Date(post.publishedAt).toLocaleDateString("en-US", {
+                                  month: "short",
+                                  day: "numeric",
+                                  year: "numeric",
+                                })}
                               </MetaItem>
                             )}
                           </CardMeta>
@@ -155,7 +142,7 @@ export function ContributionsModal({
         </Overlay>
       )}
     </AnimatePresence>,
-    document.body
+    document.body,
   );
 }
 
@@ -309,9 +296,7 @@ const RoleBadge = styled.span<{ $role: "author" | "collaborator" }>`
   border-radius: 4px;
   margin-left: 4px;
   background: ${(p) =>
-    p.$role === "author"
-      ? "rgba(144, 116, 242, 0.2)"
-      : "rgba(255, 184, 0, 0.2)"};
+    p.$role === "author" ? "rgba(144, 116, 242, 0.2)" : "rgba(255, 184, 0, 0.2)"};
   color: ${(p) => (p.$role === "author" ? LOUNGE_COLORS.tier1 : "#ffb800")};
 `;
 

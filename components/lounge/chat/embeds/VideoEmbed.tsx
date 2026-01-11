@@ -39,7 +39,7 @@ export const VideoEmbed = memo(function VideoEmbed({
 
 function calculateDisplayDimensions(
   width?: number,
-  height?: number
+  height?: number,
 ): { width: number; height: number } {
   const maxWidth = 400;
   const maxHeight = 300;

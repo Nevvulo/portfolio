@@ -34,7 +34,11 @@ export function AnimatedRoutes({
 
   if (skipAnimation) {
     return (
-      <div id="scroll-container" style={scrollStyle} className={isHomepage ? "homepage-scroll" : ""}>
+      <div
+        id="scroll-container"
+        style={scrollStyle}
+        className={isHomepage ? "homepage-scroll" : ""}
+      >
         {children}
       </div>
     );

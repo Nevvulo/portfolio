@@ -1,8 +1,4 @@
-import {
-  BLOCKED_WORDS,
-  SPAM_PATTERNS,
-  MAX_BIO_LENGTH,
-} from "../constants/word-filter";
+import { BLOCKED_WORDS, MAX_BIO_LENGTH, SPAM_PATTERNS } from "../constants/word-filter";
 import type { BioFilterResult } from "../types/user-popout";
 
 /**

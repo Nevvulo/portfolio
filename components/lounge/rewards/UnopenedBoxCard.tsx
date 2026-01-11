@@ -1,8 +1,8 @@
-import styled, { keyframes } from "styled-components";
+import { format } from "date-fns";
 import { m } from "framer-motion";
 import { Gift, Sparkles } from "lucide-react";
-import { format } from "date-fns";
-import { RARITY_COLORS, RARITY_ORDER, LOUNGE_COLORS } from "../../../constants/lounge";
+import styled, { keyframes } from "styled-components";
+import { LOUNGE_COLORS, RARITY_COLORS, RARITY_ORDER } from "../../../constants/lounge";
 import type { Reward } from "../../../types/lounge";
 
 interface UnopenedBoxCardProps {
@@ -12,9 +12,10 @@ interface UnopenedBoxCardProps {
 
 export function UnopenedBoxCard({ reward, onClick }: UnopenedBoxCardProps) {
   // Get best rarity hint for glow
-  const bestRarity = [...reward.items].sort(
-    (a, b) => (RARITY_ORDER[b.rarity] || 0) - (RARITY_ORDER[a.rarity] || 0)
-  )[0]?.rarity || "common";
+  const bestRarity =
+    [...reward.items].sort(
+      (a, b) => (RARITY_ORDER[b.rarity] || 0) - (RARITY_ORDER[a.rarity] || 0),
+    )[0]?.rarity || "common";
 
   const rarityColors = RARITY_COLORS[bestRarity as keyof typeof RARITY_COLORS];
 

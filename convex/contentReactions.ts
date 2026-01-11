@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import { query, mutation } from "./_generated/server";
+import { mutation, query } from "./_generated/server";
 import { getCurrentUser, requireUser } from "./auth";
 
 // Reaction type validator
@@ -8,7 +8,7 @@ const reactionTypeValidator = v.union(
   v.literal("heart"),
   v.literal("plus1"),
   v.literal("eyes"),
-  v.literal("question")
+  v.literal("question"),
 );
 
 // ============================================
@@ -60,10 +60,7 @@ export const getForPost = query({
       .collect();
 
     // Group by highlight
-    const byHighlight = new Map<
-      string,
-      { counts: Record<string, number>; total: number }
-    >();
+    const byHighlight = new Map<string, { counts: Record<string, number>; total: number }>();
 
     for (const reaction of reactions) {
       const key = reaction.highlightId.toString();
@@ -94,7 +91,7 @@ export const getMyReaction = query({
     const reaction = await ctx.db
       .query("contentReactions")
       .withIndex("by_user_highlight", (q) =>
-        q.eq("userId", user._id).eq("highlightId", args.highlightId)
+        q.eq("userId", user._id).eq("highlightId", args.highlightId),
       )
       .unique();
 
@@ -152,7 +149,7 @@ export const react = mutation({
     const existing = await ctx.db
       .query("contentReactions")
       .withIndex("by_user_highlight", (q) =>
-        q.eq("userId", user._id).eq("highlightId", args.highlightId)
+        q.eq("userId", user._id).eq("highlightId", args.highlightId),
       )
       .unique();
 
@@ -195,7 +192,7 @@ export const removeReaction = mutation({
     const existing = await ctx.db
       .query("contentReactions")
       .withIndex("by_user_highlight", (q) =>
-        q.eq("userId", user._id).eq("highlightId", args.highlightId)
+        q.eq("userId", user._id).eq("highlightId", args.highlightId),
       )
       .unique();
 

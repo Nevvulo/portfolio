@@ -1,16 +1,16 @@
-import { useState, useCallback } from "react";
-import styled from "styled-components";
-import { m, AnimatePresence } from "framer-motion";
 import { useQuery } from "convex/react";
-import { Menu, X, type LucideIcon } from "lucide-react";
+import { AnimatePresence, m } from "framer-motion";
+import { type LucideIcon, Menu, X } from "lucide-react";
+import { useCallback, useState } from "react";
+import styled from "styled-components";
+import { LOUNGE_COLORS, LOUNGE_LAYOUT } from "../../../constants/lounge";
 import { api } from "../../../convex/_generated/api";
-import { LOUNGE_LAYOUT, LOUNGE_COLORS } from "../../../constants/lounge";
 import { useTierAccess } from "../../../hooks/lounge/useTierAccess";
-import { Sidebar } from "./Sidebar";
-import { MembersPanel } from "./MembersPanel";
-import { TopBar } from "./TopBar";
-import { UserPopoutProvider, UserPopout } from "../user-popout";
 import { UsernameSetup } from "../UsernameSetup";
+import { UserPopout, UserPopoutProvider } from "../user-popout";
+import { MembersPanel } from "./MembersPanel";
+import { Sidebar } from "./Sidebar";
+import { TopBar } from "./TopBar";
 
 interface LoungeLayoutProps {
   children: React.ReactNode;
@@ -62,10 +62,7 @@ export function LoungeLayout({
   if (currentUser && !currentUser.username && !usernameSkipped) {
     return (
       <UsernameSetupContainer>
-        <UsernameSetup
-          onComplete={handleUsernameComplete}
-          onSkip={handleUsernameSkip}
-        />
+        <UsernameSetup onComplete={handleUsernameComplete} onSkip={handleUsernameSkip} />
       </UsernameSetupContainer>
     );
   }
@@ -80,7 +77,9 @@ export function LoungeLayout({
 
         {/* Sidebar */}
         <AnimatePresence>
-          {(isSidebarOpen || typeof window !== "undefined" && window.innerWidth >= LOUNGE_LAYOUT.mobileBreakpoint) && (
+          {(isSidebarOpen ||
+            (typeof window !== "undefined" &&
+              window.innerWidth >= LOUNGE_LAYOUT.mobileBreakpoint)) && (
             <SidebarWrapper
               initial={false}
               animate={{ x: 0 }}
@@ -159,8 +158,8 @@ const SidebarWrapper = styled(m.div)`
   width: ${LOUNGE_LAYOUT.sidebarWidth};
   min-width: ${LOUNGE_LAYOUT.sidebarWidth};
   height: 100%;
-  background: ${(props) => props.theme.background === "#fff" ? "#f5f3fa" : LOUNGE_COLORS.glassBackground};
-  border-right: 1px solid ${(props) => props.theme.background === "#fff" ? "rgba(0,0,0,0.08)" : LOUNGE_COLORS.glassBorder};
+  background: ${(props) => (props.theme.background === "#fff" ? "#f5f3fa" : LOUNGE_COLORS.glassBackground)};
+  border-right: 1px solid ${(props) => (props.theme.background === "#fff" ? "rgba(0,0,0,0.08)" : LOUNGE_COLORS.glassBorder)};
   z-index: 100;
 
   @media (max-width: ${LOUNGE_LAYOUT.mobileBreakpoint}px) {
@@ -199,8 +198,8 @@ const ContentArea = styled.div`
 
 const MembersPanelWrapper = styled(m.div)`
   height: 100%;
-  background: ${(props) => props.theme.background === "#fff" ? "#f5f3fa" : LOUNGE_COLORS.glassBackground};
-  border-left: 1px solid ${(props) => props.theme.background === "#fff" ? "rgba(0,0,0,0.08)" : LOUNGE_COLORS.glassBorder};
+  background: ${(props) => (props.theme.background === "#fff" ? "#f5f3fa" : LOUNGE_COLORS.glassBackground)};
+  border-left: 1px solid ${(props) => (props.theme.background === "#fff" ? "rgba(0,0,0,0.08)" : LOUNGE_COLORS.glassBorder)};
   overflow: hidden;
 
   @media (max-width: ${LOUNGE_LAYOUT.mobileBreakpoint}px) {
@@ -215,15 +214,15 @@ const MobileMenuButton = styled.button`
   left: 12px;
   z-index: 150;
   padding: 8px;
-  background: ${(props) => props.theme.background === "#fff" ? "rgba(255,255,255,0.9)" : LOUNGE_COLORS.glassBackground};
-  border: 1px solid ${(props) => props.theme.background === "#fff" ? "rgba(0,0,0,0.1)" : LOUNGE_COLORS.glassBorder};
+  background: ${(props) => (props.theme.background === "#fff" ? "rgba(255,255,255,0.9)" : LOUNGE_COLORS.glassBackground)};
+  border: 1px solid ${(props) => (props.theme.background === "#fff" ? "rgba(0,0,0,0.1)" : LOUNGE_COLORS.glassBorder)};
   border-radius: 8px;
   color: ${(props) => props.theme.foreground};
   cursor: pointer;
   transition: all 0.2s ease;
 
   &:hover {
-    background: ${(props) => props.theme.background === "#fff" ? "rgba(144, 116, 242, 0.1)" : "rgba(144, 116, 242, 0.2)"};
+    background: ${(props) => (props.theme.background === "#fff" ? "rgba(144, 116, 242, 0.1)" : "rgba(144, 116, 242, 0.2)")};
   }
 
   @media (max-width: ${LOUNGE_LAYOUT.mobileBreakpoint}px) {

@@ -72,9 +72,7 @@ export const getReactionsOverTime = query({
   args: {
     days: v.number(),
     postId: v.optional(v.id("blogPosts")),
-    type: v.optional(
-      v.union(v.literal("like"), v.literal("helpful"), v.literal("insightful"))
-    ),
+    type: v.optional(v.union(v.literal("like"), v.literal("helpful"), v.literal("insightful"))),
   },
   handler: async (ctx, args) => {
     await requireCreator(ctx);
@@ -92,7 +90,10 @@ export const getReactionsOverTime = query({
     }
 
     // Group by day
-    const reactionsByDay: Record<string, { like: number; helpful: number; insightful: number; total: number }> = {};
+    const reactionsByDay: Record<
+      string,
+      { like: number; helpful: number; insightful: number; total: number }
+    > = {};
 
     // Initialize all days
     for (let i = 0; i < args.days; i++) {
@@ -136,9 +137,7 @@ export const getCommentsOverTime = query({
     const comments = await ctx.db.query("blogComments").collect();
 
     // Filter by time range and not deleted
-    let filtered = comments.filter(
-      (c) => c.createdAt >= startTime && !c.isDeleted
-    );
+    let filtered = comments.filter((c) => c.createdAt >= startTime && !c.isDeleted);
     if (args.postId) {
       filtered = filtered.filter((c) => c.postId === args.postId);
     }
@@ -186,22 +185,17 @@ export const getDetailedAnalytics = query({
     // Current period stats
     const currentViews = allViews.filter((v) => v.viewedAt >= startTime);
     const previousViews = allViews.filter(
-      (v) => v.viewedAt >= previousStartTime && v.viewedAt < startTime
+      (v) => v.viewedAt >= previousStartTime && v.viewedAt < startTime,
     );
 
     const currentReactions = allReactions.filter((r) => r.createdAt >= startTime);
     const previousReactions = allReactions.filter(
-      (r) => r.createdAt >= previousStartTime && r.createdAt < startTime
+      (r) => r.createdAt >= previousStartTime && r.createdAt < startTime,
     );
 
-    const currentComments = allComments.filter(
-      (c) => c.createdAt >= startTime && !c.isDeleted
-    );
+    const currentComments = allComments.filter((c) => c.createdAt >= startTime && !c.isDeleted);
     const previousComments = allComments.filter(
-      (c) =>
-        c.createdAt >= previousStartTime &&
-        c.createdAt < startTime &&
-        !c.isDeleted
+      (c) => c.createdAt >= previousStartTime && c.createdAt < startTime && !c.isDeleted,
     );
 
     // Calculate percentage changes
@@ -340,9 +334,7 @@ export const getPostAnalytics = query({
     // Period filtered
     const periodViews = views.filter((v) => v.viewedAt >= startTime);
     const periodReactions = reactions.filter((r) => r.createdAt >= startTime);
-    const periodComments = comments.filter(
-      (c) => c.createdAt >= startTime && !c.isDeleted
-    );
+    const periodComments = comments.filter((c) => c.createdAt >= startTime && !c.isDeleted);
 
     return {
       post: {
@@ -396,7 +388,10 @@ export const getAllPostsAnalytics = query({
 
     // Build lookup maps
     const viewsByPost: Record<string, { total: number; period: number }> = {};
-    const reactionsByPost: Record<string, { total: number; period: number; like: number; helpful: number; insightful: number }> = {};
+    const reactionsByPost: Record<
+      string,
+      { total: number; period: number; like: number; helpful: number; insightful: number }
+    > = {};
     const commentsByPost: Record<string, { total: number; period: number }> = {};
 
     // Initialize
@@ -441,20 +436,28 @@ export const getAllPostsAnalytics = query({
       }
     }
 
-    return posts.map((post) => {
-      const id = post._id.toString();
-      return {
-        _id: post._id,
-        title: post.title,
-        slug: post.slug,
-        status: post.status,
-        visibility: post.visibility,
-        contentType: post.contentType,
-        publishedAt: post.publishedAt,
-        views: viewsByPost[id] || { total: 0, period: 0 },
-        reactions: reactionsByPost[id] || { total: 0, period: 0, like: 0, helpful: 0, insightful: 0 },
-        comments: commentsByPost[id] || { total: 0, period: 0 },
-      };
-    }).sort((a, b) => b.views.period - a.views.period);
+    return posts
+      .map((post) => {
+        const id = post._id.toString();
+        return {
+          _id: post._id,
+          title: post.title,
+          slug: post.slug,
+          status: post.status,
+          visibility: post.visibility,
+          contentType: post.contentType,
+          publishedAt: post.publishedAt,
+          views: viewsByPost[id] || { total: 0, period: 0 },
+          reactions: reactionsByPost[id] || {
+            total: 0,
+            period: 0,
+            like: 0,
+            helpful: 0,
+            insightful: 0,
+          },
+          comments: commentsByPost[id] || { total: 0, period: 0 },
+        };
+      })
+      .sort((a, b) => b.views.period - a.views.period);
   },
 });

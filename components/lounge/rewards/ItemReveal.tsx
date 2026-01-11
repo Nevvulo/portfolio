@@ -1,19 +1,19 @@
 import { m } from "framer-motion";
-import styled, { keyframes, css } from "styled-components";
 import {
-  Smile,
-  Image,
-  Ticket,
   Clock,
-  Megaphone,
-  Sparkles,
-  Music,
-  Video,
   Gamepad2,
   Gift,
+  Image,
+  Megaphone,
+  Music,
+  Smile,
+  Sparkles,
+  Ticket,
+  Video,
 } from "lucide-react";
+import styled, { css, keyframes } from "styled-components";
 import { RARITY_COLORS, REWARD_TYPES } from "../../../constants/lounge";
-import type { RewardItem, ItemRarity } from "../../../types/lounge";
+import type { ItemRarity, RewardItem } from "../../../types/lounge";
 
 interface ItemRevealProps {
   item: RewardItem;

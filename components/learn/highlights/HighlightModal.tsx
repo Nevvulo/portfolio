@@ -1,10 +1,10 @@
+import { AnimatePresence, m } from "framer-motion";
+import { ChevronDown, ChevronRight, Highlighter, Trash2, X } from "lucide-react";
 import React, { useCallback, useState } from "react";
-import styled from "styled-components";
 import { createPortal } from "react-dom";
-import { m, AnimatePresence } from "framer-motion";
-import { X, Highlighter, ChevronRight, ChevronDown, Trash2 } from "lucide-react";
+import styled from "styled-components";
 import { LOUNGE_COLORS } from "@/constants/lounge";
-import { Id } from "@/convex/_generated/dataModel";
+import type { Id } from "@/convex/_generated/dataModel";
 
 interface HighlightWithUser {
   _id: Id<"contentHighlights">;
@@ -105,7 +105,7 @@ export function HighlightModal({
       onScrollToHighlight(highlightId);
       onClose();
     },
-    [onScrollToHighlight, onClose]
+    [onScrollToHighlight, onClose],
   );
 
   const handleDelete = useCallback(
@@ -128,7 +128,7 @@ export function HighlightModal({
         console.error("Failed to delete highlight:", error);
       }
     },
-    [onDelete]
+    [onDelete],
   );
 
   // Handle escape key
@@ -178,120 +178,117 @@ export function HighlightModal({
               transition={{ duration: 0.15 }}
               onClick={(e) => e.stopPropagation()}
             >
-            <ModalHeader>
-              <HeaderTitle>
-                <Highlighter size={18} />
-                <span>{totalCount} Highlight{totalCount !== 1 ? "s" : ""}</span>
-              </HeaderTitle>
-              <CloseButton onClick={onClose}>
-                <X size={18} />
-              </CloseButton>
-            </ModalHeader>
+              <ModalHeader>
+                <HeaderTitle>
+                  <Highlighter size={18} />
+                  <span>
+                    {totalCount} Highlight{totalCount !== 1 ? "s" : ""}
+                  </span>
+                </HeaderTitle>
+                <CloseButton onClick={onClose}>
+                  <X size={18} />
+                </CloseButton>
+              </ModalHeader>
 
-            <ModalContent>
-              {highlightsByUser.length === 0 ? (
-                <EmptyState>No highlights yet</EmptyState>
-              ) : (
-                highlightsByUser.map((group) => {
-                  const userId = group.user._id.toString();
-                  const isExpanded = expandedUsers.has(userId);
+              <ModalContent>
+                {highlightsByUser.length === 0 ? (
+                  <EmptyState>No highlights yet</EmptyState>
+                ) : (
+                  highlightsByUser.map((group) => {
+                    const userId = group.user._id.toString();
+                    const isExpanded = expandedUsers.has(userId);
 
-                  return (
-                    <UserGroup key={userId}>
-                      <UserHeader onClick={() => toggleUser(userId)}>
-                        <UserInfo>
-                          <Avatar
-                            src={group.user.avatarUrl || "/default-avatar.png"}
-                            alt={group.user.displayName}
-                          />
-                          <UserName>
-                            {group.user.displayName}
-                            <HighlightCountLabel>
-                              ({group.highlights.length})
-                            </HighlightCountLabel>
-                          </UserName>
-                        </UserInfo>
-                        <ExpandIcon $isExpanded={isExpanded}>
-                          <ChevronDown size={16} />
-                        </ExpandIcon>
-                      </UserHeader>
+                    return (
+                      <UserGroup key={userId}>
+                        <UserHeader onClick={() => toggleUser(userId)}>
+                          <UserInfo>
+                            <Avatar
+                              src={group.user.avatarUrl || "/default-avatar.png"}
+                              alt={group.user.displayName}
+                            />
+                            <UserName>
+                              {group.user.displayName}
+                              <HighlightCountLabel>({group.highlights.length})</HighlightCountLabel>
+                            </UserName>
+                          </UserInfo>
+                          <ExpandIcon $isExpanded={isExpanded}>
+                            <ChevronDown size={16} />
+                          </ExpandIcon>
+                        </UserHeader>
 
-                      <AnimatePresence>
-                        {isExpanded && (
-                          <HighlightsList
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: "auto", opacity: 1 }}
-                            exit={{ height: 0, opacity: 0 }}
-                            transition={{ duration: 0.15 }}
-                          >
-                            {group.highlights
-                              .filter((h) => !deletingIds.has(h._id.toString()))
-                              .map((highlight) => {
-                                const isOwn = currentUserId === group.user._id.toString();
-                                const highlightId = highlight._id.toString();
-                                const reactions = reactionsByHighlight[highlightId];
+                        <AnimatePresence>
+                          {isExpanded && (
+                            <HighlightsList
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: "auto", opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              transition={{ duration: 0.15 }}
+                            >
+                              {group.highlights
+                                .filter((h) => !deletingIds.has(h._id.toString()))
+                                .map((highlight) => {
+                                  const isOwn = currentUserId === group.user._id.toString();
+                                  const highlightId = highlight._id.toString();
+                                  const reactions = reactionsByHighlight[highlightId];
 
-                                // Get top emojis for this highlight
-                                const topEmojis = reactions
-                                  ? Object.entries(reactions.counts)
-                                      .filter(([, count]) => count > 0)
-                                      .sort((a, b) => b[1] - a[1])
-                                      .slice(0, 3)
-                                      .map(([type]) => REACTION_EMOJI[type])
-                                  : [];
+                                  // Get top emojis for this highlight
+                                  const topEmojis = reactions
+                                    ? Object.entries(reactions.counts)
+                                        .filter(([, count]) => count > 0)
+                                        .sort((a, b) => b[1] - a[1])
+                                        .slice(0, 3)
+                                        .map(([type]) => REACTION_EMOJI[type])
+                                    : [];
 
-                                return (
-                                  <HighlightItem
-                                    key={highlightId}
-                                    onClick={() => handleScrollTo(highlightId)}
-                                    whileHover={{ x: 4 }}
-                                  >
-                                    <HighlightText>
-                                      "{highlight.highlightedText.slice(0, 80)}
-                                      {highlight.highlightedText.length > 80
-                                        ? "..."
-                                        : ""}
-                                      "
-                                    </HighlightText>
-                                    <HighlightActions>
-                                      {topEmojis.length > 0 && (
-                                        <ReactionBadges>
-                                          {topEmojis.map((emoji, i) => (
-                                            <span key={i}>{emoji}</span>
-                                          ))}
-                                        </ReactionBadges>
-                                      )}
-                                      {isOwn && onDelete && (
-                                        <DeleteButton
-                                          onClick={(e) => handleDelete(e, highlightId)}
-                                          title="Delete highlight"
-                                          whileHover={{ scale: 1.1 }}
-                                          whileTap={{ scale: 0.9 }}
-                                        >
-                                          <Trash2 size={12} />
-                                        </DeleteButton>
-                                      )}
-                                      <ScrollIcon>
-                                        <ChevronRight size={14} />
-                                      </ScrollIcon>
-                                    </HighlightActions>
-                                  </HighlightItem>
-                                );
-                              })}
-                          </HighlightsList>
-                        )}
-                      </AnimatePresence>
-                    </UserGroup>
-                  );
-                })
-              )}
-            </ModalContent>
-          </ModalContainer>
+                                  return (
+                                    <HighlightItem
+                                      key={highlightId}
+                                      onClick={() => handleScrollTo(highlightId)}
+                                      whileHover={{ x: 4 }}
+                                    >
+                                      <HighlightText>
+                                        "{highlight.highlightedText.slice(0, 80)}
+                                        {highlight.highlightedText.length > 80 ? "..." : ""}"
+                                      </HighlightText>
+                                      <HighlightActions>
+                                        {topEmojis.length > 0 && (
+                                          <ReactionBadges>
+                                            {topEmojis.map((emoji, i) => (
+                                              <span key={i}>{emoji}</span>
+                                            ))}
+                                          </ReactionBadges>
+                                        )}
+                                        {isOwn && onDelete && (
+                                          <DeleteButton
+                                            onClick={(e) => handleDelete(e, highlightId)}
+                                            title="Delete highlight"
+                                            whileHover={{ scale: 1.1 }}
+                                            whileTap={{ scale: 0.9 }}
+                                          >
+                                            <Trash2 size={12} />
+                                          </DeleteButton>
+                                        )}
+                                        <ScrollIcon>
+                                          <ChevronRight size={14} />
+                                        </ScrollIcon>
+                                      </HighlightActions>
+                                    </HighlightItem>
+                                  );
+                                })}
+                            </HighlightsList>
+                          )}
+                        </AnimatePresence>
+                      </UserGroup>
+                    );
+                  })
+                )}
+              </ModalContent>
+            </ModalContainer>
           </ModalWrapper>
         </>
       )}
     </AnimatePresence>,
-    document.body
+    document.body,
   );
 }
 

@@ -1,7 +1,18 @@
 import { create } from "zustand";
 import type { Id } from "../../convex/_generated/dataModel";
 
-type ContentType = "music" | "video" | "writing" | "game_build" | "news" | "tools" | "event" | "advice" | "giveaway" | "poll" | "emoji";
+type ContentType =
+  | "music"
+  | "video"
+  | "writing"
+  | "game_build"
+  | "news"
+  | "tools"
+  | "event"
+  | "advice"
+  | "giveaway"
+  | "poll"
+  | "emoji";
 type Tier = "free" | "tier1" | "tier2";
 
 interface ContentFormState {

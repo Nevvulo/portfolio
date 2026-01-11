@@ -1,21 +1,21 @@
-import Head from "next/head";
-import styled from "styled-components";
-import { useQuery } from "convex/react";
 import { useUser } from "@clerk/nextjs";
-import { useState, useEffect, useRef, useCallback } from "react";
-import { api } from "../../convex/_generated/api";
+import { useQuery } from "convex/react";
+import Head from "next/head";
+import { useCallback, useEffect, useRef, useState } from "react";
+import styled from "styled-components";
+import { Skeleton } from "../../components/generics/skeleton";
+import { BlogView } from "../../components/layout/blog";
 import {
-	BentoGrid,
-	BentoCardProps,
-	UserInfoCard,
-	useTimeTracking,
-	SearchBar,
-	LabelFilter,
-	SearchResultCard,
+  type BentoCardProps,
+  BentoGrid,
+  LabelFilter,
+  SearchBar,
+  SearchResultCard,
+  UserInfoCard,
+  useTimeTracking,
 } from "../../components/learn";
 import { SimpleNavbar } from "../../components/navbar/simple";
-import { BlogView } from "../../components/layout/blog";
-import { Skeleton } from "../../components/generics/skeleton";
+import { api } from "../../convex/_generated/api";
 import { useBlogSearch } from "../../hooks/useBlogSearch";
 
 interface RecommendationScore {
@@ -41,7 +41,7 @@ export default function Learn() {
   const newsPosts = useQuery(api.blogPosts.getForBento, { contentType: "news" });
   const watchHistory = useQuery(
     api.articleWatchTime.getUserWatchHistory,
-    isSignedIn ? { limit: 50 } : "skip"
+    isSignedIn ? { limit: 50 } : "skip",
   );
   const basePosts = useQuery(api.blogPosts.getForBento, { excludeNews: true });
 
@@ -94,7 +94,7 @@ export default function Learn() {
           limit: POSTS_PER_PAGE,
           offset,
         }
-      : "skip"
+      : "skip",
   );
 
   // Reset accumulated posts when recScores change (personalization updated)
@@ -116,9 +116,7 @@ export default function Learn() {
         }
         // Subsequent pages - append, avoiding duplicates
         const existingIds = new Set(prev.map((p) => p._id));
-        const newPosts = paginatedResult.posts.filter(
-          (p) => !existingIds.has(p._id)
-        );
+        const newPosts = paginatedResult.posts.filter((p) => !existingIds.has(p._id));
         return [...prev, ...(newPosts as BentoCardProps[])];
       });
       setIsLoadingMore(false);
@@ -154,7 +152,7 @@ export default function Learn() {
           handleLoadMore();
         }
       },
-      { threshold: 0.1, rootMargin: "200px" }
+      { threshold: 0.1, rootMargin: "200px" },
     );
 
     observer.observe(element);
@@ -186,7 +184,8 @@ export default function Learn() {
     clearAll,
   } = useBlogSearch();
 
-  const isLoading = newsPosts === undefined || (articlePosts.length === 0 && paginatedResult === undefined);
+  const isLoading =
+    newsPosts === undefined || (articlePosts.length === 0 && paginatedResult === undefined);
   const hasMore = paginatedResult?.hasMore ?? false;
 
   return (
@@ -241,9 +240,7 @@ export default function Learn() {
               {/* Search results or BentoGrid */}
               {isSearchActive ? (
                 <SearchResultsContainer>
-                  {isSearching && (
-                    <SearchStatus>Searching...</SearchStatus>
-                  )}
+                  {isSearching && <SearchStatus>Searching...</SearchStatus>}
                   {!isSearching && searchError && (
                     <SearchStatus>
                       <NoResultsText>{searchError}</NoResultsText>
@@ -295,7 +292,10 @@ export default function Learn() {
         <title>Learn - Nevulo</title>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Protest+Revolution&display=swap" rel="stylesheet" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Protest+Revolution&display=swap"
+          rel="stylesheet"
+        />
         <meta
           name="description"
           content="Learn software engineering, web development, and programming through articles, tutorials, and videos."
@@ -646,9 +646,12 @@ const SkeletonNewsCard = styled(Skeleton)<{ $size: "small" | "medium" | "large" 
   border-radius: 12px;
   ${(p) => {
     switch (p.$size) {
-      case "small": return "width: 280px; height: 90px;";
-      case "medium": return "width: 340px; height: 100px;";
-      case "large": return "width: 420px; height: 110px;";
+      case "small":
+        return "width: 280px; height: 90px;";
+      case "medium":
+        return "width: 340px; height: 100px;";
+      case "large":
+        return "width: 420px; height: 110px;";
     }
   }}
 

@@ -1,6 +1,6 @@
+import { lookup } from "dns/promises";
 import type { NextApiRequest, NextApiResponse } from "next";
 import type { EmbedType } from "../../../types/lounge";
-import { lookup } from "dns/promises";
 
 export const config = {
   api: {
@@ -123,7 +123,7 @@ function isYouTubeUrl(url: string): boolean {
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<UnfurlResponse | { error: string }>
+  res: NextApiResponse<UnfurlResponse | { error: string }>,
 ) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
@@ -243,18 +243,34 @@ function extractMetadata(html: string): Metadata {
   const metadata: Metadata = {};
 
   // Extract OG tags
-  const ogTitle = extractMetaContent(html, 'property="og:title"') || extractMetaContent(html, "property='og:title'");
-  const ogDescription = extractMetaContent(html, 'property="og:description"') || extractMetaContent(html, "property='og:description'");
-  const ogImage = extractMetaContent(html, 'property="og:image"') || extractMetaContent(html, "property='og:image'");
-  const ogSiteName = extractMetaContent(html, 'property="og:site_name"') || extractMetaContent(html, "property='og:site_name'");
+  const ogTitle =
+    extractMetaContent(html, 'property="og:title"') ||
+    extractMetaContent(html, "property='og:title'");
+  const ogDescription =
+    extractMetaContent(html, 'property="og:description"') ||
+    extractMetaContent(html, "property='og:description'");
+  const ogImage =
+    extractMetaContent(html, 'property="og:image"') ||
+    extractMetaContent(html, "property='og:image'");
+  const ogSiteName =
+    extractMetaContent(html, 'property="og:site_name"') ||
+    extractMetaContent(html, "property='og:site_name'");
 
   // Extract Twitter card tags as fallback
-  const twitterTitle = extractMetaContent(html, 'name="twitter:title"') || extractMetaContent(html, "name='twitter:title'");
-  const twitterDescription = extractMetaContent(html, 'name="twitter:description"') || extractMetaContent(html, "name='twitter:description'");
-  const twitterImage = extractMetaContent(html, 'name="twitter:image"') || extractMetaContent(html, "name='twitter:image'");
+  const twitterTitle =
+    extractMetaContent(html, 'name="twitter:title"') ||
+    extractMetaContent(html, "name='twitter:title'");
+  const twitterDescription =
+    extractMetaContent(html, 'name="twitter:description"') ||
+    extractMetaContent(html, "name='twitter:description'");
+  const twitterImage =
+    extractMetaContent(html, 'name="twitter:image"') ||
+    extractMetaContent(html, "name='twitter:image'");
 
   // Extract standard meta tags as fallback
-  const metaDescription = extractMetaContent(html, 'name="description"') || extractMetaContent(html, "name='description'");
+  const metaDescription =
+    extractMetaContent(html, 'name="description"') ||
+    extractMetaContent(html, "name='description'");
 
   // Extract title tag
   const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
@@ -279,32 +295,38 @@ function extractMetadata(html: string): Metadata {
 
 function extractMetaContent(html: string, attribute: string): string | undefined {
   // Match meta tag with the given attribute
-  const regex = new RegExp(`<meta[^>]+${attribute.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}[^>]+content=["']([^"']+)["']`, 'i');
+  const regex = new RegExp(
+    `<meta[^>]+${attribute.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}[^>]+content=["']([^"']+)["']`,
+    "i",
+  );
   const match = html.match(regex);
   if (match?.[1]) return match[1];
 
   // Also try with content before the attribute
-  const regex2 = new RegExp(`<meta[^>]+content=["']([^"']+)["'][^>]+${attribute.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'i');
+  const regex2 = new RegExp(
+    `<meta[^>]+content=["']([^"']+)["'][^>]+${attribute.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`,
+    "i",
+  );
   const match2 = html.match(regex2);
   return match2?.[1];
 }
 
 function decodeHtmlEntities(str: string): string {
   return str
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
     .replace(/&quot;/g, '"')
     .replace(/&#39;/g, "'")
     .replace(/&#x27;/g, "'")
-    .replace(/&#x2F;/g, '/')
-    .replace(/&nbsp;/g, ' ');
+    .replace(/&#x2F;/g, "/")
+    .replace(/&nbsp;/g, " ");
 }
 
 function resolveUrl(imageUrl: string, baseUrl: string): string {
   try {
     // If it's already an absolute URL, return as is
-    if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+    if (imageUrl.startsWith("http://") || imageUrl.startsWith("https://")) {
       return imageUrl;
     }
     // Resolve relative URL

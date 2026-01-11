@@ -1,14 +1,23 @@
-import { createContext, useContext, useState, useRef, useMemo, useEffect, useCallback, type ReactNode } from "react";
 import {
+  createLocalAudioTrack,
+  LocalAudioTrack,
+  type Participant,
+  type RemoteTrack,
+  type RemoteTrackPublication,
   Room,
   RoomEvent,
   Track,
-  LocalAudioTrack,
-  RemoteTrack,
-  RemoteTrackPublication,
-  Participant,
-  createLocalAudioTrack,
 } from "livekit-client";
+import {
+  createContext,
+  type ReactNode,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 /**
  * LiveKit Context - manages LiveKit connection globally so audio persists across page navigation.
@@ -65,7 +74,12 @@ interface LiveKitContextValue {
 
   // Actions
   connectAsListener: (userId: string, displayName?: string) => Promise<void>;
-  connectAsPublisher: (userId: string, displayName?: string, deviceId?: string, sourceType?: AudioSourceType) => Promise<void>;
+  connectAsPublisher: (
+    userId: string,
+    displayName?: string,
+    deviceId?: string,
+    sourceType?: AudioSourceType,
+  ) => Promise<void>;
   stopPublishing: () => Promise<void>;
   disconnect: (expired?: boolean) => void;
   setVolume: (volume: number) => void;
@@ -147,7 +161,7 @@ export function LiveKitProvider({ children }: { children: ReactNode }) {
 
       return response.json();
     },
-    []
+    [],
   );
 
   // Start session timer
@@ -295,19 +309,16 @@ export function LiveKitProvider({ children }: { children: ReactNode }) {
               audioElementRef.current = audioElement;
               setIsReceiving(true);
             }
-          }
+          },
         );
 
-        room.on(
-          RoomEvent.TrackUnsubscribed,
-          (track: RemoteTrack) => {
-            if (track.kind === Track.Kind.Audio) {
-              console.log("[LiveKit] Audio track unsubscribed");
-              track.detach().forEach((el) => el.remove());
-              setIsReceiving(false);
-            }
+        room.on(RoomEvent.TrackUnsubscribed, (track: RemoteTrack) => {
+          if (track.kind === Track.Kind.Audio) {
+            console.log("[LiveKit] Audio track unsubscribed");
+            track.detach().forEach((el) => el.remove());
+            setIsReceiving(false);
           }
-        );
+        });
 
         room.on(RoomEvent.Disconnected, (reason) => {
           console.log("[LiveKit] Disconnected, reason:", reason);
@@ -327,7 +338,14 @@ export function LiveKitProvider({ children }: { children: ReactNode }) {
 
         // Handle when a track is published by a remote participant
         room.on(RoomEvent.TrackPublished, (publication, participant) => {
-          console.log("[LiveKit] Track published:", publication.trackSid, "kind:", publication.kind, "by:", participant.identity);
+          console.log(
+            "[LiveKit] Track published:",
+            publication.trackSid,
+            "kind:",
+            publication.kind,
+            "by:",
+            participant.identity,
+          );
         });
 
         await room.connect(wsUrl, token);
@@ -340,7 +358,15 @@ export function LiveKitProvider({ children }: { children: ReactNode }) {
         room.remoteParticipants.forEach((participant) => {
           console.log("[LiveKit] Checking existing participant:", participant.identity);
           participant.trackPublications.forEach((publication) => {
-            console.log("[LiveKit] Existing publication:", publication.trackSid, publication.kind, "subscribed:", publication.isSubscribed, "track:", !!publication.track);
+            console.log(
+              "[LiveKit] Existing publication:",
+              publication.trackSid,
+              publication.kind,
+              "subscribed:",
+              publication.isSubscribed,
+              "track:",
+              !!publication.track,
+            );
             // For audio tracks, we need to check if they're already subscribed or need subscription
             if (publication.kind === Track.Kind.Audio) {
               if (publication.track) {
@@ -352,7 +378,9 @@ export function LiveKitProvider({ children }: { children: ReactNode }) {
                 audioElementRef.current = audioElement;
                 setIsReceiving(true);
               } else {
-                console.log("[LiveKit] Audio track not yet available, waiting for TrackSubscribed event");
+                console.log(
+                  "[LiveKit] Audio track not yet available, waiting for TrackSubscribed event",
+                );
               }
             }
           });
@@ -363,12 +391,17 @@ export function LiveKitProvider({ children }: { children: ReactNode }) {
         setError(error.message);
       }
     },
-    [getToken, cooldownUntil, startSessionTimer, isConnected]
+    [getToken, cooldownUntil, startSessionTimer, isConnected],
   );
 
   // Connect as publisher (creator only)
   const connectAsPublisher = useCallback(
-    async (userId: string, displayName?: string, deviceId?: string, sourceType?: AudioSourceType) => {
+    async (
+      userId: string,
+      displayName?: string,
+      deviceId?: string,
+      sourceType?: AudioSourceType,
+    ) => {
       // Check cooldown
       if (cooldownUntil !== null && Date.now() < cooldownUntil) {
         const remaining = Math.ceil((cooldownUntil - Date.now()) / 1000);
@@ -389,11 +422,14 @@ export function LiveKitProvider({ children }: { children: ReactNode }) {
           console.log("[LiveKit] Requesting display media, source:", source);
 
           const displayMediaOptions: DisplayMediaStreamOptions = {
-            video: source === "screen" ? true : {
-              width: 1,
-              height: 1,
-              frameRate: 1,
-            },
+            video:
+              source === "screen"
+                ? true
+                : {
+                    width: 1,
+                    height: 1,
+                    frameRate: 1,
+                  },
             audio: {
               echoCancellation: false,
               noiseSuppression: false,
@@ -411,12 +447,17 @@ export function LiveKitProvider({ children }: { children: ReactNode }) {
           const displayStream = await navigator.mediaDevices.getDisplayMedia(displayMediaOptions);
 
           mediaStreamRef.current = displayStream;
-          console.log("[LiveKit] Got display stream, audio tracks:", displayStream.getAudioTracks().length);
+          console.log(
+            "[LiveKit] Got display stream, audio tracks:",
+            displayStream.getAudioTracks().length,
+          );
 
           const audioTracks = displayStream.getAudioTracks();
           if (audioTracks.length === 0) {
             displayStream.getVideoTracks().forEach((track) => track.stop());
-            throw new Error("No audio track found. Make sure to check 'Share tab audio' in the share dialog.");
+            throw new Error(
+              "No audio track found. Make sure to check 'Share tab audio' in the share dialog.",
+            );
           }
 
           displayStream.getVideoTracks().forEach((track) => {
@@ -495,7 +536,7 @@ export function LiveKitProvider({ children }: { children: ReactNode }) {
         throw error;
       }
     },
-    [getToken, selectedDevice, audioSource, cooldownUntil, startSessionTimer]
+    [getToken, selectedDevice, audioSource, cooldownUntil, startSessionTimer],
   );
 
   // Stop publishing
@@ -515,35 +556,38 @@ export function LiveKitProvider({ children }: { children: ReactNode }) {
   }, []);
 
   // Disconnect from room
-  const disconnect = useCallback((expired: boolean = false) => {
-    console.log("[LiveKit] Disconnecting...", { expired });
+  const disconnect = useCallback(
+    (expired: boolean = false) => {
+      console.log("[LiveKit] Disconnecting...", { expired });
 
-    if (roomRef.current) {
-      roomRef.current.disconnect();
-      roomRef.current = null;
-    }
+      if (roomRef.current) {
+        roomRef.current.disconnect();
+        roomRef.current = null;
+      }
 
-    if (localTrackRef.current) {
-      localTrackRef.current.stop();
-      localTrackRef.current = null;
-    }
+      if (localTrackRef.current) {
+        localTrackRef.current.stop();
+        localTrackRef.current = null;
+      }
 
-    if (mediaStreamRef.current) {
-      mediaStreamRef.current.getTracks().forEach((track) => track.stop());
-      mediaStreamRef.current = null;
-    }
+      if (mediaStreamRef.current) {
+        mediaStreamRef.current.getTracks().forEach((track) => track.stop());
+        mediaStreamRef.current = null;
+      }
 
-    if (audioElementRef.current) {
-      audioElementRef.current.remove();
-      audioElementRef.current = null;
-    }
+      if (audioElementRef.current) {
+        audioElementRef.current.remove();
+        audioElementRef.current = null;
+      }
 
-    clearSessionTimer(expired);
+      clearSessionTimer(expired);
 
-    setIsConnected(false);
-    setIsPublishing(false);
-    setIsReceiving(false);
-  }, [clearSessionTimer]);
+      setIsConnected(false);
+      setIsPublishing(false);
+      setIsReceiving(false);
+    },
+    [clearSessionTimer],
+  );
 
   // Set audio volume
   const setVolume = useCallback((volume: number) => {
@@ -595,12 +639,13 @@ export function LiveKitProvider({ children }: { children: ReactNode }) {
       publishedTracks: roomRef.current?.localParticipant?.trackPublications.size || 0,
       remoteParticipants: roomRef.current?.remoteParticipants.size || 0,
       mediaStreamActive: mediaStreamRef.current?.active || false,
-      mediaStreamTracks: mediaStreamRef.current?.getTracks().map(t => ({
-        kind: t.kind,
-        enabled: t.enabled,
-        readyState: t.readyState,
-        label: t.label,
-      })) || [],
+      mediaStreamTracks:
+        mediaStreamRef.current?.getTracks().map((t) => ({
+          kind: t.kind,
+          enabled: t.enabled,
+          readyState: t.readyState,
+          label: t.label,
+        })) || [],
       localTrackSid: localTrackRef.current?.sid || null,
       audioElementExists: !!audioElementRef.current,
     };
@@ -617,72 +662,71 @@ export function LiveKitProvider({ children }: { children: ReactNode }) {
     };
   }, [disconnect]);
 
-  const value = useMemo(() => ({
-    // State
-    isConnected,
-    isReceiving,
-    isPublishing,
-    timeRemaining,
-    isOnCooldown,
-    cooldownUntil,
-    streamTitle,
-    error,
-    audioDevices,
-    selectedDevice,
-    audioSource,
-    isLoopbackActive,
-    // Setters
-    setStreamTitle,
-    setSelectedDevice,
-    setAudioSource,
+  const value = useMemo(
+    () => ({
+      // State
+      isConnected,
+      isReceiving,
+      isPublishing,
+      timeRemaining,
+      isOnCooldown,
+      cooldownUntil,
+      streamTitle,
+      error,
+      audioDevices,
+      selectedDevice,
+      audioSource,
+      isLoopbackActive,
+      // Setters
+      setStreamTitle,
+      setSelectedDevice,
+      setAudioSource,
 
-    // Mini-player / external setters
-    setConnectionState,
-    setTimeRemaining: setTimeRemainingLocal,
-    setCooldownState,
+      // Mini-player / external setters
+      setConnectionState,
+      setTimeRemaining: setTimeRemainingLocal,
+      setCooldownState,
 
-    // Callbacks ref for external controls (mini player)
-    callbacksRef,
+      // Callbacks ref for external controls (mini player)
+      callbacksRef,
 
-    // Actions
-    connectAsListener,
-    connectAsPublisher,
-    stopPublishing,
-    disconnect,
-    setVolume,
-    setMuted,
-    loadAudioDevices,
-    testLoopback,
-    getDebugInfo,
-  }), [
-    isConnected,
-    isReceiving,
-    isPublishing,
-    timeRemaining,
-    isOnCooldown,
-    cooldownUntil,
-    streamTitle,
-    error,
-    audioDevices,
-    selectedDevice,
-    audioSource,
-    isLoopbackActive,
-    connectAsListener,
-    connectAsPublisher,
-    stopPublishing,
-    disconnect,
-    setVolume,
-    setMuted,
-    loadAudioDevices,
-    testLoopback,
-    getDebugInfo,
-  ]);
-
-  return (
-    <LiveKitContext.Provider value={value}>
-      {children}
-    </LiveKitContext.Provider>
+      // Actions
+      connectAsListener,
+      connectAsPublisher,
+      stopPublishing,
+      disconnect,
+      setVolume,
+      setMuted,
+      loadAudioDevices,
+      testLoopback,
+      getDebugInfo,
+    }),
+    [
+      isConnected,
+      isReceiving,
+      isPublishing,
+      timeRemaining,
+      isOnCooldown,
+      cooldownUntil,
+      streamTitle,
+      error,
+      audioDevices,
+      selectedDevice,
+      audioSource,
+      isLoopbackActive,
+      connectAsListener,
+      connectAsPublisher,
+      stopPublishing,
+      disconnect,
+      setVolume,
+      setMuted,
+      loadAudioDevices,
+      testLoopback,
+      getDebugInfo,
+    ],
   );
+
+  return <LiveKitContext.Provider value={value}>{children}</LiveKitContext.Provider>;
 }
 
 export function useLiveKitContext() {

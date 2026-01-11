@@ -1,7 +1,7 @@
 import { v } from "convex/values";
-import { query, mutation } from "./_generated/server";
+import type { Doc } from "./_generated/dataModel";
+import { mutation, query } from "./_generated/server";
 import { requireCreator } from "./auth";
-import { Doc } from "./_generated/dataModel";
 
 // Status validator
 const statusValidator = v.union(v.literal("active"), v.literal("inactive"));
@@ -19,7 +19,7 @@ const linksValidator = v.optional(
   v.object({
     github: v.optional(v.string()),
     website: v.optional(v.string()),
-  })
+  }),
 );
 
 // Content section validator
@@ -46,11 +46,7 @@ export const list = query({
   handler: async (ctx, args) => {
     await requireCreator(ctx);
 
-    const projects = await ctx.db
-      .query("projects")
-      .withIndex("by_order")
-      .order("asc")
-      .collect();
+    const projects = await ctx.db.query("projects").withIndex("by_order").order("asc").collect();
 
     if (args.status) {
       return projects.filter((p) => p.status === args.status);
@@ -314,7 +310,7 @@ export const updateOrder = mutation({
       v.object({
         projectId: v.id("projects"),
         order: v.number(),
-      })
+      }),
     ),
   },
   handler: async (ctx, args) => {

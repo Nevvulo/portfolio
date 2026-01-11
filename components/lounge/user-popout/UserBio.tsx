@@ -1,6 +1,6 @@
-import { useState, useRef, useEffect } from "react";
+import { Check, Pencil, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import styled from "styled-components";
-import { Pencil, X, Check } from "lucide-react";
 import { LOUNGE_COLORS } from "../../../constants/lounge";
 import { MAX_BIO_LENGTH } from "../../../constants/word-filter";
 
@@ -24,10 +24,7 @@ export function UserBio({ bio, isEditable = false, onSave }: UserBioProps) {
   useEffect(() => {
     if (isEditing && textareaRef.current) {
       textareaRef.current.focus();
-      textareaRef.current.setSelectionRange(
-        editValue.length,
-        editValue.length
-      );
+      textareaRef.current.setSelectionRange(editValue.length, editValue.length);
     }
   }, [isEditing]);
 
@@ -92,11 +89,7 @@ export function UserBio({ bio, isEditable = false, onSave }: UserBioProps) {
               <ActionButton onClick={handleCancel} disabled={isSaving}>
                 <X size={14} />
               </ActionButton>
-              <ActionButton
-                onClick={handleSave}
-                $primary
-                disabled={isSaving || isOverLimit}
-              >
+              <ActionButton onClick={handleSave} $primary disabled={isSaving || isOverLimit}>
                 {isSaving ? "..." : <Check size={14} />}
               </ActionButton>
             </EditActions>
@@ -119,9 +112,7 @@ export function UserBio({ bio, isEditable = false, onSave }: UserBioProps) {
           )}
         </BioText>
       ) : isEditable ? (
-        <EmptyBio onClick={handleStartEdit}>
-          Click to add a bio
-        </EmptyBio>
+        <EmptyBio onClick={handleStartEdit}>Click to add a bio</EmptyBio>
       ) : (
         <EmptyBio as="span">No bio</EmptyBio>
       )}
@@ -193,8 +184,7 @@ const BioTextarea = styled.textarea<{ $isOverLimit: boolean }>`
   max-height: 120px;
   padding: 8px 10px;
   background: rgba(0, 0, 0, 0.3);
-  border: 1px solid ${(p) =>
-    p.$isOverLimit ? "#ef4444" : LOUNGE_COLORS.glassBorder};
+  border: 1px solid ${(p) => (p.$isOverLimit ? "#ef4444" : LOUNGE_COLORS.glassBorder)};
   border-radius: 6px;
   color: #fff;
   font-size: 0.875rem;
@@ -204,8 +194,7 @@ const BioTextarea = styled.textarea<{ $isOverLimit: boolean }>`
   outline: none;
 
   &:focus {
-    border-color: ${(p) =>
-      p.$isOverLimit ? "#ef4444" : LOUNGE_COLORS.tier1};
+    border-color: ${(p) => (p.$isOverLimit ? "#ef4444" : LOUNGE_COLORS.tier1)};
   }
 
   &::placeholder {
@@ -225,8 +214,7 @@ const EditFooter = styled.div`
 
 const CharCounter = styled.span<{ $isOverLimit: boolean }>`
   font-size: 0.7rem;
-  color: ${(p) =>
-    p.$isOverLimit ? "#ef4444" : "rgba(255, 255, 255, 0.4)"};
+  color: ${(p) => (p.$isOverLimit ? "#ef4444" : "rgba(255, 255, 255, 0.4)")};
 `;
 
 const EditActions = styled.div`

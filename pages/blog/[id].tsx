@@ -10,20 +10,24 @@ import type { GetStaticPropsContext } from "next";
 import Head from "next/head";
 import { type MDXRemoteSerializeResult, MDXRemote as PostContent } from "next-mdx-remote";
 import { serialize } from "next-mdx-remote/serialize";
-import remarkGfm from "remark-gfm";
 import { createContext, useContext, useEffect, useState } from "react";
+import remarkGfm from "remark-gfm";
 // @ts-expect-error
 import matter from "section-matter";
 import styled, { createGlobalStyle } from "styled-components";
+import {
+  AIDisclosureBadge,
+  getEffectiveAIStatus,
+} from "../../components/badges/ai-disclosure-badge";
 import { CircleIndicator } from "../../components/blog/circle-indicator";
 import CodeBlock from "../../components/blog/codeblock";
 import { DiscordInviteLink, isDiscordInvite } from "../../components/blog/discord-invite-link";
 import { Label, Labels } from "../../components/blog/labels";
 import {
   BlogPostPreview,
-  YouTube,
   Callout,
   CodePlayground,
+  YouTube,
 } from "../../components/blog/mdx-components";
 import { PostFooter } from "../../components/blog/post-footer";
 import { PostHeader } from "../../components/blog/post-header";
@@ -33,7 +37,6 @@ import { PostSubheader } from "../../components/blog/post-sub-header";
 import { Container } from "../../components/container";
 import { IconLink } from "../../components/generics";
 import { Avatar } from "../../components/generics/avatar";
-import { AIDisclosureBadge, getEffectiveAIStatus } from "../../components/badges/ai-disclosure-badge";
 import { BlogView } from "../../components/layout/blog";
 import { SimpleNavbar } from "../../components/navbar/simple";
 import getFile from "../../modules/getFile";
@@ -256,7 +259,7 @@ function PostBody({ content, properties }: Omit<PostProps, "discordWidget">) {
               {(() => {
                 const status = getEffectiveAIStatus(
                   properties.aiDisclosureStatus,
-                  properties.publishedAt ?? creationDate.getTime()
+                  properties.publishedAt ?? creationDate.getTime(),
                 );
                 if (status === "none") {
                   return "This article was written without AI assistance.";
@@ -330,8 +333,7 @@ const components = {
     }
 
     // External links start with http:// or https://
-    const isExternal =
-      href.startsWith("http://") || href.startsWith("https://");
+    const isExternal = href.startsWith("http://") || href.startsWith("https://");
 
     return (
       <IconLink

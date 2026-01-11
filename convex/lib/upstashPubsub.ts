@@ -38,7 +38,7 @@ export type DiscordMessage = PublishPostMessage | SyncCommentMessage;
  */
 export async function publishToRedis(
   channel: string,
-  message: DiscordMessage
+  message: DiscordMessage,
 ): Promise<{ success: boolean; subscribers: number; error?: string }> {
   const url = process.env.UPSTASH_REDIS_REST_URL;
   const token = process.env.UPSTASH_REDIS_REST_TOKEN;
@@ -81,7 +81,7 @@ export async function publishToRedis(
 export async function publishPostMessage(
   postId: string,
   channelConfig: PublishPostMessage["channelConfig"],
-  useUserToken: boolean
+  useUserToken: boolean,
 ) {
   return publishToRedis(DISCORD_CHANNELS.PUBLISH, {
     type: "publish_post",
@@ -98,7 +98,7 @@ export async function publishPostMessage(
 export async function publishSyncCommentMessage(
   commentId: string,
   postId: string,
-  threadId: string
+  threadId: string,
 ) {
   return publishToRedis(DISCORD_CHANNELS.SYNC_COMMENT, {
     type: "sync_comment",

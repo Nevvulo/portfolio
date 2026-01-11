@@ -1,4 +1,4 @@
-import { Node, mergeAttributes } from "@tiptap/core";
+import { mergeAttributes, Node } from "@tiptap/core";
 import { ReactNodeViewRenderer } from "@tiptap/react";
 import { EditorCodePlayground } from "../components/EditorCodePlayground";
 
@@ -39,7 +39,7 @@ export const CodePlayground = Node.create<CodePlaygroundOptions>({
   parseHTML() {
     return [
       {
-        tag: 'code-playground',
+        tag: "code-playground",
       },
     ];
   },

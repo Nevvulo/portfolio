@@ -1,12 +1,15 @@
-import { useState, useEffect } from "react";
-import styled from "styled-components";
-import { createPortal } from "react-dom";
-import { m, AnimatePresence } from "framer-motion";
-import { X, User, Users, Clock, FileText, Image as ImageIcon, Tag, Bot } from "lucide-react";
-import { LOUNGE_COLORS } from "@/constants/lounge";
+import { AnimatePresence, m } from "framer-motion";
+import { Bot, Clock, FileText, Image as ImageIcon, Tag, User, Users, X } from "lucide-react";
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
+import styled from "styled-components";
+import {
+  type AIDisclosureStatus,
+  getEffectiveAIStatus,
+} from "@/components/badges/ai-disclosure-badge";
+import { LOUNGE_COLORS } from "@/constants/lounge";
 import type { Id } from "@/convex/_generated/dataModel";
-import { getEffectiveAIStatus, type AIDisclosureStatus } from "@/components/badges/ai-disclosure-badge";
 
 interface AuthorInfo {
   _id: Id<"users">;
@@ -123,9 +126,7 @@ export function CreditsModal({ isOpen, onClose, post }: CreditsModalProps) {
                       <User size={14} />
                       Author
                     </SectionLabel>
-                    <PersonLink
-                      href={`/@${post.author.username || post.author._id}`}
-                    >
+                    <PersonLink href={`/@${post.author.username || post.author._id}`}>
                       {post.author.avatarUrl ? (
                         <PersonAvatar src={post.author.avatarUrl} alt={post.author.displayName} />
                       ) : (
@@ -145,10 +146,7 @@ export function CreditsModal({ isOpen, onClose, post }: CreditsModalProps) {
                     </SectionLabel>
                     <PersonList>
                       {post.collaborators.map((collab) => (
-                        <PersonLink
-                          key={collab._id}
-                          href={`/@${collab.username || collab._id}`}
-                        >
+                        <PersonLink key={collab._id} href={`/@${collab.username || collab._id}`}>
                           {collab.avatarUrl ? (
                             <PersonAvatar src={collab.avatarUrl} alt={collab.displayName} $small />
                           ) : (
@@ -231,7 +229,7 @@ export function CreditsModal({ isOpen, onClose, post }: CreditsModalProps) {
                       {(() => {
                         const status = getEffectiveAIStatus(
                           post.aiDisclosureStatus,
-                          post.publishedAt ?? post.createdAt
+                          post.publishedAt ?? post.createdAt,
                         );
                         if (status === "none") {
                           return "Written without AI assistance";
@@ -243,9 +241,7 @@ export function CreditsModal({ isOpen, onClose, post }: CreditsModalProps) {
                       })()}
                     </AIDisclosureText>
                   </AIDisclosureRow>
-                  <AIDisclosureLink href="/ai-disclosure">
-                    Learn more
-                  </AIDisclosureLink>
+                  <AIDisclosureLink href="/ai-disclosure">Learn more</AIDisclosureLink>
                 </AIDisclosureWrapper>
               </ModalContent>
             </ModalContainer>
@@ -253,7 +249,7 @@ export function CreditsModal({ isOpen, onClose, post }: CreditsModalProps) {
         </>
       )}
     </AnimatePresence>,
-    document.body
+    document.body,
   );
 }
 

@@ -1,7 +1,7 @@
-import styled, { keyframes } from "styled-components";
 import { useQuery } from "convex/react";
-import { api } from "../../../convex/_generated/api";
+import styled, { keyframes } from "styled-components";
 import { LOUNGE_COLORS } from "../../../constants/lounge";
+import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 
 interface TypingIndicatorProps {

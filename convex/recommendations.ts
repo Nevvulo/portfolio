@@ -1,6 +1,6 @@
 import { v } from "convex/values";
-import { internalAction, internalQuery } from "./_generated/server";
 import { internal } from "./_generated/api";
+import { internalAction, internalQuery } from "./_generated/server";
 
 const UPSTASH_REDIS_URL = process.env.UPSTASH_REDIS_REST_URL;
 const UPSTASH_REDIS_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN;
@@ -36,10 +36,9 @@ export const rebuildCoViewingMatrix = internalAction({
       return { processed: 0 };
     }
 
-    const recentWatchTime = await ctx.runQuery(
-      internal.articleWatchTime.getAllWatchTimeRecent,
-      { sinceDays: 30 }
-    );
+    const recentWatchTime = await ctx.runQuery(internal.articleWatchTime.getAllWatchTimeRecent, {
+      sinceDays: 30,
+    });
 
     const userPosts = new Map<string, Map<string, number>>();
     for (const record of recentWatchTime) {

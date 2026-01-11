@@ -1,5 +1,5 @@
 import type { Editor } from "@tiptap/react";
-import { ToolbarButton, EditorToolbarWrapper, ToolbarDivider } from "./styles";
+import { EditorToolbarWrapper, ToolbarButton, ToolbarDivider } from "./styles";
 
 interface EditorToolbarProps {
   editor: Editor | null;

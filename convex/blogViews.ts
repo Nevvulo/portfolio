@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import { query, mutation, internalMutation } from "./_generated/server";
+import { mutation, query } from "./_generated/server";
 import { getCurrentUser, requireUser } from "./auth";
 
 /**
@@ -27,9 +27,7 @@ export const recordView = mutation({
     // Check if user already viewed
     const existingView = await ctx.db
       .query("blogViews")
-      .withIndex("by_user_post", (q) =>
-        q.eq("userId", user._id).eq("postId", args.postId)
-      )
+      .withIndex("by_user_post", (q) => q.eq("userId", user._id).eq("postId", args.postId))
       .unique();
 
     if (existingView) {
@@ -84,9 +82,7 @@ export const hasViewed = query({
 
     const view = await ctx.db
       .query("blogViews")
-      .withIndex("by_user_post", (q) =>
-        q.eq("userId", user._id).eq("postId", args.postId)
-      )
+      .withIndex("by_user_post", (q) => q.eq("userId", user._id).eq("postId", args.postId))
       .unique();
 
     return !!view;
@@ -121,7 +117,7 @@ export const getReadingHistory = query({
           title: post.title,
           viewedAt: view.viewedAt,
         };
-      })
+      }),
     );
 
     return history.filter(Boolean);
@@ -131,12 +127,7 @@ export const getReadingHistory = query({
 /**
  * Helper to update interaction score
  */
-async function updateInteractionScore(
-  ctx: any,
-  postId: any,
-  userId: any,
-  points: number
-) {
+async function updateInteractionScore(ctx: any, postId: any, userId: any, points: number) {
   const existing = await ctx.db
     .query("blogInteractions")
     .withIndex("by_user", (q: any) => q.eq("userId", userId))

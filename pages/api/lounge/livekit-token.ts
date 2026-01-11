@@ -1,6 +1,6 @@
-import { NextApiRequest, NextApiResponse } from "next";
-import { getAuth, clerkClient } from "@clerk/nextjs/server";
+import { clerkClient, getAuth } from "@clerk/nextjs/server";
 import { AccessToken } from "livekit-server-sdk";
+import type { NextApiRequest, NextApiResponse } from "next";
 
 const LIVEKIT_API_KEY = process.env.LIVEKIT_API_KEY;
 const LIVEKIT_API_SECRET = process.env.LIVEKIT_API_SECRET;
@@ -11,10 +11,7 @@ const JUNGLE_ROOM = "jungle-stage";
 // Creator's Discord ID for publisher permission check
 const CREATOR_DISCORD_ID = "246574843460321291";
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
@@ -41,7 +38,7 @@ export default async function handler(
       const clerk = await clerkClient();
       const clerkUser = await clerk.users.getUser(userId);
       const discordAccount = clerkUser.externalAccounts?.find(
-        (a) => a.provider === "oauth_discord"
+        (a) => a.provider === "oauth_discord",
       );
       const discordId = discordAccount?.providerUserId || discordAccount?.externalId;
       isPublisher = discordId === CREATOR_DISCORD_ID;

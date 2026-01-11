@@ -1,7 +1,11 @@
 import { v } from "convex/values";
-import { action, internalAction, internalMutation, internalQuery, query } from "./_generated/server";
-import { internal, api } from "./_generated/api";
-import { Id } from "./_generated/dataModel";
+import { internal } from "./_generated/api";
+import {
+  action,
+  internalMutation,
+  internalQuery,
+  query,
+} from "./_generated/server";
 
 // GitHub raw content base URL
 const GITHUB_BASE = "https://raw.githubusercontent.com/Nevvulo/blog/main";
@@ -34,7 +38,10 @@ interface BlogmapPost {
 /**
  * Infer bento size based on post characteristics
  */
-function inferBentoSize(post: BlogmapPost, index: number): "small" | "medium" | "large" | "banner" | "featured" {
+function inferBentoSize(
+  post: BlogmapPost,
+  index: number,
+): "small" | "medium" | "large" | "banner" | "featured" {
   // First post is always featured
   if (index === 0) return "featured";
 
@@ -131,11 +138,9 @@ export const migrateSinglePost = internalMutation({
     coverAuthorUrl: v.optional(v.string()),
     authorId: v.id("users"),
     labels: v.array(v.string()),
-    difficulty: v.optional(v.union(
-      v.literal("beginner"),
-      v.literal("intermediate"),
-      v.literal("advanced")
-    )),
+    difficulty: v.optional(
+      v.union(v.literal("beginner"), v.literal("intermediate"), v.literal("advanced")),
+    ),
     readTimeMins: v.optional(v.number()),
     keyIdeas: v.optional(v.array(v.string())),
     location: v.optional(v.string()),
@@ -144,7 +149,7 @@ export const migrateSinglePost = internalMutation({
       v.literal("medium"),
       v.literal("large"),
       v.literal("banner"),
-      v.literal("featured")
+      v.literal("featured"),
     ),
     bentoOrder: v.number(),
     mediumUrl: v.optional(v.string()),
@@ -233,6 +238,7 @@ export const migrateFromGitHub = action({
       // 2. Process each post
       for (let i = 0; i < blogmap.length; i++) {
         const post = blogmap[i];
+        if (!post) continue;
         console.log(`Processing ${i + 1}/${blogmap.length}: ${post.slug}`);
 
         try {
@@ -354,7 +360,9 @@ export const migrateContentToSeparateTable = internalMutation({
       }
     }
 
-    console.log(`Content migration complete: ${migrated} migrated, ${skipped} skipped, ${errors} errors`);
+    console.log(
+      `Content migration complete: ${migrated} migrated, ${skipped} skipped, ${errors} errors`,
+    );
     return { migrated, skipped, errors, total: posts.length };
   },
 });
@@ -430,7 +438,9 @@ export const clearOldContentField = internalMutation({
  */
 export const runContentMigration = action({
   args: {},
-  handler: async (ctx): Promise<{ migrated: number; skipped: number; errors: number; total: number }> => {
+  handler: async (
+    ctx,
+  ): Promise<{ migrated: number; skipped: number; errors: number; total: number }> => {
     return await ctx.runMutation(internal.blogMigration.migrateContentToSeparateTable, {});
   },
 });

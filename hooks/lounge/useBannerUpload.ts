@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useCallback, useState } from "react";
 import type { BannerUploadResult } from "../../types/user-popout";
 
 /**
@@ -70,7 +70,7 @@ export function useBannerUpload() {
         setIsUploading(false);
       }
     },
-    []
+    [],
   );
 
   /**

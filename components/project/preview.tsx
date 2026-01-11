@@ -1,6 +1,6 @@
+import { m } from "framer-motion";
 import Image from "next/image";
 import styled from "styled-components";
-import { m } from "framer-motion";
 import { StrippedLink } from "../generics";
 import type { ProjectProps, ProjectStyleProps } from ".";
 

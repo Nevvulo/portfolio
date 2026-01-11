@@ -1,5 +1,5 @@
-import { useState, memo } from "react";
 import Image from "next/image";
+import { memo, useState } from "react";
 import styled from "styled-components";
 import { ImageLightbox } from "./ImageLightbox";
 
@@ -64,11 +64,7 @@ export const ImageAttachment = memo(function ImageAttachment({
       </ImageContainer>
 
       {showLightbox && (
-        <ImageLightbox
-          src={url}
-          alt={filename}
-          onClose={() => setShowLightbox(false)}
-        />
+        <ImageLightbox src={url} alt={filename} onClose={() => setShowLightbox(false)} />
       )}
     </>
   );
@@ -76,7 +72,7 @@ export const ImageAttachment = memo(function ImageAttachment({
 
 function calculateDisplayDimensions(
   width?: number,
-  height?: number
+  height?: number,
 ): { width: number; height: number } {
   const maxWidth = 400;
   const maxHeight = 300;

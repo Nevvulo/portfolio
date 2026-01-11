@@ -147,7 +147,10 @@ interface AnnouncementBannerProps {
   discordWidget: DiscordWidget | null;
 }
 
-export const AnnouncementBanner: React.FC<AnnouncementBannerProps> = ({ isLive, discordWidget }) => {
+export const AnnouncementBanner: React.FC<AnnouncementBannerProps> = ({
+  isLive,
+  discordWidget,
+}) => {
   const [isHovered, setIsHovered] = useState(false);
 
   const onlineCount = discordWidget?.presence_count || 0;
@@ -203,7 +206,12 @@ export const AnnouncementBanner: React.FC<AnnouncementBannerProps> = ({ isLive, 
             {isHovered && discordWidget && (
               <StatsContainer
                 initial={{ opacity: 0, maxWidth: 0, marginLeft: 0, paddingLeft: 0 }}
-                animate={{ opacity: 1, maxWidth: 150, marginLeft: "0.75rem", paddingLeft: "0.75rem" }}
+                animate={{
+                  opacity: 1,
+                  maxWidth: 150,
+                  marginLeft: "0.75rem",
+                  paddingLeft: "0.75rem",
+                }}
                 exit={{ opacity: 0, maxWidth: 0, marginLeft: 0, paddingLeft: 0 }}
                 transition={{ duration: 0.2, ease: "easeInOut" }}
               >

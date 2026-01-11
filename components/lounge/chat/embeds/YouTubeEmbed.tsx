@@ -1,7 +1,7 @@
-import { useState, memo } from "react";
-import Image from "next/image";
-import styled from "styled-components";
 import { Play } from "lucide-react";
+import Image from "next/image";
+import { memo, useState } from "react";
+import styled from "styled-components";
 import { LOUNGE_COLORS } from "../../../../constants/lounge";
 
 interface YouTubeEmbedProps {
@@ -40,7 +40,8 @@ export const YouTubeEmbed = memo(function YouTubeEmbed({
   const embedSrc = embedUrl || (videoId ? `https://www.youtube.com/embed/${videoId}` : null);
 
   // Generate thumbnail URL if not provided
-  const thumbnailUrl = thumbnail || (videoId ? `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg` : null);
+  const thumbnailUrl =
+    thumbnail || (videoId ? `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg` : null);
 
   if (!embedSrc || !videoId) {
     // Fallback to simple link if we can't extract video ID

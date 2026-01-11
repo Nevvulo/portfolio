@@ -1,7 +1,7 @@
-import { useEffect, useCallback } from "react";
-import styled from "styled-components";
 import { X } from "lucide-react";
+import { useCallback, useEffect } from "react";
 import { createPortal } from "react-dom";
+import styled from "styled-components";
 
 interface ImageLightboxProps {
   src: string;
@@ -17,7 +17,7 @@ export function ImageLightbox({ src, alt, onClose }: ImageLightboxProps) {
         onClose();
       }
     },
-    [onClose]
+    [onClose],
   );
 
   // Prevent body scroll when lightbox is open
@@ -48,7 +48,7 @@ export function ImageLightbox({ src, alt, onClose }: ImageLightboxProps) {
         <FullImage src={src} alt={alt || "Full size image"} />
       </ImageContainer>
     </Backdrop>,
-    document.body
+    document.body,
   );
 }
 

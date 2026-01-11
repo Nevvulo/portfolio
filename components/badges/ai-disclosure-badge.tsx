@@ -1,7 +1,7 @@
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faRobot } from "@fortawesome/free-solid-svg-icons";
-import styled from "styled-components";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Link from "next/link";
+import styled from "styled-components";
 
 export type AIDisclosureStatus = "none" | "llm-assisted" | "llm-reviewed";
 
@@ -27,7 +27,7 @@ const StatusDescriptions: Record<Exclude<AIDisclosureStatus, "none">, string> = 
 
 export function getEffectiveAIStatus(
   status?: AIDisclosureStatus,
-  publishedAt?: number
+  publishedAt?: number,
 ): AIDisclosureStatus {
   // If explicitly set, use that value
   if (status) return status;

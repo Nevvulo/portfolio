@@ -1,13 +1,9 @@
-import { NodeViewWrapper, type NodeViewProps } from "@tiptap/react";
+import { type NodeViewProps, NodeViewWrapper } from "@tiptap/react";
 import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { BlogPostPreviewWrapper, ComponentWrapper } from "../styles";
 
-export function EditorBlogPostPreview({
-  node,
-  selected,
-  updateAttributes,
-}: NodeViewProps) {
+export function EditorBlogPostPreview({ node, selected, updateAttributes }: NodeViewProps) {
   const id = node.attrs.id as string | undefined;
   const post = useQuery(api.blogPosts.getBySlug, id ? { slug: id } : "skip");
 

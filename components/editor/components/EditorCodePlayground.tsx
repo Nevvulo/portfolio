@@ -1,17 +1,6 @@
-import { NodeViewWrapper } from "@tiptap/react";
-import { useState, useCallback } from "react";
+import { type NodeViewProps, NodeViewWrapper } from "@tiptap/react";
+import { useCallback, useState } from "react";
 import { CodePlaygroundWrapper, ComponentWrapper } from "../styles";
-
-interface EditorCodePlaygroundProps {
-  node: {
-    attrs: {
-      language: string;
-      code: string;
-    };
-  };
-  selected: boolean;
-  updateAttributes: (attrs: Record<string, unknown>) => void;
-}
 
 const SUPPORTED_LANGUAGES = [
   { value: "javascript", label: "JavaScript" },
@@ -19,12 +8,9 @@ const SUPPORTED_LANGUAGES = [
   { value: "python", label: "Python" },
 ];
 
-export function EditorCodePlayground({
-  node,
-  selected,
-  updateAttributes,
-}: EditorCodePlaygroundProps) {
-  const { language, code } = node.attrs;
+export function EditorCodePlayground({ node, selected, updateAttributes }: NodeViewProps) {
+  const language = (node.attrs.language || "javascript") as string;
+  const code = (node.attrs.code || "") as string;
   const [output, setOutput] = useState<string>("");
   const [isRunning, setIsRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);

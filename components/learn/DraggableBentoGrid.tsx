@@ -1,24 +1,24 @@
-import { useSortable } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
 import {
-  DndContext,
   closestCenter,
-  PointerSensor,
+  DndContext,
+  type DragEndEvent,
   KeyboardSensor,
-  useSensors,
+  PointerSensor,
   useSensor,
-  DragEndEvent,
+  useSensors,
 } from "@dnd-kit/core";
 import {
+  arrayMove,
+  rectSortingStrategy,
   SortableContext,
   sortableKeyboardCoordinates,
-  rectSortingStrategy,
-  arrayMove,
+  useSortable,
 } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { Archive, Edit2, EyeOff, GripVertical, Send, Trash2 } from "lucide-react";
+import type { ReactNode } from "react";
 import styled from "styled-components";
-import { BentoCard, BentoCardProps } from "./BentoCard";
-import { GripVertical, Edit2, Trash2, Eye, EyeOff, Archive, Send } from "lucide-react";
-import { ReactNode } from "react";
+import { BentoCard, type BentoCardProps } from "./BentoCard";
 
 type BentoSize = "small" | "medium" | "large" | "banner" | "featured";
 
@@ -47,14 +47,9 @@ function DraggableBentoCard({
   onArchive,
   isEditing,
 }: DraggableBentoCardProps) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: post._id });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: post._id,
+  });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -98,32 +93,67 @@ function DraggableBentoCard({
 
           {/* Bottom overlay: action buttons */}
           <ActionsOverlay>
-            <StatusBadge $status={post.status || "draft"}>
-              {post.status || "draft"}
-            </StatusBadge>
+            <StatusBadge $status={post.status || "draft"}>{post.status || "draft"}</StatusBadge>
             <ActionButtons>
               {onEdit && (
-                <ActionButton onClick={(e) => { e.preventDefault(); e.stopPropagation(); onEdit(); }} title="Edit">
+                <ActionButton
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onEdit();
+                  }}
+                  title="Edit"
+                >
                   <Edit2 size={14} />
                 </ActionButton>
               )}
               {post.status === "draft" && onPublish && (
-                <ActionButton onClick={(e) => { e.preventDefault(); e.stopPropagation(); onPublish(); }} title="Publish" $success>
+                <ActionButton
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onPublish();
+                  }}
+                  title="Publish"
+                  $success
+                >
                   <Send size={14} />
                 </ActionButton>
               )}
               {post.status === "published" && onUnpublish && (
-                <ActionButton onClick={(e) => { e.preventDefault(); e.stopPropagation(); onUnpublish(); }} title="Unpublish">
+                <ActionButton
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onUnpublish();
+                  }}
+                  title="Unpublish"
+                >
                   <EyeOff size={14} />
                 </ActionButton>
               )}
               {post.status !== "archived" && onArchive && (
-                <ActionButton onClick={(e) => { e.preventDefault(); e.stopPropagation(); onArchive(); }} title="Archive">
+                <ActionButton
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onArchive();
+                  }}
+                  title="Archive"
+                >
                   <Archive size={14} />
                 </ActionButton>
               )}
               {onDelete && (
-                <ActionButton onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDelete(); }} title="Delete" $danger>
+                <ActionButton
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onDelete();
+                  }}
+                  title="Delete"
+                  $danger
+                >
                   <Trash2 size={14} />
                 </ActionButton>
               )}
@@ -169,7 +199,7 @@ export function DraggableBentoGrid({
     }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
-    })
+    }),
   );
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -198,15 +228,8 @@ export function DraggableBentoGrid({
   const GridComponent = compact ? CompactGridContainer : GridContainer;
 
   return (
-    <DndContext
-      sensors={sensors}
-      collisionDetection={closestCenter}
-      onDragEnd={handleDragEnd}
-    >
-      <SortableContext
-        items={posts.map((p) => p._id)}
-        strategy={rectSortingStrategy}
-      >
+    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+      <SortableContext items={posts.map((p) => p._id)} strategy={rectSortingStrategy}>
         <GridComponent>
           {posts.map((post) => (
             <DraggableBentoCard
@@ -356,9 +379,11 @@ const ActionButton = styled.button<{ $danger?: boolean; $success?: boolean }>`
   border: none;
   border-radius: 4px;
   background: ${(p) =>
-    p.$danger ? "rgba(239, 68, 68, 0.8)" :
-    p.$success ? "rgba(16, 185, 129, 0.8)" :
-    "rgba(255, 255, 255, 0.1)"};
+    p.$danger
+      ? "rgba(239, 68, 68, 0.8)"
+      : p.$success
+        ? "rgba(16, 185, 129, 0.8)"
+        : "rgba(255, 255, 255, 0.1)"};
   color: white;
   cursor: pointer;
   display: flex;
@@ -368,9 +393,11 @@ const ActionButton = styled.button<{ $danger?: boolean; $success?: boolean }>`
 
   &:hover {
     background: ${(p) =>
-      p.$danger ? "rgba(239, 68, 68, 1)" :
-      p.$success ? "rgba(16, 185, 129, 1)" :
-      "rgba(255, 255, 255, 0.2)"};
+      p.$danger
+        ? "rgba(239, 68, 68, 1)"
+        : p.$success
+          ? "rgba(16, 185, 129, 1)"
+          : "rgba(255, 255, 255, 0.2)"};
     transform: scale(1.1);
   }
 `;

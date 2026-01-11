@@ -1,15 +1,14 @@
-import { useEditor, EditorContent } from "@tiptap/react";
-import StarterKit from "@tiptap/starter-kit";
 import Link from "@tiptap/extension-link";
 import Placeholder from "@tiptap/extension-placeholder";
 import Typography from "@tiptap/extension-typography";
-import { useEffect, useState, useCallback, useRef } from "react";
-
-import { CustomImage, BlogPostPreview, YouTube, Callout, CodePlayground } from "./extensions";
+import { EditorContent, useEditor } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { EditorToolbar } from "./EditorToolbar";
+import { BlogPostPreview, Callout, CodePlayground, CustomImage, YouTube } from "./extensions";
+import { SlashCommand } from "./SlashCommand";
 import { mdxToTiptap } from "./serializers/mdxToTiptap";
 import { tiptapToMdx } from "./serializers/tiptapToMdx";
-import { EditorToolbar } from "./EditorToolbar";
-import { SlashCommand } from "./SlashCommand";
 import { EditorContainer, EditorContentWrapper, ImageUploadWrapper } from "./styles";
 
 interface MDXEditorProps {
@@ -87,43 +86,46 @@ export function MDXEditor({
     loadContent();
   }, [editor, initialContent]);
 
-  const handleImageUpload = useCallback(async (file: File) => {
-    if (!editor) return;
+  const handleImageUpload = useCallback(
+    async (file: File) => {
+      if (!editor) return;
 
-    setIsUploading(true);
+      setIsUploading(true);
 
-    try {
-      // Convert to base64
-      const base64 = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-      });
+      try {
+        // Convert to base64
+        const base64 = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
 
-      // Upload to API
-      const response = await fetch("/api/blog/upload-image", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ file: base64, filename: file.name }),
-      });
+        // Upload to API
+        const response = await fetch("/api/blog/upload-image", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ file: base64, filename: file.name }),
+        });
 
-      if (!response.ok) {
-        throw new Error("Failed to upload image");
+        if (!response.ok) {
+          throw new Error("Failed to upload image");
+        }
+
+        const { url } = await response.json();
+
+        // Insert image into editor
+        editor.chain().focus().setImage({ src: url, alt: file.name }).run();
+      } catch (error) {
+        console.error("Failed to upload image:", error);
+        alert("Failed to upload image. Please try again.");
+      } finally {
+        setIsUploading(false);
+        setShowImageUpload(false);
       }
-
-      const { url } = await response.json();
-
-      // Insert image into editor
-      editor.chain().focus().setImage({ src: url, alt: file.name }).run();
-    } catch (error) {
-      console.error("Failed to upload image:", error);
-      alert("Failed to upload image. Please try again.");
-    } finally {
-      setIsUploading(false);
-      setShowImageUpload(false);
-    }
-  }, [editor]);
+    },
+    [editor],
+  );
 
   const handleFileSelect = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -132,7 +134,7 @@ export function MDXEditor({
         handleImageUpload(file);
       }
     },
-    [handleImageUpload]
+    [handleImageUpload],
   );
 
   const handleDrop = useCallback(
@@ -143,7 +145,7 @@ export function MDXEditor({
         handleImageUpload(file);
       }
     },
-    [handleImageUpload]
+    [handleImageUpload],
   );
 
   const handlePaste = useCallback(
@@ -162,7 +164,7 @@ export function MDXEditor({
         }
       }
     },
-    [handleImageUpload]
+    [handleImageUpload],
   );
 
   if (isLoading) {
@@ -183,10 +185,7 @@ export function MDXEditor({
 
   return (
     <EditorContainer>
-      <EditorToolbar
-        editor={editor}
-        onImageUpload={() => setShowImageUpload(true)}
-      />
+      <EditorToolbar editor={editor} onImageUpload={() => setShowImageUpload(true)} />
 
       <EditorContentWrapper
         onDrop={handleDrop}
@@ -194,10 +193,7 @@ export function MDXEditor({
         onPaste={handlePaste}
       >
         <EditorContent editor={editor} />
-        <SlashCommand
-          editor={editor}
-          onImageUpload={() => setShowImageUpload(true)}
-        />
+        <SlashCommand editor={editor} onImageUpload={() => setShowImageUpload(true)} />
       </EditorContentWrapper>
 
       {showImageUpload && (
@@ -257,12 +253,8 @@ export function MDXEditor({
                       <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z" />
                     </svg>
                   </div>
-                  <div className="upload-text">
-                    Drop an image here or click to upload
-                  </div>
-                  <div className="upload-hint">
-                    Supports PNG, JPG, GIF, WebP (max 10MB)
-                  </div>
+                  <div className="upload-text">Drop an image here or click to upload</div>
+                  <div className="upload-hint">Supports PNG, JPG, GIF, WebP (max 10MB)</div>
                   <input
                     ref={fileInputRef}
                     type="file"

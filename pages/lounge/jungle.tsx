@@ -1,38 +1,38 @@
-import Head from "next/head";
-import { useRouter } from "next/router";
-import styled from "styled-components";
-import { useQuery, useMutation, useAction } from "convex/react";
-import { useEffect, useState, useCallback, useRef } from "react";
-import { m, AnimatePresence } from "framer-motion";
+import { useAction, useMutation, useQuery } from "convex/react";
+import { AnimatePresence, m } from "framer-motion";
 import {
-  TreePalm,
-  Volume2,
-  VolumeX,
-  Users,
-  Music2,
-  Lock,
   Crown,
-  Play,
-  Pause,
-  SkipForward,
-  Trash2,
-  X,
   ListMusic,
+  Lock,
+  LogOut,
   Mic,
   MicOff,
+  Music2,
+  Pause,
+  Play,
   Radio,
-  Youtube,
   Settings,
-  LogOut,
+  SkipForward,
+  Trash2,
+  TreePalm,
+  Users,
+  Volume2,
+  VolumeX,
+  X,
+  Youtube,
 } from "lucide-react";
-import YouTube, { type YouTubePlayer, type YouTubeEvent } from "react-youtube";
-import { useLiveKitContext } from "../../lib/lounge/LiveKitContext";
-import { api } from "../../convex/_generated/api";
+import Head from "next/head";
+import { useRouter } from "next/router";
+import { useCallback, useEffect, useRef, useState } from "react";
+import YouTube, { type YouTubeEvent, type YouTubePlayer } from "react-youtube";
+import styled from "styled-components";
 import { LoungeLayout } from "../../components/lounge/layout/LoungeLayout";
-import { useTierAccess } from "../../hooks/lounge/useTierAccess";
 import { LOUNGE_COLORS, TIER_INFO } from "../../constants/lounge";
-import type { Tier } from "../../types/lounge";
+import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
+import { useTierAccess } from "../../hooks/lounge/useTierAccess";
+import { useLiveKitContext } from "../../lib/lounge/LiveKitContext";
+import type { Tier } from "../../types/lounge";
 
 export const getServerSideProps = () => ({ props: {} });
 
@@ -72,7 +72,7 @@ interface JungleState {
 
 // Mulberry32 seeded PRNG - deterministic and high quality
 function mulberry32(seed: number) {
-  return function () {
+  return () => {
     let t = (seed += 0x6d2b79f5);
     t = Math.imul(t ^ (t >>> 15), t | 1);
     t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
@@ -81,10 +81,7 @@ function mulberry32(seed: number) {
 }
 
 // Generate deterministic waypoints for smooth avatar movement
-function generateWaypoints(
-  seed: number,
-  count: number = 6
-): { x: number; y: number }[] {
+function generateWaypoints(seed: number, count: number = 6): { x: number; y: number }[] {
   const rng = mulberry32(seed);
   const waypoints: { x: number; y: number }[] = [];
 
@@ -181,8 +178,7 @@ export default function JunglePage() {
     }
   }, [liveKit, liveKit.timeRemaining, liveKit.isConnected, liveKit.disconnect]);
   const router = useRouter();
-  const { isLoading, user, tier, displayName, avatarUrl, isFreeUser, isCreator } =
-    useTierAccess();
+  const { isLoading, user, displayName, avatarUrl, isFreeUser, isCreator } = useTierAccess();
 
   const getOrCreateUser = useAction(api.users.getOrCreateUser);
   const joinJungle = useMutation(api.jungle.join);
@@ -197,10 +193,10 @@ export default function JunglePage() {
   const stopLiveStream = useMutation(api.jungle.stopLiveStream);
   // setIdle is available via api.jungle.setIdle if needed
 
-  const jungleState = useQuery(
-    api.jungle.getState,
-    userReady && !isFreeUser ? {} : "skip"
-  ) as JungleState | null | undefined;
+  const jungleState = useQuery(api.jungle.getState, userReady && !isFreeUser ? {} : "skip") as
+    | JungleState
+    | null
+    | undefined;
 
   // Register callbacks for mini player controls (using refs to avoid re-renders)
   useEffect(() => {
@@ -216,7 +212,14 @@ export default function JunglePage() {
       liveKit.callbacksRef.current.onSetMuted = null;
       liveKit.callbacksRef.current.onSetVolume = null;
     };
-  }, [liveKit, liveKit.disconnect, liveKit.setMuted, liveKit.setVolume, leaveJungle, liveKit.callbacksRef]);
+  }, [
+    liveKit,
+    liveKit.disconnect,
+    liveKit.setMuted,
+    liveKit.setVolume,
+    leaveJungle,
+    liveKit.callbacksRef,
+  ]);
 
   useEffect(() => {
     setMounted(true);
@@ -294,7 +297,7 @@ export default function JunglePage() {
         event.target.playVideo();
       }
     },
-    [isMuted, volume, jungleState]
+    [isMuted, volume, jungleState],
   );
 
   const handlePlayerEnd = useCallback(() => {
@@ -377,7 +380,7 @@ export default function JunglePage() {
         user.id,
         displayName || "Creator",
         liveKit.selectedDevice || undefined,
-        liveKit.audioSource
+        liveKit.audioSource,
       );
 
       // Only update DB after successfully connected
@@ -437,8 +440,8 @@ export default function JunglePage() {
               <Lock size={48} />
               <LockedTitle>The Jungle is for Supporters</LockedTitle>
               <LockedText>
-                Become a Super Legend to hang out in The Jungle with other
-                supporters, listen to shared music, and vibe together!
+                Become a Super Legend to hang out in The Jungle with other supporters, listen to
+                shared music, and vibe together!
               </LockedText>
               <UpgradeButton href="/support">
                 <Crown size={16} />
@@ -480,8 +483,12 @@ export default function JunglePage() {
             <Stage>
               {/* Background */}
               <StageBackground>
-                <TreeLeft><TreePalm size={80} /></TreeLeft>
-                <TreeRight><TreePalm size={80} /></TreeRight>
+                <TreeLeft>
+                  <TreePalm size={80} />
+                </TreeLeft>
+                <TreeRight>
+                  <TreePalm size={80} />
+                </TreeRight>
                 <StageLights>
                   <Light $color={LOUNGE_COLORS.tier1} $delay={0} />
                   <Light $color={LOUNGE_COLORS.tier2} $delay={0.5} />
@@ -528,9 +535,7 @@ export default function JunglePage() {
                           Started {formatDuration(Date.now() - streamStartedAt)}
                         </TrackArtist>
                       )}
-                      {liveKit.isReceiving && (
-                        <LiveStatus>Connected</LiveStatus>
-                      )}
+                      {liveKit.isReceiving && <LiveStatus>Connected</LiveStatus>}
                       {!liveKit.isReceiving && !isCreator && liveKit.isConnected && (
                         <LiveStatus>Connecting...</LiveStatus>
                       )}
@@ -541,13 +546,9 @@ export default function JunglePage() {
                     <Music2 size={32} />
                     {currentTrack ? (
                       <NowPlaying>
-                        <NowPlayingLabel>
-                          {isPlaying ? "NOW PLAYING" : "PAUSED"}
-                        </NowPlayingLabel>
+                        <NowPlayingLabel>{isPlaying ? "NOW PLAYING" : "PAUSED"}</NowPlayingLabel>
                         <TrackTitle>{currentTrack.title}</TrackTitle>
-                        {currentTrack.artist && (
-                          <TrackArtist>{currentTrack.artist}</TrackArtist>
-                        )}
+                        {currentTrack.artist && <TrackArtist>{currentTrack.artist}</TrackArtist>}
                       </NowPlaying>
                     ) : (
                       <NowPlaying>
@@ -587,17 +588,13 @@ export default function JunglePage() {
                             duration: anim.duration,
                             repeat: Infinity,
                             ease: "easeInOut",
-                            times: anim.xPositions.map(
-                              (_, i) => i / (anim.xPositions.length - 1)
-                            ),
+                            times: anim.xPositions.map((_, i) => i / (anim.xPositions.length - 1)),
                           },
                           top: {
                             duration: anim.duration,
                             repeat: Infinity,
                             ease: "easeInOut",
-                            times: anim.yPositions.map(
-                              (_, i) => i / (anim.yPositions.length - 1)
-                            ),
+                            times: anim.yPositions.map((_, i) => i / (anim.yPositions.length - 1)),
                           },
                         }}
                       >
@@ -606,9 +603,7 @@ export default function JunglePage() {
                           alt={listener.displayName}
                           $tier={listener.tier}
                         />
-                        <AvatarName $tier={listener.tier}>
-                          {listener.displayName}
-                        </AvatarName>
+                        <AvatarName $tier={listener.tier}>{listener.displayName}</AvatarName>
                       </AvatarWrapper>
                     );
                   })}
@@ -674,11 +669,7 @@ export default function JunglePage() {
                         <LiveDotSmall />
                         LIVE
                       </LiveModeIndicator>
-                      <ControlButton
-                        onClick={handleStopLiveStream}
-                        title="Stop Streaming"
-                        $danger
-                      >
+                      <ControlButton onClick={handleStopLiveStream} title="Stop Streaming" $danger>
                         <MicOff size={20} />
                       </ControlButton>
                     </>
@@ -728,11 +719,7 @@ export default function JunglePage() {
 
               {/* Leave Button */}
               <Divider />
-              <ControlButton
-                onClick={handleLeaveJungle}
-                title="Leave Jungle"
-                $danger
-              >
+              <ControlButton onClick={handleLeaveJungle} title="Leave Jungle" $danger>
                 <LogOut size={20} />
               </ControlButton>
             </AudioControls>
@@ -836,9 +823,7 @@ export default function JunglePage() {
                       </ModeOptionIcon>
                       <ModeOptionInfo>
                         <ModeOptionTitle>Live Audio</ModeOptionTitle>
-                        <ModeOptionDesc>
-                          Stream audio from your device in real-time
-                        </ModeOptionDesc>
+                        <ModeOptionDesc>Stream audio from your device in real-time</ModeOptionDesc>
                       </ModeOptionInfo>
                     </ModeOptionHeader>
 
@@ -898,8 +883,8 @@ export default function JunglePage() {
 
                         {liveKit.audioSource === "tab" && (
                           <SourceHint>
-                            Select a Chrome tab to stream its audio. The tab content won't be shared - only the audio.
-                            Make sure to check "Share tab audio" in the picker.
+                            Select a Chrome tab to stream its audio. The tab content won't be shared
+                            - only the audio. Make sure to check "Share tab audio" in the picker.
                           </SourceHint>
                         )}
 
@@ -931,9 +916,13 @@ export default function JunglePage() {
                             onClick={() => liveKit.testLoopback(!liveKit.isLoopbackActive)}
                             $active={liveKit.isLoopbackActive}
                           >
-                            {liveKit.isLoopbackActive ? "Stop Loopback" : "Test Loopback (hear yourself)"}
+                            {liveKit.isLoopbackActive
+                              ? "Stop Loopback"
+                              : "Test Loopback (hear yourself)"}
                           </DebugButton>
-                          <DebugButton onClick={() => console.log("[LiveKit Debug]", liveKit.getDebugInfo())}>
+                          <DebugButton
+                            onClick={() => console.log("[LiveKit Debug]", liveKit.getDebugInfo())}
+                          >
                             Log Debug Info to Console
                           </DebugButton>
                         </DebugSection>
@@ -954,9 +943,7 @@ export default function JunglePage() {
                       </ModeOptionIcon>
                       <ModeOptionInfo>
                         <ModeOptionTitle>YouTube Queue</ModeOptionTitle>
-                        <ModeOptionDesc>
-                          Play YouTube videos with synced playback
-                        </ModeOptionDesc>
+                        <ModeOptionDesc>Play YouTube videos with synced playback</ModeOptionDesc>
                       </ModeOptionInfo>
                     </ModeOptionHeader>
 
@@ -981,9 +968,7 @@ export default function JunglePage() {
                   </ModeOption>
                 </ModeOptions>
 
-                {liveKit.error && (
-                  <ErrorBox>{liveKit.error}</ErrorBox>
-                )}
+                {liveKit.error && <ErrorBox>{liveKit.error}</ErrorBox>}
               </ModePanel>
             )}
           </AnimatePresence>
@@ -996,8 +981,8 @@ export default function JunglePage() {
               {isCreator
                 ? " As the creator, you can stream live audio or play YouTube videos."
                 : mode === "live"
-                ? " Currently streaming live audio."
-                : " Music plays in sync for everyone."}
+                  ? " Currently streaming live audio."
+                  : " Music plays in sync for everyone."}
             </InfoText>
           </InfoSection>
         </JungleContainer>
@@ -1173,8 +1158,7 @@ const DJBooth = styled.div<{ $isLive?: boolean }>`
   flex-direction: column;
   align-items: center;
   padding: 1rem 2rem;
-  background: ${(props) =>
-    props.$isLive ? "rgba(239, 68, 68, 0.2)" : "rgba(0, 0, 0, 0.6)"};
+  background: ${(props) => (props.$isLive ? "rgba(239, 68, 68, 0.2)" : "rgba(0, 0, 0, 0.6)")};
   border: 1px solid ${(props) =>
     props.$isLive ? "rgba(239, 68, 68, 0.5)" : LOUNGE_COLORS.glassBorder};
   border-radius: 12px;
@@ -1309,12 +1293,11 @@ const ControlButton = styled.button<{ $active?: boolean; $danger?: boolean }>`
     props.$danger
       ? "rgba(239, 68, 68, 0.2)"
       : props.$active
-      ? "rgba(144, 116, 242, 0.2)"
-      : "rgba(255, 255, 255, 0.1)"};
+        ? "rgba(144, 116, 242, 0.2)"
+        : "rgba(255, 255, 255, 0.1)"};
   border: none;
   border-radius: 6px;
-  color: ${(props) =>
-    props.$danger ? "#ef4444" : props.$active ? LOUNGE_COLORS.tier1 : "#fff"};
+  color: ${(props) => (props.$danger ? "#ef4444" : props.$active ? LOUNGE_COLORS.tier1 : "#fff")};
   cursor: pointer;
   transition: all 0.15s;
 
@@ -1613,8 +1596,7 @@ const ModeOptions = styled.div`
 
 const ModeOption = styled.div<{ $active?: boolean }>`
   padding: 1rem;
-  background: ${(props) =>
-    props.$active ? "rgba(144, 116, 242, 0.1)" : "rgba(0, 0, 0, 0.2)"};
+  background: ${(props) => (props.$active ? "rgba(144, 116, 242, 0.1)" : "rgba(0, 0, 0, 0.2)")};
   border: 1px solid ${(props) =>
     props.$active ? "rgba(144, 116, 242, 0.3)" : "rgba(255, 255, 255, 0.1)"};
   border-radius: 8px;
@@ -1777,8 +1759,7 @@ const SourceToggle = styled.div`
 const SourceOption = styled.button<{ $active?: boolean }>`
   flex: 1;
   padding: 0.5rem 0.75rem;
-  background: ${(props) =>
-    props.$active ? "rgba(144, 116, 242, 0.2)" : "rgba(0, 0, 0, 0.3)"};
+  background: ${(props) => (props.$active ? "rgba(144, 116, 242, 0.2)" : "rgba(0, 0, 0, 0.3)")};
   border: 1px solid ${(props) =>
     props.$active ? "rgba(144, 116, 242, 0.5)" : LOUNGE_COLORS.glassBorder};
   border-radius: 6px;
@@ -1857,13 +1838,13 @@ const DebugButton = styled.button<{ $active?: boolean }>`
 const SessionTimer = styled.span<{ $isLow?: boolean }>`
   margin-left: 0.75rem;
   padding: 0.25rem 0.5rem;
-  background: ${(props) => props.$isLow ? "rgba(239, 68, 68, 0.2)" : "rgba(34, 197, 94, 0.2)"};
-  border: 1px solid ${(props) => props.$isLow ? "rgba(239, 68, 68, 0.4)" : "rgba(34, 197, 94, 0.4)"};
+  background: ${(props) => (props.$isLow ? "rgba(239, 68, 68, 0.2)" : "rgba(34, 197, 94, 0.2)")};
+  border: 1px solid ${(props) => (props.$isLow ? "rgba(239, 68, 68, 0.4)" : "rgba(34, 197, 94, 0.4)")};
   border-radius: 4px;
   font-size: 0.75rem;
   font-weight: 600;
   font-family: var(--font-mono);
-  color: ${(props) => props.$isLow ? "#ef4444" : "#22c55e"};
+  color: ${(props) => (props.$isLow ? "#ef4444" : "#22c55e")};
   ${(props) => props.$isLow && `animation: pulse 1s ease-in-out infinite;`}
 `;
 

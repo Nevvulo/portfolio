@@ -1,17 +1,18 @@
-import { useState, useCallback } from "react";
-import styled from "styled-components";
-import { Edit2, Trash2, Pin, Reply } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { Edit2, Pin, Reply, Trash2 } from "lucide-react";
+import { useCallback, useState } from "react";
+import styled from "styled-components";
 
 // Remove "about" prefix from relative time (e.g., "about 2 hours ago" -> "2 hours ago")
 const formatRelativeTime = (date: number | Date) =>
   formatDistanceToNow(date, { addSuffix: true }).replace(/^about /, "");
+
 import { LOUNGE_COLORS, TIER_INFO } from "../../../constants/lounge";
-import { MessageMarkdown } from "./MessageMarkdown";
-import { MessageEmbeds } from "./embeds";
-import { useUserPopout } from "../../../hooks/lounge/useUserPopout";
-import type { Tier, MessageEmbed } from "../../../types/lounge";
 import type { Id } from "../../../convex/_generated/dataModel";
+import { useUserPopout } from "../../../hooks/lounge/useUserPopout";
+import type { MessageEmbed, Tier } from "../../../types/lounge";
+import { MessageEmbeds } from "./embeds";
+import { MessageMarkdown } from "./MessageMarkdown";
 
 interface MessageProps {
   id: Id<"messages">;
@@ -65,8 +66,10 @@ export function Message({
 
   // For linked Discord users, use their Convex profile; for unlinked, use Discord data
   const hasLinkedUser = isFromDiscord && authorId;
-  const displayName = isFromDiscord && discordAuthor && !hasLinkedUser ? discordAuthor.name : authorName;
-  const displayAvatar = isFromDiscord && discordAuthor && !hasLinkedUser ? discordAuthor.avatar : authorAvatar;
+  const displayName =
+    isFromDiscord && discordAuthor && !hasLinkedUser ? discordAuthor.name : authorName;
+  const displayAvatar =
+    isFromDiscord && discordAuthor && !hasLinkedUser ? discordAuthor.avatar : authorAvatar;
 
   // Handle clicking on the author name to open their profile
   // Allow popout for regular users AND linked Discord users (who have an authorId)
@@ -78,7 +81,7 @@ export function Message({
         openPopout(authorId, e.currentTarget);
       }
     },
-    [authorId, openPopout]
+    [authorId, openPopout],
   );
 
   const handleSaveEdit = () => {
@@ -109,7 +112,7 @@ export function Message({
         openPopout(authorId, e.currentTarget);
       }
     },
-    [authorId, openPopout]
+    [authorId, openPopout],
   );
 
   return (
@@ -121,15 +124,17 @@ export function Message({
     >
       {isGrouped ? (
         <GroupedTimestampWrapper className="grouped-timestamp">
-          <GroupedTimestamp>{new Date(createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}</GroupedTimestamp>
+          <GroupedTimestamp>
+            {new Date(createdAt).toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+              hour12: false,
+            })}
+          </GroupedTimestamp>
         </GroupedTimestampWrapper>
       ) : (
         <AvatarWrapper>
-          <AvatarButton
-            onClick={handleAvatarClick}
-            $clickable={!!authorId}
-            disabled={!authorId}
-          >
+          <AvatarButton onClick={handleAvatarClick} $clickable={!!authorId} disabled={!authorId}>
             <Avatar src={displayAvatar} alt={displayName} loading="lazy" decoding="async" />
           </AvatarButton>
           {isFromDiscord && !hasLinkedUser && <DiscordBadge>D</DiscordBadge>}
@@ -209,14 +214,13 @@ const MessageContainer = styled.div<{ $isPinned?: boolean; $isGrouped?: boolean 
   padding: ${(props) => (props.$isGrouped ? "0.125rem 1rem" : "0.5rem 1rem")};
   padding-top: ${(props) => (props.$isGrouped ? "0.125rem" : "0.5rem")};
   margin-top: ${(props) => (props.$isGrouped ? "0" : "0")};
-  background: ${(props) =>
-    props.$isPinned ? "rgba(250, 168, 26, 0.05)" : "transparent"};
+  background: ${(props) => (props.$isPinned ? "rgba(250, 168, 26, 0.05)" : "transparent")};
   border-left: ${(props) =>
     props.$isPinned ? `2px solid ${LOUNGE_COLORS.goldPrimary}` : "2px solid transparent"};
   position: relative;
 
   &:hover {
-    background: ${(props) => props.theme.background === "#fff" ? "rgba(0, 0, 0, 0.02)" : "rgba(255, 255, 255, 0.02)"};
+    background: ${(props) => (props.theme.background === "#fff" ? "rgba(0, 0, 0, 0.02)" : "rgba(255, 255, 255, 0.02)")};
   }
 
   &:hover .grouped-timestamp {
@@ -255,7 +259,7 @@ const GroupedTimestampWrapper = styled.div`
 
 const GroupedTimestamp = styled.span`
   font-size: 0.55rem;
-  color: ${(props) => props.theme.background === "#fff" ? "rgba(0,0,0,0.35)" : "rgba(255, 255, 255, 0.35)"};
+  color: ${(props) => (props.theme.background === "#fff" ? "rgba(0,0,0,0.35)" : "rgba(255, 255, 255, 0.35)")};
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
   text-align: center;
@@ -264,7 +268,7 @@ const GroupedTimestamp = styled.span`
 
 const InlineEditedTag = styled.span`
   font-size: 0.65rem;
-  color: ${(props) => props.theme.background === "#fff" ? "rgba(0,0,0,0.3)" : "rgba(255, 255, 255, 0.3)"};
+  color: ${(props) => (props.theme.background === "#fff" ? "rgba(0,0,0,0.3)" : "rgba(255, 255, 255, 0.3)")};
   margin-left: 4px;
 `;
 
@@ -376,18 +380,18 @@ const DiscordTag = styled.span`
 
 const Timestamp = styled.span`
   font-size: 0.7rem;
-  color: ${(props) => props.theme.background === "#fff" ? "rgba(0,0,0,0.45)" : "rgba(255, 255, 255, 0.4)"};
+  color: ${(props) => (props.theme.background === "#fff" ? "rgba(0,0,0,0.45)" : "rgba(255, 255, 255, 0.4)")};
 `;
 
 const EditedTag = styled.span`
   font-size: 0.65rem;
-  color: ${(props) => props.theme.background === "#fff" ? "rgba(0,0,0,0.35)" : "rgba(255, 255, 255, 0.3)"};
+  color: ${(props) => (props.theme.background === "#fff" ? "rgba(0,0,0,0.35)" : "rgba(255, 255, 255, 0.3)")};
 `;
 
 const MessageTextWrapper = styled.div`
   font-size: 0.95rem;
   line-height: 1.4;
-  color: ${(props) => props.theme.background === "#fff" ? "rgba(0,0,0,0.85)" : "rgba(255, 255, 255, 0.9)"};
+  color: ${(props) => (props.theme.background === "#fff" ? "rgba(0,0,0,0.85)" : "rgba(255, 255, 255, 0.9)")};
   word-break: break-word;
   /* Prevent text reflow CLS */
   overflow-wrap: break-word;
@@ -400,8 +404,8 @@ const MessageTextWrapper = styled.div`
 const EditInput = styled.textarea`
   width: 100%;
   padding: 0.5rem;
-  background: ${(props) => props.theme.background === "#fff" ? "rgba(0,0,0,0.04)" : "rgba(0, 0, 0, 0.3)"};
-  border: 1px solid ${(props) => props.theme.background === "#fff" ? "rgba(0,0,0,0.12)" : LOUNGE_COLORS.glassBorder};
+  background: ${(props) => (props.theme.background === "#fff" ? "rgba(0,0,0,0.04)" : "rgba(0, 0, 0, 0.3)")};
+  border: 1px solid ${(props) => (props.theme.background === "#fff" ? "rgba(0,0,0,0.12)" : LOUNGE_COLORS.glassBorder)};
   border-radius: 6px;
   color: ${(props) => props.theme.foreground};
   font-size: 0.95rem;
@@ -422,10 +426,10 @@ const ActionMenu = styled.div`
   display: flex;
   gap: 2px;
   padding: 4px;
-  background: ${(props) => props.theme.background === "#fff" ? "#fff" : LOUNGE_COLORS.glassBackground};
-  border: 1px solid ${(props) => props.theme.background === "#fff" ? "rgba(0,0,0,0.12)" : LOUNGE_COLORS.glassBorder};
+  background: ${(props) => (props.theme.background === "#fff" ? "#fff" : LOUNGE_COLORS.glassBackground)};
+  border: 1px solid ${(props) => (props.theme.background === "#fff" ? "rgba(0,0,0,0.12)" : LOUNGE_COLORS.glassBorder)};
   border-radius: 6px;
-  box-shadow: ${(props) => props.theme.background === "#fff" ? "0 2px 8px rgba(0,0,0,0.1)" : "none"};
+  box-shadow: ${(props) => (props.theme.background === "#fff" ? "0 2px 8px rgba(0,0,0,0.1)" : "none")};
 `;
 
 const ActionButton = styled.button<{ $danger?: boolean }>`
@@ -436,13 +440,15 @@ const ActionButton = styled.button<{ $danger?: boolean }>`
   background: transparent;
   border: none;
   border-radius: 4px;
-  color: ${(props) => (props.$danger ? "#ed4245" : (props.theme.background === "#fff" ? "rgba(0,0,0,0.6)" : "rgba(255, 255, 255, 0.7)"))};
+  color: ${(props) => (props.$danger ? "#ed4245" : props.theme.background === "#fff" ? "rgba(0,0,0,0.6)" : "rgba(255, 255, 255, 0.7)")};
   cursor: pointer;
   transition: all 0.15s ease;
 
   &:hover {
     background: ${(props) =>
-      props.$danger ? "rgba(237, 66, 69, 0.2)" : (props.theme.background === "#fff" ? "rgba(0,0,0,0.08)" : "rgba(255, 255, 255, 0.1)")};
+      props.$danger
+        ? "rgba(237, 66, 69, 0.2)"
+        : (props.theme.background === "#fff" ? "rgba(0,0,0,0.08)" : "rgba(255, 255, 255, 0.1)")};
     color: ${(props) => (props.$danger ? "#ed4245" : props.theme.foreground)};
   }
 `;

@@ -1,4 +1,3 @@
-import React from "react";
 import {
   m,
   useAnimationFrame,
@@ -6,10 +5,10 @@ import {
   useMotionValue,
   useTransform,
 } from "motion/react";
+import type React from "react";
 import { useRef } from "react";
 import { cn } from "../../utils/cn";
 
- 
 export function Button({
   borderRadius = "1.75rem",
   children,
@@ -54,7 +53,7 @@ export function Button({
     </Component>
   );
 }
- 
+
 export const MovingBorder = ({
   children,
   duration = 3000,
@@ -70,7 +69,7 @@ export const MovingBorder = ({
 }) => {
   const pathRef = useRef<any>();
   const progress = useMotionValue<number>(0);
- 
+
   useAnimationFrame((time) => {
     const length = pathRef.current?.getTotalLength();
     if (length) {
@@ -78,18 +77,12 @@ export const MovingBorder = ({
       progress.set((time * pxPerMillisecond) % length);
     }
   });
- 
-  const x = useTransform(
-    progress,
-    (val) => pathRef.current?.getPointAtLength(val).x,
-  );
-  const y = useTransform(
-    progress,
-    (val) => pathRef.current?.getPointAtLength(val).y,
-  );
- 
+
+  const x = useTransform(progress, (val) => pathRef.current?.getPointAtLength(val).x);
+  const y = useTransform(progress, (val) => pathRef.current?.getPointAtLength(val).y);
+
   const transform = useMotionTemplate`translateX(${x}px) translateY(${y}px) translateX(-50%) translateY(-50%)`;
- 
+
   return (
     <>
       <svg
@@ -100,14 +93,7 @@ export const MovingBorder = ({
         height="100%"
         {...otherProps}
       >
-        <rect
-          fill="none"
-          width="100%"
-          height="100%"
-          rx={rx}
-          ry={ry}
-          ref={pathRef}
-        />
+        <rect fill="none" width="100%" height="100%" rx={rx} ry={ry} ref={pathRef} />
       </svg>
       <m.div
         style={{
