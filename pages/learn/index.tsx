@@ -303,6 +303,7 @@ export default function Learn() {
           name="description"
           content="Learn software engineering, web development, and programming through articles, tutorials, and videos."
         />
+        {/* OpenGraph tags */}
         <meta property="og:title" content="Learn - Nevulo" />
         <meta
           property="og:description"
@@ -313,11 +314,20 @@ export default function Learn() {
           property="og:image"
           content="https://nev.so/api/og?title=Learn&subtitle=Articles%20%26%20Tutorials"
         />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta property="og:site_name" content="Nevulo" />
+        <meta property="og:type" content="website" />
+        {/* Twitter/Discord card tags */}
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="Learn - Nevulo" />
         <meta
           name="twitter:description"
           content="Learn software engineering and web development."
+        />
+        <meta
+          name="twitter:image"
+          content="https://nev.so/api/og?title=Learn&subtitle=Articles%20%26%20Tutorials"
         />
         <link rel="canonical" href="https://nev.so/learn" />
       </Head>

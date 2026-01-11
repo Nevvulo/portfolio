@@ -1067,29 +1067,32 @@ function PostBody({
 
       <Head>
         <title>{`${post.title || ""} - Learn - Nevulo`}</title>
-        <meta property="title" content={post.title} />
-        <meta property="description" content={post.description} />
+        <meta name="title" content={post.title} />
+        <meta name="description" content={post.description} />
+        <meta name="author" content={post.author?.displayName || "Nevulo"} />
+        {/* OpenGraph tags */}
         <meta property="og:title" content={post.title} />
         <meta property="og:description" content={post.description} />
         <meta property="og:image" content={ogImage} />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta property="og:image:alt" content={post.title} />
         <meta property="og:site_name" content="Nevulo Learn" />
         <meta property="og:url" content={location} />
         <meta property="og:type" content="article" />
-        <meta property="twitter:title" content={post.title} />
-        <meta property="twitter:description" content={post.description} />
-        <meta property="twitter:image" content={ogImage} />
-        <meta property="twitter:site" content="@Nevvulo" />
-        <meta property="twitter:creator" content="@Nevvulo" />
-        <meta property="creator" content={post.author?.displayName || "Nevulo"} />
         <meta property="og:article:published_time" content={creationDate.toISOString()} />
-        <meta
-          property="og:article:author:username"
-          content={post.author?.displayName || "Nevulo"}
-        />
+        <meta property="og:article:author" content={post.author?.displayName || "Nevulo"} />
         <meta property="og:article:section" content="Technology" />
         {post.labels?.map((tag) => (
           <meta key={tag} property="og:article:tag" content={tag} />
         ))}
+        {/* Twitter/Discord card tags */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={post.title} />
+        <meta name="twitter:description" content={post.description} />
+        <meta name="twitter:image" content={ogImage} />
+        <meta name="twitter:site" content="@Nevvulo" />
+        <meta name="twitter:creator" content="@Nevvulo" />
         <link rel="canonical" href={location} />
       </Head>
     </BlogView>

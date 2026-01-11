@@ -279,26 +279,32 @@ function PostBody({ content, properties }: Omit<PostProps, "discordWidget">) {
 
       <Head>
         <title>{String(properties.title || "")} › Blog - Nevulo</title>
-        <meta property="title" content={properties.title} />
-        <meta property="description" content={properties.description} />
+        <meta name="title" content={properties.title} />
+        <meta name="description" content={properties.description} />
+        <meta name="author" content="Nevulo" />
+        {/* OpenGraph tags */}
         <meta property="og:title" content={properties.title} />
         <meta property="og:description" content={properties.description} />
         <meta property="og:image" content={ogImage} />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta property="og:image:alt" content={properties.title} />
         <meta property="og:site_name" content="Nevulo Blog" />
         <meta property="og:url" content={location} />
         <meta property="og:type" content="article" />
-        <meta property="twitter:title" content={properties.title} />
-        <meta property="twitter:description" content={properties.description} />
-        <meta property="twitter:image" content={ogImage} />
-        <meta property="twitter:site" content="@Nevvulo" />
-        <meta property="twitter:creator" content="@Nevvulo" />
-        <meta property="creator" content="Nevulo" />
         <meta property="og:article:published_time" content={creationDate.toISOString()} />
-        <meta property="og:article:author:username" content="Nevulo" />
+        <meta property="og:article:author" content="Nevulo" />
         <meta property="og:article:section" content="Technology" />
         {properties.labels?.map((tag) => (
           <meta key={tag} property="og:article:tag" content={tag} />
         ))}
+        {/* Twitter/Discord card tags */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={properties.title} />
+        <meta name="twitter:description" content={properties.description} />
+        <meta name="twitter:image" content={ogImage} />
+        <meta name="twitter:site" content="@Nevvulo" />
+        <meta name="twitter:creator" content="@Nevvulo" />
       </Head>
     </BlogView>
   );
