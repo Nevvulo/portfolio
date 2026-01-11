@@ -773,7 +773,8 @@ export const reorderPostsVideosFirst = internalMutation({
 
     // Update bentoOrder for all posts
     for (let i = 0; i < ordered.length; i++) {
-      await ctx.db.patch(ordered[i]._id, { bentoOrder: i });
+      const post = ordered[i];
+      if (post) await ctx.db.patch(post._id, { bentoOrder: i });
     }
 
     return { reordered: ordered.length, videos: videos.length, nonVideos: nonVideos.length };

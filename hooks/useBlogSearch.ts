@@ -28,6 +28,7 @@ interface UseBlogSearchReturn {
   isSearching: boolean;
   error: string | null;
   allLabels: string[];
+  isLabelsLoading: boolean;
   isActive: boolean;
   clearAll: () => void;
 }
@@ -84,7 +85,9 @@ export function useBlogSearch(): UseBlogSearchReturn {
   const debouncedQuery = useDebounce(query, 300);
 
   // Get all available labels from Convex
-  const allLabels = useQuery(api.search.getAllLabels) ?? [];
+  const allLabelsQuery = useQuery(api.search.getAllLabels);
+  const allLabels = allLabelsQuery ?? [];
+  const isLabelsLoading = allLabelsQuery === undefined;
 
   // Perform search when query or labels change
   const performSearch = useCallback(async (searchQuery: string, labels: string[]) => {
@@ -166,6 +169,7 @@ export function useBlogSearch(): UseBlogSearchReturn {
     isSearching,
     error,
     allLabels,
+    isLabelsLoading,
     isActive,
     clearAll,
   };

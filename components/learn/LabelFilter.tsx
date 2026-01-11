@@ -1,23 +1,52 @@
 import { X } from "lucide-react";
 import styled from "styled-components";
+import { Skeleton } from "../generics/skeleton";
+
+// Max labels to show (roughly 4 lines on lower resolutions)
+const MAX_VISIBLE_LABELS = 15;
+
+// Pre-generated widths for skeleton labels to avoid CLS
+// These simulate realistic label widths (40-100px range)
+const SKELETON_LABEL_WIDTHS = [
+  52, 78, 64, 45, 88, 56, 72, 94, 48, 82, 60, 75, 68, 42, 86
+];
 
 interface LabelFilterProps {
   labels: string[];
   selectedLabels: string[];
   onToggle: (label: string) => void;
   onClear?: () => void;
+  isLoading?: boolean;
 }
 
-export function LabelFilter({ labels, selectedLabels, onToggle, onClear }: LabelFilterProps) {
+export function LabelFilter({ labels, selectedLabels, onToggle, onClear, isLoading }: LabelFilterProps) {
+  const hasSelection = selectedLabels.length > 0;
+
+  // Show skeleton while loading
+  if (isLoading) {
+    return (
+      <Container>
+        <FilterRow>
+          <LabelsScroll>
+            {SKELETON_LABEL_WIDTHS.map((width, i) => (
+              <SkeletonLabel key={i} $width={width} />
+            ))}
+          </LabelsScroll>
+        </FilterRow>
+      </Container>
+    );
+  }
+
   if (labels.length === 0) return null;
 
-  const hasSelection = selectedLabels.length > 0;
+  // Limit to first 15 labels
+  const visibleLabels = labels.slice(0, MAX_VISIBLE_LABELS);
 
   return (
     <Container>
       <FilterRow>
         <LabelsScroll>
-          {labels.map((label) => (
+          {visibleLabels.map((label) => (
             <FilterLabel
               key={label}
               $selected={selectedLabels.includes(label)}
@@ -103,6 +132,13 @@ const FilterLabel = styled.button<{ $selected: boolean }>`
 		background: rgba(79, 77, 193, 0.3);
 		border-color: rgba(79, 77, 193, 0.5);
 	}
+`;
+
+const SkeletonLabel = styled(Skeleton)<{ $width: number }>`
+	width: ${(p) => p.$width}px;
+	height: 22px;
+	border-radius: 4px;
+	flex-shrink: 0;
 `;
 
 export default LabelFilter;

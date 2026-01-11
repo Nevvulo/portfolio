@@ -26,26 +26,31 @@ function levenshteinDistance(a: string, b: string): number {
   for (let i = 0; i <= b.length; i++) {
     matrix[i] = [i];
   }
-  for (let j = 0; j <= a.length; j++) {
-    matrix[0][j] = j;
+  const firstRow = matrix[0];
+  if (firstRow) {
+    for (let j = 0; j <= a.length; j++) {
+      firstRow[j] = j;
+    }
   }
 
   // Fill matrix
   for (let i = 1; i <= b.length; i++) {
     for (let j = 1; j <= a.length; j++) {
+      const currentRow = matrix[i]!;
+      const prevRow = matrix[i - 1]!;
       if (b[i - 1] === a[j - 1]) {
-        matrix[i][j] = matrix[i - 1][j - 1];
+        currentRow[j] = prevRow[j - 1]!;
       } else {
-        matrix[i][j] = Math.min(
-          matrix[i - 1][j - 1] + 1, // substitution
-          matrix[i][j - 1] + 1, // insertion
-          matrix[i - 1][j] + 1, // deletion
+        currentRow[j] = Math.min(
+          prevRow[j - 1]! + 1, // substitution
+          currentRow[j - 1]! + 1, // insertion
+          prevRow[j]! + 1, // deletion
         );
       }
     }
   }
 
-  return matrix[b.length][a.length];
+  return matrix[b.length]?.[a.length] ?? 0;
 }
 
 /**
@@ -268,14 +273,19 @@ export function mergeOverlappingPositions(
   const sorted = [...positions].sort((a, b) => a.position.start - b.position.start);
 
   const merged: Array<{ ids: string[]; start: number; end: number }> = [];
+  const first = sorted[0];
+  if (!first) return [];
+
   let current = {
-    ids: [sorted[0].id],
-    start: sorted[0].position.start,
-    end: sorted[0].position.end,
+    ids: [first.id],
+    start: first.position.start,
+    end: first.position.end,
   };
 
   for (let i = 1; i < sorted.length; i++) {
-    const { id, position } = sorted[i];
+    const item = sorted[i];
+    if (!item) continue;
+    const { id, position } = item;
 
     if (position.start <= current.end) {
       // Overlapping - merge

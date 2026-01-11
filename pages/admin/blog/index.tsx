@@ -15,18 +15,14 @@ const MDXEditor = dynamic(
 );
 
 import {
-  AlertCircle,
   ArrowDown,
   ArrowUp,
   BarChart3,
   Calendar,
-  Check,
   Eye,
-  EyeOff,
   FileText,
   Heart,
   Lightbulb,
-  Loader2,
   MessageCircle,
   MessageSquare,
   Newspaper,
@@ -1776,7 +1772,7 @@ function MigrationTab() {
       {status && (
         <StatsGrid>
           <StatCard>
-            <StatValue>{status.totalPosts}</StatValue>
+            <StatValue>{status.migratedCount}</StatValue>
             <StatLabel>Posts in Convex</StatLabel>
           </StatCard>
         </StatsGrid>
@@ -1925,12 +1921,6 @@ const StatLabel = styled.div`
   font-size: 14px;
   color: ${(p) => p.theme.textColor};
   margin-top: 4px;
-`;
-
-const PostList = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
 `;
 
 const PostListItem = styled.div`

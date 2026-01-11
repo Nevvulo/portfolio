@@ -146,7 +146,7 @@ export const syncPostToSearch = internalAction({
  */
 export const removePostFromSearch = internalAction({
   args: { slug: v.string() },
-  handler: async (ctx, args) => {
+  handler: async (_ctx, args) => {
     if (!UPSTASH_SEARCH_URL || !UPSTASH_SEARCH_TOKEN) {
       console.warn("[search] Missing Upstash Search credentials, skipping removal");
       return;

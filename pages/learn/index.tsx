@@ -9,6 +9,7 @@ import {
   type BentoCardProps,
   BentoGrid,
   LabelFilter,
+  NewsBubbles,
   SearchBar,
   SearchResultCard,
   UserInfoCard,
@@ -180,6 +181,7 @@ export default function Learn() {
     isSearching,
     error: searchError,
     allLabels,
+    isLabelsLoading,
     isActive: isSearchActive,
     clearAll,
   } = useBlogSearch();
@@ -211,7 +213,7 @@ export default function Learn() {
                   <SectionHeader $align="right">
                     <SectionTitle>news</SectionTitle>
                   </SectionHeader>
-                  <BentoGrid posts={newsPosts as BentoCardProps[]} compact />
+                  <NewsBubbles posts={newsPosts as BentoCardProps[]} />
                 </NewsColumn>
               )}
             </TopRow>
@@ -225,14 +227,15 @@ export default function Learn() {
                 </ArticlesHeaderRow>
               </SectionHeader>
 
-              {/* Label filter */}
-              {allLabels.length > 0 && (
+              {/* Label filter - show skeleton when loading, or labels when available */}
+              {(isLabelsLoading || allLabels.length > 0) && (
                 <FilterContainer>
                   <LabelFilter
                     labels={allLabels}
                     selectedLabels={selectedLabels}
                     onToggle={toggleLabel}
                     onClear={selectedLabels.length > 0 ? clearLabels : undefined}
+                    isLoading={isLabelsLoading}
                   />
                 </FilterContainer>
               )}
@@ -391,6 +394,10 @@ const TopRow = styled.div`
 const NewsColumn = styled.div`
   flex: 1;
   min-width: 0;
+
+  @media (max-width: 900px) {
+    width: 100%;
+  }
 `;
 
 const Section = styled.div`
@@ -529,39 +536,49 @@ const LoadingDot = styled.div<{ $delay: number }>`
   }
 `;
 
+// Pre-generated widths for skeleton labels (matching LabelFilter)
+const SKELETON_LABEL_WIDTHS = [
+  52, 78, 64, 45, 88, 56, 72, 94, 48, 82, 60, 75, 68, 42, 86
+];
+
 // Loading skeleton that matches the actual layout
 function LoadingSkeleton() {
   return (
     <>
-      {/* Top row: User card skeleton + News skeletons */}
+      {/* Top row: User card skeleton + News skeleton */}
       <TopRow>
         <UserCardSkeleton>
-          <SkeletonAvatarSection>
-            <SkeletonAvatar />
-            <SkeletonXpText />
-          </SkeletonAvatarSection>
-          <SkeletonUserInfo>
-            <SkeletonName />
-            <SkeletonButton />
-          </SkeletonUserInfo>
+          <SkeletonAvatar />
+          <SkeletonName />
+          <SkeletonXpBadge />
+          <SkeletonNotificationBtn />
         </UserCardSkeleton>
         <NewsColumn>
           <SectionHeader $align="right">
             <SkeletonSectionTitle style={{ marginLeft: "auto" }} />
           </SectionHeader>
-          <SkeletonNewsGrid>
-            {[...Array(4)].map((_, i) => (
-              <SkeletonNewsCard key={i} $size={i === 0 ? "large" : i === 1 ? "medium" : "small"} />
-            ))}
-          </SkeletonNewsGrid>
+          <SkeletonNewsBubbles>
+            <SkeletonBubble />
+            <SkeletonNewsAvatar />
+          </SkeletonNewsBubbles>
         </NewsColumn>
       </TopRow>
 
       {/* Articles section skeleton */}
-      <Section>
+      <SkeletonContentSection>
         <SectionHeader>
           <SkeletonSectionTitle />
         </SectionHeader>
+
+        {/* Label filter skeleton */}
+        <SkeletonFilterContainer>
+          <SkeletonLabelsRow>
+            {SKELETON_LABEL_WIDTHS.map((width, i) => (
+              <SkeletonLabelPill key={i} $width={width} />
+            ))}
+          </SkeletonLabelsRow>
+        </SkeletonFilterContainer>
+
         <SkeletonBentoGrid>
           <SkeletonBentoCard $cols={3} $rows={2} />
           <SkeletonBentoCard $cols={2} $rows={2} />
@@ -569,59 +586,49 @@ function LoadingSkeleton() {
           <SkeletonBentoCard $cols={2} $rows={1} />
           <SkeletonBentoCard $cols={1} $rows={1} />
         </SkeletonBentoGrid>
-      </Section>
+      </SkeletonContentSection>
     </>
   );
 }
 
-// User card skeleton styles
+// User card skeleton styles - matches UserInfoCard exactly
 const UserCardSkeleton = styled.div`
-  background: linear-gradient(135deg, rgba(144, 116, 242, 0.1) 0%, rgba(144, 116, 242, 0.03) 100%);
-  border: 1px solid rgba(144, 116, 242, 0.2);
-  border-radius: 16px;
-  padding: 16px 20px;
-  min-width: 280px;
+  background: linear-gradient(135deg, rgba(144, 116, 242, 0.15) 0%, rgba(144, 116, 242, 0.05) 100%);
+  border: 1px solid rgba(144, 116, 242, 0.3);
+  border-radius: 12px;
+  padding: 12px 16px;
+  margin-top: 50px;
   display: flex;
   align-items: center;
-  gap: 16px;
-`;
-
-const SkeletonAvatarSection = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
+  gap: 12px;
+  flex-shrink: 0;
+  width: fit-content;
 `;
 
 const SkeletonAvatar = styled(Skeleton)`
-  width: 76px;
-  height: 76px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
-`;
-
-const SkeletonXpText = styled(Skeleton)`
-  width: 60px;
-  height: 12px;
-  border-radius: 4px;
-`;
-
-const SkeletonUserInfo = styled.div`
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+  flex-shrink: 0;
 `;
 
 const SkeletonName = styled(Skeleton)`
-  width: 100px;
-  height: 20px;
+  width: 60px;
+  height: 15px;
   border-radius: 4px;
 `;
 
-const SkeletonButton = styled(Skeleton)`
-  width: 80px;
-  height: 32px;
-  border-radius: 8px;
+const SkeletonXpBadge = styled(Skeleton)`
+  width: 90px;
+  height: 28px;
+  border-radius: 6px;
+`;
+
+const SkeletonNotificationBtn = styled(Skeleton)`
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  margin-left: auto;
 `;
 
 const SkeletonSectionTitle = styled(Skeleton)`
@@ -630,34 +637,49 @@ const SkeletonSectionTitle = styled(Skeleton)`
   border-radius: 6px;
 `;
 
-// News skeleton grid - right aligned like actual
-const SkeletonNewsGrid = styled.div`
+// News bubbles skeleton - matches NewsBubbles layout EXACTLY
+const SkeletonNewsBubbles = styled.div`
   display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: 10px;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  width: 100%;
+  padding-right: 48px;
+  position: relative;
 
   @media (max-width: 900px) {
-    gap: 8px;
+    padding-right: 48px;
   }
 `;
 
-const SkeletonNewsCard = styled(Skeleton)<{ $size: "small" | "medium" | "large" }>`
-  border-radius: 12px;
-  ${(p) => {
-    switch (p.$size) {
-      case "small":
-        return "width: 280px; height: 90px;";
-      case "medium":
-        return "width: 340px; height: 100px;";
-      case "large":
-        return "width: 420px; height: 110px;";
-    }
-  }}
+const SkeletonBubble = styled(Skeleton)`
+  max-width: 380px;
+  width: 100%;
+  height: 120px;
+  border-radius: 16px 16px 4px 16px;
 
-  @media (max-width: 600px) {
-    width: 100% !important;
-    height: 80px !important;
+  @media (max-width: 900px) {
+    max-width: 100%;
+    width: 100%;
+  }
+`;
+
+const SkeletonNewsAvatar = styled(Skeleton)`
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  position: absolute;
+  bottom: 0;
+  right: 0;
+`;
+
+// Skeleton content section with proper spacing to match loaded state
+const SkeletonContentSection = styled.div`
+  margin-bottom: 24px;
+  margin-top: 8px;
+
+  &:last-child {
+    margin-bottom: 0;
   }
 `;
 
@@ -666,11 +688,11 @@ const SkeletonBentoGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   grid-auto-rows: 200px;
-  grid-auto-flow: dense;
   gap: 16px;
   padding: 0 24px;
   max-width: 1400px;
   margin: 0 auto;
+  contain: layout style;
 
   @media (max-width: 1200px) {
     grid-template-columns: repeat(4, 1fr);
@@ -705,4 +727,28 @@ const SkeletonBentoCard = styled(Skeleton)<{ $cols: number; $rows: number }>`
     grid-row: span 1 !important;
     min-height: 200px;
   }
+`;
+
+// Label filter skeleton styles
+const SkeletonFilterContainer = styled.div`
+  padding: 0 24px 16px;
+  max-width: 1400px;
+  margin: 0 auto;
+
+  @media (max-width: 900px) {
+    padding: 0 16px 12px;
+  }
+`;
+
+const SkeletonLabelsRow = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+`;
+
+const SkeletonLabelPill = styled(Skeleton)<{ $width: number }>`
+  width: ${(p) => p.$width}px;
+  height: 22px;
+  border-radius: 4px;
+  flex-shrink: 0;
 `;

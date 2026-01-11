@@ -114,8 +114,10 @@ async function batchGetAuthors(ctx: any, authorIds: Id<"users">[]) {
 
   for (let i = 0; i < uniqueIds.length; i++) {
     const author = authors[i];
+    const id = uniqueIds[i];
+    if (!id) continue;
     if (author) {
-      authorMap.set(uniqueIds[i].toString(), {
+      authorMap.set(id.toString(), {
         _id: author._id,
         displayName: author.displayName,
         username: author.username,
@@ -124,7 +126,7 @@ async function batchGetAuthors(ctx: any, authorIds: Id<"users">[]) {
         isCreator: author.isCreator,
       });
     } else {
-      authorMap.set(uniqueIds[i].toString(), null);
+      authorMap.set(id.toString(), null);
     }
   }
 
@@ -146,7 +148,7 @@ export const list = query({
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const user = await requireCreator(ctx);
+    await requireCreator(ctx);
 
     const postsQuery = ctx.db.query("blogPosts").order("desc");
 
@@ -850,7 +852,6 @@ export const getAnalytics = query({
     await requireCreator(ctx);
 
     const allPosts = await ctx.db.query("blogPosts").collect();
-    const views = await ctx.db.query("blogViews").collect();
     const comments = await ctx.db.query("blogComments").collect();
     const reactions = await ctx.db.query("blogReactions").collect();
 

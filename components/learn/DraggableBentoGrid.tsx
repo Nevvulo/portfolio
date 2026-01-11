@@ -454,11 +454,11 @@ const GridContainer = styled.div`
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   grid-auto-rows: 200px;
-  grid-auto-flow: dense;
   gap: 16px;
   padding: 0 24px;
   max-width: 1400px;
   margin: 0 auto;
+  contain: layout style;
 
   /* Ensure grid items stretch to fill their cells */
   & > * {

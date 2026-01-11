@@ -147,6 +147,8 @@ const CardContainer = styled.div`
   padding: 12px 16px;
   backdrop-filter: blur(10px);
   margin-top: 50px;
+  flex-shrink: 0;
+  width: fit-content;
 `;
 
 const CardContent = styled.div`

@@ -26,8 +26,6 @@ const REACTIONS: { type: ReactionType; icon: typeof faHeart; label: string; colo
 const HOLD_INTERVAL_START_MS = 350; // Initial interval (~3/s)
 const HOLD_INTERVAL_MIN_MS = 65; // Max speed interval (~15/s)
 const HOLD_RAMP_DURATION_MS = 2500; // Time to reach max speed
-const MAX_PER_POST_AUTH = 50;
-const MAX_PER_POST_ANON = 5;
 const BATCH_THRESHOLD = 2; // Use batch mutation when more than this many reactions
 const DEBOUNCE_DELAY_MS = 150; // Wait this long after release before sending batch
 

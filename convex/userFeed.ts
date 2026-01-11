@@ -563,7 +563,6 @@ export const deletePost = mutation({
     }
 
     // Author or profile owner can delete
-    const profileUser = await ctx.db.get(post.profileUserId);
     const canDelete =
       post.authorId === user._id || post.profileUserId === user._id || user.isCreator;
 

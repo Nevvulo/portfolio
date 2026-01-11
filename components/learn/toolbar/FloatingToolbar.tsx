@@ -196,14 +196,106 @@ export function FloatingToolbar({
 
   return (
     <>
-      {/* Desktop Toolbar */}
-      <AnimatePresence>
-        {isVisible && (
-          <ToolbarWrapper $tocCollapsed={tocCollapsed}>
-            <ToolbarContainer
-              initial={{ opacity: 0, x: -12 }}
+      {/* Desktop Toolbar - stays mounted, animate visibility */}
+      <ToolbarWrapper $tocCollapsed={tocCollapsed} style={{ pointerEvents: isVisible ? 'auto' : 'none' }}>
+        <ToolbarContainer
+          initial={false}
+          animate={{
+            opacity: isVisible ? 1 : 0,
+            x: isVisible ? 0 : -12
+          }}
+          transition={{ duration: 0.15, ease: "easeOut" }}
+        >
+          {/* Reactions */}
+          <ReactionFan
+            postId={postId}
+            isExpanded={showReactionFan}
+            onToggle={() => setShowReactionFan(!showReactionFan)}
+          />
+
+          {/* Highlights */}
+          <ToolbarButton
+            icon={Highlighter}
+            label="View highlights"
+            onClick={onOpenHighlights}
+            badge={highlightCount}
+          />
+
+          <Divider />
+
+          {/* Navigation */}
+          <ToolbarButton
+            icon={ChevronUp}
+            label="Previous section"
+            onClick={navigateToPrevSection}
+            disabled={!canGoPrev}
+          />
+          <ToolbarButton
+            icon={ChevronDown}
+            label="Next section"
+            onClick={navigateToNextSection}
+            disabled={!canGoNext}
+          />
+          <ToolbarButton icon={ChevronsUp} label="Scroll to top" onClick={scrollToTop} />
+
+          <Divider />
+
+          {/* Actions */}
+          <ToolbarButton icon={Share2} label="Share" onClick={handleShare} />
+          <ToolbarButton
+            icon={MessageSquare}
+            label={isSignedIn ? "Go to comments" : "Sign in to comment"}
+            onClick={handleComment}
+          />
+
+          {/* Edit (only for authorized users) */}
+          {canEdit && <ToolbarButton icon={Pencil} label="Edit post" onClick={handleEdit} />}
+
+          {/* Report */}
+          <ToolbarButton
+            icon={Flag}
+            label="Report an issue"
+            onClick={() => setReportModalOpen(true)}
+            variant="danger"
+          />
+        </ToolbarContainer>
+      </ToolbarWrapper>
+
+      {/* Mobile Toolbar FAB - stays mounted, animate visibility */}
+      <MobileToolbarWrapper style={{ pointerEvents: isVisible ? 'auto' : 'none' }}>
+        {/* Click-outside overlay */}
+        <AnimatePresence>
+          {mobileToolbarOpen && (
+            <MobileToolbarOverlay
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
+              onClick={() => setMobileToolbarOpen(false)}
+            />
+          )}
+        </AnimatePresence>
+
+        <MobileToolbarButton
+          initial={false}
+          animate={{
+            opacity: isVisible ? 1 : 0,
+            x: isVisible ? 0 : 12
+          }}
+          transition={{ duration: 0.15 }}
+          onClick={() => setMobileToolbarOpen(!mobileToolbarOpen)}
+          aria-label={mobileToolbarOpen ? "Close toolbar" : "Open toolbar"}
+          $isOpen={mobileToolbarOpen}
+        >
+          {mobileToolbarOpen ? <X size={20} /> : <MoreVertical size={20} />}
+        </MobileToolbarButton>
+
+        <AnimatePresence>
+          {mobileToolbarOpen && (
+            <MobileToolbarExpanded
+              initial={{ opacity: 0, x: 12 }}
               animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -12 }}
+              exit={{ opacity: 0, x: 12 }}
               transition={{ duration: 0.15, ease: "easeOut" }}
             >
               {/* Reactions */}
@@ -211,17 +303,21 @@ export function FloatingToolbar({
                 postId={postId}
                 isExpanded={showReactionFan}
                 onToggle={() => setShowReactionFan(!showReactionFan)}
+                expandDirection="left"
               />
 
               {/* Highlights */}
               <ToolbarButton
                 icon={Highlighter}
                 label="View highlights"
-                onClick={onOpenHighlights}
+                onClick={() => {
+                  onOpenHighlights();
+                  setMobileToolbarOpen(false);
+                }}
                 badge={highlightCount}
               />
 
-              <Divider />
+              <MobileDivider />
 
               {/* Navigation */}
               <ToolbarButton
@@ -236,161 +332,61 @@ export function FloatingToolbar({
                 onClick={navigateToNextSection}
                 disabled={!canGoNext}
               />
-              <ToolbarButton icon={ChevronsUp} label="Scroll to top" onClick={scrollToTop} />
+              <ToolbarButton
+                icon={ChevronsUp}
+                label="Scroll to top"
+                onClick={() => {
+                  scrollToTop();
+                  setMobileToolbarOpen(false);
+                }}
+              />
 
-              <Divider />
+              <MobileDivider />
 
               {/* Actions */}
-              <ToolbarButton icon={Share2} label="Share" onClick={handleShare} />
+              <ToolbarButton
+                icon={Share2}
+                label="Share"
+                onClick={() => {
+                  handleShare();
+                  setMobileToolbarOpen(false);
+                }}
+              />
               <ToolbarButton
                 icon={MessageSquare}
                 label={isSignedIn ? "Go to comments" : "Sign in to comment"}
-                onClick={handleComment}
+                onClick={() => {
+                  handleComment();
+                  setMobileToolbarOpen(false);
+                }}
               />
 
               {/* Edit (only for authorized users) */}
-              {canEdit && <ToolbarButton icon={Pencil} label="Edit post" onClick={handleEdit} />}
+              {canEdit && (
+                <ToolbarButton
+                  icon={Pencil}
+                  label="Edit post"
+                  onClick={() => {
+                    handleEdit();
+                    setMobileToolbarOpen(false);
+                  }}
+                />
+              )}
 
               {/* Report */}
               <ToolbarButton
                 icon={Flag}
                 label="Report an issue"
-                onClick={() => setReportModalOpen(true)}
+                onClick={() => {
+                  setReportModalOpen(true);
+                  setMobileToolbarOpen(false);
+                }}
                 variant="danger"
               />
-            </ToolbarContainer>
-          </ToolbarWrapper>
-        )}
-      </AnimatePresence>
-
-      {/* Mobile Toolbar FAB */}
-      <AnimatePresence>
-        {isVisible && (
-          <MobileToolbarWrapper>
-            {/* Click-outside overlay */}
-            <AnimatePresence>
-              {mobileToolbarOpen && (
-                <MobileToolbarOverlay
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.15 }}
-                  onClick={() => setMobileToolbarOpen(false)}
-                />
-              )}
-            </AnimatePresence>
-
-            <MobileToolbarButton
-              initial={{ opacity: 0, x: 12 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 12 }}
-              transition={{ duration: 0.15 }}
-              onClick={() => setMobileToolbarOpen(!mobileToolbarOpen)}
-              aria-label={mobileToolbarOpen ? "Close toolbar" : "Open toolbar"}
-              $isOpen={mobileToolbarOpen}
-            >
-              {mobileToolbarOpen ? <X size={20} /> : <MoreVertical size={20} />}
-            </MobileToolbarButton>
-
-            <AnimatePresence>
-              {mobileToolbarOpen && (
-                <MobileToolbarExpanded
-                  initial={{ opacity: 0, x: 12 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 12 }}
-                  transition={{ duration: 0.15, ease: "easeOut" }}
-                >
-                  {/* Reactions */}
-                  <ReactionFan
-                    postId={postId}
-                    isExpanded={showReactionFan}
-                    onToggle={() => setShowReactionFan(!showReactionFan)}
-                    expandDirection="left"
-                  />
-
-                  {/* Highlights */}
-                  <ToolbarButton
-                    icon={Highlighter}
-                    label="View highlights"
-                    onClick={() => {
-                      onOpenHighlights();
-                      setMobileToolbarOpen(false);
-                    }}
-                    badge={highlightCount}
-                  />
-
-                  <MobileDivider />
-
-                  {/* Navigation */}
-                  <ToolbarButton
-                    icon={ChevronUp}
-                    label="Previous section"
-                    onClick={navigateToPrevSection}
-                    disabled={!canGoPrev}
-                  />
-                  <ToolbarButton
-                    icon={ChevronDown}
-                    label="Next section"
-                    onClick={navigateToNextSection}
-                    disabled={!canGoNext}
-                  />
-                  <ToolbarButton
-                    icon={ChevronsUp}
-                    label="Scroll to top"
-                    onClick={() => {
-                      scrollToTop();
-                      setMobileToolbarOpen(false);
-                    }}
-                  />
-
-                  <MobileDivider />
-
-                  {/* Actions */}
-                  <ToolbarButton
-                    icon={Share2}
-                    label="Share"
-                    onClick={() => {
-                      handleShare();
-                      setMobileToolbarOpen(false);
-                    }}
-                  />
-                  <ToolbarButton
-                    icon={MessageSquare}
-                    label={isSignedIn ? "Go to comments" : "Sign in to comment"}
-                    onClick={() => {
-                      handleComment();
-                      setMobileToolbarOpen(false);
-                    }}
-                  />
-
-                  {/* Edit (only for authorized users) */}
-                  {canEdit && (
-                    <ToolbarButton
-                      icon={Pencil}
-                      label="Edit post"
-                      onClick={() => {
-                        handleEdit();
-                        setMobileToolbarOpen(false);
-                      }}
-                    />
-                  )}
-
-                  {/* Report */}
-                  <ToolbarButton
-                    icon={Flag}
-                    label="Report an issue"
-                    onClick={() => {
-                      setReportModalOpen(true);
-                      setMobileToolbarOpen(false);
-                    }}
-                    variant="danger"
-                  />
-                </MobileToolbarExpanded>
-              )}
-            </AnimatePresence>
-          </MobileToolbarWrapper>
-        )}
-      </AnimatePresence>
+            </MobileToolbarExpanded>
+          )}
+        </AnimatePresence>
+      </MobileToolbarWrapper>
 
       <ReportModal
         isOpen={reportModalOpen}

@@ -1,9 +1,20 @@
+import {
+  faGithub,
+  faLinkedin,
+  faReddit,
+  faTiktok,
+  faTwitch,
+  faYoutube,
+} from "@fortawesome/free-brands-svg-icons";
+import { faEnvelope } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Head from "next/head";
+import styled from "styled-components";
 import { Notice, Subtitle } from "../../components/contact/typography";
-import { SocialLinks } from "../../components/generics/social-links";
 import { ContactBox } from "../../components/layout/contact";
 import { TopNavView } from "../../components/layout/topnav";
 import { SimpleNavbar } from "../../components/navbar/simple";
+import Socials from "../../constants/socials";
 
 export default function Contact() {
   return (
@@ -12,11 +23,36 @@ export default function Contact() {
 
       <ContactBox>
         <Subtitle color="white">Socials</Subtitle>
-        <SocialLinks
-          color="white"
-          include={{ linkedIn: true, email: true, tiktok: true }}
-          direction="row"
-        />
+        <SocialsList>
+          <SocialLink href={Socials.Twitch} target="_blank" rel="noreferrer">
+            <SocialIcon icon={faTwitch} />
+            <SocialUsername>@Nevvulo</SocialUsername>
+          </SocialLink>
+          <SocialLink href={Socials.YouTube} target="_blank" rel="noreferrer">
+            <SocialIcon icon={faYoutube} />
+            <SocialUsername>@Nevvulo</SocialUsername>
+          </SocialLink>
+          <SocialLink href={Socials.TikTok} target="_blank" rel="noreferrer">
+            <SocialIcon icon={faTiktok} />
+            <SocialUsername>@nevulo</SocialUsername>
+          </SocialLink>
+          <SocialLink href={Socials.Reddit} target="_blank" rel="noreferrer">
+            <SocialIcon icon={faReddit} />
+            <SocialUsername>r/Nevulo</SocialUsername>
+          </SocialLink>
+          <SocialLink href={Socials.GitHub} target="_blank" rel="noreferrer">
+            <SocialIcon icon={faGithub} />
+            <SocialUsername>@Nevvulo</SocialUsername>
+          </SocialLink>
+          <SocialLink href={`mailto:${Socials.Email}`}>
+            <SocialIcon icon={faEnvelope} />
+            <SocialUsername>{Socials.Email}</SocialUsername>
+          </SocialLink>
+          <SocialLink href={Socials.LinkedIn} target="_blank" rel="noreferrer">
+            <SocialIcon icon={faLinkedin} />
+            <SocialUsername>LinkedIn</SocialUsername>
+          </SocialLink>
+        </SocialsList>
         <Subtitle color="white">Security & Privacy</Subtitle>
         <Notice>
           Reporting a potential security vulnerability or privacy concern regarding one of my
@@ -54,3 +90,36 @@ export default function Contact() {
     </TopNavView>
   );
 }
+
+const SocialsList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  margin: 0.5em 0 1.5em;
+`;
+
+const SocialLink = styled.a`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: white;
+  text-decoration: none;
+  padding: 8px 0;
+  transition: opacity 0.2s;
+
+  &:hover {
+    opacity: 0.8;
+  }
+`;
+
+const SocialIcon = styled(FontAwesomeIcon)`
+  width: 24px !important;
+  height: 24px !important;
+  flex-shrink: 0;
+`;
+
+const SocialUsername = styled.span`
+  font-size: 16px;
+  font-family: var(--font-sans);
+`;

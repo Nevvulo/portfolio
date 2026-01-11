@@ -55,7 +55,7 @@ export function levelFromTotalXp(totalXp: number): {
 // ============================================
 
 function getTodayString(): string {
-  return new Date().toISOString().split("T")[0];
+  return new Date().toISOString().split("T")[0] ?? "";
 }
 
 function randomInt(min: number, max: number): number {

@@ -10,6 +10,7 @@ interface GenericTheme {
   textColor: string;
   textMuted: string;
   border: string;
+  borderColor?: string;
   linkColor: string;
   postBackground: string;
   postImageLoadingBackground: string;

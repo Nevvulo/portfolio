@@ -874,9 +874,9 @@ const SkeletonBentoGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   grid-auto-rows: 200px;
-  grid-auto-flow: dense;
   gap: 16px;
   padding: 0 24px;
+  contain: layout style;
 
   @media (max-width: 1200px) {
     grid-template-columns: repeat(4, 1fr);

@@ -71,7 +71,7 @@ export const getForPost = query({
         });
       }
       const entry = byHighlight.get(key)!;
-      entry.counts[reaction.type]++;
+      if (reaction.type in entry.counts) entry.counts[reaction.type]++;
       entry.total++;
     }
 

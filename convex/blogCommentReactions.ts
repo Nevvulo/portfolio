@@ -46,7 +46,9 @@ export const getForComment = query({
       thinking: 0,
       laugh: 0,
     };
-    for (const r of reactions) counts[r.type]++;
+    for (const r of reactions) {
+      if (r.type in counts) counts[r.type]++;
+    }
 
     return { counts, total: reactions.length };
   },
@@ -75,7 +77,7 @@ export const getForPost = query({
         });
       }
       const entry = byComment.get(key)!;
-      entry.counts[r.type]++;
+      if (r.type in entry.counts) entry.counts[r.type]++;
       entry.total++;
     }
 
