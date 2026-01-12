@@ -539,7 +539,7 @@ const EmptyState = styled.div`
 `;
 
 const CommentCard = styled.div<{ $isReply?: boolean }>`
-  padding: ${(props) => (props.$isReply ? "12px 16px" : "20px")};
+  padding: ${(props) => (props.$isReply ? "10px 12px" : "16px")};
   background: rgba(255, 255, 255, 0.03);
   border-radius: ${(props) => (props.$isReply ? "8px" : "12px")};
   border: 1px solid rgba(255, 255, 255, 0.06);
@@ -592,10 +592,12 @@ const AuthorMeta = styled.div`
 const AuthorName = styled.div`
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   font-weight: 600;
   color: ${(props) => props.theme.contrast};
   font-size: 14px;
+  flex-wrap: wrap;
+  row-gap: 4px;
 `;
 
 const AuthorTrigger = styled(UserPopoutTrigger)`
@@ -637,10 +639,13 @@ const TierBadge = styled.span<{ $tier: string }>`
   text-transform: uppercase;
   letter-spacing: 0.5px;
   color: ${(props) => (props.$tier === "tier2" ? LOUNGE_COLORS.tier2 : LOUNGE_COLORS.tier1)};
+  white-space: nowrap;
+  flex-shrink: 0;
 
   svg {
     width: 10px;
     height: 10px;
+    flex-shrink: 0;
   }
 `;
 

@@ -1118,11 +1118,21 @@ const mdxComponents = {
     if (isDiscordInvite(href)) {
       return <DiscordLink href={href} />;
     }
-    const isExternal = href.startsWith("http://") || href.startsWith("https://");
+    // Check for external links: http(s)://, protocol-relative (//), mailto:, tel:
+    const isExternal =
+      href.startsWith("http://") ||
+      href.startsWith("https://") ||
+      href.startsWith("//") ||
+      href.startsWith("mailto:") ||
+      href.startsWith("tel:");
+
+    // For external links, open in new tab with proper attributes
     if (isExternal) {
+      // For protocol-relative URLs, ensure they have https
+      const normalizedHref = href.startsWith("//") ? `https:${href}` : href;
       return (
         <ExternalLink
-          href={href}
+          href={normalizedHref}
           target="_blank"
           rel="noopener noreferrer"
           style={{ textDecorationThickness: "0.125em", fontSize: "0.975em" }}
@@ -1132,6 +1142,7 @@ const mdxComponents = {
         </ExternalLink>
       );
     }
+    // Internal links use IconLink (uses Next.js Link for SPA navigation)
     return (
       <IconLink
         style={{ textDecorationThickness: "0.125em", fontSize: "0.975em" }}
@@ -1762,6 +1773,12 @@ const PostContainer = styled(m.div)`
   max-width: 750px;
   width: 90%;
   padding: 0 1em;
+
+  @media (max-width: 480px) {
+    padding: 0 0.5em;
+    width: 95%;
+    margin: 0.25em;
+  }
 `;
 
 const ThanksSection = styled.div`

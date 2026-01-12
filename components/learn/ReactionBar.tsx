@@ -110,7 +110,8 @@ export function ReactionBar({ postId, variant = "hero" }: ReactionBarProps) {
 
   const counts = useQuery(api.blogReactions.getCounts, { postId });
   const myReactions = useQuery(api.blogReactions.getMyReactions, { postId });
-  useQuery(
+  const reactionBudget = useQuery(api.blogReactions.getMyReactionBudget, { postId });
+  const anonymousReactions = useQuery(
     api.blogReactions.getAnonymousReactions,
     !isSignedIn && clientIp ? { postId, ip: clientIp } : "skip",
   );
@@ -122,7 +123,20 @@ export function ReactionBar({ postId, variant = "hero" }: ReactionBarProps) {
 
   const hasAnyReactions = myReactions && myReactions.total > 0;
 
+  // Calculate remaining reactions allowed (for frontend cap enforcement)
+  // Anonymous: 5 max, Authenticated: 50 max
+  const getReactionsRemaining = useCallback(() => {
+    if (isSignedIn) {
+      return reactionBudget?.postRemaining ?? 50;
+    }
+    return anonymousReactions?.postRemaining ?? 5;
+  }, [isSignedIn, reactionBudget, anonymousReactions]);
+
+  // Check if user has reached their cap
+  const hasReachedCap = getReactionsRemaining() <= 0;
+
   // Detect count changes - reconcile optimistic offset when server confirms
+  // This fixes the "flip" issue by properly syncing with server state
   useEffect(() => {
     if (!counts) return;
 
@@ -130,17 +144,23 @@ export function ReactionBar({ postId, variant = "hero" }: ReactionBarProps) {
     for (const type of types) {
       const newCount = counts[type];
       const oldCount = lastCounts.current[type];
-      const increase = newCount - oldCount;
 
-      if (increase > 0) {
-        // Server confirmed reactions - reduce our optimistic offset
-        setOptimisticOffset((prev) => ({
-          ...prev,
-          [type]: Math.max(0, prev[type] - increase),
-        }));
+      // Only update if counts changed
+      if (newCount !== oldCount) {
+        // Clear optimistic offset for this type when server confirms
+        // This prevents the flip by fully trusting server state
+        setOptimisticOffset((prev) => {
+          // If there's no pending reactions to send, clear optimistic offset
+          if (pendingToSendRef.current[type] === 0) {
+            return { ...prev, [type]: 0 };
+          }
+          // Otherwise, reduce by the difference
+          const increase = Math.max(0, newCount - oldCount);
+          return { ...prev, [type]: Math.max(0, prev[type] - increase) };
+        });
+
+        lastCounts.current[type] = newCount;
       }
-
-      lastCounts.current[type] = newCount;
     }
   }, [counts]);
 
@@ -344,7 +364,21 @@ export function ReactionBar({ postId, variant = "hero" }: ReactionBarProps) {
 
   // Add a pending reaction optimistically
   const addPendingReaction = useCallback(
-    (type: ReactionType, color: string) => {
+    (type: ReactionType, color: string): boolean => {
+      // Check if we've already reached the cap (including pending reactions)
+      const pendingTotal =
+        pendingToSendRef.current.like +
+        pendingToSendRef.current.helpful +
+        pendingToSendRef.current.insightful;
+      const remaining = getReactionsRemaining() - pendingTotal;
+
+      if (remaining <= 0) {
+        // Already at cap, trigger visual feedback
+        triggerShakeAndGlow(type);
+        showLimitToast("post");
+        return false;
+      }
+
       // Optimistic UI updates
       haptic.light();
       spawnFloatingNumber(type, color);
@@ -357,8 +391,9 @@ export function ReactionBar({ postId, variant = "hero" }: ReactionBarProps) {
 
       // Add to optimistic offset (will be reduced when server confirms)
       setOptimisticOffset((prev) => ({ ...prev, [type]: prev[type] + 1 }));
+      return true;
     },
-    [spawnFloatingNumber],
+    [spawnFloatingNumber, getReactionsRemaining, triggerShakeAndGlow, showLimitToast],
   );
 
   const startHold = useCallback(
@@ -375,8 +410,12 @@ export function ReactionBar({ postId, variant = "hero" }: ReactionBarProps) {
       setBounceTick(0); // Reset bounce tick
       holdStartTimeRef.current = Date.now();
 
-      // Immediate first reaction (optimistic)
-      addPendingReaction(type, color);
+      // Immediate first reaction (optimistic) - stop if cap reached
+      if (!addPendingReaction(type, color)) {
+        isHoldingRef.current = false;
+        setHoldingType(null);
+        return;
+      }
 
       // Recursive timeout with accelerating interval
       const scheduleNext = () => {
@@ -387,7 +426,12 @@ export function ReactionBar({ postId, variant = "hero" }: ReactionBarProps) {
 
         holdTimeoutRef.current = setTimeout(() => {
           if (isHoldingRef.current) {
-            addPendingReaction(type, color);
+            // Stop holding if cap reached
+            if (!addPendingReaction(type, color)) {
+              isHoldingRef.current = false;
+              setHoldingType(null);
+              return;
+            }
             scheduleNext();
           }
         }, interval);
@@ -494,6 +538,7 @@ export function ReactionBar({ postId, variant = "hero" }: ReactionBarProps) {
               ref={(el) => {
                 if (el) buttonRefs.current.set(type, el);
               }}
+              $capReached={hasReachedCap}
               onMouseDown={(e) => {
                 e.preventDefault();
                 startHold(type, color);
@@ -505,7 +550,7 @@ export function ReactionBar({ postId, variant = "hero" }: ReactionBarProps) {
                 startHold(type, color);
               }}
               onTouchEnd={stopHold}
-              title={`${label} - Hold to add more`}
+              title={hasReachedCap ? `${label} - Limit reached` : `${label} - Hold to add more`}
               whileTap={{ scale: 0.92 }}
               transition={{ type: "spring", stiffness: 400, damping: 20 }}
             >
@@ -515,6 +560,7 @@ export function ReactionBar({ postId, variant = "hero" }: ReactionBarProps) {
                 $isShaking={isShaking}
                 $isGlowing={isGlowing}
                 $glowColor={isGlowing ? "#ef4444" : color}
+                $capReached={hasReachedCap && isActive}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 transition={{ type: "spring", stiffness: 400, damping: 20 }}
@@ -544,15 +590,16 @@ export function ReactionBar({ postId, variant = "hero" }: ReactionBarProps) {
           );
         })}
 
-        {/* Clear button with dropdown */}
-        {isSignedIn && hasAnyReactions && (
-          <ClearButtonWrapper ref={dropdownRef}>
+        {/* Clear button with dropdown - always reserve space when signed in to prevent CLS */}
+        {isSignedIn && (
+          <ClearButtonWrapper ref={dropdownRef} $visible={!!hasAnyReactions}>
             <ClearButton
               onClick={() => setShowClearDropdown(!showClearDropdown)}
               whileTap={{ scale: 0.92 }}
               whileHover={{ scale: 1.05 }}
               transition={{ type: "spring", stiffness: 400, damping: 20 }}
               title="Clear reactions"
+              disabled={!hasAnyReactions}
             >
               <ClearIconCircle $isOpen={showClearDropdown}>
                 <X size={18} />
@@ -560,7 +607,7 @@ export function ReactionBar({ postId, variant = "hero" }: ReactionBarProps) {
             </ClearButton>
 
             <AnimatePresence>
-              {showClearDropdown && (
+              {showClearDropdown && hasAnyReactions && (
                 <Dropdown
                   initial={{ opacity: 0, y: -8, scale: 0.95 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -653,7 +700,7 @@ const errorGlow = keyframes`
   50% { box-shadow: 0 4px 16px rgba(0,0,0,0.1), 0 0 24px rgba(239, 68, 68, 0.5), inset 0 1px 0 rgba(255,255,255,0.15); }
 `;
 
-const GlassButton = styled(m.button)`
+const GlassButton = styled(m.button)<{ $capReached?: boolean }>`
   position: relative;
   display: flex;
   align-items: center;
@@ -661,10 +708,12 @@ const GlassButton = styled(m.button)`
   padding: 0;
   background: transparent;
   border: none;
-  cursor: pointer;
+  cursor: ${(props) => (props.$capReached ? "default" : "pointer")};
   user-select: none;
   -webkit-user-select: none;
   touch-action: manipulation;
+  opacity: ${(props) => (props.$capReached ? 0.7 : 1)};
+  transition: opacity 0.2s ease;
 
   &:disabled {
     cursor: not-allowed;
@@ -678,6 +727,7 @@ const IconCircle = styled(m.div)<{
   $isShaking: boolean;
   $isGlowing: boolean;
   $glowColor: string;
+  $capReached?: boolean;
 }>`
   width: 48px;
   height: 48px;
@@ -692,9 +742,14 @@ const IconCircle = styled(m.div)<{
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid ${(props) =>
-    props.$active ? `${props.$color}40` : `rgba(255, 255, 255, 0.12)`};
+    props.$capReached
+      ? `rgba(76, 175, 80, 0.5)` // Green border when cap reached to indicate "complete"
+      : props.$active
+        ? `${props.$color}40`
+        : `rgba(255, 255, 255, 0.12)`};
   box-shadow:
     0 4px 16px rgba(0, 0, 0, 0.1),
+    ${(props) => (props.$capReached ? `0 0 12px rgba(76, 175, 80, 0.3),` : "")}
     inset 0 1px 0 rgba(255, 255, 255, 0.15);
 
   transition: all 0.2s ease;
@@ -776,9 +831,12 @@ const FloatingPlusOne = styled(m.span)<{ $color: string }>`
 `;
 
 // Clear button and dropdown styles
-const ClearButtonWrapper = styled.div`
+const ClearButtonWrapper = styled.div<{ $visible?: boolean }>`
   position: relative;
   margin-left: 8px;
+  opacity: ${(props) => (props.$visible ? 1 : 0)};
+  pointer-events: ${(props) => (props.$visible ? "auto" : "none")};
+  transition: opacity 0.2s ease;
 `;
 
 const ClearButton = styled(m.button)`
