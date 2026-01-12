@@ -23,7 +23,8 @@
   "dependencies": {
     "@ai-sdk/openai": "^3.0.7",
     "@anthropic-ai/claude-code": "^2.0.65",
-    "@clerk/nextjs": "^6.36.2",
+    "@clerk/clerk-js": "^5.119.1",
+    "@clerk/nextjs": "^6.36.7",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",

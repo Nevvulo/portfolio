@@ -1,6 +1,5 @@
 import { Html, PerspectiveCamera, Sparkles, Text } from "@react-three/drei";
 import { Canvas, useFrame } from "@react-three/fiber";
-import Image from "next/image";
 import { Suspense, useRef } from "react";
 import styled from "styled-components";
 import * as THREE from "three";
@@ -39,11 +38,11 @@ function HtmlProjectCard({
   isMobile?: boolean;
   isLandscape?: boolean;
 }) {
-  // Responsive card width
+  // Responsive card width - increased for better mobile readability
   const cardWidth = isMobile
     ? isLandscape
-      ? "340px" // Mobile landscape
-      : "260px" // Mobile portrait
+      ? "380px" // Mobile landscape
+      : "300px" // Mobile portrait (increased from 260px)
     : "550px"; // Desktop
 
   // Responsive distance factor (how 3D depth affects size)
@@ -95,27 +94,42 @@ function HtmlProjectCard({
             {project.logoUrl && project.logoWidth && project.logoHeight ? (
               project.logoIncludesName ? (
                 <CardLogo>
-                  <Image
+                  {/* Using native img for Safari compatibility inside drei Html */}
+                  <img
                     src={project.logoUrl}
                     width={Math.min(project.logoWidth, 180)}
                     height={Math.min(project.logoHeight, 180)}
                     alt={`${project.name} Logo`}
+                    loading="eager"
                     style={{
                       objectFit: "contain",
                       filter: "drop-shadow(0px 4px 8px rgba(0,0,0,0.6))",
+                      maxWidth: "100%",
+                      height: "auto",
+                    }}
+                    onError={(e) => {
+                      // Hide broken image and show fallback
+                      (e.target as HTMLImageElement).style.display = "none";
                     }}
                   />
                 </CardLogo>
               ) : (
                 <CardLogoWithTitle>
-                  <Image
+                  {/* Using native img for Safari compatibility inside drei Html */}
+                  <img
                     src={project.logoUrl}
                     width={Math.min(project.logoWidth, 48)}
                     height={Math.min(project.logoHeight, 48)}
                     alt={`${project.name} Logo`}
+                    loading="eager"
                     style={{
                       objectFit: "contain",
                       filter: "drop-shadow(0px 4px 8px rgba(0,0,0,0.6))",
+                      maxWidth: "100%",
+                      height: "auto",
+                    }}
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = "none";
                     }}
                   />
                   <CardTitle>{project.name}</CardTitle>
@@ -156,11 +170,11 @@ const CardContainer = styled.div<{ $background: string; $isActive: boolean }>`
   border: 2px solid ${(props) =>
     props.$isActive ? "rgba(99, 102, 241, 0.4)" : "rgba(255, 255, 255, 0.1)"};
 
-  /* Mobile responsive */
+  /* Mobile responsive - increased height for better readability */
   @media (max-width: 767px) {
-    padding: 0.75rem 1rem;
-    height: 95px;
-    border-radius: 12px;
+    padding: 1rem 1.25rem;
+    height: 110px;
+    border-radius: 14px;
   }
 
   &:hover {
@@ -289,8 +303,8 @@ const CardSubtitle = styled.p`
   flex: 1;
 
   @media (max-width: 767px) {
-    font-size: 0.65rem;
-    line-height: 1.2;
+    font-size: 0.75rem;
+    line-height: 1.25;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;

@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { Webhook } from "svix";
 import { PLANS } from "../../../lib/clerk";
+import { logger, trackMetric } from "../../../lib/observability";
 import { getSupporterKey, redis } from "../../../lib/redis";
 import { syncDiscordRoles } from "../discord/roles";
 
@@ -35,13 +36,15 @@ type WebhookEvent = {
 };
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  const startTime = Date.now();
+
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
   const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET;
   if (!WEBHOOK_SECRET) {
-    console.error("Missing CLERK_WEBHOOK_SECRET");
+    logger.error("Clerk webhook secret not configured", { endpoint: "/api/webhooks/clerk" });
     return res.status(500).json({ error: "Server misconfigured" });
   }
 
@@ -51,6 +54,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const svix_signature = req.headers["svix-signature"] as string;
 
   if (!svix_id || !svix_timestamp || !svix_signature) {
+    logger.warn("Clerk webhook missing svix headers", { svix_id: !!svix_id });
     return res.status(400).json({ error: "Missing svix headers" });
   }
 
@@ -66,27 +70,45 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       "svix-signature": svix_signature,
     }) as WebhookEvent;
   } catch (err) {
-    console.error("Webhook verification failed:", err);
+    logger.error("Clerk webhook signature verification failed", {
+      error: err,
+      svix_id,
+    });
+    trackMetric("webhook.clerk.verification_failed", 1);
     return res.status(400).json({ error: "Invalid signature" });
   }
+
+  const userId = event.data.user_id;
+  const planId = event.data.plan?.id || event.data.plan_id;
+
+  logger.info("Clerk webhook received", {
+    eventType: event.type,
+    eventId: event.data.id,
+    userId,
+    planId,
+  });
 
   // Handle subscriptionItem events
   switch (event.type) {
     case "subscriptionItem.active": {
-      const userId = event.data.user_id;
-      const planId = event.data.plan?.id || event.data.plan_id;
-
       if (!userId) {
-        console.error("No user_id in subscriptionItem event");
+        logger.error("Clerk webhook missing user_id", { eventType: event.type, eventId: event.data.id });
         break;
       }
 
-      console.log(`Subscription active for user ${userId}, plan: ${planId}`);
+      logger.info("Processing subscription activation", { userId, planId });
 
       // Sync Discord roles
       const result = await syncDiscordRoles(userId, planId ?? null);
       if (!result.success) {
-        console.error(`Failed to sync Discord role: ${result.error}`);
+        logger.error("Failed to sync Discord roles on subscription active", {
+          userId,
+          planId,
+          error: result.error,
+        });
+        trackMetric("webhook.clerk.discord_sync_failed", 1, { event: "active" });
+      } else {
+        trackMetric("webhook.clerk.discord_sync_success", 1, { event: "active" });
       }
 
       // Update Redis cache with subscription status
@@ -98,46 +120,65 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             ? "super_legend_2"
             : null;
 
-      await redis.hset(key, {
-        clerkPlan: clerkPlan ?? "",
-        clerkPlanStatus: "active",
-        lastSyncedAt: new Date().toISOString(),
-      });
-      console.log(`Updated Redis cache for user ${userId} with plan ${clerkPlan}`);
+      try {
+        await redis.hset(key, {
+          clerkPlan: clerkPlan ?? "",
+          clerkPlanStatus: "active",
+          lastSyncedAt: new Date().toISOString(),
+        });
+        logger.info("Updated Redis cache for subscription", { userId, clerkPlan });
+      } catch (redisError) {
+        logger.error("Failed to update Redis cache", { userId, error: redisError });
+        trackMetric("webhook.clerk.redis_update_failed", 1);
+      }
       break;
     }
 
     case "subscriptionItem.canceled":
     case "subscriptionItem.ended": {
-      const userId = event.data.user_id;
-
       if (!userId) {
-        console.error("No user_id in subscriptionItem event");
+        logger.error("Clerk webhook missing user_id", { eventType: event.type, eventId: event.data.id });
         break;
       }
 
+      logger.info("Processing subscription cancellation", { userId, eventType: event.type });
+
       // Remove all supporter roles
-      console.log(`Subscription ended/canceled for user ${userId}`);
       const result = await syncDiscordRoles(userId, null);
       if (!result.success) {
-        console.error(`Failed to remove Discord roles: ${result.error}`);
+        logger.error("Failed to remove Discord roles on subscription end", {
+          userId,
+          error: result.error,
+        });
+        trackMetric("webhook.clerk.discord_sync_failed", 1, { event: "canceled" });
+      } else {
+        trackMetric("webhook.clerk.discord_sync_success", 1, { event: "canceled" });
       }
 
       // Update Redis cache with canceled status
       const key = getSupporterKey(userId);
-      const status = event.type === "subscriptionItem.canceled" ? "canceled" : "canceled";
-      await redis.hset(key, {
-        clerkPlan: "",
-        clerkPlanStatus: status,
-        lastSyncedAt: new Date().toISOString(),
-      });
-      console.log(`Updated Redis cache for user ${userId} - subscription ${event.type}`);
+      const status = event.type === "subscriptionItem.canceled" ? "canceled" : "ended";
+      try {
+        await redis.hset(key, {
+          clerkPlan: "",
+          clerkPlanStatus: status,
+          lastSyncedAt: new Date().toISOString(),
+        });
+        logger.info("Updated Redis cache for cancellation", { userId, status });
+      } catch (redisError) {
+        logger.error("Failed to update Redis cache", { userId, error: redisError });
+        trackMetric("webhook.clerk.redis_update_failed", 1);
+      }
       break;
     }
 
     default:
-      console.log(`Unhandled webhook event: ${event.type}`);
+      logger.debug("Unhandled Clerk webhook event", { eventType: event.type });
   }
+
+  // Track webhook processing time
+  trackMetric("webhook.clerk.duration", Date.now() - startTime, { eventType: event.type });
+  trackMetric("webhook.clerk.processed", 1, { eventType: event.type });
 
   return res.status(200).json({ received: true });
 }
