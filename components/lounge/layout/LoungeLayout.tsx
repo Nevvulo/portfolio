@@ -1,3 +1,4 @@
+import { useUser } from "@clerk/nextjs";
 import { useQuery } from "convex/react";
 import { AnimatePresence, m } from "framer-motion";
 import { type LucideIcon, Menu, X } from "lucide-react";
@@ -27,13 +28,14 @@ export function LoungeLayout({
   channelType,
   customIcon,
 }: LoungeLayoutProps) {
+  const { isSignedIn } = useUser();
   const { isLoading, tier, isCreator, displayName, avatarUrl } = useTierAccess();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMembersPanelOpen, setIsMembersPanelOpen] = useState(true);
   const [usernameSkipped, setUsernameSkipped] = useState(false);
 
-  // Get current user from Convex to check for username
-  const currentUser = useQuery(api.users.getMe);
+  // Get current user from Convex to check for username (only when signed in)
+  const currentUser = useQuery(api.users.getMe, isSignedIn ? {} : "skip");
 
   // Handle username setup completion
   const handleUsernameComplete = useCallback(() => {

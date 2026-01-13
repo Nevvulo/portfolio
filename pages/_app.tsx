@@ -14,6 +14,7 @@ import NProgress from "nprogress";
 import React, { useEffect, useState } from "react";
 import { createGlobalStyle, ThemeProvider } from "styled-components";
 import { JungleMiniPlayer } from "../components/lounge/JungleMiniPlayer";
+import { AuthenticatedUserProvider } from "../components/providers/AuthenticatedUserProvider";
 import { DarkTheme, LightTheme } from "../constants/theme";
 import { useTheme } from "../hooks/useTheme";
 import { ConvexClientProvider } from "../lib/convex";
@@ -145,20 +146,22 @@ export default function MyApp({ Component, router, pageProps }: AppProps) {
       <QueryClientProvider client={queryClient}>
         <ClerkProvider appearance={clerkAppearance}>
           <ConvexClientProvider>
-            <LiveKitProvider>
-              <ThemeProvider theme={theme}>
-                <LazyMotion key="app" strict features={loadMotionFeatures}>
-                  <GlobalStyle />
-                  <MainHead />
-                  <div id="scroll-container">
-                    <Component {...pageProps} />
-                  </div>
-                  <JungleMiniPlayer />
-                  <Analytics />
-                  <SpeedInsights />
-                </LazyMotion>
-              </ThemeProvider>
-            </LiveKitProvider>
+            <AuthenticatedUserProvider>
+              <LiveKitProvider>
+                <ThemeProvider theme={theme}>
+                  <LazyMotion key="app" strict features={loadMotionFeatures}>
+                    <GlobalStyle />
+                    <MainHead />
+                    <div id="scroll-container">
+                      <Component {...pageProps} />
+                    </div>
+                    <JungleMiniPlayer />
+                    <Analytics />
+                    <SpeedInsights />
+                  </LazyMotion>
+                </ThemeProvider>
+              </LiveKitProvider>
+            </AuthenticatedUserProvider>
           </ConvexClientProvider>
         </ClerkProvider>
       </QueryClientProvider>

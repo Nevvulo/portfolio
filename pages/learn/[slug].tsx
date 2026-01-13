@@ -275,8 +275,8 @@ function PostBody({
   } | null>(null);
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
 
-  // Get current Convex user for highlight ownership checks
-  const convexUser = useQuery(api.users.getMe);
+  // Get current Convex user for highlight ownership checks (only when signed in)
+  const convexUser = useQuery(api.users.getMe, isSignedIn ? {} : "skip");
 
   // Highlight queries
   const highlights = useQuery(api.contentHighlights.getForPost, { postId: post._id });
