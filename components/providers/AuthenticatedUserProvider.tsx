@@ -2,6 +2,7 @@
 
 import { useUser } from "@clerk/nextjs";
 import { useAction, useQuery } from "convex/react";
+import { useRouter } from "next/router";
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { api } from "../../convex/_generated/api";
 import { UsernameSetup } from "../lounge/UsernameSetup";
@@ -28,25 +29,32 @@ interface AuthenticatedUserProviderProps {
 }
 
 export function AuthenticatedUserProvider({ children }: AuthenticatedUserProviderProps) {
+  const router = useRouter();
   const { user, isSignedIn, isLoaded } = useUser();
   const [mounted, setMounted] = useState(false);
-  const [usernameSkipped, setUsernameSkipped] = useState(false);
+  const [usernameSkippedForSession, setUsernameSkippedForSession] = useState(false);
   const [userCreationAttempted, setUserCreationAttempted] = useState(false);
 
-  // Get or create user action
   const getOrCreateUser = useAction(api.users.getOrCreateUser);
 
-  // Get current user from Convex
   const convexUser = useQuery(
     api.users.getMe,
     isSignedIn && userCreationAttempted ? {} : "skip"
   );
 
+  const isOnAccountPage = router.pathname === "/account";
+
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // Create user in Convex when signed in
+  // Reset skip state when navigating away from /account
+  useEffect(() => {
+    if (!isOnAccountPage) {
+      setUsernameSkippedForSession(false);
+    }
+  }, [isOnAccountPage]);
+
   useEffect(() => {
     if (!mounted || !isLoaded || !isSignedIn || !user || userCreationAttempted) return;
 
@@ -62,23 +70,23 @@ export function AuthenticatedUserProvider({ children }: AuthenticatedUserProvide
       })
       .catch((err) => {
         console.error("[AuthenticatedUserProvider] Failed to create user:", err);
-        setUserCreationAttempted(true); // Still mark as attempted to avoid infinite loops
+        setUserCreationAttempted(true);
       });
   }, [mounted, isLoaded, isSignedIn, user, userCreationAttempted, getOrCreateUser]);
 
-  // Check if username setup is needed
+  // Only show username modal on /account page
   const needsUsernameSetup =
+    isOnAccountPage &&
     isSignedIn &&
     convexUser &&
     !convexUser.username &&
-    !usernameSkipped;
+    !usernameSkippedForSession;
 
   const handleUsernameComplete = useCallback(() => {
-    // Username set, continue normally
   }, []);
 
   const handleUsernameSkip = useCallback(() => {
-    setUsernameSkipped(true);
+    setUsernameSkippedForSession(true);
   }, []);
 
   const contextValue: AuthenticatedUserContextType = {
@@ -87,7 +95,6 @@ export function AuthenticatedUserProvider({ children }: AuthenticatedUserProvide
     convexUserId: convexUser?._id ?? null,
   };
 
-  // Show username setup modal if needed
   if (needsUsernameSetup) {
     return (
       <AuthenticatedUserContext.Provider value={contextValue}>
