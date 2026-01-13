@@ -9,8 +9,13 @@ import type { ReactNode } from "react";
 // The URL comes from environment variable set during `npx convex dev` or deploy
 const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL;
 
-// Create the Convex client (only if URL exists)
-export const convex = convexUrl ? new ConvexReactClient(convexUrl) : null;
+// Skip Convex in headless/test environments (e.g., Lighthouse) to prevent WebSocket errors
+const isHeadless =
+  typeof navigator !== "undefined" &&
+  (navigator.webdriver === true || /HeadlessChrome/.test(navigator.userAgent));
+
+// Create the Convex client (only if URL exists and not in headless mode)
+export const convex = convexUrl && !isHeadless ? new ConvexReactClient(convexUrl) : null;
 
 /**
  * Convex Provider with Clerk authentication
@@ -22,12 +27,9 @@ export function ConvexClientProvider({ children }: { children: ReactNode }) {
     return <>{children}</>;
   }
 
-  // Use the provider - reference it here to avoid unused import warning
-  const Provider = ConvexProviderWithClerk;
-
   return (
-    <Provider client={convex} useAuth={useAuth}>
+    <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
       {children}
-    </Provider>
+    </ConvexProviderWithClerk>
   );
 }

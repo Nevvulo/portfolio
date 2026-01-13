@@ -102,15 +102,16 @@ export function TableOfContents({
     return () => observer.disconnect();
   }, [heroRef]);
 
-  // Track when thanks section is reached - once reached, stay hidden
+  // Track when thanks section is in view - hide TOC when thanks is visible
   useEffect(() => {
     if (!thanksSectionRef.current) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
         const entry = entries[0];
-        if (entry?.isIntersecting) {
-          setThanksReached(true);
+        if (entry) {
+          // Update based on current intersection state
+          setThanksReached(entry.isIntersecting);
         }
       },
       { threshold: 0.1 },

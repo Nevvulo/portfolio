@@ -6,6 +6,8 @@ import {
   faMedium,
   faTwitter,
 } from "@fortawesome/free-brands-svg-icons";
+import { faExternalLinkAlt } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import type { GetStaticPropsContext } from "next";
 import Head from "next/head";
 import { type MDXRemoteSerializeResult, MDXRemote as PostContent } from "next-mdx-remote";
@@ -331,24 +333,73 @@ const components = {
   },
   // biome-ignore lint/suspicious/noExplicitAny: MDX component props
   a: (props: any) => {
-    const href = props.href || "";
+    let href = props.href || "";
+    let children = props.children;
+
+    // Handle malformed markdown-style hrefs: [text](url) passed as href
+    // This can happen when markdown isn't parsed correctly
+    const markdownLinkMatch = href.match(/^\[([^\]]*)\]\(([^)]+)\)$/);
+    if (markdownLinkMatch) {
+      href = markdownLinkMatch[2] || "";
+      if (children === props.href || !children) {
+        children = markdownLinkMatch[1] || href;
+      }
+    }
+
+    // Also handle URL-encoded markdown: %5Btext%5D(url)
+    if (href.includes("%5B") || href.includes("%5D")) {
+      try {
+        const decoded = decodeURIComponent(href);
+        const decodedMatch = decoded.match(/^\[([^\]]*)\]\(([^)]+)\)$/);
+        if (decodedMatch) {
+          href = decodedMatch[2] || "";
+          if (children === props.href || !children) {
+            children = decodedMatch[1] || href;
+          }
+        }
+      } catch {
+        // Ignore decoding errors
+      }
+    }
 
     // Check if it's a Discord invite link
     if (isDiscordInvite(href)) {
       return <DiscordLink href={href} />;
     }
 
-    // External links start with http:// or https://
-    const isExternal = href.startsWith("http://") || href.startsWith("https://");
+    // Check for external links: http(s)://, protocol-relative (//), mailto:, tel:
+    const isExternal =
+      href.startsWith("http://") ||
+      href.startsWith("https://") ||
+      href.startsWith("//") ||
+      href.startsWith("mailto:") ||
+      href.startsWith("tel:");
 
+    // For external links, open in new tab with proper attributes
+    if (isExternal) {
+      const normalizedHref = href.startsWith("//") ? `https:${href}` : href;
+      return (
+        <ExternalLink
+          href={normalizedHref}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ textDecorationThickness: "0.125em", fontSize: "0.975em" }}
+        >
+          {children}
+          <ExternalIcon icon={faExternalLinkAlt} />
+        </ExternalLink>
+      );
+    }
+
+    // Internal links use IconLink (uses Next.js Link for SPA navigation)
     return (
       <IconLink
         style={{ textDecorationThickness: "0.125em", fontSize: "0.975em" }}
-        isExternal={isExternal}
+        isExternal={false}
         {...props}
         href={href}
       >
-        {props.children}
+        {children}
       </IconLink>
     );
   },
@@ -675,6 +726,27 @@ const DotpointList = styled.ol`
   @media (max-width: 480px) {
     font-size: 0.9em;
   }
+`;
+
+const ExternalLink = styled.a`
+  color: #9074f2;
+  font-family: var(--font-mono);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+
+  &:hover {
+    opacity: 0.8;
+  }
+`;
+
+const ExternalIcon = styled(FontAwesomeIcon)`
+  width: 10px;
+  height: 10px;
+  margin-left: 4px;
+  color: #bbbbbb;
+  vertical-align: baseline;
 `;
 
 const BoldText = styled.span`

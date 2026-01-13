@@ -19,7 +19,7 @@ export const getServerSideProps = () => ({ props: {} });
 export default function ProfilePage() {
   const router = useRouter();
   const { username } = router.query;
-  useUser(); // Hook to ensure clerk context is available
+  const { isSignedIn } = useUser();
   const [showFeedSettings, setShowFeedSettings] = useState(false);
   const [showContributions, setShowContributions] = useState(false);
 
@@ -29,8 +29,8 @@ export default function ProfilePage() {
     typeof username === "string" ? { username } : "skip",
   );
 
-  // Get current user
-  const currentUser = useQuery(api.users.getMe);
+  // Get current user (only when signed in)
+  const currentUser = useQuery(api.users.getMe, isSignedIn ? {} : "skip");
 
   // Check if can post on this profile's feed
   const canPostResult = useQuery(

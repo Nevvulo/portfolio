@@ -1,12 +1,6 @@
-# Modern browsers that support ES2020+ features
-# This reduces JavaScript polyfills and bundle size
-
-> 0.5%
-last 2 versions
-not dead
-not ie 11
-not op_mini all
-Chrome >= 80
-Firefox >= 74
-Safari >= 13.1
-Edge >= 80
+# Target only modern browsers to eliminate polyfills
+# This removes Array.prototype.at, Object.hasOwn, etc polyfills
+last 2 Chrome versions
+last 2 Firefox versions
+last 2 Safari versions
+last 2 Edge versions

@@ -35,9 +35,9 @@ export default class MyDocument extends Document {
         <Head>
           <link rel="preconnect" href="https://fonts.googleapis.com" />
           <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-          {/* Load all fonts directly - Safari doesn't handle async font loading well */}
+          {/* Load fonts with display=swap - shows fallback immediately, swaps when ready */}
           <link
-            href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500;600&family=Roboto+Condensed:wght@700&family=Work+Sans:wght@800&family=Sixtyfour&display=swap"
+            href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500;600&family=Protest+Revolution&family=Roboto+Condensed:wght@700&family=Work+Sans:wght@800&family=Sixtyfour&display=swap"
             rel="stylesheet"
           />
           <link rel="icon" href="/nevulo-logo.svg" type="image/svg+xml" />

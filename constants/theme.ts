@@ -1,6 +1,6 @@
 export const DarkTheme = {
   background: "#100d1b",
-  backgroundSecondary: "rgba(16, 13, 27, 0.8)",
+  backgroundSecondary: "rgba(17, 17, 17, 0.8)",
   foreground: "#fff",
   contrast: "#fff",
   pure: "#fff",
@@ -22,7 +22,7 @@ export const DarkTheme = {
 
 export const LightTheme = {
   background: "#fff",
-  backgroundSecondary: "rgba(245, 245, 245, 0.9)",
+  backgroundSecondary: "rgba(255, 255, 255, 0.95)",
   foreground: "#212121",
   contrast: "#000",
   pure: "#fff",

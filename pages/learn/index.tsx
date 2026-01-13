@@ -293,12 +293,6 @@ export default function Learn() {
 
       <Head key="learn">
         <title>Learn - Nevulo</title>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Protest+Revolution&display=swap"
-          rel="stylesheet"
-        />
         <meta
           name="description"
           content="Learn software engineering, web development, and programming through articles, tutorials, and videos."

@@ -332,12 +332,6 @@ export default function Home({ discordWidget, isLive: serverIsLive }: HomeProps)
 
           <Head>
             <title>Nevulo - Software Engineer | Portfolio</title>
-            <link rel="preconnect" href="https://fonts.googleapis.com" />
-            <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-            <link
-              href="https://fonts.googleapis.com/css2?family=Protest+Revolution&display=swap"
-              rel="stylesheet"
-            />
             <meta
               name="description"
               content="Software engineer based in Melbourne, Australia. Building exceptional digital experiences with modern web technologies."
@@ -353,7 +347,7 @@ export default function Home({ discordWidget, isLive: serverIsLive }: HomeProps)
             <meta property="og:site_name" content="Blake's Portfolio" />
             <meta
               property="og:image"
-              content="https://nev.so/api/og?title=Blake%20-%20Software%20Engineer&subtitle=Building%20exceptional%20digital%20experiences%20in%20Melbourne"
+              content="https://nev.so/api/og"
             />
             <meta property="og:image:width" content="1200" />
             <meta property="og:image:height" content="630" />
@@ -404,9 +398,10 @@ const TopNavBar = styled.nav`
   min-height: 48px;
   padding: 10px 1rem;
   padding-top: calc(10px + env(safe-area-inset-top, 0px));
-  background: rgba(17, 17, 17, 0.8);
+  background: ${(props) => props.theme.backgroundSecondary};
   backdrop-filter: blur(10px);
-  border-bottom: 1px solid rgba(79, 77, 193, 0.1);
+  border-bottom: 1px solid ${(props) => props.theme.border};
+  box-shadow: 0 1px 3px ${(props) => props.theme.postImageBoxShadow};
   z-index: 999;
 `;
 
@@ -474,13 +469,13 @@ const MobileMenu = styled.div`
   position: absolute;
   top: calc(100% + 8px);
   left: 0;
-  background: rgba(17, 17, 17, 0.98);
+  background: ${(props) => props.theme.background};
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(79, 77, 193, 0.2);
+  border: 1px solid ${(props) => props.theme.border};
   border-radius: 8px;
   padding: 0.5rem 0;
   min-width: 150px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
   z-index: 10000;
 `;
 

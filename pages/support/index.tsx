@@ -138,6 +138,33 @@ export default function Support() {
                     background: "linear-gradient(135deg, #4f4dc1, #6b69d6)",
                     border: "none",
                   },
+                  // Badge-style billing cycle pills (not a switch)
+                  billingCycleSwitch: {
+                    background: "transparent",
+                    border: "none",
+                    padding: "0",
+                    gap: "8px",
+                    display: "flex",
+                  },
+                  billingCycleSwitchButton: {
+                    borderRadius: "20px",
+                    padding: "6px 14px",
+                    fontWeight: "600",
+                    fontSize: "12px",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.5px",
+                    transition: "all 0.2s ease",
+                  },
+                  "billingCycleSwitchButton[data-checked='true']": {
+                    background: "linear-gradient(135deg, #4f4dc1, #6b69d6)",
+                    color: "#fff",
+                    boxShadow: "0 2px 8px rgba(79, 77, 193, 0.4)",
+                  },
+                  "billingCycleSwitchButton[data-checked='false']": {
+                    background: "rgba(255, 255, 255, 0.1)",
+                    color: "#888",
+                    border: "1px solid rgba(255, 255, 255, 0.2)",
+                  },
                 },
               }}
             />

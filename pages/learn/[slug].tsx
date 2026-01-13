@@ -275,8 +275,8 @@ function PostBody({
   } | null>(null);
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
 
-  // Get current Convex user for highlight ownership checks
-  const convexUser = useQuery(api.users.getMe);
+  // Get current Convex user for highlight ownership checks (only when signed in)
+  const convexUser = useQuery(api.users.getMe, isSignedIn ? {} : "skip");
 
   // Highlight queries
   const highlights = useQuery(api.contentHighlights.getForPost, { postId: post._id });
@@ -1114,10 +1114,41 @@ const mdxComponents = {
     return <PostImg loading="lazy" {...props} src={src} />;
   },
   a: (props: any) => {
-    const href = props.href || "";
+    let href = props.href || "";
+    let children = props.children;
+
+    // Handle malformed markdown-style hrefs: [text](url) passed as href
+    // This can happen when markdown isn't parsed correctly
+    const markdownLinkMatch = href.match(/^\[([^\]]*)\]\(([^)]+)\)$/);
+    if (markdownLinkMatch) {
+      // Extract the actual URL from the markdown syntax
+      href = markdownLinkMatch[2] || "";
+      // Use the link text as children if current children is just the malformed href
+      if (children === props.href || !children) {
+        children = markdownLinkMatch[1] || href;
+      }
+    }
+
+    // Also handle URL-encoded markdown: %5Btext%5D(url) or %5Btext%5D%28url%29
+    if (href.includes("%5B") || href.includes("%5D")) {
+      try {
+        const decoded = decodeURIComponent(href);
+        const decodedMatch = decoded.match(/^\[([^\]]*)\]\(([^)]+)\)$/);
+        if (decodedMatch) {
+          href = decodedMatch[2] || "";
+          if (children === props.href || !children) {
+            children = decodedMatch[1] || href;
+          }
+        }
+      } catch {
+        // Ignore decoding errors
+      }
+    }
+
     if (isDiscordInvite(href)) {
       return <DiscordLink href={href} />;
     }
+
     // Check for external links: http(s)://, protocol-relative (//), mailto:, tel:
     const isExternal =
       href.startsWith("http://") ||
@@ -1137,11 +1168,12 @@ const mdxComponents = {
           rel="noopener noreferrer"
           style={{ textDecorationThickness: "0.125em", fontSize: "0.975em" }}
         >
-          {props.children}
+          {children}
           <ExternalIcon icon={faExternalLinkAlt} />
         </ExternalLink>
       );
     }
+
     // Internal links use IconLink (uses Next.js Link for SPA navigation)
     return (
       <IconLink
@@ -1150,7 +1182,7 @@ const mdxComponents = {
         {...props}
         href={href}
       >
-        {props.children}
+        {children}
       </IconLink>
     );
   },

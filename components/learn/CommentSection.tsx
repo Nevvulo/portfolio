@@ -73,8 +73,8 @@ export function CommentSection({ postId }: CommentSectionProps) {
   const [replyContent, setReplyContent] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Get current Convex user for ID comparison and staff check
-  const currentUser = useQuery(api.users.getMe);
+  // Get current Convex user for ID comparison and staff check (only when signed in)
+  const currentUser = useQuery(api.users.getMe, isSignedIn ? {} : "skip");
   const comments = useQuery(api.blogComments.list, { postId }) as Comment[] | undefined;
   const commentCount = useQuery(api.blogComments.getCount, { postId });
   const createComment = useMutation(api.blogComments.create);
@@ -84,7 +84,10 @@ export function CommentSection({ postId }: CommentSectionProps) {
 
   // Comment reactions
   const commentReactions = useQuery(api.blogCommentReactions.getForPost, { postId });
-  const myCommentReactions = useQuery(api.blogCommentReactions.getMyReactionsForPost, { postId });
+  const myCommentReactions = useQuery(
+    api.blogCommentReactions.getMyReactionsForPost,
+    isSignedIn ? { postId } : "skip",
+  );
   const toggleReaction = useMutation(api.blogCommentReactions.toggle);
 
   // Check if current user is staff/creator (role >= 1 or isCreator flag)
