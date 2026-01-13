@@ -1,6 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
-import { requireUser } from "./auth";
+import { getCurrentUser, requireUser } from "./auth";
 
 /**
  * Get notifications for current user
@@ -25,10 +25,12 @@ export const list = query({
 
 /**
  * Get unread notification count
+ * Returns 0 if not authenticated (graceful degradation)
  */
 export const getUnreadCount = query({
   handler: async (ctx) => {
-    const user = await requireUser(ctx);
+    const user = await getCurrentUser(ctx);
+    if (!user) return 0;
 
     const unreadNotifications = await ctx.db
       .query("notifications")

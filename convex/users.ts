@@ -66,20 +66,25 @@ export const getOrCreateUser = action({
     const clerkId = identity.subject;
 
     // Fetch verified user data from Clerk API
-    const clerkRes = await fetch(`https://api.clerk.com/v1/users/${clerkId}`, {
-      headers: {
-        Authorization: `Bearer ${process.env.CLERK_SECRET_KEY}`,
-      },
-    });
+    let clerkUser: any = null;
+    try {
+      const clerkRes = await fetch(`https://api.clerk.com/v1/users/${clerkId}`, {
+        headers: {
+          Authorization: `Bearer ${process.env.CLERK_SECRET_KEY}`,
+        },
+      });
 
-    if (!clerkRes.ok) {
-      throw new Error(`Failed to fetch from Clerk: ${clerkRes.status}`);
+      if (clerkRes.ok) {
+        clerkUser = await clerkRes.json();
+      } else {
+        console.error(`[getOrCreateUser] Clerk API returned ${clerkRes.status}, continuing with basic user creation`);
+      }
+    } catch (error) {
+      console.error("[getOrCreateUser] Failed to fetch from Clerk API:", error);
     }
 
-    const clerkUser = await clerkRes.json();
-
-    // Get verified Discord ID from Clerk's external accounts
-    const discordAccount = clerkUser.external_accounts?.find(
+    // Get verified Discord ID from Clerk's external accounts (if clerkUser is available)
+    const discordAccount = clerkUser?.external_accounts?.find(
       (a: { provider: string }) => a.provider === "oauth_discord",
     );
     const discordId = discordAccount?.provider_user_id || discordAccount?.external_id || undefined;
@@ -88,49 +93,51 @@ export const getOrCreateUser = action({
     const discordUsername = discordAccount?.username;
 
     // Get Twitch account
-    const twitchAccount = clerkUser.external_accounts?.find(
+    const twitchAccount = clerkUser?.external_accounts?.find(
       (a: { provider: string }) => a.provider === "oauth_twitch",
     );
     const twitchUsername = twitchAccount?.username;
 
-    // Fetch Clerk subscription for tier
+    // Fetch Clerk subscription for tier (only if Clerk API is available)
     let clerkPlan: string | undefined;
     let clerkPlanStatus: string | undefined;
-    try {
-      const billingRes = await fetch(
-        `https://api.clerk.com/v1/users/${clerkId}/billing/subscription`,
-        {
-          headers: {
-            Authorization: `Bearer ${process.env.CLERK_SECRET_KEY}`,
+    if (process.env.CLERK_SECRET_KEY) {
+      try {
+        const billingRes = await fetch(
+          `https://api.clerk.com/v1/users/${clerkId}/billing/subscription`,
+          {
+            headers: {
+              Authorization: `Bearer ${process.env.CLERK_SECRET_KEY}`,
+            },
           },
-        },
-      );
+        );
 
-      if (billingRes.ok) {
-        const billingData = await billingRes.json();
-        const item = billingData.subscription_items?.[0];
-        const planSlug = item?.plan?.slug;
-        const planName = item?.plan?.name?.toLowerCase().replace(/\s+/g, "_");
-        const status = billingData.status;
+        if (billingRes.ok) {
+          const billingData = await billingRes.json();
+          const item = billingData.subscription_items?.[0];
+          const planSlug = item?.plan?.slug;
+          const planName = item?.plan?.name?.toLowerCase().replace(/\s+/g, "_");
+          const status = billingData.status;
 
-        if (planSlug === "super_legend" || planName === "super_legend") {
-          clerkPlan = "super_legend";
-        } else if (
-          planSlug === "super_legend_2" ||
-          planName === "super_legend_ii" ||
-          planName === "super_legend_2"
-        ) {
-          clerkPlan = "super_legend_2";
+          if (planSlug === "super_legend" || planName === "super_legend") {
+            clerkPlan = "super_legend";
+          } else if (
+            planSlug === "super_legend_2" ||
+            planName === "super_legend_ii" ||
+            planName === "super_legend_2"
+          ) {
+            clerkPlan = "super_legend_2";
+          }
+
+          if (status === "active" || status === "past_due" || status === "canceled") {
+            clerkPlanStatus = status;
+          } else if (clerkPlan) {
+            clerkPlanStatus = "active";
+          }
         }
-
-        if (status === "active" || status === "past_due" || status === "canceled") {
-          clerkPlanStatus = status;
-        } else if (clerkPlan) {
-          clerkPlanStatus = "active";
-        }
+      } catch (error) {
+        console.error("Error fetching Clerk subscription:", error);
       }
-    } catch (error) {
-      console.error("Error fetching Clerk subscription:", error);
     }
 
     // Fetch Discord supporter status if we have a Discord ID
@@ -207,8 +214,8 @@ export const getOrCreateUser = action({
     // Call internal mutation to create/update user
     const userId: Id<"users"> = await ctx.runMutation(internal.users.createOrUpdateUserInternal, {
       clerkId,
-      displayName: args.displayName || clerkUser.first_name || clerkUser.username || "Anonymous",
-      avatarUrl: args.avatarUrl || clerkUser.image_url,
+      displayName: args.displayName || clerkUser?.first_name || clerkUser?.username || "Anonymous",
+      avatarUrl: args.avatarUrl || clerkUser?.image_url,
       discordId,
       discordUsername,
       twitchUsername,
