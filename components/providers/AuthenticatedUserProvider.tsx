@@ -12,12 +12,14 @@ interface AuthenticatedUserContextType {
   isReady: boolean;
   hasUsername: boolean;
   convexUserId: string | null;
+  error: Error | null;
 }
 
 const AuthenticatedUserContext = createContext<AuthenticatedUserContextType>({
   isReady: false,
   hasUsername: false,
   convexUserId: null,
+  error: null,
 });
 
 export function useAuthenticatedUser() {
@@ -34,6 +36,7 @@ export function AuthenticatedUserProvider({ children }: AuthenticatedUserProvide
   const [mounted, setMounted] = useState(false);
   const [usernameSkippedForSession, setUsernameSkippedForSession] = useState(false);
   const [userCreationAttempted, setUserCreationAttempted] = useState(false);
+  const [userCreationError, setUserCreationError] = useState<Error | null>(null);
 
   const getOrCreateUser = useAction(api.users.getOrCreateUser);
 
@@ -67,9 +70,11 @@ export function AuthenticatedUserProvider({ children }: AuthenticatedUserProvide
     })
       .then(() => {
         setUserCreationAttempted(true);
+        setUserCreationError(null);
       })
       .catch((err) => {
         console.error("[AuthenticatedUserProvider] Failed to create user:", err);
+        setUserCreationError(err instanceof Error ? err : new Error(String(err)));
         setUserCreationAttempted(true);
       });
   }, [mounted, isLoaded, isSignedIn, user, userCreationAttempted, getOrCreateUser]);
@@ -90,9 +95,10 @@ export function AuthenticatedUserProvider({ children }: AuthenticatedUserProvide
   }, []);
 
   const contextValue: AuthenticatedUserContextType = {
-    isReady: !isSignedIn || (userCreationAttempted && convexUser !== undefined),
+    isReady: !isSignedIn || (userCreationAttempted && (convexUser !== undefined || userCreationError !== null)),
     hasUsername: !!convexUser?.username,
     convexUserId: convexUser?._id ?? null,
+    error: userCreationError,
   };
 
   if (needsUsernameSetup) {

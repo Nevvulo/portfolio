@@ -13,6 +13,7 @@ import Router from "next/router";
 import NProgress from "nprogress";
 import React, { useEffect, useState } from "react";
 import { createGlobalStyle, ThemeProvider } from "styled-components";
+import { ErrorBoundary } from "../components/ErrorBoundary";
 import { JungleMiniPlayer } from "../components/lounge/JungleMiniPlayer";
 import { AuthenticatedUserProvider } from "../components/providers/AuthenticatedUserProvider";
 import { DarkTheme, LightTheme } from "../constants/theme";
@@ -129,28 +130,30 @@ export default function MyApp({ Component, router, pageProps }: AppProps) {
 
   return (
     <React.StrictMode>
-      <QueryClientProvider client={queryClient}>
-        <ClerkProvider appearance={clerkAppearance}>
-          <ConvexClientProvider>
-            <AuthenticatedUserProvider>
-              <LiveKitProvider>
-                <ThemeProvider theme={theme}>
-                  <LazyMotion key="app" strict features={loadMotionFeatures}>
-                    <GlobalStyle />
-                    <MainHead />
-                    <div id="scroll-container">
-                      <Component {...pageProps} />
-                    </div>
-                    <JungleMiniPlayer />
-                    <Analytics />
-                    <SpeedInsights />
-                  </LazyMotion>
-                </ThemeProvider>
-              </LiveKitProvider>
-            </AuthenticatedUserProvider>
-          </ConvexClientProvider>
-        </ClerkProvider>
-      </QueryClientProvider>
+      <ErrorBoundary>
+        <QueryClientProvider client={queryClient}>
+          <ClerkProvider appearance={clerkAppearance}>
+            <ConvexClientProvider>
+              <AuthenticatedUserProvider>
+                <LiveKitProvider>
+                  <ThemeProvider theme={theme}>
+                    <LazyMotion key="app" strict features={loadMotionFeatures}>
+                      <GlobalStyle />
+                      <MainHead />
+                      <div id="scroll-container">
+                        <Component {...pageProps} />
+                      </div>
+                      <JungleMiniPlayer />
+                      <Analytics />
+                      <SpeedInsights />
+                    </LazyMotion>
+                  </ThemeProvider>
+                </LiveKitProvider>
+              </AuthenticatedUserProvider>
+            </ConvexClientProvider>
+          </ClerkProvider>
+        </QueryClientProvider>
+      </ErrorBoundary>
     </React.StrictMode>
   );
 }

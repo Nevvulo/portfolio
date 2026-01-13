@@ -4,14 +4,16 @@ import type { DiscordRole, SupporterStatus } from "../types/supporter";
 const redisUrl = process.env.UPSTASH_REDIS_REST_URL;
 const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN;
 
-if (!redisUrl || !redisToken) {
-  console.warn("[redis] Missing UPSTASH_REDIS_REST_URL or UPSTASH_REDIS_REST_TOKEN");
+const isRedisConfigured = !!(redisUrl && redisToken);
+
+if (!isRedisConfigured) {
+  console.warn("[redis] Missing UPSTASH_REDIS_REST_URL or UPSTASH_REDIS_REST_TOKEN - Redis disabled");
 }
 
-export const redis = new Redis({
-  url: redisUrl || "",
-  token: redisToken || "",
-});
+// Only create Redis client if configured, otherwise use a dummy that returns null
+export const redis = isRedisConfigured
+  ? new Redis({ url: redisUrl, token: redisToken })
+  : (null as unknown as Redis);
 
 const SUPPORTER_KEY_PREFIX = "user:status:";
 const DISCORD_TO_CLERK_PREFIX = "discord:clerk:";
@@ -22,6 +24,11 @@ export function getSupporterKey(clerkUserId: string): string {
 }
 
 export async function getSupporterStatus(clerkUserId: string): Promise<SupporterStatus | null> {
+  if (!redis) {
+    console.warn("[redis] Redis not configured, returning null for supporter status");
+    return null;
+  }
+
   const key = getSupporterKey(clerkUserId);
   const data = await redis.hgetall(key);
 
@@ -85,6 +92,11 @@ export async function setSupporterStatus(
   clerkUserId: string,
   status: SupporterStatus,
 ): Promise<void> {
+  if (!redis) {
+    console.warn("[redis] Redis not configured, skipping setSupporterStatus");
+    return;
+  }
+
   const key = getSupporterKey(clerkUserId);
 
   const hashData: Record<string, string> = {
@@ -112,6 +124,8 @@ export async function updateSupporterField(
   field: keyof SupporterStatus,
   value: string | number | boolean | null,
 ): Promise<void> {
+  if (!redis) return;
+
   const key = getSupporterKey(clerkUserId);
   const stringValue = value === null || value === undefined ? "" : value.toString();
 
@@ -120,6 +134,8 @@ export async function updateSupporterField(
 }
 
 export async function deleteSupporterStatus(clerkUserId: string): Promise<void> {
+  if (!redis) return;
+
   const key = getSupporterKey(clerkUserId);
   await redis.del(key);
 }
@@ -128,6 +144,8 @@ export async function deleteSupporterStatus(clerkUserId: string): Promise<void> 
  * Get Clerk user ID from Discord user ID using reverse index
  */
 export async function getClerkIdByDiscordId(discordUserId: string): Promise<string | null> {
+  if (!redis) return null;
+
   const key = `${DISCORD_TO_CLERK_PREFIX}${discordUserId}`;
   const clerkId = await redis.get<string>(key);
   return clerkId || null;
@@ -140,6 +158,8 @@ export async function setDiscordToClerkMapping(
   discordUserId: string,
   clerkUserId: string,
 ): Promise<void> {
+  if (!redis) return;
+
   const key = `${DISCORD_TO_CLERK_PREFIX}${discordUserId}`;
   await redis.set(key, clerkUserId, { ex: SUPPORTER_TTL_SECONDS });
 }

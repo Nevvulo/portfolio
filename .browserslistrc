@@ -1,6 +1,0 @@
-# Target only modern browsers to eliminate polyfills
-# This removes Array.prototype.at, Object.hasOwn, etc polyfills
-last 2 Chrome versions
-last 2 Firefox versions
-last 2 Safari versions
-last 2 Edge versions
