@@ -42,14 +42,12 @@ const CompactGridContainer = styled.div`
   flex-wrap: wrap;
   justify-content: flex-end;
   gap: 10px;
-  padding: 0 24px;
+  padding: 0 48px;
   max-width: 1400px;
   margin: 0 auto;
+  box-sizing: border-box;
 
-  @media (max-width: 900px) {
-    gap: 8px;
-    padding: 0 16px;
-  }
+
 `;
 
 // TRUE BENTO GRID - 5 columns for proper bento layout
@@ -58,15 +56,18 @@ const GridContainer = styled.div`
   grid-template-columns: repeat(5, 1fr);
   grid-auto-rows: 200px;
   gap: 16px;
-  padding: 0 24px;
-  max-width: 1400px;
+  padding: 0 48px;
+  max-width: 1200px;
   margin: 0 auto;
+  box-sizing: border-box;
   contain: layout style;
+  overflow: hidden;
 
   /* Ensure grid items stretch to fill their cells */
   & > * {
     min-height: 100%;
     height: 100%;
+    min-width: 0;
   }
 
   @media (max-width: 1200px) {
@@ -94,8 +95,11 @@ const EmptyState = styled.div`
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 60px 20px;
+  padding: 60px 48px;
   text-align: center;
+  max-width: 1400px;
+  margin: 0 auto;
+  box-sizing: border-box;
 `;
 
 const EmptyTitle = styled.h2`
@@ -118,10 +122,12 @@ const SkeletonBentoGrid = styled.div`
   grid-template-columns: repeat(5, 1fr);
   grid-auto-rows: 200px;
   gap: 16px;
-  padding: 0 24px;
-  max-width: 1400px;
+  padding: 0 48px;
+  max-width: 1200px;
   margin: 0 auto;
+  box-sizing: border-box;
   contain: layout style;
+  overflow: hidden;
 
   @media (max-width: 1200px) {
     grid-template-columns: repeat(4, 1fr);

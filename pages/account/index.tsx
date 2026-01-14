@@ -1,10 +1,12 @@
 import { useClerk, useUser } from "@clerk/nextjs";
 import { useSubscription } from "@clerk/nextjs/experimental";
+import { useMutation, useQuery } from "convex/react";
 import Head from "next/head";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import styled from "styled-components";
+import { api } from "../../convex/_generated/api";
 import { SupporterBadges } from "../../components/badges/supporter-badges";
 import { SimpleNavbar } from "../../components/navbar/simple";
 import { useSupporterStatus } from "../../hooks/useSupporterStatus";
@@ -23,6 +25,11 @@ export default function AccountPage() {
   const router = useRouter();
   const [syncStatus, setSyncStatus] = useState<"idle" | "syncing" | "success" | "error">("idle");
   const [syncError, setSyncError] = useState<string | null>(null);
+
+  // Convex data for credits settings
+  const convexUser = useQuery(api.users.getMe);
+  const updateShowOnCredits = useMutation(api.users.updateShowOnCredits);
+  const [creditsToggleSaving, setCreditsToggleSaving] = useState(false);
 
   useEffect(() => {
     if (isLoaded && !isSignedIn) {
@@ -119,6 +126,18 @@ export default function AccountPage() {
       month: "long",
       day: "numeric",
     });
+  };
+
+  const handleCreditsToggle = async () => {
+    if (!convexUser) return;
+    setCreditsToggleSaving(true);
+    try {
+      await updateShowOnCredits({ showOnCredits: !convexUser.showOnCredits });
+    } catch (error) {
+      console.error("Failed to update credits preference:", error);
+    } finally {
+      setCreditsToggleSaving(false);
+    }
   };
 
   return (
@@ -246,6 +265,31 @@ export default function AccountPage() {
             </BadgesActions>
             {badgeSyncError && <SyncError>{badgeSyncError}</SyncError>}
           </BadgesCard>
+        </Section>
+
+        <Section>
+          <SectionTitle>Privacy Settings</SectionTitle>
+          <SectionDescription>
+            Control how your profile appears to others on the site.
+          </SectionDescription>
+          <SettingsCard>
+            <SettingRow>
+              <SettingInfo>
+                <SettingLabel>Show on credits page</SettingLabel>
+                <SettingDescription>
+                  Display your profile on the <CreditsLink href="/credits">/credits</CreditsLink>{" "}
+                  page to show your support
+                </SettingDescription>
+              </SettingInfo>
+              <ToggleSwitch
+                $enabled={convexUser?.showOnCredits ?? false}
+                $disabled={!convexUser || creditsToggleSaving}
+                onClick={handleCreditsToggle}
+              >
+                <ToggleKnob $enabled={convexUser?.showOnCredits ?? false} />
+              </ToggleSwitch>
+            </SettingRow>
+          </SettingsCard>
         </Section>
 
         <Section>
@@ -724,4 +768,79 @@ const LastSynced = styled.span`
   font-size: 12px;
   color: ${(props) => props.theme.contrast};
   opacity: 0.6;
+`;
+
+// Privacy Settings styled components
+const SettingsCard = styled.div`
+  background: ${(props) => props.theme.postBackground};
+  border: 1.5px solid rgba(79, 77, 193, 0.2);
+  border-radius: 12px;
+  padding: 1.5rem;
+`;
+
+const SettingRow = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+`;
+
+const SettingInfo = styled.div`
+  flex: 1;
+`;
+
+const SettingLabel = styled.div`
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 15px;
+  color: ${(props) => props.theme.contrast};
+  margin-bottom: 4px;
+`;
+
+const SettingDescription = styled.div`
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: ${(props) => props.theme.contrast};
+  opacity: 0.7;
+`;
+
+const CreditsLink = styled(Link)`
+  color: #4f4dc1;
+  text-decoration: none;
+  font-weight: 600;
+
+  &:hover {
+    text-decoration: underline;
+  }
+`;
+
+const ToggleSwitch = styled.button<{ $enabled: boolean; $disabled: boolean }>`
+  width: 48px;
+  height: 28px;
+  border-radius: 14px;
+  background: ${(props) =>
+    props.$enabled ? "linear-gradient(135deg, #4f4dc1, #6b69d6)" : "rgba(255, 255, 255, 0.1)"};
+  border: 1.5px solid
+    ${(props) => (props.$enabled ? "rgba(79, 77, 193, 0.6)" : "rgba(255, 255, 255, 0.2)")};
+  padding: 2px;
+  cursor: ${(props) => (props.$disabled ? "not-allowed" : "pointer")};
+  opacity: ${(props) => (props.$disabled ? 0.5 : 1)};
+  transition: all 0.2s ease;
+  position: relative;
+  flex-shrink: 0;
+
+  &:hover:not(:disabled) {
+    border-color: ${(props) =>
+      props.$enabled ? "rgba(79, 77, 193, 0.8)" : "rgba(255, 255, 255, 0.4)"};
+  }
+`;
+
+const ToggleKnob = styled.div<{ $enabled: boolean }>`
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s ease;
+  transform: translateX(${(props) => (props.$enabled ? "20px" : "0")});
 `;

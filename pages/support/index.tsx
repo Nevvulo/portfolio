@@ -1,5 +1,11 @@
-import { PricingTable } from "@clerk/nextjs";
+import dynamic from "next/dynamic";
 import Head from "next/head";
+
+// Dynamically import PricingTable to reduce initial bundle size
+const PricingTable = dynamic(
+  () => import("@clerk/nextjs").then((mod) => mod.PricingTable),
+  { ssr: false }
+);
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import styled, { keyframes } from "styled-components";

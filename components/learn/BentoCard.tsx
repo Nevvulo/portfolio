@@ -389,6 +389,8 @@ const FeaturedWrapper = styled(Link)`
   display: block;
   grid-column: span 3;
   grid-row: span 2;
+  min-width: 0;
+  overflow: hidden;
 
   @media (max-width: 1200px) {
     grid-column: span 2;
@@ -404,6 +406,8 @@ const LargeWrapper = styled(Link)`
   display: block;
   grid-column: span 2;
   grid-row: span 2;
+  min-width: 0;
+  overflow: hidden;
 
   @media (max-width: 600px) {
     grid-column: span 1;
@@ -415,6 +419,8 @@ const BannerWrapper = styled(Link)`
   display: block;
   grid-column: span 3;
   grid-row: span 1;
+  min-width: 0;
+  overflow: hidden;
 
   @media (max-width: 900px) {
     grid-column: span 2;
@@ -430,6 +436,8 @@ const MediumWrapper = styled(Link)`
   display: block;
   grid-column: span 2;
   grid-row: span 1;
+  min-width: 0;
+  overflow: hidden;
 
   @media (max-width: 600px) {
     grid-column: span 1;
@@ -441,6 +449,8 @@ const SmallWrapper = styled(Link)`
   display: block;
   grid-column: span 1;
   grid-row: span 1;
+  min-width: 0;
+  overflow: hidden;
 `;
 
 // ========== NEWS (COMPACT - SIZE RESPONSIVE) ==========

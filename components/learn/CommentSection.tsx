@@ -17,7 +17,7 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useMutation, useQuery } from "convex/react";
 import { formatDistanceToNow } from "date-fns";
-import { useState } from "react";
+import React, { useState } from "react";
 import styled from "styled-components";
 import { LOUNGE_COLORS } from "../../constants/lounge";
 import { api } from "../../convex/_generated/api";
@@ -66,21 +66,55 @@ interface Comment {
   replies: (Comment & { author: CommentAuthor | null })[];
 }
 
+interface CommentsResponse {
+  comments: Comment[];
+  hasMore: boolean;
+  nextCursor: number | null;
+}
+
 export function CommentSection({ postId }: CommentSectionProps) {
   const { isSignedIn } = useUser();
   const [newComment, setNewComment] = useState("");
   const [replyingTo, setReplyingTo] = useState<Id<"blogComments"> | null>(null);
   const [replyContent, setReplyContent] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [cursor, setCursor] = useState<number | undefined>(undefined);
+  const [allComments, setAllComments] = useState<Comment[]>([]);
+  const [hasMore, setHasMore] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   // Get current Convex user for ID comparison and staff check (only when signed in)
   const currentUser = useQuery(api.users.getMe, isSignedIn ? {} : "skip");
-  const comments = useQuery(api.blogComments.list, { postId }) as Comment[] | undefined;
+  const commentsResponse = useQuery(api.blogComments.list, { postId, cursor }) as
+    | CommentsResponse
+    | undefined;
   const commentCount = useQuery(api.blogComments.getCount, { postId });
   const createComment = useMutation(api.blogComments.create);
   const deleteComment = useMutation(api.blogComments.deleteComment);
   const reportComment = useMutation(api.blogComments.report);
   const grantCommentXp = useMutation(api.experience.grantCommentXp);
+
+  // Update comments when response changes
+  React.useEffect(() => {
+    if (commentsResponse) {
+      if (cursor === undefined) {
+        // Initial load
+        setAllComments(commentsResponse.comments);
+      } else {
+        // Load more - append to existing
+        setAllComments((prev) => [...prev, ...commentsResponse.comments]);
+      }
+      setHasMore(commentsResponse.hasMore);
+      setIsLoadingMore(false);
+    }
+  }, [commentsResponse, cursor]);
+
+  const loadMoreComments = () => {
+    if (commentsResponse?.nextCursor && !isLoadingMore) {
+      setIsLoadingMore(true);
+      setCursor(commentsResponse.nextCursor);
+    }
+  };
 
   // Comment reactions
   const commentReactions = useQuery(api.blogCommentReactions.getForPost, { postId });
@@ -185,8 +219,13 @@ export function CommentSection({ postId }: CommentSectionProps) {
 
       {/* Comments list */}
       <CommentList>
-        {comments?.length === 0 && <EmptyState>Be the first to comment!</EmptyState>}
-        {comments?.map((comment) => (
+        {allComments.length === 0 && !commentsResponse && (
+          <LoadingState>Loading comments...</LoadingState>
+        )}
+        {allComments.length === 0 && commentsResponse && (
+          <EmptyState>Be the first to comment!</EmptyState>
+        )}
+        {allComments.map((comment) => (
           <CommentItem
             key={comment._id}
             comment={comment}
@@ -211,6 +250,15 @@ export function CommentSection({ postId }: CommentSectionProps) {
             allMyReactions={myCommentReactions}
           />
         ))}
+        {hasMore && (
+          <LoadMoreButton onClick={loadMoreComments} disabled={isLoadingMore}>
+            {isLoadingMore ? (
+              <FontAwesomeIcon icon={faSpinner} spin />
+            ) : (
+              "Load More Comments"
+            )}
+          </LoadMoreButton>
+        )}
       </CommentList>
     </Container>
   );
@@ -539,6 +587,38 @@ const EmptyState = styled.div`
   padding: 40px;
   color: ${(props) => props.theme.textColor};
   font-size: 15px;
+`;
+
+const LoadingState = styled.div`
+  text-align: center;
+  padding: 40px;
+  color: ${(props) => props.theme.textColor};
+  font-size: 15px;
+  opacity: 0.7;
+`;
+
+const LoadMoreButton = styled.button`
+  width: 100%;
+  padding: 12px 20px;
+  margin-top: 16px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.05);
+  color: ${(props) => props.theme.textColor};
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.25);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
 `;
 
 const CommentCard = styled.div<{ $isReply?: boolean }>`

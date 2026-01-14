@@ -186,8 +186,8 @@ export default function Learn() {
     clearAll,
   } = useBlogSearch();
 
-  const isLoading =
-    newsPosts === undefined || (articlePosts.length === 0 && paginatedResult === undefined);
+  // Show skeleton until we have both news posts and article posts populated
+  const isLoading = newsPosts === undefined || articlePosts.length === 0;
   const hasMore = paginatedResult?.hasMore ?? false;
 
   return (
@@ -341,7 +341,11 @@ const NavbarWrapper = styled.div`
   & > header > div:first-child {
     max-width: 1400px;
     justify-content: flex-start;
-    padding: 0 24px;
+    padding: 0 48px;
+
+    @media (max-width: 900px) {
+      padding: 0 16px;
+    }
 
     & > div:first-child {
       display: none; /* Hide left spacer */
@@ -358,12 +362,16 @@ const NavbarWrapper = styled.div`
 `;
 
 const PageHeader = styled.div`
-  padding: 0 24px 12px;
+  padding: 0 48px 0;
   max-width: 1400px;
   margin: 0 auto;
   margin-top: -30px;
   display: flex;
   justify-content: flex-start;
+
+  @media (max-width: 900px) {
+    padding: 0 16px 0;
+  }
 `;
 
 const HeaderTitle = styled.h1`
@@ -391,12 +399,16 @@ const TopRow = styled.div`
   display: flex;
   align-items: flex-start;
   gap: 20px;
-  padding: 0 24px;
+  padding: 0 48px;
   max-width: 1400px;
-  margin: 0 auto 24px;
+  margin: 0 auto 16px;
+
+  @media (max-width: 1100px) {
+    flex-direction: column;
+    gap: 16px;
+  }
 
   @media (max-width: 900px) {
-    flex-direction: column;
     padding: 0 16px;
   }
 `;
@@ -404,6 +416,7 @@ const TopRow = styled.div`
 const NewsColumn = styled.div`
   flex: 1;
   min-width: 0;
+  margin-left: auto;
 
   @media (max-width: 900px) {
     width: 100%;
@@ -411,7 +424,8 @@ const NewsColumn = styled.div`
 `;
 
 const Section = styled.div`
-  margin-bottom: 24px;
+  max-width: 1400px;
+  margin: 0 auto 24px;
 
   &:last-child {
     margin-bottom: 0;
@@ -419,7 +433,7 @@ const Section = styled.div`
 `;
 
 const SectionHeader = styled.div<{ $align?: "left" | "right" }>`
-  padding: 0 24px 8px;
+  padding: 0 48px 8px;
   max-width: 1400px;
   margin: 0 auto;
   text-align: ${(p) => p.$align || "left"};
@@ -451,7 +465,7 @@ const ArticlesHeaderRow = styled.div`
 `;
 
 const FilterContainer = styled.div`
-  padding: 0 24px 16px;
+  padding: 0 48px 16px;
   max-width: 1400px;
   margin: 0 auto;
 
@@ -461,7 +475,7 @@ const FilterContainer = styled.div`
 `;
 
 const SearchResultsContainer = styled.div`
-  padding: 0 24px;
+  padding: 0 48px;
   max-width: 1400px;
   margin: 0 auto;
 
@@ -565,7 +579,7 @@ function LoadingSkeleton() {
         </UserCardSkeleton>
         <NewsColumn>
           <SectionHeader $align="right">
-            <SkeletonSectionTitle style={{ marginLeft: "auto" }} />
+            <SectionTitle>news</SectionTitle>
           </SectionHeader>
           <SkeletonNewsBubbles>
             <SkeletonBubble />
@@ -577,7 +591,7 @@ function LoadingSkeleton() {
       {/* Articles section skeleton */}
       <SkeletonContentSection>
         <SectionHeader>
-          <SkeletonSectionTitle />
+          <SectionTitle>content</SectionTitle>
         </SectionHeader>
 
         {/* Label filter skeleton */}
@@ -607,7 +621,6 @@ const UserCardSkeleton = styled.div`
   border: 1px solid rgba(144, 116, 242, 0.3);
   border-radius: 12px;
   padding: 12px 16px;
-  margin-top: 50px;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -653,19 +666,18 @@ const SkeletonNewsBubbles = styled.div`
   flex-direction: column;
   align-items: flex-end;
   gap: 6px;
+  max-width: 50%;
+  min-width: 45vw;
+  margin-left: auto;
   width: 100%;
   padding-right: 48px;
   position: relative;
-
-  @media (max-width: 900px) {
-    padding-right: 48px;
-  }
 `;
 
 const SkeletonBubble = styled(Skeleton)`
   max-width: 380px;
   width: 100%;
-  height: 120px;
+  height: 110px;
   border-radius: 16px 16px 4px 16px;
 
   @media (max-width: 900px) {
@@ -685,8 +697,8 @@ const SkeletonNewsAvatar = styled(Skeleton)`
 
 // Skeleton content section with proper spacing to match loaded state
 const SkeletonContentSection = styled.div`
-  margin-bottom: 24px;
-  margin-top: 8px;
+  max-width: 1400px;
+  margin: 0 auto 24px;
 
   &:last-child {
     margin-bottom: 0;
@@ -699,10 +711,12 @@ const SkeletonBentoGrid = styled.div`
   grid-template-columns: repeat(5, 1fr);
   grid-auto-rows: 200px;
   gap: 16px;
-  padding: 0 24px;
-  max-width: 1400px;
+  padding: 0 48px;
+  max-width: 1200px;
   margin: 0 auto;
+  box-sizing: border-box;
   contain: layout style;
+  overflow: hidden;
 
   @media (max-width: 1200px) {
     grid-template-columns: repeat(4, 1fr);
@@ -720,6 +734,7 @@ const SkeletonBentoGrid = styled.div`
     grid-template-columns: 1fr;
     grid-auto-rows: auto;
     gap: 16px;
+    padding: 0 16px;
   }
 `;
 
@@ -741,7 +756,7 @@ const SkeletonBentoCard = styled(Skeleton)<{ $cols: number; $rows: number }>`
 
 // Label filter skeleton styles
 const SkeletonFilterContainer = styled.div`
-  padding: 0 24px 16px;
+  padding: 0 48px 16px;
   max-width: 1400px;
   margin: 0 auto;
 

@@ -61,6 +61,11 @@ const nextConfig = {
         protocol: "https",
         hostname: "media.discordapp.net",
       },
+      {
+        // Clerk user avatars
+        protocol: "https",
+        hostname: "img.clerk.com",
+      },
     ],
     // Configure valid quality values to prevent warnings
     qualities: [25, 50, 75, 100],

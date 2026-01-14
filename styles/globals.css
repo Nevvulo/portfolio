@@ -6,7 +6,7 @@
 
 /* Define consistent font stacks as CSS custom properties */
 :root {
-  /* Primary monospace - Fira Code loaded from Google Fonts, with cross-platform fallbacks */
+  /* Primary monospace - Fira Code from Google Fonts */
   --font-mono:
     "Fira Code", "Cascadia Code", "JetBrains Mono", "SF Mono", "Monaco", "Inconsolata",
     "Roboto Mono", "Source Code Pro", "Consolas", "DejaVu Sans Mono", "Courier New", monospace;
@@ -14,7 +14,7 @@
   /* Display font - Sixtyfour for headings */
   --font-display: "Sixtyfour", var(--font-mono);
 
-  /* Sans-serif stack - Inter loaded from Google Fonts */
+  /* Sans-serif stack - Inter from Google Fonts */
   --font-sans:
     "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu",
     "Cantarell", "Helvetica Neue", sans-serif;
@@ -24,6 +24,12 @@
   --font-weight-medium: 500;
   --font-weight-semibold: 600;
   --font-weight-bold: 700;
+}
+
+/* Apply fonts to html and body */
+html,
+body {
+  font-family: var(--font-sans);
 }
 
 /* Font rendering optimizations */

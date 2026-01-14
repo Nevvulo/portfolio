@@ -58,6 +58,9 @@ export default defineSchema({
         v.literal("owner_only"), // Only profile owner can post
       ),
     ),
+    // Credits page visibility
+    showOnCredits: v.optional(v.boolean()), // Opt-in to appear on /credits page
+    isContributor: v.optional(v.boolean()), // Show in contributors section
     createdAt: v.number(),
   })
     .index("by_clerkId", ["clerkId"])
@@ -72,6 +75,17 @@ export default defineSchema({
     description: v.optional(v.string()),
     type: v.union(v.literal("chat"), v.literal("announcements"), v.literal("content")),
     requiredTier: v.union(v.literal("free"), v.literal("tier1"), v.literal("tier2")),
+    // Advanced access rules (overrides requiredTier if set)
+    accessRules: v.optional(
+      v.object({
+        matchMode: v.optional(v.union(v.literal("any"), v.literal("all"))), // Default: "any" (OR logic)
+        twitchSubs: v.optional(v.boolean()), // Any Twitch subscriber
+        twitchSubTier: v.optional(v.union(v.literal(1), v.literal(2), v.literal(3))), // Minimum Twitch tier
+        superLegend: v.optional(v.boolean()), // Super Legend I or II
+        superLegendTier: v.optional(v.union(v.literal(1), v.literal(2))), // 1 = SL I, 2 = SL II
+        discordBoosters: v.optional(v.boolean()), // Discord server boosters
+      }),
+    ),
     order: v.number(),
     icon: v.optional(v.string()), // emoji or icon name
     isArchived: v.boolean(),

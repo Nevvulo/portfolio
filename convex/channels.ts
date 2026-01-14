@@ -1,6 +1,6 @@
 import { v } from "convex/values";
 import { internalQuery, mutation, query } from "./_generated/server";
-import { getCurrentUser, hasAccessToTier, requireCreator } from "./auth";
+import { getCurrentUser, hasAccessToTier, requireCreator, userHasChannelAccess } from "./auth";
 
 /**
  * List all channels the user has access to
@@ -20,11 +20,14 @@ export const list = query({
       .collect();
 
     // Map channels with access info
-    return channels.map((channel: any) => ({
-      ...channel,
-      hasAccess: hasAccessToTier(user.tier, channel.requiredTier),
-      isLocked: !hasAccessToTier(user.tier, channel.requiredTier),
-    }));
+    return channels.map((channel: any) => {
+      const hasAccess = userHasChannelAccess(user, channel);
+      return {
+        ...channel,
+        hasAccess,
+        isLocked: !hasAccess,
+      };
+    });
   },
 });
 
@@ -48,7 +51,7 @@ export const getBySlug = query({
       return null;
     }
 
-    const hasAccess = hasAccessToTier(user.tier, channel.requiredTier);
+    const hasAccess = userHasChannelAccess(user, channel);
 
     return {
       ...channel,
@@ -74,7 +77,7 @@ export const get = query({
       return null;
     }
 
-    const hasAccess = hasAccessToTier(user.tier, channel.requiredTier);
+    const hasAccess = userHasChannelAccess(user, channel);
 
     return {
       ...channel,
@@ -136,6 +139,20 @@ export const update = mutation({
     description: v.optional(v.string()),
     type: v.optional(v.union(v.literal("chat"), v.literal("announcements"), v.literal("content"))),
     requiredTier: v.optional(v.union(v.literal("free"), v.literal("tier1"), v.literal("tier2"))),
+    // Advanced access rules (set to null to remove and fall back to requiredTier)
+    accessRules: v.optional(
+      v.union(
+        v.object({
+          matchMode: v.optional(v.union(v.literal("any"), v.literal("all"))),
+          twitchSubs: v.optional(v.boolean()),
+          twitchSubTier: v.optional(v.union(v.literal(1), v.literal(2), v.literal(3))),
+          superLegend: v.optional(v.boolean()),
+          superLegendTier: v.optional(v.union(v.literal(1), v.literal(2))),
+          discordBoosters: v.optional(v.boolean()),
+        }),
+        v.null(), // Allow setting to null to remove access rules
+      ),
+    ),
     icon: v.optional(v.string()),
     order: v.optional(v.number()),
     discordChannelId: v.optional(v.string()),
@@ -276,10 +293,17 @@ export const listForMention = query({
       .collect();
 
     // Filter by user access and return minimal data
-    const userTier = user?.tier ?? "free";
+    // Create a user-like object for access checking
+    const userForAccess = user ?? {
+      tier: "free" as const,
+      twitchSubTier: null,
+      discordBooster: null,
+      clerkPlan: null,
+      clerkPlanStatus: null,
+    };
 
     return channels
-      .filter((c) => hasAccessToTier(userTier, c.requiredTier))
+      .filter((c) => userHasChannelAccess(userForAccess, c))
       .sort((a, b) => a.order - b.order)
       .map((c) => ({
         _id: c._id,
