@@ -393,8 +393,8 @@ const DesktopExpandButton = styled(m.button)`
 // Mobile button
 const MobileTOCButton = styled(m.button)`
   position: fixed;
-  top: 80px;
-  right: 24px;
+  top: 32px;
+  right: 6px;
   width: 40px;
   height: 40px;
   border-radius: 8px;

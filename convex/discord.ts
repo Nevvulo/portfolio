@@ -657,3 +657,54 @@ export const upsertDiscordClerkMapping = mutation({
     }
   },
 });
+
+/**
+ * Get user by Discord ID for slash commands
+ * Returns public profile data + supporter status for linked users
+ */
+export const getUserByDiscordId = query({
+  args: {
+    discordId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    // First try: Look up user directly by discordId field
+    let user = await ctx.db
+      .query("users")
+      .withIndex("by_discordId", (q) => q.eq("discordId", args.discordId))
+      .unique();
+
+    // Second try: Check discordClerkMapping for linked accounts
+    if (!user) {
+      const mapping = await ctx.db
+        .query("discordClerkMapping")
+        .withIndex("by_discordId", (q) => q.eq("discordId", args.discordId))
+        .unique();
+
+      if (mapping) {
+        user = await ctx.db
+          .query("users")
+          .withIndex("by_clerkId", (q) => q.eq("clerkId", mapping.clerkId))
+          .unique();
+      }
+    }
+
+    if (!user) {
+      return null; // Not linked
+    }
+
+    return {
+      _id: user._id,
+      username: user.username,
+      displayName: user.displayName,
+      avatarUrl: user.avatarUrl,
+      tier: user.tier,
+      isCreator: user.isCreator,
+      // Supporter status for badges
+      discordHighestRole: user.discordHighestRole,
+      twitchSubTier: user.twitchSubTier,
+      discordBooster: user.discordBooster,
+      clerkPlan: user.clerkPlan,
+      clerkPlanStatus: user.clerkPlanStatus,
+    };
+  },
+});

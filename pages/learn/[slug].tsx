@@ -796,36 +796,37 @@ function PostBody({
             <h3>{post.description}</h3>
           </HeroDescriptionWrapper>
 
-          {post.labels?.length ? (
-            <Labels>
-              {post.labels
-                .map((labelText) => labelText.replace(/-/g, " "))
-                .slice(0, 3)
-                .map((label) => (
-                  <Label key={label}>{label}</Label>
-                ))}
-            </Labels>
-          ) : null}
+          <HeroBottomSection>
+            {post.labels?.length ? (
+              <Labels>
+                {post.labels
+                  .map((labelText) => labelText.replace(/-/g, " "))
+                  .slice(0, 3)
+                  .map((label) => (
+                    <Label key={label}>{label}</Label>
+                  ))}
+              </Labels>
+            ) : null}
 
-          {/* Reactions and Highlights */}
-          <HeroActionsRow>
-            <ReactionBar postId={post._id} variant="hero" />
-            {highlightCounts && highlightCounts.total > 0 && (
-              <HighlightCount
-                count={highlightCounts.total}
-                uniqueUsers={highlightCounts.uniqueUsers}
-                onClick={() => setHighlightModalOpen(true)}
-              />
-            )}
-          </HeroActionsRow>
+            {/* Reactions and Highlights */}
+            <HeroActionsRow>
+              <ReactionBar postId={post._id} variant="hero" />
+              {highlightCounts && highlightCounts.total > 0 && (
+                <HighlightCount
+                  count={highlightCounts.total}
+                  uniqueUsers={highlightCounts.uniqueUsers}
+                  onClick={() => setHighlightModalOpen(true)}
+                />
+              )}
+            </HeroActionsRow>
 
-          <IconContainer direction="row">
-            <HeroActionButton onClick={() => setShareModalOpen(true)} title="Share this article">
-              <Share2 />
-            </HeroActionButton>
-            <HeroActionButton onClick={() => setCreditsModalOpen(true)} title="View credits">
-              <FileText />
-            </HeroActionButton>
+            <IconContainer direction="row">
+              <HeroActionButton onClick={() => setShareModalOpen(true)} title="Share this article">
+                <Share2 />
+              </HeroActionButton>
+              <HeroActionButton onClick={() => setCreditsModalOpen(true)} title="View credits">
+                <FileText />
+              </HeroActionButton>
             {post.mediumUrl && (
               <IconLink
                 icon={faMedium}
@@ -847,7 +848,8 @@ function PostBody({
             {post.devToUrl && (
               <IconLink icon={faDev} target="_blank" href={post.devToUrl} width="24" height="24" />
             )}
-          </IconContainer>
+            </IconContainer>
+          </HeroBottomSection>
         </PostHeader>
       </PostHeroImg>
 
@@ -1365,11 +1367,20 @@ const FallbackContent = styled.div`
 
 const IconContainer = styled(Container).attrs({ direction: "row" })`
   margin: 1em 0 0 0;
+  min-height: 36px; /* Reserve space to prevent CLS */
 
   * {
     margin-left: 6px;
     margin-right: 6px;
     height: 32px;
+  }
+`;
+
+const HeroBottomSection = styled.div`
+  min-height: 140px; /* Reserve space for labels + reactions + icons to prevent CLS */
+
+  @media (max-width: 480px) {
+    min-height: 160px;
   }
 `;
 
@@ -1379,6 +1390,7 @@ const HeroActionsRow = styled.div`
   gap: 8px;
   flex-wrap: wrap;
   margin-top: 16px;
+  min-height: 48px; /* Reserve space to prevent CLS */
 `;
 
 const HighlightableContent = styled.div`
@@ -1774,8 +1786,13 @@ const PostContainer = styled(m.div)`
   width: 90%;
   padding: 0 1em;
 
+  @media (max-width: 1200px) {
+    padding-right: 36px;
+  }
+
   @media (max-width: 480px) {
     padding: 0 0.5em;
+    padding-right: 36px;
     width: 95%;
     margin: 0.25em;
   }
@@ -1851,6 +1868,9 @@ const HeroActionButton = styled.button`
   justify-content: center;
   width: 36px;
   height: 36px;
+  min-width: 36px;
+  min-height: 36px;
+  flex-shrink: 0;
   background: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 8px;
@@ -1861,6 +1881,8 @@ const HeroActionButton = styled.button`
   svg {
     width: 18px;
     height: 18px;
+    min-width: 18px;
+    min-height: 18px;
   }
 
   &:hover {

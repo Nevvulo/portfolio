@@ -88,8 +88,59 @@ export default function Home({ discordWidget, isLive: serverIsLive }: HomeProps)
     return undefined;
   }, []);
 
-  // Scroll snapping is now handled purely by CSS (scroll-snap-type: y mandatory)
-  // No custom wheel handler needed - let the browser do its thing
+  // First section locked, rest scrolls freely
+  useEffect(() => {
+    const scrollContainer = document.getElementById("scroll-container");
+    if (!scrollContainer) return;
+
+    const sections = scrollContainer.querySelectorAll("section");
+    const secondSection = sections[1] as HTMLElement | undefined;
+    if (!secondSection) return;
+
+    let isAnimating = false;
+    let accumulatedDelta = 0;
+    const THRESHOLD = 30;
+
+    const handleWheel = (e: WheelEvent) => {
+      if (isAnimating) {
+        e.preventDefault();
+        return;
+      }
+
+      const scrollTop = scrollContainer.scrollTop;
+      const inFirstSection = scrollTop < 50;
+
+      if (!inFirstSection) {
+        accumulatedDelta = 0;
+        return; // Free scroll for rest of page
+      }
+
+      // In first section - block scroll and accumulate
+      e.preventDefault();
+
+      if (e.deltaY > 0) {
+        accumulatedDelta += e.deltaY;
+
+        if (accumulatedDelta >= THRESHOLD) {
+          isAnimating = true;
+          accumulatedDelta = 0;
+
+          scrollContainer.scrollTo({
+            top: secondSection.offsetTop,
+            behavior: "smooth",
+          });
+
+          setTimeout(() => { isAnimating = false; }, 800);
+        }
+      }
+    };
+
+    scrollContainer.addEventListener("wheel", handleWheel, { passive: false });
+
+    return () => {
+      scrollContainer.removeEventListener("wheel", handleWheel);
+    };
+  }, []);
 
   const isLive = isLiveOverride !== null ? isLiveOverride : serverIsLive;
 
@@ -140,7 +191,7 @@ export default function Home({ discordWidget, isLive: serverIsLive }: HomeProps)
                     Contact
                   </MobileNavLink>
                   <MobileNavLink href={ROUTES.BLOG.ROOT} onClick={() => setMobileMenuOpen(false)}>
-                    Blog
+                    Explore
                   </MobileNavLink>
                   <MobileNavLink
                     href={ROUTES.PROJECTS.ROOT}
@@ -157,6 +208,12 @@ export default function Home({ discordWidget, isLive: serverIsLive }: HomeProps)
                   <MobileNavLink href="/support" onClick={() => setMobileMenuOpen(false)}>
                     Support
                   </MobileNavLink>
+                  <SignedIn>
+                    <MobileMenuSeparator />
+                    <MobileBadgesSection>
+                      <SupporterBadges direction="column" showLabels size="small" />
+                    </MobileBadgesSection>
+                  </SignedIn>
                 </MobileMenu>
               )}
             </MobileMenuWrapper>
@@ -165,7 +222,7 @@ export default function Home({ discordWidget, isLive: serverIsLive }: HomeProps)
             <DesktopNavLinks>
               <NavLink href={ROUTES.ABOUT}>About</NavLink>
               <NavLink href={ROUTES.CONTACT}>Contact</NavLink>
-              <NavLink href={ROUTES.BLOG.ROOT}>Blog</NavLink>
+              <NavLink href={ROUTES.BLOG.ROOT}>Explore</NavLink>
               <NavLink href={ROUTES.PROJECTS.ROOT}>Projects</NavLink>
               <NavLink href="/games">Games</NavLink>
               <NavLink href="/live">Live</NavLink>
@@ -288,7 +345,7 @@ export default function Home({ discordWidget, isLive: serverIsLive }: HomeProps)
           <Section>
             <LearnSectionContent>
               <LearnSectionHeader>
-                <LearnTitle>learn</LearnTitle>
+                <LearnTitle>explore</LearnTitle>
                 <ViewAllLink href="/learn">View all →</ViewAllLink>
               </LearnSectionHeader>
 
@@ -500,6 +557,20 @@ const MobileNavLink = styled(Link)`
   &:hover {
     opacity: 1;
     background: rgba(79, 77, 193, 0.1);
+  }
+`;
+
+const MobileMenuSeparator = styled.div`
+  height: 1px;
+  background: rgba(79, 77, 193, 0.2);
+  margin: 0.5rem 1rem;
+`;
+
+const MobileBadgesSection = styled.div`
+  padding: 0.5rem 1rem 0.75rem;
+
+  > div {
+    align-items: flex-start;
   }
 `;
 

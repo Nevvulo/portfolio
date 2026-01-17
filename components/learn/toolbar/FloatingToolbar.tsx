@@ -449,8 +449,8 @@ const MobileToolbarOverlay = styled(m.div)`
 
 const MobileToolbarButton = styled(m.button)<{ $isOpen: boolean }>`
   position: fixed;
-  top: 128px; /* Below TOC button (80px + 40px height + 8px gap) */
-  right: 24px;
+  top: 80px; /* Below TOC button (32px + 40px height + 8px gap) */
+  right: 6px;
   z-index: 100;
   width: 40px;
   height: 40px;
@@ -471,8 +471,8 @@ const MobileToolbarButton = styled(m.button)<{ $isOpen: boolean }>`
 
 const MobileToolbarExpanded = styled(m.div)`
   position: fixed;
-  top: 176px; /* Below the button (128px + 40px + 8px gap) */
-  right: 24px;
+  top: 128px; /* Below the button (80px + 40px + 8px gap) */
+  right: 6px;
   z-index: 100;
   display: flex;
   flex-direction: column;

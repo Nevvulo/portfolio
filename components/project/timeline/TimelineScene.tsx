@@ -41,12 +41,12 @@ function HtmlProjectCard({
   // Responsive card width - increased for better mobile readability
   const cardWidth = isMobile
     ? isLandscape
-      ? "380px" // Mobile landscape
-      : "300px" // Mobile portrait (increased from 260px)
+      ? "500px" // Mobile landscape
+      : "340px" // Mobile portrait
     : "550px"; // Desktop
 
-  // Responsive distance factor (how 3D depth affects size)
-  const distanceFactor = isMobile ? (isLandscape ? 2.6 : 2.2) : 3.2;
+  // Responsive distance factor (how 3D depth affects size) - higher = bigger
+  const distanceFactor = isMobile ? (isLandscape ? 2.7 : 2.5) : 3.2;
   const groupRef = useRef<THREE.Group>(null);
   const targetPos = useRef({ x: position[0], y: position[1], z: position[2] });
 
@@ -143,7 +143,6 @@ function HtmlProjectCard({
               <TimelineBadge>{timelineText}</TimelineBadge>
             </CardBottomRow>
           </CardContent>
-          {project.maintained && <MaintainedBadge>MAINTAINED</MaintainedBadge>}
         </CardContainer>
       </Html>
     </group>
@@ -172,9 +171,9 @@ const CardContainer = styled.div<{ $background: string; $isActive: boolean }>`
 
   /* Mobile responsive - increased height for better readability */
   @media (max-width: 767px) {
-    padding: 1rem 1.25rem;
-    height: 110px;
-    border-radius: 14px;
+    padding: 1.25rem 1.5rem;
+    height: 140px;
+    border-radius: 16px;
   }
 
   &:hover {
@@ -254,8 +253,8 @@ const CardLogo = styled.div`
 
   @media (max-width: 767px) {
     img {
-      max-width: 80px !important;
-      max-height: 32px !important;
+      max-width: 120px !important;
+      max-height: 40px !important;
       width: auto !important;
       height: auto !important;
     }
@@ -288,7 +287,7 @@ const CardTitle = styled.h2`
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 
   @media (max-width: 767px) {
-    font-size: 1.1rem;
+    font-size: 1.4rem;
   }
 `;
 
@@ -303,8 +302,8 @@ const CardSubtitle = styled.p`
   flex: 1;
 
   @media (max-width: 767px) {
-    font-size: 0.75rem;
-    line-height: 1.25;
+    font-size: 0.9rem;
+    line-height: 1.3;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
@@ -326,9 +325,9 @@ const TimelineBadge = styled.div`
   flex-shrink: 0;
 
   @media (max-width: 767px) {
-    padding: 0.2rem 0.4rem;
-    font-size: 0.5rem;
-    border-radius: 4px;
+    padding: 0.3rem 0.5rem;
+    font-size: 0.6rem;
+    border-radius: 5px;
   }
 `;
 
@@ -336,21 +335,21 @@ const MaintainedBadge = styled.div`
   position: absolute;
   top: 1rem;
   right: 1rem;
-  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(8px);
   padding: 0.2rem 0.6rem;
   border-radius: 4px;
   font-size: 0.65rem;
   font-weight: 600;
-  color: white;
+  color: rgba(0, 0, 0, 0.8);
   letter-spacing: 0.02em;
   text-transform: uppercase;
-  box-shadow: 0 2px 8px rgba(34, 197, 94, 0.4);
 
   @media (max-width: 767px) {
-    top: 0.5rem;
-    right: 0.5rem;
-    padding: 0.1rem 0.3rem;
-    font-size: 0.4rem;
+    top: 0.75rem;
+    right: 0.75rem;
+    padding: 0.15rem 0.4rem;
+    font-size: 0.5rem;
     border-radius: 3px;
   }
 `;

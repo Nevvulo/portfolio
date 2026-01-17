@@ -76,4 +76,8 @@ const Container = styled(m.svg).attrs({ viewBox: "0 -1 50 54" })`
   border-radius: 8px;
   width: 40px;
   height: 40px;
+
+  @media (max-width: 1200px) {
+    right: 6px;
+  }
 `;
