@@ -71,6 +71,10 @@ const LogoContainer = styled.div`
   cursor: pointer;
   transition: opacity 0.2s ease;
 
+  img {
+    filter: ${(props) => (props.theme.background === "#fff" ? "invert(1)" : "none")};
+  }
+
   &:hover {
     opacity: 0.8;
   }

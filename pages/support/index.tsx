@@ -359,7 +359,7 @@ function SubscriberBenefits() {
           <FounderStatusContent>
             <FounderStatusTitle>Founder #{status.founderNumber}</FounderStatusTitle>
             <FounderStatusDescription>
-              You&apos;re an early supporter and have special access to a badge + Discord role!
+              You&apos;ve got a special permanent badge &amp; Discord role! Thanks for being an early supporter.
             </FounderStatusDescription>
           </FounderStatusContent>
         </FounderStatusCard>

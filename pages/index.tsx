@@ -88,59 +88,6 @@ export default function Home({ discordWidget, isLive: serverIsLive }: HomeProps)
     return undefined;
   }, []);
 
-  // First section locked, rest scrolls freely
-  useEffect(() => {
-    const scrollContainer = document.getElementById("scroll-container");
-    if (!scrollContainer) return;
-
-    const sections = scrollContainer.querySelectorAll("section");
-    const secondSection = sections[1] as HTMLElement | undefined;
-    if (!secondSection) return;
-
-    let isAnimating = false;
-    let accumulatedDelta = 0;
-    const THRESHOLD = 30;
-
-    const handleWheel = (e: WheelEvent) => {
-      if (isAnimating) {
-        e.preventDefault();
-        return;
-      }
-
-      const scrollTop = scrollContainer.scrollTop;
-      const inFirstSection = scrollTop < 50;
-
-      if (!inFirstSection) {
-        accumulatedDelta = 0;
-        return; // Free scroll for rest of page
-      }
-
-      // In first section - block scroll and accumulate
-      e.preventDefault();
-
-      if (e.deltaY > 0) {
-        accumulatedDelta += e.deltaY;
-
-        if (accumulatedDelta >= THRESHOLD) {
-          isAnimating = true;
-          accumulatedDelta = 0;
-
-          scrollContainer.scrollTo({
-            top: secondSection.offsetTop,
-            behavior: "smooth",
-          });
-
-          setTimeout(() => { isAnimating = false; }, 800);
-        }
-      }
-    };
-
-    scrollContainer.addEventListener("wheel", handleWheel, { passive: false });
-
-    return () => {
-      scrollContainer.removeEventListener("wheel", handleWheel);
-    };
-  }, []);
 
   const isLive = isLiveOverride !== null ? isLiveOverride : serverIsLive;
 
@@ -461,9 +408,9 @@ const TopNavBar = styled.nav`
   min-height: 48px;
   padding: 10px 1rem;
   padding-top: calc(10px + env(safe-area-inset-top, 0px));
-  background: rgba(17, 17, 17, 0.8);
+  background: ${(props) => props.theme.navbarBackground};
   backdrop-filter: blur(10px);
-  border-bottom: 1px solid rgba(79, 77, 193, 0.1);
+  border-bottom: 1px solid ${(props) => props.theme.navbarBorder};
   z-index: 999;
 `;
 
@@ -531,13 +478,13 @@ const MobileMenu = styled.div`
   position: absolute;
   top: calc(100% + 8px);
   left: 0;
-  background: rgba(17, 17, 17, 0.98);
+  background: ${(props) => props.theme.menuBackground};
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(79, 77, 193, 0.2);
+  border: 1px solid ${(props) => props.theme.menuBorder};
   border-radius: 8px;
   padding: 0.5rem 0;
   min-width: 150px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 20px ${(props) => props.theme.menuShadow};
   z-index: 10000;
 `;
 
@@ -705,8 +652,14 @@ const LogoWrapper = styled.div`
   width: 48px;
   height: 48px;
   flex-shrink: 0;
-  margin-right: 26px;
+  margin-right: clamp(2px, 2vw, 24px);
   filter: ${(props) => (props.theme.background === "#fff" ? "invert(1)" : "none")};
+
+  @media (max-width: 400px) {
+    margin-right: 0px;
+    width: 32px;
+    height: 32px;
+  }
 `;
 
 const NevuloTitle = styled.h1`
@@ -715,7 +668,8 @@ const NevuloTitle = styled.h1`
   font-family: var(--font-display);
   font-weight: 400;
   line-height: clamp(64px, 7vmax, 72px);
-  font-size: clamp(4vh, 5.6vmax, 82px);
+  font-size: clamp(4vw, 4.5vmax, 72px);
+  text-wrap: nowrap;
   margin-bottom: 0px;
   margin-top: 0px;
   letter-spacing: -1.5px;
@@ -816,7 +770,6 @@ const NavButton = styled(Link)`
 const ScrollHint = styled.div`
   display: flex;
   align-items: center;
-  gap: 0.5rem;
   flex-direction: row;
   opacity: 0.6;
 
@@ -832,6 +785,7 @@ const ScrollText = styled.p`
   letter-spacing: 1.5px;
   color: ${(props) => props.theme.contrast};
   margin: 0;
+  margin-right: 0.5rem;
 `;
 
 const ScrollArrow = styled.div`
