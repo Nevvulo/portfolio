@@ -39,8 +39,9 @@ import {
 } from "../../components/learn/highlights";
 import { CreditsModal, ShareModal } from "../../components/learn/modals";
 import { ReactionBar } from "../../components/learn/ReactionBar";
+import { MobileTOCBar } from "../../components/learn/MobileTOCBar";
 import { TableOfContents, type TOCItem } from "../../components/learn/TableOfContents";
-import { FloatingToolbar, ReportModal } from "../../components/learn/toolbar";
+import { FloatingToolbar, MobileToolbarContent, ReportModal } from "../../components/learn/toolbar";
 import { useArticleWatchTime } from "../../components/learn/useArticleWatchTime";
 import { useTimeTracking } from "../../components/learn/useTimeTracking";
 import {
@@ -259,13 +260,51 @@ function PostBody({
   const [isHighlighting, setIsHighlighting] = useState(false);
 
   // Toolbar state
-  const [tocCollapsed, setTocCollapsed] = useState(false);
   const [tocHeadings, setTocHeadings] = useState<TOCItem[]>([]);
   const [activeHeading, setActiveHeading] = useState<string>("");
   const [reportModalOpen, setReportModalOpen] = useState(false);
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [creditsModalOpen, setCreditsModalOpen] = useState(false);
   const commentSectionRef = useRef<HTMLDivElement>(null);
+
+  // Mobile TOC bar state
+  const [tocCollapsed, setTocCollapsed] = useState(false);
+  const [readProgress, setReadProgress] = useState(0);
+  const [mobileBarVisible, setMobileBarVisible] = useState(false);
+
+  // Track scroll progress and mobile bar visibility
+  useEffect(() => {
+    const handleScroll = () => {
+      // Calculate read progress based on how far we've scrolled through the content
+      if (contentRef.current && thanksSectionRef.current) {
+        const contentTop = contentRef.current.getBoundingClientRect().top + window.scrollY;
+        const thanksTop = thanksSectionRef.current.getBoundingClientRect().top + window.scrollY;
+        const scrollY = window.scrollY;
+        const viewportHeight = window.innerHeight;
+
+        // Progress from content start to thanks section
+        const contentHeight = thanksTop - contentTop;
+        const scrollProgress = scrollY - contentTop + viewportHeight * 0.3;
+        const progress = Math.max(0, Math.min(100, (scrollProgress / contentHeight) * 100));
+        setReadProgress(progress);
+      }
+
+      // Show mobile bar when hero is out of view AND we haven't reached thanks section
+      if (heroContainerRef.current && thanksSectionRef.current) {
+        const heroRect = heroContainerRef.current.getBoundingClientRect();
+        const thanksRect = thanksSectionRef.current.getBoundingClientRect();
+        const heroOutOfView = heroRect.bottom < 0;
+        // Hide when thanks section comes into view (with small offset)
+        const thanksReached = thanksRect.top <= window.innerHeight - 100;
+        setMobileBarVisible(heroOutOfView && !thanksReached);
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll(); // Initial call
+
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   // Comment input state
   const [pendingComment, setPendingComment] = useState<{
@@ -706,12 +745,40 @@ function PostBody({
             headings={tocHeadings}
             activeHeading={activeHeading}
             highlightCount={highlightCounts?.total || 0}
-            tocCollapsed={tocCollapsed}
-            onTocCollapseChange={setTocCollapsed}
             onOpenHighlights={() => setHighlightModalOpen(true)}
             heroRef={heroContainerRef}
             thanksSectionRef={thanksSectionRef}
             commentSectionRef={commentSectionRef}
+          />
+          <MobileTOCBar
+            articleTitle={post.title}
+            headings={tocHeadings}
+            activeHeading={activeHeading}
+            readProgress={readProgress}
+            isVisible={mobileBarVisible && tocHeadings.length > 0}
+            onHeadingClick={(id) => {
+              const element = document.getElementById(id);
+              if (element) {
+                // Use larger offset for mobile TOC bar height (~90px) + some padding
+                const offset = 110;
+                const elementPosition = element.getBoundingClientRect().top + window.scrollY;
+                window.scrollTo({ top: elementPosition - offset, behavior: "instant" });
+              }
+            }}
+            toolbarContent={
+              <MobileToolbarContent
+                postId={post._id}
+                postSlug={post.slug}
+                postTitle={post.title}
+                headings={tocHeadings}
+                activeHeading={activeHeading}
+                highlightCount={highlightCounts?.total || 0}
+                onOpenHighlights={() => setHighlightModalOpen(true)}
+                onClose={() => {}}
+                commentSectionRef={commentSectionRef}
+                thanksSectionRef={thanksSectionRef}
+              />
+            }
           />
         </>
       )}
@@ -1449,6 +1516,11 @@ const ReadingFocusOverlayStyled = styled.div<{ $showTopShadow: boolean }>`
     -webkit-mask-image: linear-gradient(to bottom, black 0%, transparent 100%);
     opacity: ${(props) => (props.$showTopShadow ? 1 : 0)};
     transition: opacity 0.2s ease;
+
+    /* Hide top gradient on mobile - the mobile TOC bar provides the visual boundary */
+    @media (max-width: 1200px) {
+      display: none;
+    }
   }
 
   &::after {
