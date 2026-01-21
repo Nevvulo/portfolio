@@ -1,9 +1,9 @@
 import { useUser } from "@clerk/nextjs";
-import { BookOpen, Check, ChevronRight, Clock, Lock, MessageSquare, Sparkles, Target } from "lucide-react";
+import { Bot, Check, ChevronRight, Clock, Crown, Gamepad2, Lock, MessageSquare, Sparkles, Vault } from "lucide-react";
 import Head from "next/head";
 import Link from "next/link";
 import { useMemo } from "react";
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
 import { SupporterBadge } from "../../components/badges/supporter-badge";
 import { BackButton } from "../../components/generics";
 import { AnimatedMinimalView } from "../../components/layout/minimal";
@@ -12,6 +12,58 @@ import { useSupporterStatus } from "../../hooks/useSupporterStatus";
 
 // Feature categories and their features
 const BENEFIT_CATEGORIES = [
+  {
+    id: "software",
+    title: "Software Perks",
+    icon: Bot,
+    description: "Exclusive access to software and bot features",
+    features: [
+      {
+        id: "nevi-bot",
+        title: "@Nevi Discord Bot",
+        description: "87+ commands including economy games, XP/leveling, profile cards with supporter badges, and exclusive commands for supporters.",
+        minTier: "tier1" as const,
+        tags: ["Profile badges", "Economy bonuses", "Custom commands"],
+      },
+      {
+        id: "golfquest",
+        title: "Golfquest Cosmetics & Features",
+        description: "Exclusive cosmetics, special game modes, and supporter-only features in Golfquest.",
+        minTier: "tier1" as const,
+        comingSoon: true,
+        customIcon: Gamepad2,
+      },
+    ],
+  },
+  {
+    id: "content",
+    title: "Content Access",
+    icon: Vault,
+    description: "Exclusive resources and early access content",
+    features: [
+      {
+        id: "vault",
+        title: "Legend Vault",
+        description: "Access exclusive resources, downloadables, and supporter-only content curated just for you.",
+        minTier: "tier1" as const,
+        link: "/vault",
+        isVaultCTA: true,
+      },
+      {
+        id: "early-access",
+        title: "Early Access Content",
+        description: "Be the first to see new music, writing, videos, and projects before they're publicly released.",
+        minTier: "tier1" as const,
+        link: "/learn",
+      },
+      {
+        id: "tier2-content",
+        title: "Monthly Digital Loot",
+        description: "Exclusive digital content delivered monthly - wallpapers, assets, and surprise goodies.",
+        minTier: "tier2" as const,
+      },
+    ],
+  },
   {
     id: "lounge",
     title: "Lounge Access",
@@ -38,35 +90,6 @@ const BENEFIT_CATEGORIES = [
         description: "Shared listening room to enjoy music together",
         minTier: "free" as const,
         link: "/lounge/jungle",
-      },
-    ],
-  },
-  {
-    id: "content",
-    title: "Content Access",
-    icon: BookOpen,
-    description: "Exclusive articles, videos, and early access",
-    features: [
-      {
-        id: "early-access",
-        title: "Early Access Content",
-        description: "Get access to articles and videos before public release",
-        minTier: "tier1" as const,
-        link: "/learn",
-      },
-      {
-        id: "exclusive-posts",
-        title: "Exclusive Posts",
-        description: "Members-only articles, tutorials, and behind-the-scenes",
-        minTier: "tier1" as const,
-        link: "/learn",
-      },
-      {
-        id: "tier2-content",
-        title: "Super Legend II Exclusives",
-        description: "Premium content only for our most dedicated supporters",
-        minTier: "tier2" as const,
-        link: "/learn",
       },
     ],
   },
@@ -117,33 +140,6 @@ const BENEFIT_CATEGORIES = [
       },
     ],
   },
-  {
-    id: "interaction",
-    title: "Direct Interaction",
-    icon: Target,
-    description: "Get closer with priority access and exclusive interactions",
-    features: [
-      {
-        id: "priority-support",
-        title: "Priority Support",
-        description: "Get faster responses to questions and feedback",
-        minTier: "tier1" as const,
-      },
-      {
-        id: "monthly-drops",
-        title: "Monthly Mystery Drops",
-        description: "Exclusive mystery boxes with wallpapers, discount codes, and more",
-        minTier: "tier1" as const,
-        comingSoon: true,
-      },
-      {
-        id: "giveaways",
-        title: "Exclusive Giveaways",
-        description: "Entry into supporter-only giveaways and contests",
-        minTier: "tier1" as const,
-      },
-    ],
-  },
 ];
 
 function getTierLevel(tier: string): number {
@@ -177,15 +173,16 @@ export default function SupporterBenefits() {
   }, [status]);
 
   const userTierLevel = getTierLevel(userTier);
+  const isFounder = !isLoading && status?.founderNumber !== undefined && status?.founderNumber !== null;
 
   const isFeatureUnlocked = (feature: (typeof BENEFIT_CATEGORIES)[0]["features"][0]) => {
-    if (feature.special === "twitch") {
+    if ("special" in feature && feature.special === "twitch") {
       return status?.twitchSubTier != null;
     }
-    if (feature.special === "discordBooster") {
+    if ("special" in feature && feature.special === "discordBooster") {
       return status?.discordBooster === true;
     }
-    if (!feature.minTier) return true;
+    if (!("minTier" in feature) || !feature.minTier) return true;
     return userTierLevel >= getTierLevel(feature.minTier);
   };
 
@@ -221,6 +218,21 @@ export default function SupporterBenefits() {
           </HeroSubtitle>
         </HeroSection>
 
+        {/* Founder Badge Status - only shown to founders */}
+        {isSignedIn && isFounder && (
+          <FounderStatusCard>
+            <FounderStatusIcon>
+              <Crown size={20} />
+            </FounderStatusIcon>
+            <FounderStatusContent>
+              <FounderStatusTitle>Founder #{status?.founderNumber}</FounderStatusTitle>
+              <FounderStatusDescription>
+                You&apos;re an early supporter and have special access to a badge + Discord role!
+              </FounderStatusDescription>
+            </FounderStatusContent>
+          </FounderStatusCard>
+        )}
+
         <CategoriesGrid>
           {BENEFIT_CATEGORIES.map((category) => {
             const IconComponent = category.icon;
@@ -238,30 +250,48 @@ export default function SupporterBenefits() {
 
               <FeaturesList>
                 {category.features.map((feature) => {
-                  const unlocked = isSignedIn && !isLoading && isFeatureUnlocked(feature);
+                  const unlocked = !!(isSignedIn && !isLoading && isFeatureUnlocked(feature));
+                  const hasComingSoon = "comingSoon" in feature && feature.comingSoon;
+                  const featureLink = "link" in feature ? feature.link : undefined;
+                  const isVaultCTA = "isVaultCTA" in feature && feature.isVaultCTA;
+                  const badgeLink = "badgeLink" in feature ? feature.badgeLink : undefined;
+                  const badgeLinkIsExternal = typeof badgeLink === "string" && badgeLink.startsWith("http");
                   return (
                     <FeatureItem key={feature.id} $unlocked={unlocked}>
                       <FeatureIcon $unlocked={unlocked}>
-                        {unlocked ? <Check size={14} /> : feature.comingSoon ? <Clock size={14} /> : <Lock size={14} />}
+                        {unlocked ? <Check size={14} /> : hasComingSoon ? <Clock size={14} /> : <Lock size={14} />}
                       </FeatureIcon>
                       <FeatureContent>
                         <FeatureTitle>
                           {feature.title}
-                          {feature.comingSoon && <ComingSoonTag>Coming Soon</ComingSoonTag>}
+                          {hasComingSoon && <ComingSoonTag>Coming Soon</ComingSoonTag>}
                         </FeatureTitle>
                         <FeatureDescription>{feature.description}</FeatureDescription>
+                        {"tags" in feature && feature.tags && (
+                          <FeatureTags>
+                            {feature.tags.map((tag) => (
+                              <FeatureTag key={tag}>{tag}</FeatureTag>
+                            ))}
+                          </FeatureTags>
+                        )}
+                        {isVaultCTA && unlocked && featureLink && (
+                          <VaultCTA href={featureLink}>
+                            <Vault size={14} />
+                            Open the Vault
+                          </VaultCTA>
+                        )}
                       </FeatureContent>
-                      {"badgeType" in feature && feature.badgeType && (
+                      {"badgeType" in feature && feature.badgeType && badgeLink && (
                         <BadgePreview
-                          href={"badgeLink" in feature ? feature.badgeLink : undefined}
-                          target={"badgeLink" in feature && feature.badgeLink?.startsWith("http") ? "_blank" : undefined}
-                          rel={"badgeLink" in feature && feature.badgeLink?.startsWith("http") ? "noopener noreferrer" : undefined}
+                          href={badgeLink}
+                          target={badgeLinkIsExternal ? "_blank" : undefined}
+                          rel={badgeLinkIsExternal ? "noopener noreferrer" : undefined}
                         >
                           <SupporterBadge type={feature.badgeType} size="small" />
                         </BadgePreview>
                       )}
-                      {feature.link && unlocked && (
-                        <FeatureLink href={feature.link}>
+                      {featureLink && unlocked && !isVaultCTA && (
+                        <FeatureLink href={featureLink}>
                           <ChevronRight size={16} />
                         </FeatureLink>
                       )}
@@ -556,6 +586,103 @@ const BadgePreview = styled(Link)`
 
   &:hover {
     transform: scale(1.05);
+  }
+`;
+
+// Founder Status Card
+const founderPulse = keyframes`
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(255, 110, 180, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(255, 110, 180, 0);
+  }
+`;
+
+const FounderStatusCard = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  background: linear-gradient(135deg, rgba(255, 110, 180, 0.08) 0%, rgba(255, 110, 180, 0.03) 100%);
+  border: 1px solid rgba(255, 110, 180, 0.25);
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+  animation: ${founderPulse} 3s ease-in-out infinite;
+`;
+
+const FounderStatusIcon = styled.div`
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 110, 180, 0.15);
+  color: #ff6eb4;
+  border-radius: 10px;
+  flex-shrink: 0;
+`;
+
+const FounderStatusContent = styled.div`
+  flex: 1;
+`;
+
+const FounderStatusTitle = styled.h4`
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 18px;
+  color: #ff6eb4;
+  margin: 0 0 0.25rem 0;
+`;
+
+const FounderStatusDescription = styled.p`
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.4;
+  color: ${(props) => props.theme.textColor};
+  margin: 0;
+  opacity: 0.85;
+`;
+
+// Feature Tags
+const FeatureTags = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+`;
+
+const FeatureTag = styled.span`
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  color: ${(props) => props.theme.textColor};
+`;
+
+// Vault CTA Button
+const VaultCTA = styled(Link)`
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  padding: 0.5rem 1rem;
+  background: linear-gradient(135deg, #9074f2, #7c5ce0);
+  color: white;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 13px;
+  text-decoration: none;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+
+  &:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(144, 116, 242, 0.4);
   }
 `;
 
