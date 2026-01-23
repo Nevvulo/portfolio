@@ -1,7 +1,10 @@
 import { faDiscord, faTwitch } from "@fortawesome/free-brands-svg-icons";
 import { faCrown, faStar } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import Image from "next/image";
 import styled from "styled-components";
+import SuperLegendIcon from "../../assets/img/super-legend.png";
+import SuperLegend2Icon from "../../assets/img/super-legend-2.png";
 import { BadgeColors, BadgeDescriptions, BadgeNames, BadgeType } from "../../constants/badges";
 
 interface SupporterBadgeProps {
@@ -11,6 +14,8 @@ interface SupporterBadgeProps {
   expandOnHover?: boolean;
   customColor?: string;
   customLabel?: string;
+  /** Optional founder number (1-10) to display "Founder #X" */
+  founderNumber?: number;
 }
 
 function getBadgeIcon(type: BadgeType) {
@@ -22,13 +27,19 @@ function getBadgeIcon(type: BadgeType) {
     case BadgeType.DISCORD_BOOSTER:
     case BadgeType.DISCORD_ROLE:
       return faDiscord;
-    case BadgeType.SUPER_LEGEND:
-      return faStar;
-    case BadgeType.SUPER_LEGEND_2:
+    case BadgeType.FOUNDER:
       return faCrown;
     default:
       return faStar;
   }
+}
+
+function isSuperLegendType(type: BadgeType): boolean {
+  return type === BadgeType.SUPER_LEGEND || type === BadgeType.SUPER_LEGEND_2;
+}
+
+function getSuperLegendImage(type: BadgeType) {
+  return type === BadgeType.SUPER_LEGEND_2 ? SuperLegend2Icon : SuperLegendIcon;
 }
 
 export function SupporterBadge({
@@ -38,19 +49,41 @@ export function SupporterBadge({
   expandOnHover = false,
   customColor,
   customLabel,
+  founderNumber,
 }: SupporterBadgeProps) {
   const color = customColor || BadgeColors[type];
   const icon = getBadgeIcon(type);
-  const label = customLabel || BadgeNames[type];
+  const isFounder = type === BadgeType.FOUNDER;
+  const isSuperLegend = isSuperLegendType(type);
+  const iconSize = size === "small" ? 14 : 18;
+
+  // For founder badge, show "Founder #X" if founderNumber is provided
+  const label =
+    customLabel || (isFounder && founderNumber ? `Founder #${founderNumber}` : BadgeNames[type]);
+  const description =
+    isFounder && founderNumber
+      ? `Founder #${founderNumber} - One of the first 10 supporters`
+      : customLabel || BadgeDescriptions[type];
 
   return (
     <BadgeContainer
       $color={color}
       $size={size}
       $expandOnHover={expandOnHover}
-      title={!expandOnHover ? customLabel || BadgeDescriptions[type] : undefined}
+      $isFounder={isFounder}
+      title={!expandOnHover ? description : undefined}
     >
-      <FontAwesomeIcon icon={icon} style={{ width: size === "small" ? 12 : 14, flexShrink: 0 }} />
+      {isSuperLegend ? (
+        <Image
+          src={getSuperLegendImage(type)}
+          alt={BadgeNames[type]}
+          width={iconSize}
+          height={iconSize}
+          style={{ flexShrink: 0 }}
+        />
+      ) : (
+        <FontAwesomeIcon icon={icon} style={{ width: size === "small" ? 12 : 14, flexShrink: 0 }} />
+      )}
       {(showLabel || expandOnHover) && (
         <BadgeLabel $expandOnHover={expandOnHover}>{label}</BadgeLabel>
       )}
@@ -58,7 +91,12 @@ export function SupporterBadge({
   );
 }
 
-const BadgeContainer = styled.div<{ $color: string; $size: string; $expandOnHover: boolean }>`
+const BadgeContainer = styled.div<{
+  $color: string;
+  $size: string;
+  $expandOnHover: boolean;
+  $isFounder?: boolean;
+}>`
 	display: inline-flex;
 	align-items: center;
 	gap: 4px;
@@ -76,6 +114,23 @@ const BadgeContainer = styled.div<{ $color: string; $size: string; $expandOnHove
 		background: ${(p) => p.$color}33;
 		border-color: ${(p) => p.$color}66;
 	}
+
+	/* Founder badge glow effect */
+	${(p) =>
+    p.$isFounder &&
+    `
+		box-shadow: 0 0 8px ${p.$color}55, 0 0 16px ${p.$color}33;
+		animation: founderGlow 2s ease-in-out infinite alternate;
+
+		@keyframes founderGlow {
+			from {
+				box-shadow: 0 0 8px ${p.$color}55, 0 0 16px ${p.$color}33;
+			}
+			to {
+				box-shadow: 0 0 12px ${p.$color}77, 0 0 24px ${p.$color}44;
+			}
+		}
+	`}
 `;
 
 const BadgeLabel = styled.span<{ $expandOnHover: boolean }>`

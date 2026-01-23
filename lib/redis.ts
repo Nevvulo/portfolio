@@ -17,6 +17,12 @@ const SUPPORTER_KEY_PREFIX = "user:status:";
 const DISCORD_TO_CLERK_PREFIX = "discord:clerk:";
 const SUPPORTER_TTL_SECONDS = 7 * 24 * 60 * 60; // 7 days
 
+// Founder tracking keys (permanent, no TTL)
+const FOUNDER_COUNT_KEY = "founders:count";
+const FOUNDER_SLOT_PREFIX = "founders:slot:"; // founders:slot:1 -> clerkId
+const FOUNDER_USER_PREFIX = "founders:user:"; // founders:user:{clerkId} -> slotNumber
+export const MAX_FOUNDERS = 10;
+
 export function getSupporterKey(clerkUserId: string): string {
   return `${SUPPORTER_KEY_PREFIX}${clerkUserId}`;
 }
@@ -67,6 +73,10 @@ export async function getSupporterStatus(clerkUserId: string): Promise<Supporter
   const discordBooster = rawDiscordBooster === true || rawDiscordBooster === "true";
 
   const twitchSubTierRaw = getString(data.twitchSubTier);
+  const founderNumberRaw = getString(data.founderNumber);
+  const founderNumber = founderNumberRaw
+    ? (Number.parseInt(founderNumberRaw, 10) as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10)
+    : null;
 
   return {
     twitchSubTier: twitchSubTierRaw ? (Number.parseInt(twitchSubTierRaw, 10) as 1 | 2 | 3) : null,
@@ -77,6 +87,7 @@ export async function getSupporterStatus(clerkUserId: string): Promise<Supporter
     clerkPlan: (getString(data.clerkPlan) as "super_legend" | "super_legend_2") || null,
     clerkPlanStatus:
       (getString(data.clerkPlanStatus) as "active" | "past_due" | "canceled") || null,
+    founderNumber,
     lastSyncedAt: getString(data.lastSyncedAt) || new Date().toISOString(),
   };
 }
@@ -95,6 +106,7 @@ export async function setSupporterStatus(
     discordUserId: status.discordUserId ?? "",
     clerkPlan: status.clerkPlan ?? "",
     clerkPlanStatus: status.clerkPlanStatus ?? "",
+    founderNumber: status.founderNumber?.toString() ?? "",
     lastSyncedAt: status.lastSyncedAt,
   };
 
@@ -142,4 +154,98 @@ export async function setDiscordToClerkMapping(
 ): Promise<void> {
   const key = `${DISCORD_TO_CLERK_PREFIX}${discordUserId}`;
   await redis.set(key, clerkUserId, { ex: SUPPORTER_TTL_SECONDS });
+}
+
+// ============================================
+// FOUNDER TRACKING (First 10 subscribers)
+// ============================================
+
+/**
+ * Get the number of remaining founder spots (0-10)
+ */
+export async function getFounderSpotsRemaining(): Promise<number> {
+  const count = (await redis.get<number>(FOUNDER_COUNT_KEY)) || 0;
+  return Math.max(0, MAX_FOUNDERS - count);
+}
+
+/**
+ * Get current founder count
+ */
+export async function getFounderCount(): Promise<number> {
+  return (await redis.get<number>(FOUNDER_COUNT_KEY)) || 0;
+}
+
+/**
+ * Check if a user is a founder and get their slot number
+ * @returns Founder slot number (1-10) or null if not a founder
+ */
+export async function getUserFounderNumber(
+  clerkUserId: string,
+): Promise<1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | null> {
+  const slot = await redis.get<number>(`${FOUNDER_USER_PREFIX}${clerkUserId}`);
+  if (slot && slot >= 1 && slot <= 10) {
+    return slot as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
+  }
+  return null;
+}
+
+/**
+ * Get the Clerk user ID for a founder slot
+ */
+export async function getFounderBySlot(slot: number): Promise<string | null> {
+  if (slot < 1 || slot > MAX_FOUNDERS) return null;
+  return (await redis.get<string>(`${FOUNDER_SLOT_PREFIX}${slot}`)) || null;
+}
+
+/**
+ * Atomically claim a founder slot for a user.
+ * Uses Redis INCR for atomic counting to prevent race conditions.
+ *
+ * @param clerkUserId - The Clerk user ID to claim the slot for
+ * @returns The founder slot number (1-10) if claimed, or null if all slots are taken
+ */
+export async function claimFounderSlot(
+  clerkUserId: string,
+): Promise<1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | null> {
+  // Check if user is already a founder (idempotent)
+  const existingSlot = await getUserFounderNumber(clerkUserId);
+  if (existingSlot) {
+    return existingSlot;
+  }
+
+  // Atomically increment the counter
+  const newCount = await redis.incr(FOUNDER_COUNT_KEY);
+
+  // Check if we exceeded the limit
+  if (newCount > MAX_FOUNDERS) {
+    // Rollback the increment - we went over the limit
+    await redis.decr(FOUNDER_COUNT_KEY);
+    return null;
+  }
+
+  // Successfully claimed slot - persist the mapping (no TTL, permanent)
+  const slotNumber = newCount as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
+
+  // Use a pipeline for atomic writes
+  await redis.set(`${FOUNDER_SLOT_PREFIX}${slotNumber}`, clerkUserId);
+  await redis.set(`${FOUNDER_USER_PREFIX}${clerkUserId}`, slotNumber);
+
+  return slotNumber;
+}
+
+/**
+ * Get all founders with their slot numbers
+ * @returns Array of { slot, clerkUserId } ordered by slot number
+ */
+export async function getAllFounders(): Promise<Array<{ slot: number; clerkUserId: string }>> {
+  const founders: Array<{ slot: number; clerkUserId: string }> = [];
+
+  for (let slot = 1; slot <= MAX_FOUNDERS; slot++) {
+    const clerkUserId = await getFounderBySlot(slot);
+    if (clerkUserId) {
+      founders.push({ slot, clerkUserId });
+    }
+  }
+
+  return founders;
 }

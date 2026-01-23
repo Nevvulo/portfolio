@@ -2,6 +2,7 @@ import { clerkClient, getAuth } from "@clerk/nextjs/server";
 import { ConvexHttpClient } from "convex/browser";
 import type { NextApiRequest, NextApiResponse } from "next";
 import { api } from "../../../convex/_generated/api";
+import { grantFounderStatus } from "../../../lib/founder";
 import { setSupporterStatus } from "../../../lib/redis";
 import type { DiscordRole, SupporterStatus } from "../../../types/supporter";
 import { checkBoosterStatus, getMemberHighestRole } from "../../../utils/discord-member";
@@ -119,6 +120,29 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const now = new Date().toISOString();
 
+    // If user has an active paid subscription, attempt to grant founder status
+    let founderNumber: SupporterStatus["founderNumber"] = null;
+    if (clerkPlan && clerkPlanStatus === "active") {
+      try {
+        console.log("[supporter/sync] User has active subscription, checking founder status...");
+        const founderResult = await grantFounderStatus(userId);
+        if (founderResult.success && founderResult.founderNumber) {
+          founderNumber = founderResult.founderNumber;
+          console.log(
+            `[supporter/sync] Founder status: ${founderResult.alreadyFounder ? "already founder" : "newly granted"} #${founderNumber}`,
+          );
+        } else if (!founderResult.success) {
+          console.log(
+            `[supporter/sync] Founder slots full (${founderResult.slotsRemaining} remaining)`,
+          );
+        }
+      } catch (error) {
+        console.error("[supporter/sync] Failed to grant founder status:", error);
+        // Don't fail the whole sync for this
+      }
+    }
+
+    // Build supporter status with founder number
     const supporterStatus: SupporterStatus = {
       twitchSubTier,
       discordBooster,
@@ -127,6 +151,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       discordUserId,
       clerkPlan,
       clerkPlanStatus,
+      founderNumber,
       lastSyncedAt: now,
     };
 
@@ -150,6 +175,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         discordBooster: discordBooster || undefined,
         clerkPlan: clerkPlan || undefined,
         clerkPlanStatus: clerkPlanStatus || undefined,
+        founderNumber: founderNumber ?? undefined,
         discordUsername,
         twitchUsername,
       });

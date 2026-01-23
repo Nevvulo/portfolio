@@ -30,10 +30,7 @@ export function AuthenticatedUserProvider({ children }: AuthenticatedUserProvide
 
   const getOrCreateUser = useAction(api.users.getOrCreateUser);
 
-  const convexUser = useQuery(
-    api.users.getMe,
-    isSignedIn && userCreationAttempted ? {} : "skip"
-  );
+  const convexUser = useQuery(api.users.getMe, isSignedIn && userCreationAttempted ? {} : "skip");
 
   useEffect(() => {
     setMounted(true);

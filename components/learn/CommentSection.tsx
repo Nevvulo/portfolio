@@ -252,11 +252,7 @@ export function CommentSection({ postId }: CommentSectionProps) {
         ))}
         {hasMore && (
           <LoadMoreButton onClick={loadMoreComments} disabled={isLoadingMore}>
-            {isLoadingMore ? (
-              <FontAwesomeIcon icon={faSpinner} spin />
-            ) : (
-              "Load More Comments"
-            )}
+            {isLoadingMore ? <FontAwesomeIcon icon={faSpinner} spin /> : "Load More Comments"}
           </LoadMoreButton>
         )}
       </CommentList>

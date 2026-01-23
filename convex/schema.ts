@@ -37,6 +37,21 @@ export default defineSchema({
     discordBooster: v.optional(v.boolean()),
     clerkPlan: v.optional(v.string()),
     clerkPlanStatus: v.optional(v.string()),
+    // Founder status - first 10 subscribers get permanent founder badge (1-10)
+    founderNumber: v.optional(
+      v.union(
+        v.literal(1),
+        v.literal(2),
+        v.literal(3),
+        v.literal(4),
+        v.literal(5),
+        v.literal(6),
+        v.literal(7),
+        v.literal(8),
+        v.literal(9),
+        v.literal(10),
+      ),
+    ),
     supporterSyncedAt: v.optional(v.number()),
     // Connection usernames (for displaying in other users' popouts)
     discordUsername: v.optional(v.string()),
@@ -75,6 +90,7 @@ export default defineSchema({
     description: v.optional(v.string()),
     type: v.union(v.literal("chat"), v.literal("announcements"), v.literal("content")),
     requiredTier: v.union(v.literal("free"), v.literal("tier1"), v.literal("tier2")),
+    isAnnouncement: v.optional(v.boolean()), // Only creator can post
     // Advanced access rules (overrides requiredTier if set)
     accessRules: v.optional(
       v.object({
@@ -849,8 +865,61 @@ export default defineSchema({
       }),
     ),
 
+    // Stream settings - stream-o-meter and schedule
+    stream: v.optional(
+      v.object({
+        // Stream-o-meter: 0-100 chance of streaming today
+        streamChance: v.number(),
+        streamChanceMessage: v.optional(v.string()), // Optional custom message
+        lastUpdated: v.number(),
+        // Rough schedule (day of week -> typical stream times)
+        schedule: v.optional(
+          v.array(
+            v.object({
+              day: v.union(
+                v.literal("monday"),
+                v.literal("tuesday"),
+                v.literal("wednesday"),
+                v.literal("thursday"),
+                v.literal("friday"),
+                v.literal("saturday"),
+                v.literal("sunday"),
+              ),
+              startTime: v.optional(v.string()), // "HH:MM" format
+              endTime: v.optional(v.string()), // "HH:MM" format
+              likelihood: v.union(v.literal("likely"), v.literal("maybe"), v.literal("unlikely")),
+            }),
+          ),
+        ),
+      }),
+    ),
+
     updatedAt: v.number(),
   }),
+
+  // Discord Scheduled Events cache
+  discordEvents: defineTable({
+    eventId: v.string(),
+    guildId: v.string(),
+    name: v.string(),
+    description: v.optional(v.string()),
+    scheduledStartTime: v.number(),
+    scheduledEndTime: v.optional(v.number()),
+    entityType: v.union(v.literal("stage_instance"), v.literal("voice"), v.literal("external")),
+    status: v.union(
+      v.literal("scheduled"),
+      v.literal("active"),
+      v.literal("completed"),
+      v.literal("canceled"),
+    ),
+    coverImageUrl: v.optional(v.string()),
+    location: v.optional(v.string()),
+    userCount: v.optional(v.number()),
+    syncedAt: v.number(),
+  })
+    .index("by_eventId", ["eventId"])
+    .index("by_startTime", ["scheduledStartTime"])
+    .index("by_status", ["status"]),
 
   // ============================================
   // PROJECTS PORTFOLIO
@@ -1061,4 +1130,67 @@ export default defineSchema({
   })
     .index("by_post", ["postId"])
     .index("by_user_post", ["userId", "postId"]),
+
+  // ============================================
+  // VAULT - Downloadable files with tier-restricted access
+  // ============================================
+
+  vaultFiles: defineTable({
+    title: v.string(),
+    description: v.optional(v.string()),
+    slug: v.string(),
+    fileType: v.union(
+      v.literal("pdf"),
+      v.literal("video"),
+      v.literal("document"),
+      v.literal("image"),
+      v.literal("archive"),
+    ),
+    fileUrl: v.string(),
+    thumbnailUrl: v.optional(v.string()),
+    filename: v.string(),
+    mimeType: v.string(),
+    fileSize: v.number(),
+    pageCount: v.optional(v.number()),
+    duration: v.optional(v.number()),
+    visibility: v.union(
+      v.literal("public"),
+      v.literal("members"),
+      v.literal("tier1"),
+      v.literal("tier2"),
+    ),
+    order: v.number(),
+    authorId: v.id("users"),
+    downloadCount: v.number(),
+    isArchived: v.boolean(),
+    createdAt: v.number(),
+  })
+    .index("by_slug", ["slug"])
+    .index("by_visibility", ["visibility", "isArchived"])
+    .index("by_order", ["order"]),
+
+  // ============================================
+  // SUPPORTER ADMIN - Super Legend Management
+  // ============================================
+
+  // Track vault file downloads for analytics
+  vaultDownloadLogs: defineTable({
+    userId: v.id("users"),
+    fileId: v.id("vaultFiles"),
+    downloadedAt: v.number(),
+    userTier: v.string(),
+  })
+    .index("by_user", ["userId", "downloadedAt"])
+    .index("by_file", ["fileId", "downloadedAt"]),
+
+  // Custom notifications sent to subscribers
+  supporterNotifications: defineTable({
+    title: v.string(),
+    message: v.string(),
+    targetTier: v.union(v.literal("tier1"), v.literal("tier2"), v.literal("all")),
+    sentAt: v.number(),
+    sentBy: v.id("users"),
+    recipientCount: v.number(),
+    discordWebhookSent: v.boolean(),
+  }).index("by_sent", ["sentAt"]),
 });

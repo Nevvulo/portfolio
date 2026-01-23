@@ -1,5 +1,6 @@
 import { faClock, faPlay, faTimes } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { DollarSign } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import styled from "styled-components";
@@ -11,6 +12,8 @@ import { SkeletonImage } from "../blog/skeleton-image";
 type BentoSize = "small" | "medium" | "large" | "banner" | "featured";
 type ContentType = "article" | "video" | "news";
 type Difficulty = "beginner" | "intermediate" | "advanced";
+
+type Visibility = "public" | "members" | "tier1" | "tier2";
 
 export interface BentoCardProps {
   _id: Id<"blogPosts">;
@@ -26,6 +29,7 @@ export interface BentoCardProps {
   bentoSize: BentoSize;
   viewCount: number;
   publishedAt?: number;
+  visibility?: Visibility;
   author?: {
     displayName: string;
     avatarUrl?: string;
@@ -44,8 +48,10 @@ export function BentoCard(props: BentoCardProps) {
     labels,
     readTimeMins,
     publishedAt,
+    visibility,
   } = props;
   const [isPlaying, setIsPlaying] = useState(false);
+  const isTierLocked = visibility === "tier1" || visibility === "tier2";
 
   const isVideo = contentType === "video";
   const isNews = contentType === "news";
@@ -72,6 +78,7 @@ export function BentoCard(props: BentoCardProps) {
     return (
       <NewsWrapper href={`/learn/${slug}`} $size={bentoSize}>
         <NewsCard $featured={isFeatured}>
+          {isTierLocked && <TierBadge tier={visibility as "tier1" | "tier2"} small />}
           {thumbnail && (
             <NewsImage $size={bentoSize}>
               <SkeletonImage alt={title} fill style={{ objectFit: "cover" }} src={thumbnail} />
@@ -100,6 +107,7 @@ export function BentoCard(props: BentoCardProps) {
     return (
       <FeaturedWrapper href={`/learn/${slug}`} onClick={handleVideoClick}>
         <FeaturedCard>
+          {isTierLocked && <TierBadge tier={visibility as "tier1" | "tier2"} />}
           <FeaturedImage>
             {isPlaying && youtubeId ? (
               <>
@@ -157,6 +165,7 @@ export function BentoCard(props: BentoCardProps) {
     return (
       <LargeWrapper href={`/learn/${slug}`} onClick={handleVideoClick}>
         <LargeCard>
+          {isTierLocked && <TierBadge tier={visibility as "tier1" | "tier2"} />}
           {isPlaying && youtubeId ? (
             <>
               <VideoEmbed
@@ -204,6 +213,7 @@ export function BentoCard(props: BentoCardProps) {
     return (
       <BannerWrapper href={`/learn/${slug}`} onClick={handleVideoClick}>
         <BannerCard>
+          {isTierLocked && <TierBadge tier={visibility as "tier1" | "tier2"} />}
           {isPlaying && youtubeId ? (
             <>
               <VideoEmbed
@@ -251,6 +261,7 @@ export function BentoCard(props: BentoCardProps) {
     return (
       <SmallWrapper href={`/learn/${slug}`} onClick={handleVideoClick}>
         <SmallCard $isPlaying={isPlaying}>
+          {isTierLocked && <TierBadge tier={visibility as "tier1" | "tier2"} small />}
           {isPlaying && youtubeId ? (
             <>
               <VideoEmbed
@@ -289,6 +300,7 @@ export function BentoCard(props: BentoCardProps) {
   return (
     <MediumWrapper href={`/learn/${slug}`} onClick={handleVideoClick}>
       <MediumCard>
+        {isTierLocked && <TierBadge tier={visibility as "tier1" | "tier2"} />}
         {isPlaying && youtubeId ? (
           <>
             <VideoEmbed
@@ -858,5 +870,54 @@ const PlayButton = styled.div<{ $large?: boolean; $small?: boolean }>`
     transform: translate(-50%, -50%) scale(1.1);
   }
 `;
+
+// ========== LEGEND BADGE ==========
+const TierBadgeBase = styled.div<{ $small?: boolean }>`
+  position: absolute;
+  top: ${(props) => (props.$small ? "8px" : "12px")};
+  right: ${(props) => (props.$small ? "8px" : "12px")};
+  z-index: 10;
+  padding: ${(props) => (props.$small ? "3px 6px" : "4px 8px")};
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  gap: 3px;
+`;
+
+const TierBadgeText = styled.span<{ $small?: boolean }>`
+  font-family: "Fira Code", monospace;
+  font-size: ${(props) => (props.$small ? "11px" : "12px")};
+  font-weight: 700;
+  letter-spacing: -0.8px;
+  background: linear-gradient(135deg, #ffd700, #ff8c00);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+`;
+
+const TierBadgeIcon = styled.div<{ $small?: boolean }>`
+  display: flex;
+  align-items: center;
+  color: #f59e0b;
+
+  svg {
+    width: ${(props) => (props.$small ? "12px" : "14px")};
+    height: ${(props) => (props.$small ? "12px" : "14px")};
+    stroke-width: 2.5px;
+  }
+`;
+
+function TierBadge({ small }: { tier: "tier1" | "tier2"; small?: boolean }) {
+  return (
+    <TierBadgeBase $small={small}>
+      <TierBadgeIcon $small={small}>
+        <DollarSign />
+      </TierBadgeIcon>
+      <TierBadgeText $small={small}>Legend</TierBadgeText>
+    </TierBadgeBase>
+  );
+}
 
 export default BentoCard;

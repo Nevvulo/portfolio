@@ -1,11 +1,12 @@
 import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
 import { useQuery } from "convex/react";
-import { Menu, X } from "lucide-react";
+import { Calendar, ChevronLeft, ChevronRight, Menu, Play, X, Zap } from "lucide-react";
 import Head from "next/head";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
+import GolfquestBanner from "../assets/img/games/golfquest.png";
 import NevuloLogoSrc from "../assets/svg/nevulo-huge-bold-svg.svg";
 import { SupporterBadges } from "../components/badges/supporter-badges";
 import { SocialLinks } from "../components/generics";
@@ -16,6 +17,7 @@ import { CanvasIntro } from "../components/home/canvas-intro";
 import { type BentoCardProps, BentoGrid } from "../components/learn";
 import { FeaturedProjectCard } from "../components/project/featured-project";
 import { ROUTES } from "../constants/routes";
+import Socials from "../constants/socials";
 import { api } from "../convex/_generated/api";
 import type { DiscordWidget } from "../types/discord";
 import { fetchDiscordWidget } from "../utils/discord-widget";
@@ -36,6 +38,10 @@ export default function Home({ discordWidget, isLive: serverIsLive }: HomeProps)
   const [isLiveOverride, setIsLiveOverride] = useState<boolean | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
+
+  // Shorts carousel state
+  const [playingShortId, setPlayingShortId] = useState<string | null>(null);
+  const shortsCarouselRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -88,7 +94,6 @@ export default function Home({ discordWidget, isLive: serverIsLive }: HomeProps)
     return undefined;
   }, []);
 
-
   const isLive = isLiveOverride !== null ? isLiveOverride : serverIsLive;
 
   // Fetch learn posts from Convex
@@ -113,6 +118,40 @@ export default function Home({ discordWidget, isLive: serverIsLive }: HomeProps)
   // Get featured projects from Convex
   const projects = useQuery(api.projects.listActive);
   const featuredProjects = projects?.filter((p) => p.slug === "unloan" || p.slug === "flux") ?? [];
+
+  // Get shorts for Live section carousel
+  const shortsPosts =
+    learnPosts
+      ?.filter((p) => p.contentType === "video" && p.labels?.includes("short"))
+      ?.slice(0, 10) ?? [];
+
+  // Carousel scroll handlers
+  const scrollShortsCarousel = (direction: "left" | "right") => {
+    if (shortsCarouselRef.current) {
+      const scrollAmount = 200;
+      shortsCarouselRef.current.scrollBy({
+        left: direction === "left" ? -scrollAmount : scrollAmount,
+        behavior: "smooth",
+      });
+    }
+  };
+
+  // Get stream settings and events
+  const streamSettings = useQuery(api.stream.getStreamSettings);
+  const upcomingEvents = useQuery(api.stream.getUpcomingEvents);
+
+  // Get game-related posts for Games section
+  const gamePosts =
+    learnPosts
+      ?.filter((p) =>
+        p.labels?.some(
+          (label: string) =>
+            label.toLowerCase().includes("game") ||
+            label.toLowerCase().includes("roblox") ||
+            label.toLowerCase().includes("golfquest"),
+        ),
+      )
+      ?.slice(0, 3) ?? [];
 
   return (
     <>
@@ -310,6 +349,280 @@ export default function Home({ discordWidget, isLive: serverIsLive }: HomeProps)
             </LearnSectionContent>
           </Section>
 
+          {/* Live / Events & Videos Section */}
+          <Section>
+            <LiveSectionContent>
+              <SectionHeader>
+                <SectionTitle>
+                  <SectionTitlePrimary>events &</SectionTitlePrimary>
+                  <SectionTitleSecondary>videos</SectionTitleSecondary>
+                </SectionTitle>
+                <ViewAllLink href="/live">View all →</ViewAllLink>
+              </SectionHeader>
+
+              {/* Top Row: Stream-O-Meter + Events Calendar */}
+              <LiveTopRow>
+                {/* Stream-O-Meter */}
+                <StreamOMeterCard href="https://twitch.tv/Nevvulo" target="_blank" $isLive={isLive}>
+                  {isLive && (
+                    <LiveBadge>
+                      <LivePulse />
+                      LIVE
+                    </LiveBadge>
+                  )}
+                  <StreamOMeterHeader>
+                    <Zap size={18} />
+                    <span>Stream-O-Meter</span>
+                  </StreamOMeterHeader>
+                  <StreamOMeterLabel $chance={streamSettings?.streamChance ?? 0}>
+                    {(streamSettings?.streamChance ?? 0) >= 80
+                      ? "Very likely!"
+                      : (streamSettings?.streamChance ?? 0) >= 50
+                        ? "Good chance"
+                        : (streamSettings?.streamChance ?? 0) >= 20
+                          ? "Maybe"
+                          : "Not today"}
+                  </StreamOMeterLabel>
+                  <StreamOMeterBar>
+                    <StreamOMeterSegments>
+                      {[...Array(10)].map((_, i) => (
+                        <StreamOMeterSegment
+                          key={i}
+                          $active={i < Math.ceil((streamSettings?.streamChance ?? 0) / 10)}
+                          $chance={streamSettings?.streamChance ?? 0}
+                        />
+                      ))}
+                    </StreamOMeterSegments>
+                  </StreamOMeterBar>
+                  <StreamOMeterValue $chance={streamSettings?.streamChance ?? 0}>
+                    {streamSettings?.streamChance ?? 0}%
+                  </StreamOMeterValue>
+                  {streamSettings?.streamChanceMessage && (
+                    <StreamOMeterMessage>{streamSettings.streamChanceMessage}</StreamOMeterMessage>
+                  )}
+                </StreamOMeterCard>
+
+                {/* Events Calendar */}
+                <EventsCalendarCard>
+                  <EventsCalendarHeader>
+                    <Calendar size={16} />
+                    <span>Upcoming Events</span>
+                  </EventsCalendarHeader>
+                  {!upcomingEvents || upcomingEvents.length === 0 ? (
+                    <NoEventsState>
+                      <Calendar size={20} />
+                      <span>No upcoming events</span>
+                    </NoEventsState>
+                  ) : (
+                    <EventsList>
+                      {upcomingEvents.slice(0, 3).map((event) => (
+                        <EventItem key={event._id}>
+                          <EventDate>
+                            {new Date(event.scheduledStartTime).toLocaleDateString(undefined, {
+                              weekday: "short",
+                              month: "short",
+                              day: "numeric",
+                            })}
+                          </EventDate>
+                          <EventName>{event.name}</EventName>
+                        </EventItem>
+                      ))}
+                    </EventsList>
+                  )}
+                </EventsCalendarCard>
+              </LiveTopRow>
+
+              {/* Twitch + Discord Embeds Row */}
+              <LiveEmbeds>
+                <LiveEmbedCard href="https://twitch.tv/Nevvulo" target="_blank" $isLive={isLive}>
+                  <LiveEmbedIcon $color="#9146ff">
+                    <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
+                      <path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714Z" />
+                    </svg>
+                  </LiveEmbedIcon>
+                  <LiveEmbedContent>
+                    <LiveEmbedTitle>{isLive ? "Live Now!" : "Twitch"}</LiveEmbedTitle>
+                    <LiveEmbedSubtitle>twitch.tv/Nevvulo</LiveEmbedSubtitle>
+                  </LiveEmbedContent>
+                </LiveEmbedCard>
+
+                <LiveEmbedCard href={Socials.Discord} target="_blank">
+                  <LiveEmbedIcon $color="#5865f2">
+                    <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
+                      <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z" />
+                    </svg>
+                  </LiveEmbedIcon>
+                  <LiveEmbedContent>
+                    <LiveEmbedTitle>Discord</LiveEmbedTitle>
+                    <LiveEmbedSubtitle>
+                      {discordWidget?.presence_count ? (
+                        <OnlineIndicator>
+                          <OnlineDot />
+                          {discordWidget.presence_count} online
+                        </OnlineIndicator>
+                      ) : (
+                        "Join us"
+                      )}
+                    </LiveEmbedSubtitle>
+                  </LiveEmbedContent>
+                </LiveEmbedCard>
+              </LiveEmbeds>
+
+              {/* Shorts Carousel */}
+              {shortsPosts.length > 0 && (
+                <ShortsSection>
+                  <ShortsSectionHeader>
+                    <ShortsSectionTitle>Shorts</ShortsSectionTitle>
+                    <ShortsNavButtons>
+                      <ShortsNavButton
+                        onClick={() => scrollShortsCarousel("left")}
+                        aria-label="Scroll left"
+                      >
+                        <ChevronLeft size={18} />
+                      </ShortsNavButton>
+                      <ShortsNavButton
+                        onClick={() => scrollShortsCarousel("right")}
+                        aria-label="Scroll right"
+                      >
+                        <ChevronRight size={18} />
+                      </ShortsNavButton>
+                    </ShortsNavButtons>
+                  </ShortsSectionHeader>
+                  <ShortsCarousel ref={shortsCarouselRef}>
+                    {shortsPosts.map((short) => (
+                      <ShortCard
+                        key={short._id}
+                        onClick={() =>
+                          setPlayingShortId(playingShortId === short._id ? null : short._id)
+                        }
+                      >
+                        {playingShortId === short._id && short.youtubeId ? (
+                          <ShortEmbed>
+                            <iframe
+                              src={`https://www.youtube.com/embed/${short.youtubeId}?autoplay=1&rel=0`}
+                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                              allowFullScreen
+                              title={short.title}
+                            />
+                          </ShortEmbed>
+                        ) : (
+                          <ShortThumbnail>
+                            {short.coverImage ? (
+                              <Image
+                                src={short.coverImage}
+                                alt={short.title}
+                                fill
+                                style={{ objectFit: "cover" }}
+                              />
+                            ) : short.youtubeId ? (
+                              <Image
+                                src={`https://img.youtube.com/vi/${short.youtubeId}/maxresdefault.jpg`}
+                                alt={short.title}
+                                fill
+                                style={{ objectFit: "cover" }}
+                              />
+                            ) : (
+                              <ShortPlaceholder />
+                            )}
+                            <ShortOverlay>
+                              <ShortPlayButton>
+                                <Play size={24} fill="white" />
+                              </ShortPlayButton>
+                              <ShortTitle>{short.title}</ShortTitle>
+                            </ShortOverlay>
+                          </ShortThumbnail>
+                        )}
+                      </ShortCard>
+                    ))}
+                  </ShortsCarousel>
+                </ShortsSection>
+              )}
+
+              {/* Empty state if no shorts */}
+              {shortsPosts.length === 0 && (
+                <LiveVideosEmpty>
+                  <Play size={24} />
+                  <span>Videos coming soon</span>
+                </LiveVideosEmpty>
+              )}
+            </LiveSectionContent>
+          </Section>
+
+          {/* Games Section */}
+          <Section>
+            <GamesSectionContent>
+              <SectionHeader>
+                <SectionTitle>
+                  <SectionTitlePrimary>explore</SectionTitlePrimary>
+                  <SectionTitleSecondary>games</SectionTitleSecondary>
+                </SectionTitle>
+                <ViewAllLink href="/games">View all →</ViewAllLink>
+              </SectionHeader>
+
+              {/* Featured Games Row */}
+              <GamesCardsRow>
+                <GolfquestCard href="/games/golfquest">
+                  <GolfquestImageWrapper>
+                    <Image
+                      src={GolfquestBanner}
+                      alt="Golfquest"
+                      fill
+                      style={{ objectFit: "cover" }}
+                    />
+                    <GolfquestOverlay />
+                  </GolfquestImageWrapper>
+                  <GolfquestContent>
+                    <GolfquestBadges>
+                      <GolfquestBadge>Coming 2026</GolfquestBadge>
+                      <GolfquestPlatform>Roblox</GolfquestPlatform>
+                    </GolfquestBadges>
+                    <GolfquestTitle>Golfquest</GolfquestTitle>
+                    <GolfquestDesc>Golf adventure with precision mechanics</GolfquestDesc>
+                  </GolfquestContent>
+                </GolfquestCard>
+
+                <SecretGameCard>
+                  <SecretGameContent>
+                    <SecretGameIcon>?</SecretGameIcon>
+                    <SecretGameBadge>Coming 2027</SecretGameBadge>
+                    <SecretGameTitle>Secret Project</SecretGameTitle>
+                    <SecretGameDesc>Reveal coming soon...</SecretGameDesc>
+                  </SecretGameContent>
+                  <SecretGameGlow />
+                </SecretGameCard>
+              </GamesCardsRow>
+
+              {/* Game Articles Row - 3x1 on desktop, 1x3 on mobile */}
+              {gamePosts.length > 0 && (
+                <GamesArticleGrid>
+                  {gamePosts.map((post) => (
+                    <GameArticleCard key={post._id} href={`/learn/${post.slug}`}>
+                      <GameArticleThumbnail>
+                        {post.coverImage ? (
+                          <Image
+                            src={post.coverImage}
+                            alt={post.title}
+                            fill
+                            style={{ objectFit: "cover" }}
+                          />
+                        ) : (
+                          <GameArticlePlaceholder />
+                        )}
+                        <GameArticleOverlay />
+                      </GameArticleThumbnail>
+                      <GameArticleContent>
+                        {post.labels?.length > 0 && (
+                          <GameArticleLabel>{post.labels[0]}</GameArticleLabel>
+                        )}
+                        <GameArticleTitle>{post.title}</GameArticleTitle>
+                      </GameArticleContent>
+                    </GameArticleCard>
+                  ))}
+                </GamesArticleGrid>
+              )}
+            </GamesSectionContent>
+          </Section>
+
           {/* Projects Section */}
           <Section>
             <SectionContent>
@@ -332,6 +645,34 @@ export default function Home({ discordWidget, isLive: serverIsLive }: HomeProps)
                 ))}
               </ProjectsContainer>
             </SectionContent>
+          </Section>
+
+          {/* Support Section */}
+          <Section>
+            <SupportSectionContent>
+              <SupportHeader>
+                <SupportTitle>support nevulo</SupportTitle>
+                <SupportSubtitle>
+                  Get exclusive perks, early access, and help support my work
+                </SupportSubtitle>
+              </SupportHeader>
+
+              <SupportTiers>
+                <SupportTierCard href="/support" $featured>
+                  <TierBadge $tier="legend">Super Legend</TierBadge>
+                  <TierPrice>
+                    $5<span>/mo</span>
+                  </TierPrice>
+                  <TierPerks>
+                    <TierPerk>Exclusive Discord role & channels</TierPerk>
+                    <TierPerk>Vault access - downloads & resources</TierPerk>
+                    <TierPerk>Early access to games & content</TierPerk>
+                    <TierPerk>Special badge on your profile</TierPerk>
+                  </TierPerks>
+                  <TierCTA>Learn More →</TierCTA>
+                </SupportTierCard>
+              </SupportTiers>
+            </SupportSectionContent>
           </Section>
 
           <Head>
@@ -943,6 +1284,1017 @@ const ProjectsContainer = styled.div`
   flex-direction: column;
   gap: 1.5rem;
   width: 100%;
+`;
+
+// Games section styles
+const GamesSectionContent = styled.div`
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  min-height: 450px; /* Prevent CLS */
+`;
+
+const GamesCardsRow = styled.div`
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 1rem;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+`;
+
+const GolfquestCard = styled(Link)`
+  display: flex;
+  flex-direction: column;
+  border-radius: 14px;
+  overflow: hidden;
+  background: rgba(30, 25, 45, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(79, 77, 193, 0.25);
+  text-decoration: none;
+  transition: all 0.2s ease;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 16px 32px rgba(0, 0, 0, 0.25);
+    border-color: rgba(16, 185, 129, 0.4);
+    background: rgba(30, 25, 45, 0.85);
+  }
+`;
+
+const GolfquestImageWrapper = styled.div`
+  position: relative;
+  height: 140px;
+  background: linear-gradient(135deg, #065f46, #047857);
+`;
+
+const GolfquestOverlay = styled.div`
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(6, 95, 70, 0.3), rgba(4, 120, 87, 0.2));
+`;
+
+const GolfquestContent = styled.div`
+  padding: 1rem;
+`;
+
+const GolfquestBadges = styled.div`
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+`;
+
+const GolfquestBadge = styled.span`
+  display: inline-flex;
+  padding: 3px 8px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  border-radius: 4px;
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+`;
+
+const GolfquestPlatform = styled.span`
+  display: inline-flex;
+  padding: 3px 8px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  border-radius: 4px;
+  background: ${(props) => props.theme.contrast}08;
+  color: ${(props) => props.theme.contrast}70;
+`;
+
+const GolfquestTitle = styled.h3`
+  font-family: var(--font-sans);
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: ${(props) => props.theme.contrast};
+  margin: 0 0 0.25rem 0;
+`;
+
+const GolfquestDesc = styled.p`
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  color: ${(props) => props.theme.contrast}70;
+  margin: 0;
+  line-height: 1.4;
+`;
+
+const SecretGameCard = styled.div`
+  position: relative;
+  border-radius: 14px;
+  overflow: hidden;
+  background: rgba(30, 25, 45, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px dashed rgba(168, 85, 247, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+`;
+
+const SecretGameContent = styled.div`
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  padding: 1.5rem;
+`;
+
+const SecretGameIcon = styled.div`
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #a855f7;
+  background: rgba(168, 85, 247, 0.1);
+  border: 2px dashed rgba(168, 85, 247, 0.3);
+  border-radius: 12px;
+`;
+
+const SecretGameBadge = styled.span`
+  display: inline-flex;
+  padding: 3px 8px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  border-radius: 4px;
+  background: rgba(168, 85, 247, 0.15);
+  color: #a855f7;
+  margin-bottom: 0.5rem;
+`;
+
+const SecretGameTitle = styled.h3`
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  font-weight: 700;
+  color: ${(props) => props.theme.contrast};
+  margin: 0 0 0.25rem 0;
+`;
+
+const SecretGameDesc = styled.p`
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: #a855f7;
+  margin: 0;
+  opacity: 0.8;
+`;
+
+const SecretGameGlow = styled.div`
+  position: absolute;
+  width: 150px;
+  height: 150px;
+  background: radial-gradient(circle, rgba(168, 85, 247, 0.1) 0%, transparent 70%);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+`;
+
+const GamesArticleGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+`;
+
+const GameArticleCard = styled(Link)`
+  display: flex;
+  flex-direction: column;
+  border-radius: 12px;
+  overflow: hidden;
+  background: rgba(30, 25, 45, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(79, 77, 193, 0.2);
+  text-decoration: none;
+  transition: all 0.2s ease;
+
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.25);
+    border-color: rgba(79, 77, 193, 0.4);
+    background: rgba(30, 25, 45, 0.85);
+  }
+`;
+
+const GameArticleThumbnail = styled.div`
+  position: relative;
+  aspect-ratio: 16 / 9;
+  background: linear-gradient(135deg, #065f46, #047857);
+  overflow: hidden;
+`;
+
+const GameArticlePlaceholder = styled.div`
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.3), rgba(5, 150, 105, 0.2));
+`;
+
+const GameArticleOverlay = styled.div`
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, transparent 40%, rgba(0, 0, 0, 0.5) 100%);
+`;
+
+const GameArticleContent = styled.div`
+  padding: 0.75rem;
+`;
+
+const GameArticleLabel = styled.span`
+  display: inline-flex;
+  padding: 2px 6px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 600;
+  text-transform: uppercase;
+  border-radius: 3px;
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+  margin-bottom: 0.375rem;
+`;
+
+const GameArticleTitle = styled.h3`
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: ${(props) => props.theme.contrast};
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.3;
+`;
+
+// Live section styles
+const LiveSectionContent = styled.div`
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  min-height: 500px; /* Prevent CLS */
+`;
+
+const LiveEmbeds = styled.div`
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+
+  @media (max-width: 640px) {
+    grid-template-columns: 1fr;
+  }
+`;
+
+const LiveEmbedCard = styled.a<{ $isLive?: boolean }>`
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  padding: 1rem 1.25rem;
+  background: ${(props) =>
+    props.$isLive
+      ? "linear-gradient(135deg, rgba(145, 70, 255, 0.25) 0%, rgba(30, 25, 45, 0.8) 100%)"
+      : "rgba(30, 25, 45, 0.7)"};
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid ${(props) =>
+    props.$isLive ? "rgba(145, 70, 255, 0.4)" : "rgba(79, 77, 193, 0.25)"};
+  border-radius: 12px;
+  text-decoration: none;
+  color: ${(props) => props.theme.contrast};
+  transition: all 0.2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+    background: ${(props) =>
+      props.$isLive
+        ? "linear-gradient(135deg, rgba(145, 70, 255, 0.3) 0%, rgba(30, 25, 45, 0.9) 100%)"
+        : "rgba(30, 25, 45, 0.85)"};
+    border-color: ${(props) =>
+      props.$isLive ? "rgba(145, 70, 255, 0.6)" : "rgba(79, 77, 193, 0.4)"};
+  }
+`;
+
+const LiveBadge = styled.span`
+  position: absolute;
+  top: -8px;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  background: #ff0000;
+  color: white;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(255, 0, 0, 0.4);
+`;
+
+const LivePulse = styled.span`
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: white;
+  animation: livePulse 1.5s ease-in-out infinite;
+
+  @keyframes livePulse {
+    0%, 100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.5;
+      transform: scale(1.3);
+    }
+  }
+`;
+
+const LiveEmbedIcon = styled.div<{ $color: string }>`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  background: ${(props) => props.$color}20;
+  border-radius: 10px;
+  color: ${(props) => props.$color};
+  flex-shrink: 0;
+`;
+
+const LiveEmbedContent = styled.div`
+  flex: 1;
+  min-width: 0;
+`;
+
+const LiveEmbedTitle = styled.div`
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 0.9375rem;
+  margin-bottom: 2px;
+`;
+
+const LiveEmbedSubtitle = styled.div`
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  opacity: 0.6;
+`;
+
+const OnlineIndicator = styled.span`
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+`;
+
+const OnlineDot = styled.span`
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: #43b581;
+`;
+
+// Video grid styles for Live section
+const LiveVideosGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  min-height: 160px; /* Prevent CLS */
+
+  @media (max-width: 900px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (max-width: 480px) {
+    grid-template-columns: 1fr;
+  }
+`;
+
+const LiveVideoCard = styled(Link)`
+  display: flex;
+  flex-direction: column;
+  border-radius: 12px;
+  overflow: hidden;
+  background: rgba(30, 25, 45, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(79, 77, 193, 0.2);
+  text-decoration: none;
+  transition: all 0.2s ease;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.25);
+    background: rgba(30, 25, 45, 0.85);
+    border-color: rgba(79, 77, 193, 0.4);
+  }
+`;
+
+const LiveVideoThumbnail = styled.div`
+  position: relative;
+  aspect-ratio: 16 / 9;
+  background: #1a1a2e;
+  overflow: hidden;
+`;
+
+const LiveVideoPlaceholder = styled.div`
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, rgba(144, 116, 242, 0.2), rgba(99, 102, 241, 0.1));
+`;
+
+const LiveVideoPlayOverlay = styled.div`
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.3);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+
+  ${LiveVideoCard}:hover & {
+    opacity: 1;
+  }
+`;
+
+const LiveVideoPlayButton = styled.div`
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(144, 116, 242, 0.9);
+  border-radius: 50%;
+  transition: transform 0.2s ease;
+
+  ${LiveVideoCard}:hover & {
+    transform: scale(1.1);
+  }
+`;
+
+const LiveVideoInfo = styled.div`
+  padding: 0.75rem;
+`;
+
+const LiveVideoTitle = styled.h3`
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: ${(props) => props.theme.contrast};
+  margin: 0 0 0.375rem 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.3;
+`;
+
+const LiveVideoLabel = styled.span`
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 500;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  background: ${(props) => props.theme.contrast}08;
+  color: ${(props) => props.theme.contrast}60;
+  border-radius: 3px;
+`;
+
+const LiveVideosEmpty = styled.div`
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 2rem;
+  color: ${(props) => props.theme.contrast};
+  opacity: 0.5;
+  font-size: 0.875rem;
+  background: rgba(30, 25, 45, 0.5);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px dashed rgba(79, 77, 193, 0.3);
+  border-radius: 12px;
+`;
+
+// Shorts Carousel styles
+const ShortsSection = styled.div`
+  margin-bottom: 1.5rem;
+`;
+
+const ShortsSectionHeader = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+`;
+
+const ShortsSectionTitle = styled.h3`
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: ${(props) => props.theme.contrast};
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  opacity: 0.8;
+`;
+
+const ShortsNavButtons = styled.div`
+  display: flex;
+  gap: 0.5rem;
+`;
+
+const ShortsNavButton = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: rgba(30, 25, 45, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(79, 77, 193, 0.25);
+  border-radius: 8px;
+  color: ${(props) => props.theme.contrast};
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: rgba(30, 25, 45, 0.9);
+    border-color: rgba(79, 77, 193, 0.4);
+  }
+`;
+
+const ShortsCarousel = styled.div`
+  display: flex;
+  gap: 0.75rem;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding: 0.25rem 0;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+`;
+
+const ShortCard = styled.div`
+  flex-shrink: 0;
+  width: 140px;
+  aspect-ratio: 9 / 16;
+  border-radius: 12px;
+  overflow: hidden;
+  background: rgba(30, 25, 45, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(79, 77, 193, 0.2);
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    transform: scale(1.03);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    border-color: rgba(79, 77, 193, 0.4);
+  }
+
+  @media (max-width: 640px) {
+    width: 120px;
+  }
+`;
+
+const ShortThumbnail = styled.div`
+  position: relative;
+  width: 100%;
+  height: 100%;
+`;
+
+const ShortPlaceholder = styled.div`
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, rgba(144, 116, 242, 0.2), rgba(99, 102, 241, 0.1));
+`;
+
+const ShortOverlay = styled.div`
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.2) 50%, transparent 100%);
+  padding: 0.75rem;
+`;
+
+const ShortPlayButton = styled.div`
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(144, 116, 242, 0.9);
+  border-radius: 50%;
+  margin-bottom: auto;
+  margin-top: auto;
+  transition: transform 0.2s ease;
+
+  ${ShortCard}:hover & {
+    transform: scale(1.1);
+  }
+`;
+
+const ShortTitle = styled.span`
+  font-family: var(--font-sans);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: white;
+  text-align: center;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.3;
+  margin-top: auto;
+`;
+
+const ShortEmbed = styled.div`
+  width: 100%;
+  height: 100%;
+
+  iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+  }
+`;
+
+// Stream-O-Meter and Events Calendar styles
+const LiveTopRow = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  min-height: 180px;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+`;
+
+const StreamOMeterCard = styled.a<{ $isLive?: boolean }>`
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 1.25rem;
+  background: ${(props) =>
+    props.$isLive
+      ? "linear-gradient(135deg, rgba(145, 70, 255, 0.2) 0%, rgba(30, 25, 45, 0.8) 100%)"
+      : "rgba(30, 25, 45, 0.7)"};
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid ${(props) =>
+    props.$isLive ? "rgba(145, 70, 255, 0.3)" : "rgba(79, 77, 193, 0.25)"};
+  border-radius: 14px;
+  text-decoration: none;
+  color: ${(props) => props.theme.contrast};
+  transition: all 0.2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.25);
+    background: ${(props) =>
+      props.$isLive
+        ? "linear-gradient(135deg, rgba(145, 70, 255, 0.25) 0%, rgba(30, 25, 45, 0.9) 100%)"
+        : "rgba(30, 25, 45, 0.85)"};
+    border-color: ${(props) =>
+      props.$isLive ? "rgba(145, 70, 255, 0.5)" : "rgba(79, 77, 193, 0.4)"};
+  }
+`;
+
+const StreamOMeterHeader = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #9074f2;
+  margin-bottom: 0.75rem;
+`;
+
+const StreamOMeterLabel = styled.div<{ $chance: number }>`
+  font-family: var(--font-sans);
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: ${(props) =>
+    props.$chance >= 80
+      ? "#22c55e"
+      : props.$chance >= 50
+        ? "#eab308"
+        : props.$chance >= 20
+          ? "#f97316"
+          : "#ef4444"};
+  margin-bottom: 0.75rem;
+`;
+
+const StreamOMeterBar = styled.div`
+  height: 16px;
+  background: ${(props) => props.theme.contrast}08;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+`;
+
+const StreamOMeterSegments = styled.div`
+  display: flex;
+  gap: 3px;
+  height: 100%;
+  padding: 2px;
+`;
+
+const segmentBounce = keyframes`
+  0%, 100% {
+    transform: scaleY(1);
+  }
+  50% {
+    transform: scaleY(1.15);
+  }
+`;
+
+const StreamOMeterSegment = styled.div<{ $active: boolean; $chance: number }>`
+  flex: 1;
+  height: 100%;
+  border-radius: 4px;
+  background: ${(props) =>
+    props.$active
+      ? (
+          props.$chance >= 80
+            ? "#22c55e"
+            : props.$chance >= 50
+              ? "#eab308"
+              : props.$chance >= 20
+                ? "#f97316"
+                : "#ef4444"
+        )
+      : "rgba(255, 255, 255, 0.08)"};
+  transition: background 0.3s ease, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transform-origin: bottom;
+
+  ${(props) =>
+    props.$active &&
+    `
+    animation: segmentPulse 2s ease-in-out infinite;
+    animation-delay: ${Math.random() * 0.5}s;
+  `}
+
+  @keyframes segmentPulse {
+    0%, 100% {
+      transform: scaleY(1);
+    }
+    50% {
+      transform: scaleY(1.1);
+    }
+  }
+`;
+
+const StreamOMeterValue = styled.div<{ $chance: number }>`
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: ${(props) =>
+    props.$chance >= 80
+      ? "#22c55e"
+      : props.$chance >= 50
+        ? "#eab308"
+        : props.$chance >= 20
+          ? "#f97316"
+          : "#ef4444"};
+  opacity: 0.8;
+`;
+
+const StreamOMeterMessage = styled.div`
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  color: ${(props) => props.theme.contrast}60;
+  margin-top: 0.5rem;
+`;
+
+const EventsCalendarCard = styled.div`
+  display: flex;
+  flex-direction: column;
+  padding: 1.25rem;
+  background: rgba(30, 25, 45, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(79, 77, 193, 0.25);
+  border-radius: 14px;
+  min-height: 180px;
+`;
+
+const EventsCalendarHeader = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: ${(props) => props.theme.contrast}60;
+  margin-bottom: 1rem;
+`;
+
+const NoEventsState = styled.div`
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  color: ${(props) => props.theme.contrast}40;
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+`;
+
+const EventsList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+`;
+
+const EventItem = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+`;
+
+const EventDate = styled.span`
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: #9074f2;
+  text-transform: uppercase;
+`;
+
+const EventName = styled.span`
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: ${(props) => props.theme.contrast};
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+`;
+
+// Support section styles
+const SupportSectionContent = styled.div`
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+  text-align: center;
+`;
+
+const SupportHeader = styled.div`
+  margin-bottom: 2rem;
+`;
+
+const SupportTitle = styled.h2`
+  font-family: var(--font-display);
+  font-size: clamp(32px, 5vw, 48px);
+  font-weight: 400;
+  color: ${(props) => props.theme.contrast};
+  margin: 0 0 0.5rem 0;
+  letter-spacing: -1px;
+`;
+
+const SupportSubtitle = styled.p`
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  color: ${(props) => props.theme.contrast}70;
+  margin: 0;
+`;
+
+const SupportTiers = styled.div`
+  display: flex;
+  justify-content: center;
+`;
+
+const SupportTierCard = styled(Link)<{ $featured?: boolean }>`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem;
+  border-radius: 20px;
+  background: ${(props) =>
+    props.$featured
+      ? "linear-gradient(135deg, rgba(144, 116, 242, 0.15) 0%, rgba(99, 102, 241, 0.1) 100%)"
+      : "rgba(255, 255, 255, 0.03)"};
+  border: 1px solid ${(props) =>
+    props.$featured ? "rgba(144, 116, 242, 0.4)" : "rgba(255, 255, 255, 0.1)"};
+  text-decoration: none;
+  width: 100%;
+  max-width: 360px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 40px rgba(144, 116, 242, 0.2);
+  }
+`;
+
+const TierBadge = styled.span<{ $tier: string }>`
+  display: inline-flex;
+  padding: 0.375rem 1rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border-radius: 20px;
+  background: ${(props) =>
+    props.$tier === "legend"
+      ? "linear-gradient(135deg, #9074f2, #6366f1)"
+      : "rgba(255, 255, 255, 0.1)"};
+  color: white;
+  margin-bottom: 1rem;
+`;
+
+const TierPrice = styled.div`
+  font-family: var(--font-sans);
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: ${(props) => props.theme.contrast};
+  margin-bottom: 1.5rem;
+
+  span {
+    font-size: 1rem;
+    font-weight: 400;
+    opacity: 0.6;
+  }
+`;
+
+const TierPerks = styled.ul`
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1.5rem 0;
+  text-align: left;
+  width: 100%;
+`;
+
+const TierPerk = styled.li`
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  color: ${(props) => props.theme.contrast}90;
+  padding: 0.5rem 0;
+  padding-left: 1.5rem;
+  position: relative;
+
+  &::before {
+    content: "✓";
+    position: absolute;
+    left: 0;
+    color: #10b981;
+    font-weight: 600;
+  }
+`;
+
+const TierCTA = styled.span`
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #9074f2;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 `;
 
 export async function getStaticProps() {

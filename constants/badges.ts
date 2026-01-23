@@ -6,6 +6,7 @@ export enum BadgeType {
   DISCORD_ROLE = "DISCORD_ROLE",
   SUPER_LEGEND = "SUPER_LEGEND",
   SUPER_LEGEND_2 = "SUPER_LEGEND_2",
+  FOUNDER = "FOUNDER",
 }
 
 export const BadgeNames: Record<BadgeType, string> = {
@@ -16,6 +17,7 @@ export const BadgeNames: Record<BadgeType, string> = {
   [BadgeType.DISCORD_ROLE]: "Discord Role",
   [BadgeType.SUPER_LEGEND]: "Super Legend I",
   [BadgeType.SUPER_LEGEND_2]: "Super Legend II",
+  [BadgeType.FOUNDER]: "Founder",
 };
 
 export const BadgeColors: Record<BadgeType, string> = {
@@ -26,6 +28,7 @@ export const BadgeColors: Record<BadgeType, string> = {
   [BadgeType.DISCORD_ROLE]: "#5865F2", // Discord blurple (default, overridden by role color)
   [BadgeType.SUPER_LEGEND]: "#f7be5c", // Gold
   [BadgeType.SUPER_LEGEND_2]: "#e67e22", // Dark orange for tier 2
+  [BadgeType.FOUNDER]: "#ff6eb4", // Hot pink (with glow effect in component)
 };
 
 export const BadgeDescriptions: Record<BadgeType, string> = {
@@ -36,4 +39,5 @@ export const BadgeDescriptions: Record<BadgeType, string> = {
   [BadgeType.DISCORD_ROLE]: "Discord Server Role",
   [BadgeType.SUPER_LEGEND]: "Super Legend Supporter",
   [BadgeType.SUPER_LEGEND_2]: "Super Legend 2 Supporter",
+  [BadgeType.FOUNDER]: "One of the first 10 supporters",
 };

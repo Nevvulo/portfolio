@@ -1,9 +1,60 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { Webhook } from "svix";
 import { PLANS } from "../../../lib/clerk";
+import { grantFounderStatus } from "../../../lib/founder";
 import { logger, trackMetric } from "../../../lib/observability";
 import { getSupporterKey, redis } from "../../../lib/redis";
 import { syncDiscordRoles } from "../discord/roles";
+
+// Discord webhook for Super Legend purchase notifications
+const SUPPORT_WEBHOOK_URL =
+  "https://discord.com/api/webhooks/1464343392837439500/xw9H8NeA37ZVDjmjxPx7qoPsJdXWEGAo-3q9a9MvjTEZlgu9qBWLIDQiok49s7kzxEci";
+
+/**
+ * Send a celebratory Discord webhook when a new Super Legend subscribes
+ */
+async function sendSuperLegendWebhook(
+  userId: string,
+  displayName: string | null,
+  tierName: string,
+): Promise<void> {
+  try {
+    const embed = {
+      title: "🎉 New Super Legend!",
+      description: `**${displayName || "A new supporter"}** just became a **${tierName}**!`,
+      color: tierName === "Super Legend II" ? 0xffd700 : 0x9333ea, // Gold for tier 2, purple for tier 1
+      fields: [
+        {
+          name: "Tier",
+          value: tierName,
+          inline: true,
+        },
+        {
+          name: "Joined",
+          value: `<t:${Math.floor(Date.now() / 1000)}:R>`,
+          inline: true,
+        },
+      ],
+      footer: {
+        text: "Thank you for your support! 💜",
+      },
+      timestamp: new Date().toISOString(),
+    };
+
+    await fetch(SUPPORT_WEBHOOK_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        embeds: [embed],
+      }),
+    });
+
+    logger.info("Sent Super Legend webhook notification", { userId, tierName });
+  } catch (error) {
+    logger.error("Failed to send Super Legend webhook", { error, userId });
+    // Don't throw - this is non-critical
+  }
+}
 
 // Disable body parsing - we need the raw body for signature verification
 export const config = {
@@ -92,7 +143,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   switch (event.type) {
     case "subscriptionItem.active": {
       if (!userId) {
-        logger.error("Clerk webhook missing user_id", { eventType: event.type, eventId: event.data.id });
+        logger.error("Clerk webhook missing user_id", {
+          eventType: event.type,
+          eventId: event.data.id,
+        });
         break;
       }
 
@@ -109,6 +163,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         trackMetric("webhook.clerk.discord_sync_failed", 1, { event: "active" });
       } else {
         trackMetric("webhook.clerk.discord_sync_success", 1, { event: "active" });
+      }
+
+      // Attempt to grant founder status (first 10 subscribers get permanent badge)
+      const founderResult = await grantFounderStatus(userId);
+      if (founderResult.success && founderResult.founderNumber) {
+        logger.info("Founder status granted", {
+          userId,
+          founderNumber: founderResult.founderNumber,
+          alreadyFounder: founderResult.alreadyFounder,
+          slotsRemaining: founderResult.slotsRemaining,
+        });
+        trackMetric("webhook.clerk.founder_granted", 1, {
+          slot: String(founderResult.founderNumber),
+        });
+      } else if (!founderResult.success && founderResult.slotsRemaining === 0) {
+        logger.info("Founder slots full, user not granted founder status", { userId });
       }
 
       // Update Redis cache with subscription status
@@ -131,13 +201,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         logger.error("Failed to update Redis cache", { userId, error: redisError });
         trackMetric("webhook.clerk.redis_update_failed", 1);
       }
+
+      // Send celebratory Discord webhook notification
+      if (clerkPlan) {
+        const tierName = clerkPlan === "super_legend_2" ? "Super Legend II" : "Super Legend I";
+        // Try to get display name from Redis cache or use a placeholder
+        const userData = await redis.hgetall(key);
+        const displayName = (userData?.displayName as string) || null;
+        await sendSuperLegendWebhook(userId, displayName, tierName);
+        trackMetric("webhook.clerk.super_legend_notification", 1, { tier: clerkPlan });
+      }
       break;
     }
 
     case "subscriptionItem.canceled":
     case "subscriptionItem.ended": {
       if (!userId) {
-        logger.error("Clerk webhook missing user_id", { eventType: event.type, eventId: event.data.id });
+        logger.error("Clerk webhook missing user_id", {
+          eventType: event.type,
+          eventId: event.data.id,
+        });
         break;
       }
 

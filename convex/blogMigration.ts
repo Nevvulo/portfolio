@@ -1,11 +1,6 @@
 import { v } from "convex/values";
 import { internal } from "./_generated/api";
-import {
-  action,
-  internalMutation,
-  internalQuery,
-  query,
-} from "./_generated/server";
+import { action, internalMutation, internalQuery, query } from "./_generated/server";
 
 // GitHub raw content base URL
 const GITHUB_BASE = "https://raw.githubusercontent.com/Nevvulo/blog/main";

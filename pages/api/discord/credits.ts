@@ -45,10 +45,7 @@ export interface CreditsResponse {
   };
 }
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse<CreditsResponse>
-) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse<CreditsResponse>) {
   if (req.method !== "GET") {
     return res.status(405).json({ success: false, error: "Method not allowed" });
   }

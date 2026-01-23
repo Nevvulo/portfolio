@@ -3,9 +3,9 @@ import Head from "next/head";
 import Image from "next/image";
 import Link from "next/link";
 import styled, { keyframes } from "styled-components";
-import { api } from "../../convex/_generated/api";
 import { BackButton } from "../../components/generics";
 import { AnimatedMinimalView } from "../../components/layout/minimal";
+import { api } from "../../convex/_generated/api";
 
 type CreditUser = {
   _id: string;
@@ -87,9 +87,7 @@ function CreditsSection({
         ))}
       </UsersGrid>
       {section.hasMore && (
-        <ShowMoreNote>
-          + {section.total - section.items.length} more supporters
-        </ShowMoreNote>
+        <ShowMoreNote>+ {section.total - section.items.length} more supporters</ShowMoreNote>
       )}
     </Section>
   );
@@ -138,12 +136,7 @@ export default function CreditsPage() {
           </SectionsContainer>
         ) : (
           <SectionsContainer>
-            <CreditsSection
-              title="Staff"
-              section={credits.staff}
-              badge="Staff"
-              icon="🛡️"
-            />
+            <CreditsSection title="Staff" section={credits.staff} badge="Staff" icon="🛡️" />
 
             <CreditsSection
               title="Super Legend II"
@@ -210,9 +203,8 @@ export default function CreditsPage() {
         )}
 
         <FooterNote>
-          Want to appear here?{" "}
-          <Link href="/support">Become a supporter</Link> and enable &quot;Show on credits&quot; in
-          your <Link href="/account">account settings</Link>.
+          Want to appear here? <Link href="/support">Become a supporter</Link> and enable &quot;Show
+          on credits&quot; in your <Link href="/account">account settings</Link>.
         </FooterNote>
       </ContentContainer>
 
@@ -223,10 +215,7 @@ export default function CreditsPage() {
           content="Thank you to all the amazing supporters who make this possible!"
         />
         <meta property="og:title" content="Credits - Nevulo" />
-        <meta
-          property="og:description"
-          content="Thank you to all the amazing supporters!"
-        />
+        <meta property="og:description" content="Thank you to all the amazing supporters!" />
         <meta property="og:url" content="https://nev.so/credits" />
       </Head>
     </CreditsView>
@@ -514,15 +503,26 @@ const Username = styled.div`
   opacity: 0.7;
 `;
 
-const badgeColors: Record<string, { bg: string; color: string; border?: string; gradient?: boolean }> = {
+const badgeColors: Record<
+  string,
+  { bg: string; color: string; border?: string; gradient?: boolean }
+> = {
   Staff: { bg: "transparent", color: "", gradient: true },
   "SL II": { bg: "rgba(247, 190, 92, 0.15)", color: "#f7be5c", border: "rgba(247, 190, 92, 0.3)" },
   "SL I": { bg: "rgba(144, 116, 242, 0.15)", color: "#9074f2", border: "rgba(144, 116, 242, 0.3)" },
   T3: { bg: "rgba(145, 71, 255, 0.2)", color: "#9147ff", border: "rgba(145, 71, 255, 0.35)" },
   T2: { bg: "rgba(145, 71, 255, 0.15)", color: "#9147ff", border: "rgba(145, 71, 255, 0.3)" },
   T1: { bg: "rgba(145, 71, 255, 0.1)", color: "#9147ff", border: "rgba(145, 71, 255, 0.25)" },
-  Booster: { bg: "rgba(244, 127, 255, 0.15)", color: "#f47fff", border: "rgba(244, 127, 255, 0.3)" },
-  Contributor: { bg: "rgba(46, 204, 113, 0.15)", color: "#2ecc71", border: "rgba(46, 204, 113, 0.3)" },
+  Booster: {
+    bg: "rgba(244, 127, 255, 0.15)",
+    color: "#f47fff",
+    border: "rgba(244, 127, 255, 0.3)",
+  },
+  Contributor: {
+    bg: "rgba(46, 204, 113, 0.15)",
+    color: "#2ecc71",
+    border: "rgba(46, 204, 113, 0.3)",
+  },
 };
 
 const UserBadge = styled.span<{ $type: string }>`

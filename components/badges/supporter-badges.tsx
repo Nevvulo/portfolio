@@ -10,6 +10,7 @@ interface SupporterStatusData {
   discordBooster?: boolean | null;
   clerkPlan?: string | null;
   clerkPlanStatus?: string | null;
+  founderNumber?: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | null;
 }
 
 interface SupporterBadgesProps {
@@ -31,6 +32,7 @@ interface BadgeConfig {
   type: BadgeType;
   customColor?: string;
   customLabel?: string;
+  founderNumber?: number;
 }
 
 export function SupporterBadges({
@@ -52,7 +54,15 @@ export function SupporterBadges({
 
   const badges: BadgeConfig[] = [];
 
-  // Add Discord highest role badge (shown first as it's the primary identifier)
+  // Founder badge is shown FIRST (most prestigious, first 10 supporters)
+  if (status.founderNumber) {
+    badges.push({
+      type: BadgeType.FOUNDER,
+      founderNumber: status.founderNumber,
+    });
+  }
+
+  // Add Discord highest role badge
   if (status.discordHighestRole) {
     badges.push({
       type: BadgeType.DISCORD_ROLE,
@@ -90,6 +100,7 @@ export function SupporterBadges({
           size={size}
           customColor={badge.customColor}
           customLabel={badge.customLabel}
+          founderNumber={badge.founderNumber}
         />
       ))}
     </BadgeContainer>

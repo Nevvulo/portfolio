@@ -872,6 +872,20 @@ export const updateSupporterStatus = mutation({
     discordBooster: v.optional(v.boolean()),
     clerkPlan: v.optional(v.string()),
     clerkPlanStatus: v.optional(v.string()),
+    founderNumber: v.optional(
+      v.union(
+        v.literal(1),
+        v.literal(2),
+        v.literal(3),
+        v.literal(4),
+        v.literal(5),
+        v.literal(6),
+        v.literal(7),
+        v.literal(8),
+        v.literal(9),
+        v.literal(10),
+      ),
+    ),
     discordUsername: v.optional(v.string()),
     twitchUsername: v.optional(v.string()),
   },
@@ -897,8 +911,9 @@ export const updateSupporterStatus = mutation({
       return;
     }
 
-    // Update supporter fields
-    await ctx.db.patch(user._id, {
+    // Build update object - only include founderNumber if provided
+    // (founder status is permanent and should not be removed)
+    const updates: Record<string, unknown> = {
       discordHighestRole: args.discordHighestRole,
       twitchSubTier: args.twitchSubTier,
       discordBooster: args.discordBooster,
@@ -907,7 +922,14 @@ export const updateSupporterStatus = mutation({
       discordUsername: args.discordUsername,
       twitchUsername: args.twitchUsername,
       supporterSyncedAt: Date.now(),
-    });
+    };
+
+    // Only update founderNumber if provided (never remove it)
+    if (args.founderNumber !== undefined) {
+      updates.founderNumber = args.founderNumber;
+    }
+
+    await ctx.db.patch(user._id, updates);
   },
 });
 
@@ -1324,7 +1346,7 @@ export const getCreditsPage = query({
     const allUsers = await ctx.db.query("users").collect();
 
     // Helper to map user to credit display format
-    const mapUser = (u: typeof allUsers[0]): CreditUser => ({
+    const mapUser = (u: (typeof allUsers)[0]): CreditUser => ({
       _id: u._id,
       displayName: u.displayName,
       username: u.username ?? null,
@@ -1370,31 +1392,46 @@ export const getCreditsPage = query({
 
     // Super Legend I - active subscription (excluding those already in II)
     const superLegendIAll = optedInUsers
-      .filter((u) => u.clerkPlan === "super_legend" && u.clerkPlanStatus === "active" && !assignedUserIds.has(u._id))
+      .filter(
+        (u) =>
+          u.clerkPlan === "super_legend" &&
+          u.clerkPlanStatus === "active" &&
+          !assignedUserIds.has(u._id),
+      )
       .map(mapUser);
     const superLegendI = paginateSection(superLegendIAll);
     superLegendIAll.forEach((u) => assignedUserIds.add(u._id));
 
     // Twitch Subscribers - grouped by tier (excluding already assigned)
-    const twitchT3All = optedInUsers.filter((u) => u.twitchSubTier === 3 && !assignedUserIds.has(u._id)).map(mapUser);
+    const twitchT3All = optedInUsers
+      .filter((u) => u.twitchSubTier === 3 && !assignedUserIds.has(u._id))
+      .map(mapUser);
     const twitchT3 = paginateSection(twitchT3All);
     twitchT3All.forEach((u) => assignedUserIds.add(u._id));
 
-    const twitchT2All = optedInUsers.filter((u) => u.twitchSubTier === 2 && !assignedUserIds.has(u._id)).map(mapUser);
+    const twitchT2All = optedInUsers
+      .filter((u) => u.twitchSubTier === 2 && !assignedUserIds.has(u._id))
+      .map(mapUser);
     const twitchT2 = paginateSection(twitchT2All);
     twitchT2All.forEach((u) => assignedUserIds.add(u._id));
 
-    const twitchT1All = optedInUsers.filter((u) => u.twitchSubTier === 1 && !assignedUserIds.has(u._id)).map(mapUser);
+    const twitchT1All = optedInUsers
+      .filter((u) => u.twitchSubTier === 1 && !assignedUserIds.has(u._id))
+      .map(mapUser);
     const twitchT1 = paginateSection(twitchT1All);
     twitchT1All.forEach((u) => assignedUserIds.add(u._id));
 
     // Discord Boosters (excluding already assigned)
-    const discordBoostersAll = optedInUsers.filter((u) => u.discordBooster && !assignedUserIds.has(u._id)).map(mapUser);
+    const discordBoostersAll = optedInUsers
+      .filter((u) => u.discordBooster && !assignedUserIds.has(u._id))
+      .map(mapUser);
     const discordBoosters = paginateSection(discordBoostersAll);
     discordBoostersAll.forEach((u) => assignedUserIds.add(u._id));
 
     // Contributors (excluding already assigned)
-    const contributorsAll = optedInUsers.filter((u) => u.isContributor && !assignedUserIds.has(u._id)).map(mapUser);
+    const contributorsAll = optedInUsers
+      .filter((u) => u.isContributor && !assignedUserIds.has(u._id))
+      .map(mapUser);
     const contributors = paginateSection(contributorsAll);
 
     return {
@@ -1451,5 +1488,77 @@ export const setContributor = mutation({
     });
 
     return { success: true };
+  },
+});
+
+// ============================================
+// FOUNDER SYSTEM
+// ============================================
+
+/**
+ * Update founder status for a user.
+ * Called from the webhook after a founder slot is claimed in Redis.
+ * This is an HTTP mutation (no auth required) because it's called from server-side.
+ */
+export const updateFounderStatus = mutation({
+  args: {
+    clerkId: v.string(),
+    founderNumber: v.union(
+      v.literal(1),
+      v.literal(2),
+      v.literal(3),
+      v.literal(4),
+      v.literal(5),
+      v.literal(6),
+      v.literal(7),
+      v.literal(8),
+      v.literal(9),
+      v.literal(10),
+    ),
+  },
+  handler: async (ctx, args) => {
+    // Find user by Clerk ID
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerkId", (q) => q.eq("clerkId", args.clerkId))
+      .unique();
+
+    if (!user) {
+      console.log(`[updateFounderStatus] User not found for clerkId: ${args.clerkId}`);
+      return { success: false, error: "User not found" };
+    }
+
+    // Update founder number (this is permanent, never removed)
+    await ctx.db.patch(user._id, {
+      founderNumber: args.founderNumber,
+    });
+
+    console.log(
+      `[updateFounderStatus] Set founderNumber=${args.founderNumber} for user ${user._id}`,
+    );
+    return { success: true };
+  },
+});
+
+/**
+ * Get founder statistics for display
+ */
+export const getFounderStats = query({
+  handler: async (ctx) => {
+    // Count users with founderNumber set
+    const allUsers = await ctx.db.query("users").collect();
+    const founders = allUsers.filter((u) => u.founderNumber != null);
+
+    return {
+      totalFounders: founders.length,
+      spotsRemaining: Math.max(0, 10 - founders.length),
+      founders: founders
+        .sort((a, b) => (a.founderNumber ?? 0) - (b.founderNumber ?? 0))
+        .map((u) => ({
+          founderNumber: u.founderNumber,
+          displayName: u.displayName,
+          avatarUrl: u.avatarUrl ?? null,
+        })),
+    };
   },
 });

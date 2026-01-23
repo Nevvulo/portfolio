@@ -1,5 +1,3 @@
-import { faCheck, faChevronRight, faCrown, faTrophy } from "@fortawesome/free-solid-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { SignedIn, SignedOut } from "@clerk/nextjs";
 import {
   CheckoutButton,
@@ -7,20 +5,22 @@ import {
   usePlans,
   useSubscription,
 } from "@clerk/nextjs/experimental";
+import { faCheck, faChevronRight, faCrown, faTrophy } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Head from "next/head";
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import styled, { css, keyframes } from "styled-components";
 import useSWR from "swr";
-import type { FounderSpotsResponse } from "../api/founder/spots";
-import NevuloLogo from "../../assets/svg/nevulo-huge-bold-svg.svg";
 import SuperLegendIcon from "../../assets/img/super-legend.png";
 import SuperLegend2Icon from "../../assets/img/super-legend-2.png";
+import NevuloLogo from "../../assets/svg/nevulo-huge-bold-svg.svg";
 import { BackButton, SectionTitle } from "../../components/generics";
 import { AnimatedMinimalView } from "../../components/layout/minimal";
-import { PLANS } from "../../lib/clerk";
 import { useSupporterStatus } from "../../hooks/useSupporterStatus";
+import { PLANS } from "../../lib/clerk";
+import type { FounderSpotsResponse } from "../api/founder/spots";
 
 const PLAN_ICONS = {
   [PLANS.SUPER_LEGEND]: SuperLegendIcon,
@@ -33,9 +33,9 @@ const fetcher = (url: string) => fetch(url).then((res) => res.json());
 const PLAN_FEATURES = {
   [PLANS.SUPER_LEGEND]: [
     {
-      title: "Instant access to \"Legend Vault\"",
+      title: 'Instant access to "Legend Vault"',
       description: "A collection of resources/downloadables designed to help you",
-      isBeta: true
+      isBeta: true,
     },
     {
       title: "Discord supporter role & custom channel",
@@ -119,9 +119,9 @@ function FounderBanner() {
         <BannerText>
           <BannerTitle>LIMITED</BannerTitle>
           <BannerDescription>
-            The first 10 supporters get access to a special <FounderHighlight>Founder</FounderHighlight> badge
-            with additional content. Subscribe below, only{" "}
-            <SpotsCount>{data.spotsRemaining}</SpotsCount>{" "}
+            The first 10 supporters get access to a special{" "}
+            <FounderHighlight>Founder</FounderHighlight> badge with additional content. Subscribe
+            below, only <SpotsCount>{data.spotsRemaining}</SpotsCount>{" "}
             {data.spotsRemaining === 1 ? "spot" : "spots"} left!
           </BannerDescription>
         </BannerText>
@@ -141,7 +141,16 @@ interface PlanCardProps {
   onSubscriptionChange?: () => void;
 }
 
-function PlanCard({ planId, planSlug, isActive, isOtherPlanActive, monthlyPrice, annualMonthlyPrice, activePlanPeriod, onSubscriptionChange }: PlanCardProps) {
+function PlanCard({
+  planId,
+  planSlug,
+  isActive,
+  isOtherPlanActive,
+  monthlyPrice,
+  annualMonthlyPrice,
+  activePlanPeriod,
+  onSubscriptionChange,
+}: PlanCardProps) {
   const meta = PLAN_META[planSlug];
   const features = PLAN_FEATURES[planSlug as keyof typeof PLAN_FEATURES];
   const [billedAnnually, setBilledAnnually] = useState(false); // Default to monthly
@@ -150,14 +159,17 @@ function PlanCard({ planId, planSlug, isActive, isOtherPlanActive, monthlyPrice,
 
   // Calculate display price from Clerk data
   const hasAnnualOption = annualMonthlyPrice !== null && annualMonthlyPrice > 0;
-  const displayPrice = billedAnnually && hasAnnualOption
-    ? annualMonthlyPrice // Clerk already calculates the monthly equivalent
-    : (monthlyPrice ?? 0);
+  const displayPrice =
+    billedAnnually && hasAnnualOption
+      ? annualMonthlyPrice // Clerk already calculates the monthly equivalent
+      : (monthlyPrice ?? 0);
 
   // Determine if this exact plan+period combo is active
   const selectedPeriod = billedAnnually ? "annual" : "month";
-  const isExactPlanActive = isActive && activePlanPeriod !== null && activePlanPeriod === selectedPeriod;
-  const isSwitchingPeriod = isActive && activePlanPeriod !== null && activePlanPeriod !== selectedPeriod;
+  const isExactPlanActive =
+    isActive && activePlanPeriod !== null && activePlanPeriod === selectedPeriod;
+  const isSwitchingPeriod =
+    isActive && activePlanPeriod !== null && activePlanPeriod !== selectedPeriod;
 
   const planIcon = PLAN_ICONS[planSlug as keyof typeof PLAN_ICONS];
 
@@ -181,10 +193,7 @@ function PlanCard({ planId, planSlug, isActive, isOtherPlanActive, monthlyPrice,
 
       {hasAnnualOption ? (
         <BillingToggle>
-          <ToggleSwitch
-            $active={billedAnnually}
-            onClick={() => setBilledAnnually(!billedAnnually)}
-          >
+          <ToggleSwitch $active={billedAnnually} onClick={() => setBilledAnnually(!billedAnnually)}>
             <ToggleKnob $active={billedAnnually} />
           </ToggleSwitch>
           <BillingLabel>{billedAnnually ? "Billed annually" : "Billed monthly"}</BillingLabel>
@@ -196,20 +205,34 @@ function PlanCard({ planId, planSlug, isActive, isOtherPlanActive, monthlyPrice,
       <Divider />
 
       <FeatureList>
-        {features.map((feature, index) => (
-          <FeatureItem key={index}>
-            <FeatureIcon>
-              <FontAwesomeIcon icon={faCheck} />
-            </FeatureIcon>
-            <FeatureContent>
-              <FeatureTitleRow>
-                <FeatureTitle>{feature.title}</FeatureTitle>
-                {"isBeta" in feature && feature.isBeta && <BetaBadge>Beta</BetaBadge>}
-              </FeatureTitleRow>
-              {'description' in feature && feature.description && <FeatureDescription>{feature.description}</FeatureDescription>}
-            </FeatureContent>
-          </FeatureItem>
-        ))}
+        {features.map((feature, index) =>
+          "isSpecial" in feature && feature.isSpecial ? (
+            <IncludesAllFeature key={index}>
+              <IncludesAllIcon>
+                <FontAwesomeIcon icon={faChevronRight} />
+              </IncludesAllIcon>
+              <IncludesAllContent>
+                <IncludesAllTitle>All 7 features from Super Legend I</IncludesAllTitle>
+                <IncludesAllSubtitle>with increased limits, plus...</IncludesAllSubtitle>
+              </IncludesAllContent>
+            </IncludesAllFeature>
+          ) : (
+            <FeatureItem key={index}>
+              <FeatureIcon>
+                <FontAwesomeIcon icon={faCheck} />
+              </FeatureIcon>
+              <FeatureContent>
+                <FeatureTitleRow>
+                  <FeatureTitle>{feature.title}</FeatureTitle>
+                  {"isBeta" in feature && feature.isBeta && <BetaBadge>Beta</BetaBadge>}
+                </FeatureTitleRow>
+                {"description" in feature && feature.description && (
+                  <FeatureDescription>{feature.description}</FeatureDescription>
+                )}
+              </FeatureContent>
+            </FeatureItem>
+          ),
+        )}
       </FeatureList>
 
       <ButtonContainer>
@@ -257,7 +280,11 @@ function getPlanPrices(plan: any): { monthly: number | null; annualMonthly: numb
 
 function CustomPricingTable() {
   const { data: plans, isLoading: plansLoading, revalidate: revalidatePlans } = usePlans();
-  const { data: subscription, isLoading: subLoading, revalidate: revalidateSubscription } = useSubscription();
+  const {
+    data: subscription,
+    isLoading: subLoading,
+    revalidate: revalidateSubscription,
+  } = useSubscription();
 
   const isLoading = plansLoading || subLoading;
 
@@ -277,18 +304,19 @@ function CustomPricingTable() {
   const activePlanPeriod: "month" | "annual" | null = activeItem?.planPeriod ?? null;
 
   // Only consider paid plans as "subscribed" - ignore free tier
-  const isPaidPlan = activePlanSlug === PLANS.SUPER_LEGEND || activePlanSlug === PLANS.SUPER_LEGEND_2;
+  const isPaidPlan =
+    activePlanSlug === PLANS.SUPER_LEGEND || activePlanSlug === PLANS.SUPER_LEGEND_2;
   const isSubscribed = subAny?.status === "active" && isPaidPlan;
 
   // Plans is an array directly, not { data: [...] }
-  const plansArray = Array.isArray(plans) ? plans : (plans as any)?.data ?? [];
+  const plansArray = Array.isArray(plans) ? plans : ((plans as any)?.data ?? []);
 
   // Find plans from the loaded data
   const superLegendPlan = plansArray.find(
-    (p: { slug: string; id: string }) => p.slug === PLANS.SUPER_LEGEND
+    (p: { slug: string; id: string }) => p.slug === PLANS.SUPER_LEGEND,
   );
   const superLegend2Plan = plansArray.find(
-    (p: { slug: string; id: string }) => p.slug === PLANS.SUPER_LEGEND_2
+    (p: { slug: string; id: string }) => p.slug === PLANS.SUPER_LEGEND_2,
   );
 
   // Get prices from Clerk
@@ -309,7 +337,9 @@ function CustomPricingTable() {
           isOtherPlanActive={isSubscribed && activePlanSlug !== PLANS.SUPER_LEGEND}
           monthlyPrice={sl1Prices.monthly}
           annualMonthlyPrice={sl1Prices.annualMonthly}
-          activePlanPeriod={isSubscribed && activePlanSlug === PLANS.SUPER_LEGEND ? activePlanPeriod : null}
+          activePlanPeriod={
+            isSubscribed && activePlanSlug === PLANS.SUPER_LEGEND ? activePlanPeriod : null
+          }
           onSubscriptionChange={handleSubscriptionChange}
         />
       )}
@@ -321,7 +351,9 @@ function CustomPricingTable() {
           isOtherPlanActive={isSubscribed && activePlanSlug !== PLANS.SUPER_LEGEND_2}
           monthlyPrice={sl2Prices.monthly}
           annualMonthlyPrice={sl2Prices.annualMonthly}
-          activePlanPeriod={isSubscribed && activePlanSlug === PLANS.SUPER_LEGEND_2 ? activePlanPeriod : null}
+          activePlanPeriod={
+            isSubscribed && activePlanSlug === PLANS.SUPER_LEGEND_2 ? activePlanPeriod : null
+          }
           onSubscriptionChange={handleSubscriptionChange}
         />
       )}
@@ -338,7 +370,8 @@ function SubscriberBenefits() {
   const subAny = subscription as any;
   const activeItem = subAny?.subscriptionItems?.[0];
   const activePlanSlug = activeItem?.plan?.slug ?? null;
-  const isPaidPlan = activePlanSlug === PLANS.SUPER_LEGEND || activePlanSlug === PLANS.SUPER_LEGEND_2;
+  const isPaidPlan =
+    activePlanSlug === PLANS.SUPER_LEGEND || activePlanSlug === PLANS.SUPER_LEGEND_2;
   const isSubscribed = subAny?.status === "active" && isPaidPlan;
 
   // Only show if user is subscribed
@@ -359,7 +392,8 @@ function SubscriberBenefits() {
           <FounderStatusContent>
             <FounderStatusTitle>Founder #{status.founderNumber}</FounderStatusTitle>
             <FounderStatusDescription>
-              You&apos;ve got a special permanent badge &amp; Discord role! Thanks for being an early supporter.
+              You&apos;ve got a special permanent badge &amp; Discord role! Thanks for being an
+              early supporter.
             </FounderStatusDescription>
           </FounderStatusContent>
         </FounderStatusCard>
@@ -370,7 +404,8 @@ function SubscriberBenefits() {
         <ViewBenefitsContent>
           <ViewBenefitsTitle>View all your perks</ViewBenefitsTitle>
           <ViewBenefitsDescription>
-            See your full list of benefits including software perks, content access, badges, and more.
+            See your full list of benefits including software perks, content access, badges, and
+            more.
           </ViewBenefitsDescription>
         </ViewBenefitsContent>
         <ViewBenefitsArrow>
@@ -451,6 +486,14 @@ export default function Support() {
         <PricingContainer>
           <CustomPricingTable />
         </PricingContainer>
+
+        <LifetimeNote>
+          Not a fan of subscriptions? I don&apos;t have lifetime plans set up right now —{" "}
+          <LifetimeLink href="/contact">reach out to me</LifetimeLink> if you&apos;re interested in
+          a once-off lifetime payment.
+          <br />
+          These are about 2-3x the yearly plans for each tier.
+        </LifetimeNote>
 
         <SignedIn>
           <SubscriberBenefits />
@@ -713,7 +756,27 @@ const SpotsCount = styled.span`
 
 // Pricing Container
 const PricingContainer = styled.div`
-  margin-bottom: 4rem;
+  margin-bottom: 1.5rem;
+`;
+
+const LifetimeNote = styled.p`
+  text-align: center;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.6;
+  color: ${(props) => props.theme.textColor};
+  opacity: 0.7;
+  max-width: 500px;
+  margin: 0 auto 3rem;
+`;
+
+const LifetimeLink = styled(Link)`
+  color: #a5a3e8;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
 `;
 
 const PricingGrid = styled.div`
@@ -913,6 +976,52 @@ const FeatureDescription = styled.div`
   color: ${(props) => props.theme.textColor};
   opacity: 0.6;
   line-height: 1.4;
+`;
+
+// Special "Includes All" feature for Super Legend II
+const IncludesAllFeature = styled.li`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.08) 0%, rgba(255, 140, 0, 0.04) 100%);
+  border: 1px solid rgba(255, 215, 0, 0.2);
+  border-radius: 10px;
+  margin-bottom: 4px;
+`;
+
+const IncludesAllIcon = styled.span`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  background: linear-gradient(135deg, #ffd700, #ff8c00);
+  border-radius: 6px;
+  color: #1a1a1a;
+  font-size: 10px;
+`;
+
+const IncludesAllContent = styled.div`
+  flex: 1;
+`;
+
+const IncludesAllTitle = styled.div`
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 600;
+  background: linear-gradient(135deg, #ffd700, #ff8c00);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+`;
+
+const IncludesAllSubtitle = styled.div`
+  font-family: var(--font-sans);
+  font-size: 12px;
+  color: ${(props) => props.theme.textColor};
+  opacity: 0.7;
+  margin-top: 2px;
 `;
 
 const ButtonContainer = styled.div`

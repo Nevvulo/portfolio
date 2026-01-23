@@ -1,5 +1,16 @@
 import { useUser } from "@clerk/nextjs";
-import { Bot, Check, ChevronRight, Clock, Crown, Gamepad2, Lock, MessageSquare, Sparkles, Vault } from "lucide-react";
+import {
+  Bot,
+  Check,
+  ChevronRight,
+  Clock,
+  Crown,
+  Gamepad2,
+  Lock,
+  MessageSquare,
+  Sparkles,
+  Vault,
+} from "lucide-react";
 import Head from "next/head";
 import Link from "next/link";
 import { useMemo } from "react";
@@ -7,6 +18,7 @@ import styled, { keyframes } from "styled-components";
 import { SupporterBadge } from "../../components/badges/supporter-badge";
 import { BackButton } from "../../components/generics";
 import { AnimatedMinimalView } from "../../components/layout/minimal";
+import { DiscordCommandShowcase } from "../../components/supporter/DiscordCommandShowcase";
 import { BadgeType } from "../../constants/badges";
 import { useSupporterStatus } from "../../hooks/useSupporterStatus";
 
@@ -21,15 +33,26 @@ const BENEFIT_CATEGORIES = [
       {
         id: "nevi-bot",
         title: "@Nevi Discord Bot",
-        description: "87+ commands including economy games, XP/leveling, profile cards with supporter badges, and exclusive commands for supporters.",
+        description:
+          "Unlock 10x-20x daily limits on premium commands, exclusive badges, and credits recognition. See full command list below!",
         minTier: "tier1" as const,
-        tags: ["Profile badges", "Economy bonuses", "Custom commands"],
+        tags: ["10x limits", "⭐ Badges", "/credits recognition"],
       },
       {
         id: "golfquest",
         title: "Golfquest Cosmetics & Features",
-        description: "Exclusive cosmetics, special game modes, and supporter-only features in Golfquest.",
+        description:
+          "Exclusive cosmetics, special game modes, and supporter-only features in Golfquest.",
         minTier: "tier1" as const,
+        comingSoon: true,
+        customIcon: Gamepad2,
+      },
+      {
+        id: "courses",
+        title: "Continuous Courses",
+        description:
+          "Under heavy development, special access to engineering courses & an all new modern course builder/CMS",
+        minTier: "tier2" as const,
         comingSoon: true,
         customIcon: Gamepad2,
       },
@@ -44,22 +67,25 @@ const BENEFIT_CATEGORIES = [
       {
         id: "vault",
         title: "Legend Vault",
-        description: "Access exclusive resources, downloadables, and supporter-only content curated just for you.",
+        description:
+          "Access exclusive resources, downloadables, and supporter-only content curated just for you.",
         minTier: "tier1" as const,
         link: "/vault",
         isVaultCTA: true,
       },
       {
         id: "early-access",
-        title: "Early Access Content",
-        description: "Be the first to see new music, writing, videos, and projects before they're publicly released.",
+        title: "Limited & Early Access Content",
+        description:
+          "Be the first to see new music, writing, videos, and projects before they're publicly released. Includes supporter-only content",
         minTier: "tier1" as const,
         link: "/learn",
       },
       {
         id: "tier2-content",
         title: "Monthly Digital Loot",
-        description: "Exclusive digital content delivered monthly - wallpapers, assets, and surprise goodies.",
+        description:
+          "Exclusive digital content delivered monthly - wallpapers, assets, limited items, and surprise goodies.",
         minTier: "tier2" as const,
       },
     ],
@@ -100,19 +126,11 @@ const BENEFIT_CATEGORIES = [
     description: "Stand out with exclusive badges and profile customization",
     features: [
       {
-        id: "supporter-badge",
-        title: "Supporter Badge",
-        description: "Show off your support with a special badge on your profile",
+        id: "super-legend-badge",
+        title: "Super Legend Badge",
+        description: "Exclusive badge displayed on your profile - evolves with your tier",
         minTier: "tier1" as const,
-        badgeType: BadgeType.SUPER_LEGEND,
-        badgeLink: "/support",
-      },
-      {
-        id: "tier2-badge",
-        title: "Super Legend II Badge",
-        description: "Prestigious golden badge for Super Legend II members",
-        minTier: "tier2" as const,
-        badgeType: BadgeType.SUPER_LEGEND_2,
+        isDynamicBadge: true,
         badgeLink: "/support",
       },
       {
@@ -173,7 +191,8 @@ export default function SupporterBenefits() {
   }, [status]);
 
   const userTierLevel = getTierLevel(userTier);
-  const isFounder = !isLoading && status?.founderNumber !== undefined && status?.founderNumber !== null;
+  const isFounder =
+    !isLoading && status?.founderNumber !== undefined && status?.founderNumber !== null;
 
   const isFeatureUnlocked = (feature: (typeof BENEFIT_CATEGORIES)[0]["features"][0]) => {
     if ("special" in feature && feature.special === "twitch") {
@@ -227,7 +246,8 @@ export default function SupporterBenefits() {
             <FounderStatusContent>
               <FounderStatusTitle>Founder #{status?.founderNumber}</FounderStatusTitle>
               <FounderStatusDescription>
-                You&apos;ve got a special permanent badge &amp; Discord role! Thanks for being an early supporter.
+                You&apos;ve got a special permanent badge &amp; Discord role! Thanks for being an
+                early supporter.
               </FounderStatusDescription>
             </FounderStatusContent>
           </FounderStatusCard>
@@ -237,72 +257,113 @@ export default function SupporterBenefits() {
           {BENEFIT_CATEGORIES.map((category) => {
             const IconComponent = category.icon;
             return (
-            <CategoryCard key={category.id}>
-              <CategoryHeader>
-                <CategoryIcon>
-                  <IconComponent size={28} />
-                </CategoryIcon>
-                <CategoryInfo>
-                  <CategoryTitle>{category.title}</CategoryTitle>
-                  <CategoryDescription>{category.description}</CategoryDescription>
-                </CategoryInfo>
-              </CategoryHeader>
+              <CategoryCard key={category.id}>
+                <CategoryHeader>
+                  <CategoryIcon>
+                    <IconComponent size={28} />
+                  </CategoryIcon>
+                  <CategoryInfo>
+                    <CategoryTitle>{category.title}</CategoryTitle>
+                    <CategoryDescription>{category.description}</CategoryDescription>
+                  </CategoryInfo>
+                </CategoryHeader>
 
-              <FeaturesList>
-                {category.features.map((feature) => {
-                  const unlocked = !!(isSignedIn && !isLoading && isFeatureUnlocked(feature));
-                  const hasComingSoon = "comingSoon" in feature && feature.comingSoon;
-                  const featureLink = "link" in feature ? feature.link : undefined;
-                  const isVaultCTA = "isVaultCTA" in feature && feature.isVaultCTA;
-                  const badgeLink = "badgeLink" in feature ? feature.badgeLink : undefined;
-                  const badgeLinkIsExternal = typeof badgeLink === "string" && badgeLink.startsWith("http");
-                  return (
-                    <FeatureItem key={feature.id} $unlocked={unlocked}>
-                      <FeatureIcon $unlocked={unlocked}>
-                        {unlocked ? <Check size={14} /> : hasComingSoon ? <Clock size={14} /> : <Lock size={14} />}
-                      </FeatureIcon>
-                      <FeatureContent>
-                        <FeatureTitle>
-                          {feature.title}
-                          {hasComingSoon && <ComingSoonTag>Coming Soon</ComingSoonTag>}
-                        </FeatureTitle>
-                        <FeatureDescription>{feature.description}</FeatureDescription>
-                        {"tags" in feature && feature.tags && (
-                          <FeatureTags>
-                            {feature.tags.map((tag) => (
-                              <FeatureTag key={tag}>{tag}</FeatureTag>
-                            ))}
-                          </FeatureTags>
+                <FeaturesList>
+                  {category.features.map((feature) => {
+                    const unlocked = !!(isSignedIn && !isLoading && isFeatureUnlocked(feature));
+                    const hasComingSoon = "comingSoon" in feature && feature.comingSoon;
+                    const featureLink = "link" in feature ? feature.link : undefined;
+                    const isVaultCTA = "isVaultCTA" in feature && feature.isVaultCTA;
+                    const badgeLink = "badgeLink" in feature ? feature.badgeLink : undefined;
+                    const badgeLinkIsExternal =
+                      typeof badgeLink === "string" && badgeLink.startsWith("http");
+                    return (
+                      <FeatureItem key={feature.id} $unlocked={unlocked}>
+                        <FeatureIcon $unlocked={unlocked}>
+                          {unlocked ? (
+                            <Check size={14} />
+                          ) : hasComingSoon ? (
+                            <Clock size={14} />
+                          ) : (
+                            <Lock size={14} />
+                          )}
+                        </FeatureIcon>
+                        <FeatureContent>
+                          <FeatureTitle>
+                            {feature.title}
+                            {hasComingSoon && <ComingSoonTag>Coming Soon</ComingSoonTag>}
+                          </FeatureTitle>
+                          <FeatureDescription>{feature.description}</FeatureDescription>
+                          {"tags" in feature && feature.tags && (
+                            <FeatureTags>
+                              {feature.tags.map((tag) => (
+                                <FeatureTag key={tag}>{tag}</FeatureTag>
+                              ))}
+                            </FeatureTags>
+                          )}
+                          {isVaultCTA && unlocked && featureLink && (
+                            <VaultCTA href={featureLink}>
+                              <Vault size={14} />
+                              Open the Vault
+                            </VaultCTA>
+                          )}
+                        </FeatureContent>
+                        {"isDynamicBadge" in feature && feature.isDynamicBadge && badgeLink ? (
+                          unlocked ? (
+                            <BadgePreview
+                              href={badgeLink}
+                              target={badgeLinkIsExternal ? "_blank" : undefined}
+                              rel={badgeLinkIsExternal ? "noopener noreferrer" : undefined}
+                            >
+                              <SupporterBadge
+                                type={
+                                  userTier === "tier2"
+                                    ? BadgeType.SUPER_LEGEND_2
+                                    : BadgeType.SUPER_LEGEND
+                                }
+                                size="small"
+                              />
+                            </BadgePreview>
+                          ) : (
+                            <LockedBadgeIcon>
+                              <Lock size={18} />
+                            </LockedBadgeIcon>
+                          )
+                        ) : (
+                          "badgeType" in feature &&
+                          feature.badgeType &&
+                          badgeLink && (
+                            <BadgePreview
+                              href={badgeLink}
+                              target={badgeLinkIsExternal ? "_blank" : undefined}
+                              rel={badgeLinkIsExternal ? "noopener noreferrer" : undefined}
+                            >
+                              <SupporterBadge type={feature.badgeType} size="small" />
+                            </BadgePreview>
+                          )
                         )}
-                        {isVaultCTA && unlocked && featureLink && (
-                          <VaultCTA href={featureLink}>
-                            <Vault size={14} />
-                            Open the Vault
-                          </VaultCTA>
+                        {featureLink && unlocked && !isVaultCTA && (
+                          <FeatureLink href={featureLink}>
+                            <ChevronRight size={16} />
+                          </FeatureLink>
                         )}
-                      </FeatureContent>
-                      {"badgeType" in feature && feature.badgeType && badgeLink && (
-                        <BadgePreview
-                          href={badgeLink}
-                          target={badgeLinkIsExternal ? "_blank" : undefined}
-                          rel={badgeLinkIsExternal ? "noopener noreferrer" : undefined}
-                        >
-                          <SupporterBadge type={feature.badgeType} size="small" />
-                        </BadgePreview>
-                      )}
-                      {featureLink && unlocked && !isVaultCTA && (
-                        <FeatureLink href={featureLink}>
-                          <ChevronRight size={16} />
-                        </FeatureLink>
-                      )}
-                    </FeatureItem>
-                  );
-                })}
-              </FeaturesList>
-            </CategoryCard>
-          );
+                      </FeatureItem>
+                    );
+                  })}
+                </FeaturesList>
+              </CategoryCard>
+            );
           })}
         </CategoriesGrid>
+
+        {/* Discord Bot Commands Showcase */}
+        <BotShowcaseSection>
+          <BotShowcaseHeader>
+            <Bot size={24} />
+            <BotShowcaseTitle>@Nevi Bot Commands</BotShowcaseTitle>
+          </BotShowcaseHeader>
+          <DiscordCommandShowcase />
+        </BotShowcaseSection>
 
         <CTASection>
           {userTier !== "tier2" && (
@@ -589,6 +650,19 @@ const BadgePreview = styled(Link)`
   }
 `;
 
+const LockedBadgeIcon = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  color: ${(props) => props.theme.textColor};
+  opacity: 0.5;
+  flex-shrink: 0;
+`;
+
 // Founder Status Card
 const founderPulse = keyframes`
   0%, 100% {
@@ -726,4 +800,25 @@ const CTAButton = styled(Link)`
     transform: translateY(-2px);
     box-shadow: 0 4px 16px rgba(79, 77, 193, 0.4);
   }
+`;
+
+// Bot Showcase Section
+const BotShowcaseSection = styled.div`
+  margin-top: 2.5rem;
+`;
+
+const BotShowcaseHeader = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 1rem;
+  color: #5865f2;
+`;
+
+const BotShowcaseTitle = styled.h2`
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: 20px;
+  color: ${(props) => props.theme.contrast};
+  margin: 0;
 `;

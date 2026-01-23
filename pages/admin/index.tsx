@@ -1,6 +1,17 @@
 import { useMutation, useQuery } from "convex/react";
-import { Check, Crown, Search, Shield, Trash2, UserPlus, Users, X } from "lucide-react";
+import {
+  Check,
+  ChevronRight,
+  Crown,
+  Search,
+  Shield,
+  Trash2,
+  UserPlus,
+  Users,
+  X,
+} from "lucide-react";
 import Head from "next/head";
+import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import styled from "styled-components";
 import { BlogView } from "../../components/layout/blog";
@@ -89,10 +100,39 @@ export default function AdminPage() {
             </HeaderTop>
           </Header>
 
+          <QuickLinks />
+
           <StaffManagement />
         </AdminContainer>
       </BlogView>
     </>
+  );
+}
+
+function QuickLinks() {
+  return (
+    <LinksGrid>
+      <QuickLink href="/admin/support">
+        <LinkIcon $color="#ffd700">
+          <Crown size={20} />
+        </LinkIcon>
+        <LinkContent>
+          <LinkTitle>Super Legends</LinkTitle>
+          <LinkDesc>Manage subscribers & content delivery</LinkDesc>
+        </LinkContent>
+        <ChevronRight size={16} />
+      </QuickLink>
+      <QuickLink href="/admin/blog">
+        <LinkIcon $color="#3b82f6">
+          <Shield size={20} />
+        </LinkIcon>
+        <LinkContent>
+          <LinkTitle>Blog Admin</LinkTitle>
+          <LinkDesc>Manage posts & analytics</LinkDesc>
+        </LinkContent>
+        <ChevronRight size={16} />
+      </QuickLink>
+    </LinksGrid>
   );
 }
 
@@ -296,6 +336,63 @@ const Text = styled.p`
   margin: 4px 0 0;
   color: ${(props) => props.theme.textColor};
   opacity: 0.7;
+`;
+
+const LinksGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 12px;
+  margin-bottom: 24px;
+`;
+
+const QuickLink = styled(Link)`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: ${(props) => props.theme.postBackground};
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.15s ease;
+
+  &:hover {
+    border-color: rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.02);
+  }
+
+  svg:last-child {
+    color: ${(props) => props.theme.textColor};
+    opacity: 0.4;
+  }
+`;
+
+const LinkIcon = styled.div<{ $color: string }>`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: ${(props) => props.$color}22;
+  border-radius: 10px;
+  color: ${(props) => props.$color};
+`;
+
+const LinkContent = styled.div`
+  flex: 1;
+`;
+
+const LinkTitle = styled.div`
+  font-size: 14px;
+  font-weight: 600;
+  color: ${(props) => props.theme.contrast};
+`;
+
+const LinkDesc = styled.div`
+  font-size: 12px;
+  color: ${(props) => props.theme.textColor};
+  opacity: 0.6;
 `;
 
 const Section = styled.section`

@@ -1,8 +1,8 @@
 import { Check, ChevronRight, Clock, Lock, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import styled from "styled-components";
+import type { BadgeType } from "../../constants/badges";
 import { SupporterBadge } from "../badges/supporter-badge";
-import { type BadgeType } from "../../constants/badges";
 
 // Types
 export interface BenefitFeature {
@@ -105,13 +105,7 @@ export function BenefitCategoryCard({ category, isFeatureUnlocked }: BenefitCate
       <FeaturesList>
         {category.features.map((feature) => {
           const unlocked = isFeatureUnlocked(feature);
-          return (
-            <BenefitFeatureItem
-              key={feature.id}
-              feature={feature}
-              unlocked={unlocked}
-            />
-          );
+          return <BenefitFeatureItem key={feature.id} feature={feature} unlocked={unlocked} />;
         })}
       </FeaturesList>
     </CategoryCardWrapper>

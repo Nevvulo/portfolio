@@ -22,10 +22,7 @@ export interface LinkResponse {
   };
 }
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse<LinkResponse>
-) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse<LinkResponse>) {
   if (req.method !== "POST") {
     return res.status(405).json({ success: false, error: "Method not allowed" });
   }

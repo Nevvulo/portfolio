@@ -77,7 +77,8 @@ const Container = styled(m.svg).attrs({ viewBox: "0 -1 50 54" })`
   width: 40px;
   height: 40px;
 
+  /* Hide on mobile - the mobile TOC bar has its own progress ring */
   @media (max-width: 1200px) {
-    right: 6px;
+    display: none;
   }
 `;

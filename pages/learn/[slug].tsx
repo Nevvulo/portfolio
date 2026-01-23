@@ -37,9 +37,9 @@ import {
   type TextAnchor,
   useTextSelection,
 } from "../../components/learn/highlights";
+import { MobileTOCBar } from "../../components/learn/MobileTOCBar";
 import { CreditsModal, ShareModal } from "../../components/learn/modals";
 import { ReactionBar } from "../../components/learn/ReactionBar";
-import { MobileTOCBar } from "../../components/learn/MobileTOCBar";
 import { TableOfContents, type TOCItem } from "../../components/learn/TableOfContents";
 import { FloatingToolbar, MobileToolbarContent, ReportModal } from "../../components/learn/toolbar";
 import { useArticleWatchTime } from "../../components/learn/useArticleWatchTime";
@@ -93,6 +93,8 @@ interface PostData {
   devToUrl?: string;
   author?: AuthorInfo | null;
   collaborators?: AuthorInfo[];
+  hasAccess?: boolean;
+  requiredTier?: string;
 }
 
 type LearnPostProps = {
@@ -188,6 +190,30 @@ export default function LearnPost({
           <h1>Post not found</h1>
           <p>The post you're looking for doesn't exist or has been removed.</p>
         </NotFoundContainer>
+      </BlogView>
+    );
+  }
+
+  // Gated content - user doesn't have access to this tier
+  if (post.hasAccess === false) {
+    const tierLabel =
+      post.requiredTier === "tier2"
+        ? "Super Legend II"
+        : post.requiredTier === "tier1"
+          ? "Super Legend"
+          : "members";
+    return (
+      <BlogView>
+        <SimpleNavbar backRoute="/learn" />
+        <GatedContainer>
+          <GatedIcon>🔒</GatedIcon>
+          <GatedTitle>{post.title}</GatedTitle>
+          <GatedDescription>{post.description}</GatedDescription>
+          <GatedMessage>
+            This content is exclusive to <strong>{tierLabel}</strong> supporters.
+          </GatedMessage>
+          <GatedCTA href="/support">Become a Super Legend</GatedCTA>
+        </GatedContainer>
       </BlogView>
     );
   }
@@ -894,27 +920,33 @@ function PostBody({
               <HeroActionButton onClick={() => setCreditsModalOpen(true)} title="View credits">
                 <FileText />
               </HeroActionButton>
-            {post.mediumUrl && (
-              <IconLink
-                icon={faMedium}
-                target="_blank"
-                href={post.mediumUrl}
-                width="24"
-                height="24"
-              />
-            )}
-            {post.hashnodeUrl && (
-              <IconLink
-                icon={faHashnode}
-                target="_blank"
-                href={post.hashnodeUrl}
-                width="24"
-                height="24"
-              />
-            )}
-            {post.devToUrl && (
-              <IconLink icon={faDev} target="_blank" href={post.devToUrl} width="24" height="24" />
-            )}
+              {post.mediumUrl && (
+                <IconLink
+                  icon={faMedium}
+                  target="_blank"
+                  href={post.mediumUrl}
+                  width="24"
+                  height="24"
+                />
+              )}
+              {post.hashnodeUrl && (
+                <IconLink
+                  icon={faHashnode}
+                  target="_blank"
+                  href={post.hashnodeUrl}
+                  width="24"
+                  height="24"
+                />
+              )}
+              {post.devToUrl && (
+                <IconLink
+                  icon={faDev}
+                  target="_blank"
+                  href={post.devToUrl}
+                  width="24"
+                  height="24"
+                />
+              )}
             </IconContainer>
           </HeroBottomSection>
         </PostHeader>
@@ -1397,6 +1429,65 @@ const NotFoundContainer = styled.div`
 
   p {
     color: ${(props) => props.theme.textColor};
+  }
+`;
+
+const GatedContainer = styled.div`
+  text-align: center;
+  padding: 80px 20px;
+  max-width: 600px;
+  margin: 0 auto;
+`;
+
+const GatedIcon = styled.div`
+  font-size: 64px;
+  margin-bottom: 24px;
+`;
+
+const GatedTitle = styled.h1`
+  font-size: 28px;
+  font-weight: 700;
+  color: ${(props) => props.theme.contrast};
+  margin: 0 0 12px;
+`;
+
+const GatedDescription = styled.p`
+  font-size: 16px;
+  color: ${(props) => props.theme.textColor};
+  margin: 0 0 32px;
+  line-height: 1.6;
+`;
+
+const GatedMessage = styled.p`
+  font-size: 15px;
+  color: ${(props) => props.theme.textColor};
+  margin: 0 0 24px;
+  padding: 16px 24px;
+  background: rgba(147, 51, 234, 0.1);
+  border: 1px solid rgba(147, 51, 234, 0.2);
+  border-radius: 12px;
+
+  strong {
+    color: #a855f7;
+  }
+`;
+
+const GatedCTA = styled(Link)`
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 28px;
+  background: linear-gradient(135deg, #9333ea, #7c3aed);
+  color: white;
+  font-size: 15px;
+  font-weight: 600;
+  border-radius: 10px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(147, 51, 234, 0.3);
   }
 `;
 
@@ -2085,23 +2176,50 @@ const ReportLink = styled.button`
 `;
 
 // Fetch post from Convex and serialize MDX server-side
-export async function getServerSideProps({ params }: { params: { slug: string } }) {
+export async function getServerSideProps({
+  params,
+  req,
+}: {
+  params: { slug: string };
+  req: import("next").GetServerSidePropsContext["req"];
+}) {
   const { slug } = params;
 
   // Check feature flag for title animation
   const enableTitleAnimation = await isLearnTitleAnimationEnabled();
 
-  // Create Convex HTTP client
+  // Create Convex HTTP client with auth
   const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
+  // Get Clerk auth token and pass to Convex for tier-gated content access
+  const { getToken } = await import("@clerk/nextjs/server").then((m) => m.getAuth(req));
+  const token = await getToken({ template: "convex" });
+  if (token) {
+    convex.setAuth(token);
+  }
+
   try {
-    // Fetch post from Convex
+    // Fetch post from Convex (now with user's auth context for tier checking)
     const post = await convex.query(api.blogPosts.getBySlug, { slug });
 
     if (!post || post.status !== "published") {
       return {
         props: {
           post: null,
+          mdxSource: null,
+          discordWidget: null,
+          enableTitleAnimation,
+          hasDuplicateTitle: false,
+          hasDuplicateDescription: false,
+        },
+      };
+    }
+
+    // If user doesn't have access (tier-locked), return post metadata without MDX
+    if (post.hasAccess === false) {
+      return {
+        props: {
+          post,
           mdxSource: null,
           discordWidget: null,
           enableTitleAnimation,

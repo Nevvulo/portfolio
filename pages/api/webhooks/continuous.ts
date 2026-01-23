@@ -1,6 +1,6 @@
-import type { NextApiRequest, NextApiResponse } from "next";
-import { createHmac, timingSafeEqual } from "crypto";
 import { ConvexHttpClient } from "convex/browser";
+import { createHmac, timingSafeEqual } from "crypto";
+import type { NextApiRequest, NextApiResponse } from "next";
 import { api } from "../../../convex/_generated/api";
 
 // Disable body parsing - we need the raw body for signature verification
@@ -61,7 +61,7 @@ function verifySignature(
   payload: string,
   timestamp: string,
   signature: string,
-  secret: string
+  secret: string,
 ): boolean {
   try {
     const hmac = createHmac("sha256", secret);
@@ -241,7 +241,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 /**
  * Map Continuous visibility to nev.so visibility
  */
-function mapVisibility(visibility: "public" | "private" | "unlisted"): "public" | "members" | "tier1" | "tier2" {
+function mapVisibility(
+  visibility: "public" | "private" | "unlisted",
+): "public" | "members" | "tier1" | "tier2" {
   switch (visibility) {
     case "public":
       return "public";

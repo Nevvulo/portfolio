@@ -38,10 +38,13 @@ import type * as recommendations from "../recommendations.js";
 import type * as rewards from "../rewards.js";
 import type * as roles from "../roles.js";
 import type * as search from "../search.js";
+import type * as stream from "../stream.js";
+import type * as supportAdmin from "../supportAdmin.js";
 import type * as technologies from "../technologies.js";
 import type * as userFeed from "../userFeed.js";
 import type * as userProfiles from "../userProfiles.js";
 import type * as users from "../users.js";
+import type * as vault from "../vault.js";
 import type * as youtube from "../youtube.js";
 
 import type {
@@ -81,10 +84,13 @@ declare const fullApi: ApiFromModules<{
   rewards: typeof rewards;
   roles: typeof roles;
   search: typeof search;
+  stream: typeof stream;
+  supportAdmin: typeof supportAdmin;
   technologies: typeof technologies;
   userFeed: typeof userFeed;
   userProfiles: typeof userProfiles;
   users: typeof users;
+  vault: typeof vault;
   youtube: typeof youtube;
 }>;
 

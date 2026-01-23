@@ -561,9 +561,7 @@ const LoadingDot = styled.div<{ $delay: number }>`
 `;
 
 // Pre-generated widths for skeleton labels (matching LabelFilter)
-const SKELETON_LABEL_WIDTHS = [
-  52, 78, 64, 45, 88, 56, 72, 94, 48, 82, 60, 75, 68, 42, 86
-];
+const SKELETON_LABEL_WIDTHS = [52, 78, 64, 45, 88, 56, 72, 94, 48, 82, 60, 75, 68, 42, 86];
 
 // Loading skeleton that matches the actual layout
 function LoadingSkeleton() {

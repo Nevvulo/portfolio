@@ -6,9 +6,9 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import styled from "styled-components";
-import { api } from "../../convex/_generated/api";
 import { SupporterBadges } from "../../components/badges/supporter-badges";
 import { SimpleNavbar } from "../../components/navbar/simple";
+import { api } from "../../convex/_generated/api";
 import { useSupporterStatus } from "../../hooks/useSupporterStatus";
 
 export default function AccountPage() {

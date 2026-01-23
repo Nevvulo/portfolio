@@ -207,12 +207,12 @@ export function FloatingToolbar({
   return (
     <>
       {/* Desktop Toolbar - fixed RIGHT side, stays mounted, animate visibility */}
-      <ToolbarWrapper style={{ pointerEvents: isVisible ? 'auto' : 'none' }}>
+      <ToolbarWrapper style={{ pointerEvents: isVisible ? "auto" : "none" }}>
         <ToolbarContainer
           initial={false}
           animate={{
             opacity: isVisible ? 1 : 0,
-            x: isVisible ? 0 : 12
+            x: isVisible ? 0 : 12,
           }}
           transition={{ duration: 0.15, ease: "easeOut" }}
         >
@@ -456,11 +456,7 @@ export function MobileToolbarContent({
       <MobileDivider />
 
       {/* Actions */}
-      <ToolbarButton
-        icon={Share2}
-        label="Share"
-        onClick={handleShare}
-      />
+      <ToolbarButton icon={Share2} label="Share" onClick={handleShare} />
       <ToolbarButton
         icon={MessageSquare}
         label={isSignedIn ? "Go to comments" : "Sign in to comment"}
@@ -468,13 +464,7 @@ export function MobileToolbarContent({
       />
 
       {/* Edit (only for authorized users) */}
-      {canEdit && (
-        <ToolbarButton
-          icon={Pencil}
-          label="Edit post"
-          onClick={handleEdit}
-        />
-      )}
+      {canEdit && <ToolbarButton icon={Pencil} label="Edit post" onClick={handleEdit} />}
 
       {/* Report */}
       <ToolbarButton
