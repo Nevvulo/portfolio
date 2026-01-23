@@ -105,30 +105,7 @@ html {
   min-height: 100%;
 }
 
-/* HOMEPAGE: html does NOT scroll, #scroll-container does (for scroll-snap) */
-html.page-homepage {
-  overflow: hidden;
-  height: 100vh;
-}
-
-html.page-homepage body {
-  overflow: hidden;
-  height: 100vh;
-}
-
-html.page-homepage #__next {
-  height: 100vh;
-}
-
-html.page-homepage #scroll-container {
-  height: 100vh;
-  overflow-y: auto;
-  overflow-x: hidden;
-  scroll-snap-type: y mandatory;
-  scroll-behavior: smooth;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
-}
+/* HOMEPAGE: normal scrolling (scroll-snap removed) */
 
 /* ===== SCROLLBAR STYLING ===== */
 /* Webkit scrollbar for html (non-homepage) */
@@ -149,20 +126,3 @@ html::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.25);
 }
 
-/* Webkit scrollbar for homepage scroll-container */
-html.page-homepage #scroll-container::-webkit-scrollbar {
-  width: 8px;
-}
-
-html.page-homepage #scroll-container::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-html.page-homepage #scroll-container::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
-  border-radius: 4px;
-}
-
-html.page-homepage #scroll-container::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.25);
-}

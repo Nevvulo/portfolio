@@ -70,9 +70,8 @@ export default function Home({ discordWidget, isLive: serverIsLive }: HomeProps)
 
   // Handle scroll to fade out banner
   useEffect(() => {
-    const handleScroll = (e: Event) => {
-      const target = e.target as HTMLElement;
-      const scrollPosition = target.scrollTop;
+    const handleScroll = () => {
+      const scrollPosition = window.scrollY;
       const fadeStart = 100;
       const fadeEnd = 400;
 
@@ -86,12 +85,8 @@ export default function Home({ discordWidget, isLive: serverIsLive }: HomeProps)
       }
     };
 
-    const scrollContainer = document.getElementById("scroll-container");
-    if (scrollContainer) {
-      scrollContainer.addEventListener("scroll", handleScroll);
-      return () => scrollContainer.removeEventListener("scroll", handleScroll);
-    }
-    return undefined;
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   const isLive = isLiveOverride !== null ? isLiveOverride : serverIsLive;
@@ -941,11 +936,9 @@ const BackgroundImage = styled.div`
   }
 `;
 
-// Full-screen section with snap
+// Full-screen section
 const Section = styled.section`
   min-height: 100vh;
-  scroll-snap-align: start;
-  scroll-snap-stop: always;
   display: flex;
   align-items: center;
   justify-content: center;
