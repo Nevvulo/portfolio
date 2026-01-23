@@ -29,8 +29,7 @@ export default function RewardsPage() {
   const [filter, setFilter] = useState<FilterType>("all");
   const [claimingItem, setClaimingItem] = useState<InventoryItemType | null>(null);
 
-  const { isLoading, user, displayName, avatarUrl, isFreeUser, isSupporter } =
-    useTierAccess();
+  const { isLoading, user, displayName, avatarUrl, isFreeUser, isSupporter } = useTierAccess();
 
   const getOrCreateUser = useAction(api.users.getOrCreateUser);
   const revealReward = useMutation(api.rewards.revealReward);

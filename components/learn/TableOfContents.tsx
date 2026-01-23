@@ -1,7 +1,6 @@
 import { AnimatePresence, m } from "framer-motion";
-import { ChevronLeft, List, X } from "lucide-react";
+import { ChevronLeft, List } from "lucide-react";
 import { type RefObject, useCallback, useEffect, useState } from "react";
-import { createPortal } from "react-dom";
 import styled from "styled-components";
 import { LOUNGE_COLORS } from "@/constants/lounge";
 
@@ -38,7 +37,6 @@ export function TableOfContents({
   const [activeId, setActiveId] = useState<string>("");
   const [heroVisible, setHeroVisible] = useState(true);
   const [thanksReached, setThanksReached] = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -158,36 +156,8 @@ export function TableOfContents({
       const offset = 120;
       const elementPosition = element.getBoundingClientRect().top + window.scrollY;
       window.scrollTo({ top: elementPosition - offset, behavior: "smooth" });
-      // Auto-close mobile drawer
-      setMobileOpen(false);
     }
   }, []);
-
-  // Close drawer on escape
-  useEffect(() => {
-    if (!mobileOpen) return;
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        setMobileOpen(false);
-      }
-    };
-
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [mobileOpen]);
-
-  // Prevent body scroll when mobile drawer is open
-  useEffect(() => {
-    if (mobileOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [mobileOpen]);
 
   // Don't show if no headings or visibility conditions not met
   // Once thanks section is reached, hide permanently (until page refresh)
@@ -254,70 +224,6 @@ export function TableOfContents({
           </DesktopExpandButton>
         )}
       </AnimatePresence>
-
-      {/* Mobile TOC button - fixed right */}
-      <AnimatePresence>
-        {isVisible && (
-          <MobileTOCButton
-            initial={{ opacity: 0, x: 12 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 12 }}
-            transition={{ duration: 0.15, ease: "easeOut" }}
-            onClick={() => setMobileOpen(true)}
-            aria-label="Open table of contents"
-          >
-            <List size={20} />
-          </MobileTOCButton>
-        )}
-      </AnimatePresence>
-
-      {/* Mobile drawer */}
-      {createPortal(
-        <AnimatePresence>
-          {mobileOpen && (
-            <>
-              <MobileOverlay
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.2 }}
-                onClick={() => setMobileOpen(false)}
-              />
-              <MobileDrawer
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 20 }}
-                transition={{ duration: 0.15, ease: "easeOut" }}
-              >
-                <MobileDrawerHeader>
-                  <TOCTitle>On this page</TOCTitle>
-                  <CloseButton
-                    onClick={() => setMobileOpen(false)}
-                    aria-label="Close table of contents"
-                  >
-                    <X size={20} />
-                  </CloseButton>
-                </MobileDrawerHeader>
-                <MobileDrawerContent>
-                  <TOCList>
-                    {headings.map((heading) => (
-                      <TOCItem
-                        key={heading.id}
-                        $level={heading.level}
-                        $isActive={activeId === heading.id}
-                        onClick={() => handleClick(heading.id)}
-                      >
-                        {heading.text}
-                      </TOCItem>
-                    ))}
-                  </TOCList>
-                </MobileDrawerContent>
-              </MobileDrawer>
-            </>
-          )}
-        </AnimatePresence>,
-        document.body,
-      )}
     </>
   );
 }
@@ -388,90 +294,6 @@ const DesktopExpandButton = styled(m.button)`
 
   @media (max-width: 1200px) {
     display: none;
-  }
-`;
-
-// Mobile button
-const MobileTOCButton = styled(m.button)`
-  position: fixed;
-  top: 80px;
-  right: 24px;
-  width: 40px;
-  height: 40px;
-  border-radius: 8px;
-  background: rgba(0, 0, 0, 0.75);
-  border: none;
-  color: white;
-  cursor: pointer;
-  z-index: 100;
-  display: none;
-  align-items: center;
-  justify-content: center;
-
-  &:hover {
-    background: rgba(144, 116, 242, 0.3);
-  }
-
-  @media (max-width: 1200px) {
-    display: flex;
-  }
-`;
-
-// Mobile overlay
-const MobileOverlay = styled(m.div)`
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(4px);
-  z-index: 1099;
-`;
-
-// Mobile drawer
-const MobileDrawer = styled(m.div)`
-  position: fixed;
-  top: 0;
-  right: 0;
-  height: 100vh;
-  height: 100dvh;
-  width: 300px;
-  max-width: 85vw;
-  background: rgba(16, 13, 27, 0.98);
-  backdrop-filter: blur(20px);
-  border-left: 1px solid ${LOUNGE_COLORS.glassBorder};
-  box-shadow: -8px 0 32px rgba(0, 0, 0, 0.4);
-  z-index: 1100;
-  display: flex;
-  flex-direction: column;
-`;
-
-const MobileDrawerHeader = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 20px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-`;
-
-const MobileDrawerContent = styled.div`
-  flex: 1;
-  overflow-y: auto;
-  padding: 16px 20px;
-`;
-
-const CloseButton = styled.button`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border: none;
-  background: rgba(255, 255, 255, 0.08);
-  border-radius: 8px;
-  color: white;
-  cursor: pointer;
-
-  &:hover {
-    background: rgba(255, 255, 255, 0.12);
   }
 `;
 

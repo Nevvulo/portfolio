@@ -46,6 +46,97 @@ export function hasAccessToTier(
 }
 
 /**
+ * Access rules type - matches schema accessRules
+ */
+export type AccessRules = {
+  matchMode?: "any" | "all"; // Default: "any" (OR logic)
+  twitchSubs?: boolean; // Any Twitch subscriber
+  twitchSubTier?: 1 | 2 | 3; // Minimum Twitch tier
+  superLegend?: boolean; // Super Legend I or II
+  superLegendTier?: 1 | 2; // 1 = SL I, 2 = SL II
+  discordBoosters?: boolean; // Discord server boosters
+};
+
+/**
+ * User supporter status - fields used for access rule checking
+ */
+type UserSupporterStatus = {
+  tier: "free" | "tier1" | "tier2";
+  twitchSubTier?: 1 | 2 | 3 | null;
+  discordBooster?: boolean | null;
+  clerkPlan?: string | null;
+  clerkPlanStatus?: string | null;
+  isCreator?: boolean;
+  discordId?: string | null;
+};
+
+/**
+ * Check if user matches access rules
+ * Rules can be combined with matchMode: "any" (OR) or "all" (AND)
+ * Returns true if no rules are specified (fallback to requiredTier)
+ */
+export function checkAccessRules(user: UserSupporterStatus, rules?: AccessRules | null): boolean {
+  // Creator always has access
+  if (user.isCreator || user.discordId === CREATOR_DISCORD_ID) {
+    return true;
+  }
+
+  // No rules = no additional restrictions (use requiredTier fallback)
+  if (!rules) {
+    return true;
+  }
+
+  const matchMode = rules.matchMode ?? "any";
+  const checks: boolean[] = [];
+
+  // Check Twitch subscription
+  if (rules.twitchSubs) {
+    checks.push(user.twitchSubTier != null && user.twitchSubTier >= 1);
+  }
+
+  // Check minimum Twitch tier
+  if (rules.twitchSubTier) {
+    checks.push(user.twitchSubTier != null && user.twitchSubTier >= rules.twitchSubTier);
+  }
+
+  // Check Super Legend subscription
+  if (rules.superLegend) {
+    const isActiveSL =
+      user.clerkPlanStatus === "active" &&
+      (user.clerkPlan === "super_legend" || user.clerkPlan === "super_legend_2");
+    checks.push(isActiveSL);
+  }
+
+  // Check minimum Super Legend tier
+  if (rules.superLegendTier) {
+    const slTier =
+      user.clerkPlan === "super_legend_2" ? 2 : user.clerkPlan === "super_legend" ? 1 : 0;
+    const isActiveSL =
+      user.clerkPlanStatus === "active" &&
+      (user.clerkPlan === "super_legend" || user.clerkPlan === "super_legend_2");
+    checks.push(isActiveSL && slTier >= rules.superLegendTier);
+  }
+
+  // Check Discord booster
+  if (rules.discordBoosters) {
+    checks.push(user.discordBooster === true);
+  }
+
+  // If no checks were added (rules object was empty or had no matching fields)
+  if (checks.length === 0) {
+    return true;
+  }
+
+  // Apply match mode
+  if (matchMode === "all") {
+    return checks.every(Boolean);
+  } else {
+    // "any" - default OR logic
+    return checks.some(Boolean);
+  }
+}
+
+/**
  * Check if user is the creator (admin)
  */
 export function isCreator(user: { isCreator: boolean; discordId?: string | null }): boolean {
@@ -118,13 +209,15 @@ export async function requireNotBanned(ctx: QueryCtx | MutationCtx) {
 }
 
 /**
- * Require user to have access to a channel's tier
+ * Require user to have access to a channel
+ * Checks both tier-based access and advanced access rules
  */
 export async function requireChannelAccess(ctx: QueryCtx | MutationCtx, channelId: string) {
   const user = await requireUser(ctx);
   const channel = (await ctx.db.get(channelId as any)) as {
     _id: any;
-    requiredTier: "tier1" | "tier2";
+    requiredTier: "free" | "tier1" | "tier2";
+    accessRules?: AccessRules | null;
     [key: string]: any;
   } | null;
 
@@ -132,9 +225,33 @@ export async function requireChannelAccess(ctx: QueryCtx | MutationCtx, channelI
     throw new Error("Channel not found");
   }
 
-  if (!hasAccessToTier(user.tier, channel.requiredTier)) {
-    throw new Error("You don't have access to this channel. Upgrade to Tier 2!");
+  // If channel has access rules, use those instead of tier
+  if (channel.accessRules) {
+    if (!checkAccessRules(user, channel.accessRules)) {
+      throw new Error("You don't have access to this channel.");
+    }
+  } else {
+    // Fall back to tier-based access
+    if (!hasAccessToTier(user.tier, channel.requiredTier)) {
+      throw new Error("You don't have access to this channel. Upgrade to Tier 2!");
+    }
   }
 
   return { user, channel };
+}
+
+/**
+ * Check if a user has access to a channel (non-throwing version)
+ * Useful for filtering channels in queries
+ */
+export function userHasChannelAccess(
+  user: UserSupporterStatus,
+  channel: { requiredTier: "free" | "tier1" | "tier2"; accessRules?: AccessRules | null },
+): boolean {
+  // If channel has access rules, use those
+  if (channel.accessRules) {
+    return checkAccessRules(user, channel.accessRules);
+  }
+  // Fall back to tier-based access
+  return hasAccessToTier(user.tier, channel.requiredTier);
 }

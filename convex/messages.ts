@@ -269,7 +269,12 @@ export const send = mutation({
   handler: async (ctx, args) => {
     // Check if user is banned before allowing message send
     await requireNotBanned(ctx);
-    const { user } = await requireChannelAccess(ctx, args.channelId);
+    const { user, channel } = await requireChannelAccess(ctx, args.channelId);
+
+    // If channel is announcement type, only creator can post
+    if (channel.isAnnouncement && !isCreator(user)) {
+      throw new Error("Only the creator can post in announcement channels");
+    }
 
     // Validate content length
     if (args.content.length > 4000) {
@@ -318,8 +323,7 @@ export const send = mutation({
     await createMentionNotifications(ctx, args.content, messageId, args.channelId, user);
 
     // Send to Discord if channel has wormhole configured
-    const channel = await ctx.db.get(args.channelId);
-    if (channel?.discordWebhookUrl) {
+    if (channel.discordWebhookUrl) {
       // Get Discord message ID if this is a reply
       let replyToDiscordMessageId: string | undefined;
       if (args.replyToId) {

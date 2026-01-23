@@ -1,11 +1,11 @@
 export type { BentoCardProps } from "./BentoCard";
 export { BentoCard } from "./BentoCard";
 export { BentoGrid, BentoGridSkeleton } from "./BentoGrid";
-export { NewsBubbles } from "./NewsBubbles";
 export { CommentSection } from "./CommentSection";
 export type { AdminBentoCardProps } from "./DraggableBentoGrid";
 export { DraggableBentoGrid } from "./DraggableBentoGrid";
 export { LabelFilter } from "./LabelFilter";
+export { NewsBubbles } from "./NewsBubbles";
 export { ReactionBar } from "./ReactionBar";
 export { SearchBar } from "./SearchBar";
 export { SearchResultCard } from "./SearchResultCard";

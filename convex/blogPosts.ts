@@ -326,6 +326,8 @@ export const getBySlugForEdit = query({
 
 /**
  * Get a post by slug (for public pages - includes content)
+ * Returns post metadata even for tier-locked posts (for SSR), but only includes
+ * content if user has access. Check `hasAccess` field to determine if content is available.
  */
 export const getBySlug = query({
   args: { slug: v.string() },
@@ -340,16 +342,15 @@ export const getBySlug = query({
     const user = await getCurrentUser(ctx);
 
     // Check access
-    if (post.status === "draft") {
-      if (!user || !isCreator(user)) return null;
-    } else if (post.status === "published") {
-      if (!canAccessPost(user, post.visibility)) return null;
-    } else {
+    const hasAccess = canAccessPost(user, post.visibility);
+
+    // Draft and archived posts: only creator can view
+    if (post.status === "draft" || post.status === "archived") {
       if (!user || !isCreator(user)) return null;
     }
 
-    // Fetch content from separate table (bandwidth optimization)
-    const content = await getPostContent(ctx, post._id, post.content);
+    // For non-public posts, return metadata but no content if user lacks access
+    // This prevents 404s for tier-locked posts while keeping content protected
     const author = await getAuthorInfo(ctx, post.authorId);
 
     // Fetch collaborator info
@@ -359,7 +360,22 @@ export const getBySlug = query({
         )
       : [];
 
-    return { ...post, content, author, collaborators };
+    // If user doesn't have access, return metadata without content
+    if (!hasAccess) {
+      return {
+        ...post,
+        content: "", // Don't expose content
+        author,
+        collaborators,
+        hasAccess: false,
+        requiredTier: post.visibility, // Tell frontend what tier is needed
+      };
+    }
+
+    // Fetch content from separate table (bandwidth optimization)
+    const content = await getPostContent(ctx, post._id, post.content);
+
+    return { ...post, content, author, collaborators, hasAccess: true };
   },
 });
 
@@ -431,6 +447,7 @@ export const getForBento = query({
       // bentoOrder removed - only needed for sorting (done server-side)
       viewCount: post.viewCount, // kept for recommendations API
       publishedAt: post.publishedAt,
+      visibility: post.visibility, // for Super Legend badge display
       // author removed - not displayed on BentoCard
     }));
 
@@ -535,6 +552,7 @@ export const getForBentoPersonalized = query({
       bentoSize: post.bentoSize,
       viewCount: post.viewCount,
       publishedAt: post.publishedAt,
+      visibility: post.visibility, // for Super Legend badge display
     }));
 
     return bentoPosts;
@@ -654,6 +672,7 @@ export const getForBentoPaginated = query({
       bentoSize: post.bentoSize,
       viewCount: post.viewCount,
       publishedAt: post.publishedAt,
+      visibility: post.visibility, // for Super Legend badge display
     }));
 
     return {

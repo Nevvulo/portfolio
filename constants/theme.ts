@@ -18,6 +18,11 @@ export const DarkTheme = {
   difficultyBeginnerBackground: "#2d6b4f",
   difficultyIntermediateBackground: "#3d5a80",
   difficultyAdvancedBackground: "#7b3b5c",
+  menuBackground: "rgba(17, 17, 17, 0.98)",
+  menuBorder: "rgba(79, 77, 193, 0.2)",
+  menuShadow: "rgba(0, 0, 0, 0.3)",
+  navbarBackground: "rgba(17, 17, 17, 0.8)",
+  navbarBorder: "rgba(79, 77, 193, 0.1)",
 };
 
 export const LightTheme = {
@@ -40,4 +45,9 @@ export const LightTheme = {
   difficultyBeginnerBackground: "rgb(0 128 11 / 68%)",
   difficultyIntermediateBackground: "rgb(0 29 178 / 52%)",
   difficultyAdvancedBackground: "rgb(204 52 34 / 71%)",
+  menuBackground: "rgba(255, 255, 255, 0.98)",
+  menuBorder: "rgba(79, 77, 193, 0.25)",
+  menuShadow: "rgba(0, 0, 0, 0.15)",
+  navbarBackground: "rgba(255, 255, 255, 0.9)",
+  navbarBorder: "rgba(79, 77, 193, 0.15)",
 };

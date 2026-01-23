@@ -116,17 +116,19 @@ export default function MyApp({ Component, router, pageProps }: AppProps) {
       }),
   );
 
-  // Prevent html from scrolling on homepage (scroll happens in #scroll-container)
+  // FOUC prevention - mark fonts as loaded
   useEffect(() => {
     if (typeof document !== "undefined") {
-      const isHomepage = router.route === "/" || router.route === "";
-      if (isHomepage) {
-        document.documentElement.classList.add("page-homepage");
+      // Check if fonts are already loaded (cached)
+      if (document.fonts.status === "loaded") {
+        document.documentElement.classList.add("fonts-loaded");
       } else {
-        document.documentElement.classList.remove("page-homepage");
+        document.fonts.ready.then(() => {
+          document.documentElement.classList.add("fonts-loaded");
+        });
       }
     }
-  }, [router.route]);
+  }, []);
 
   return (
     <React.StrictMode>

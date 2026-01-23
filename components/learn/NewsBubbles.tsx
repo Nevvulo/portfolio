@@ -39,12 +39,7 @@ export function NewsBubbles({ posts }: NewsBubblesProps) {
         })}
       </BubbleStack>
       <AvatarContainer>
-        <Avatar
-          src={NevuloImg}
-          alt="Nevulo"
-          width={36}
-          height={36}
-        />
+        <Avatar src={NevuloImg} alt="Nevulo" width={36} height={36} />
       </AvatarContainer>
     </BubblesContainer>
   );

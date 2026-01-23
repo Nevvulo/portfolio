@@ -58,6 +58,7 @@ interface FloatingNumber {
 
 export function ReactionBar({ postId, variant = "hero" }: ReactionBarProps) {
   const { isSignedIn } = useUser();
+  const [mounted, setMounted] = useState(false);
   const [shakingButton, setShakingButton] = useState<ReactionType | null>(null);
   const [glowingButton, setGlowingButton] = useState<ReactionType | null>(null);
   const [floatingNumbers, setFloatingNumbers] = useState<FloatingNumber[]>([]);
@@ -66,6 +67,11 @@ export function ReactionBar({ postId, variant = "hero" }: ReactionBarProps) {
   const [showClearDropdown, setShowClearDropdown] = useState(false);
   const [isClearing, setIsClearing] = useState(false);
   const [clientIp, setClientIp] = useState<string | null>(null);
+
+  // Track mount state to avoid flash
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Track server count changes for reconciliation
   const lastCounts = useRef<Record<ReactionType, number>>({ like: 0, helpful: 0, insightful: 0 });
@@ -515,9 +521,12 @@ export function ReactionBar({ postId, variant = "hero" }: ReactionBarProps) {
     };
   }, []);
 
+  // Show skeleton until mounted and data is ready
+  const isLoading = !mounted || counts === undefined;
+
   return (
     <>
-      <Container ref={containerRef} $variant={variant}>
+      <Container ref={containerRef} $variant={variant} $loading={isLoading}>
         {REACTIONS.map(({ type, icon, label, color }) => {
           const serverCount = counts?.[type] ?? 0;
           const optimistic = optimisticOffset[type];
@@ -677,10 +686,13 @@ export function ReactionBar({ postId, variant = "hero" }: ReactionBarProps) {
   );
 }
 
-const Container = styled.div<{ $variant: "hero" | "inline" }>`
+const Container = styled.div<{ $variant: "hero" | "inline"; $loading?: boolean }>`
   display: flex;
   align-items: center;
   gap: ${(props) => (props.$variant === "hero" ? "16px" : "12px")};
+  min-height: 48px; /* Match IconCircle height to prevent CLS */
+  opacity: ${(props) => (props.$loading ? 0 : 1)};
+  transition: opacity 0.15s ease;
 `;
 
 const shake = keyframes`

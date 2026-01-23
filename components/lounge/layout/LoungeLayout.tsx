@@ -1,13 +1,9 @@
-import { useUser } from "@clerk/nextjs";
-import { useQuery } from "convex/react";
 import { AnimatePresence, m } from "framer-motion";
 import { type LucideIcon, Menu, X } from "lucide-react";
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import styled from "styled-components";
 import { LOUNGE_COLORS, LOUNGE_LAYOUT } from "../../../constants/lounge";
-import { api } from "../../../convex/_generated/api";
 import { useTierAccess } from "../../../hooks/lounge/useTierAccess";
-import { UsernameSetup } from "../UsernameSetup";
 import { UserPopout, UserPopoutProvider } from "../user-popout";
 import { MembersPanel } from "./MembersPanel";
 import { Sidebar } from "./Sidebar";
@@ -28,44 +24,17 @@ export function LoungeLayout({
   channelType,
   customIcon,
 }: LoungeLayoutProps) {
-  const { isSignedIn } = useUser();
   const { isLoading, tier, isCreator, displayName, avatarUrl } = useTierAccess();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMembersPanelOpen, setIsMembersPanelOpen] = useState(true);
-  const [usernameSkipped, setUsernameSkipped] = useState(false);
-
-  // Get current user from Convex to check for username (only when signed in)
-  const currentUser = useQuery(api.users.getMe, isSignedIn ? {} : "skip");
-
-  // Handle username setup completion
-  const handleUsernameComplete = useCallback(() => {
-    // User set their username, continue to lounge
-  }, []);
-
-  // Handle username setup skip
-  const handleUsernameSkip = useCallback(() => {
-    setUsernameSkipped(true);
-  }, []);
 
   // Show loading state
-  if (isLoading || currentUser === undefined) {
+  if (isLoading) {
     return (
       <LoadingContainer>
         <LoadingSpinner />
         <LoadingText>Loading the lounge...</LoadingText>
       </LoadingContainer>
-    );
-  }
-
-  // Lounge is now open to everyone - keeping code for reference
-  // The tier system still determines which channels users can access
-
-  // Show username setup if user doesn't have a username yet
-  if (currentUser && !currentUser.username && !usernameSkipped) {
-    return (
-      <UsernameSetupContainer>
-        <UsernameSetup onComplete={handleUsernameComplete} onSkip={handleUsernameSkip} />
-      </UsernameSetupContainer>
     );
   }
 
@@ -276,15 +245,4 @@ const LoadingSpinner = styled.div`
 const LoadingText = styled.p`
   color: ${(props) => props.theme.textColor};
   font-size: 0.9rem;
-`;
-
-// Username setup container
-const UsernameSetupContainer = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  background: ${(props) => props.theme.background};
-  color: ${(props) => props.theme.foreground};
-  padding: 2rem;
 `;

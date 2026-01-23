@@ -98,6 +98,10 @@ const Container = styled.div.withConfig({
     transform: translateY(-4px);
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15), 0 2px 6px rgba(0, 0, 0, 0.1);
   }
+
+  @media (max-width: 768px) {
+    height: ${(props) => (props.isSmaller ? "400px" : "450px")};
+  }
 `;
 
 const ImageWrapper = styled.div`

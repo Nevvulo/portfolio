@@ -95,7 +95,7 @@ const DetailedContainer = styled.div`
 `;
 
 const ContextMenu = styled(Container).attrs({ direction: "column" })`
-  background: rgba(0, 0, 0, 0.8);
+  background: ${(props) => props.theme.menuBackground};
   animation: ${riseUpSmall} 0.3s ease-in-out;
   padding: 0.4em;
   right: 2.5%;
@@ -104,6 +104,8 @@ const ContextMenu = styled(Container).attrs({ direction: "column" })`
   position: fixed;
   margin-left: auto;
   border-radius: 6px;
+  border: 1px solid ${(props) => props.theme.menuBorder};
+  box-shadow: 0 4px 20px ${(props) => props.theme.menuShadow};
 `;
 
 function CollapsibleContent({

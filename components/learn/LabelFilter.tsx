@@ -7,9 +7,7 @@ const MAX_VISIBLE_LABELS = 15;
 
 // Pre-generated widths for skeleton labels to avoid CLS
 // These simulate realistic label widths (40-100px range)
-const SKELETON_LABEL_WIDTHS = [
-  52, 78, 64, 45, 88, 56, 72, 94, 48, 82, 60, 75, 68, 42, 86
-];
+const SKELETON_LABEL_WIDTHS = [52, 78, 64, 45, 88, 56, 72, 94, 48, 82, 60, 75, 68, 42, 86];
 
 interface LabelFilterProps {
   labels: string[];
@@ -19,7 +17,13 @@ interface LabelFilterProps {
   isLoading?: boolean;
 }
 
-export function LabelFilter({ labels, selectedLabels, onToggle, onClear, isLoading }: LabelFilterProps) {
+export function LabelFilter({
+  labels,
+  selectedLabels,
+  onToggle,
+  onClear,
+  isLoading,
+}: LabelFilterProps) {
   const hasSelection = selectedLabels.length > 0;
 
   // Show skeleton while loading

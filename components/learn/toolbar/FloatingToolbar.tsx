@@ -1,6 +1,6 @@
 import { useUser } from "@clerk/nextjs";
 import { useQuery } from "convex/react";
-import { AnimatePresence, m } from "framer-motion";
+import { m } from "framer-motion";
 import {
   ChevronDown,
   ChevronsUp,
@@ -8,10 +8,8 @@ import {
   Flag,
   Highlighter,
   MessageSquare,
-  MoreVertical,
   Pencil,
   Share2,
-  X,
 } from "lucide-react";
 import { useRouter } from "next/router";
 import { type RefObject, useCallback, useEffect, useState } from "react";
@@ -36,12 +34,24 @@ interface FloatingToolbarProps {
   headings: TOCItem[];
   activeHeading: string;
   highlightCount: number;
-  tocCollapsed: boolean;
-  onTocCollapseChange: (collapsed: boolean) => void;
   onOpenHighlights: () => void;
   heroRef: RefObject<HTMLElement>;
   thanksSectionRef: RefObject<HTMLElement>;
   commentSectionRef?: RefObject<HTMLElement>;
+}
+
+// Props for the mobile toolbar content (used by MobileTOCBar)
+export interface MobileToolbarContentProps {
+  postId: Id<"blogPosts">;
+  postSlug: string;
+  postTitle: string;
+  headings: TOCItem[];
+  activeHeading: string;
+  highlightCount: number;
+  onOpenHighlights: () => void;
+  onClose: () => void;
+  commentSectionRef?: RefObject<HTMLElement>;
+  thanksSectionRef: RefObject<HTMLElement>;
 }
 
 export function FloatingToolbar({
@@ -51,7 +61,6 @@ export function FloatingToolbar({
   headings,
   activeHeading,
   highlightCount,
-  tocCollapsed,
   onOpenHighlights,
   heroRef,
   thanksSectionRef,
@@ -64,7 +73,6 @@ export function FloatingToolbar({
   const [thanksReached, setThanksReached] = useState(false);
   const [showReactionFan, setShowReactionFan] = useState(false);
   const [reportModalOpen, setReportModalOpen] = useState(false);
-  const [mobileToolbarOpen, setMobileToolbarOpen] = useState(false);
 
   // Check if user can edit this post
   const canEdit = useQuery(api.blogPosts.canEdit, { postId });
@@ -91,23 +99,24 @@ export function FloatingToolbar({
     return () => observer.disconnect();
   }, [heroRef]);
 
-  // Track when thanks section is in view - hide toolbar when thanks is visible
+  // Track when we've scrolled past the start of thanks section - hide toolbar from that point onwards
   useEffect(() => {
     if (!thanksSectionRef.current) return;
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const entry = entries[0];
-        if (entry) {
-          // Update based on current intersection state, not just setting to true
-          setThanksReached(entry.isIntersecting);
-        }
-      },
-      { threshold: 0.1 },
-    );
+    const checkPosition = () => {
+      if (!thanksSectionRef.current) return;
+      const rect = thanksSectionRef.current.getBoundingClientRect();
+      // Hide toolbar once we've scrolled past the start of the thanks section
+      // Using a small offset (100px) so it hides slightly before the section starts
+      setThanksReached(rect.top <= window.innerHeight - 100);
+    };
 
-    observer.observe(thanksSectionRef.current);
-    return () => observer.disconnect();
+    // Check on mount
+    checkPosition();
+
+    // Check on scroll
+    window.addEventListener("scroll", checkPosition, { passive: true });
+    return () => window.removeEventListener("scroll", checkPosition);
   }, [thanksSectionRef]);
 
   // Compute visibility: show when hero is out of view AND thanks section hasn't been reached
@@ -197,13 +206,13 @@ export function FloatingToolbar({
 
   return (
     <>
-      {/* Desktop Toolbar - stays mounted, animate visibility */}
-      <ToolbarWrapper $tocCollapsed={tocCollapsed} style={{ pointerEvents: isVisible ? 'auto' : 'none' }}>
+      {/* Desktop Toolbar - fixed RIGHT side, stays mounted, animate visibility */}
+      <ToolbarWrapper style={{ pointerEvents: isVisible ? "auto" : "none" }}>
         <ToolbarContainer
           initial={false}
           animate={{
             opacity: isVisible ? 1 : 0,
-            x: isVisible ? 0 : -12
+            x: isVisible ? 0 : 12,
           }}
           transition={{ duration: 0.15, ease: "easeOut" }}
         >
@@ -262,133 +271,6 @@ export function FloatingToolbar({
         </ToolbarContainer>
       </ToolbarWrapper>
 
-      {/* Mobile Toolbar FAB - stays mounted, animate visibility */}
-      <MobileToolbarWrapper style={{ pointerEvents: isVisible ? 'auto' : 'none' }}>
-        {/* Click-outside overlay */}
-        <AnimatePresence>
-          {mobileToolbarOpen && (
-            <MobileToolbarOverlay
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.15 }}
-              onClick={() => setMobileToolbarOpen(false)}
-            />
-          )}
-        </AnimatePresence>
-
-        <MobileToolbarButton
-          initial={false}
-          animate={{
-            opacity: isVisible ? 1 : 0,
-            x: isVisible ? 0 : 12
-          }}
-          transition={{ duration: 0.15 }}
-          onClick={() => setMobileToolbarOpen(!mobileToolbarOpen)}
-          aria-label={mobileToolbarOpen ? "Close toolbar" : "Open toolbar"}
-          $isOpen={mobileToolbarOpen}
-        >
-          {mobileToolbarOpen ? <X size={20} /> : <MoreVertical size={20} />}
-        </MobileToolbarButton>
-
-        <AnimatePresence>
-          {mobileToolbarOpen && (
-            <MobileToolbarExpanded
-              initial={{ opacity: 0, x: 12 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 12 }}
-              transition={{ duration: 0.15, ease: "easeOut" }}
-            >
-              {/* Reactions */}
-              <ReactionFan
-                postId={postId}
-                isExpanded={showReactionFan}
-                onToggle={() => setShowReactionFan(!showReactionFan)}
-                expandDirection="left"
-              />
-
-              {/* Highlights */}
-              <ToolbarButton
-                icon={Highlighter}
-                label="View highlights"
-                onClick={() => {
-                  onOpenHighlights();
-                  setMobileToolbarOpen(false);
-                }}
-                badge={highlightCount}
-              />
-
-              <MobileDivider />
-
-              {/* Navigation */}
-              <ToolbarButton
-                icon={ChevronUp}
-                label="Previous section"
-                onClick={navigateToPrevSection}
-                disabled={!canGoPrev}
-              />
-              <ToolbarButton
-                icon={ChevronDown}
-                label="Next section"
-                onClick={navigateToNextSection}
-                disabled={!canGoNext}
-              />
-              <ToolbarButton
-                icon={ChevronsUp}
-                label="Scroll to top"
-                onClick={() => {
-                  scrollToTop();
-                  setMobileToolbarOpen(false);
-                }}
-              />
-
-              <MobileDivider />
-
-              {/* Actions */}
-              <ToolbarButton
-                icon={Share2}
-                label="Share"
-                onClick={() => {
-                  handleShare();
-                  setMobileToolbarOpen(false);
-                }}
-              />
-              <ToolbarButton
-                icon={MessageSquare}
-                label={isSignedIn ? "Go to comments" : "Sign in to comment"}
-                onClick={() => {
-                  handleComment();
-                  setMobileToolbarOpen(false);
-                }}
-              />
-
-              {/* Edit (only for authorized users) */}
-              {canEdit && (
-                <ToolbarButton
-                  icon={Pencil}
-                  label="Edit post"
-                  onClick={() => {
-                    handleEdit();
-                    setMobileToolbarOpen(false);
-                  }}
-                />
-              )}
-
-              {/* Report */}
-              <ToolbarButton
-                icon={Flag}
-                label="Report an issue"
-                onClick={() => {
-                  setReportModalOpen(true);
-                  setMobileToolbarOpen(false);
-                }}
-                variant="danger"
-              />
-            </MobileToolbarExpanded>
-          )}
-        </AnimatePresence>
-      </MobileToolbarWrapper>
-
       <ReportModal
         isOpen={reportModalOpen}
         onClose={() => setReportModalOpen(false)}
@@ -399,14 +281,13 @@ export function FloatingToolbar({
   );
 }
 
-const ToolbarWrapper = styled.div<{ $tocCollapsed: boolean }>`
+const ToolbarWrapper = styled.div`
   position: fixed;
   z-index: 50;
-  left: ${(props) => (props.$tocCollapsed ? "24px" : "260px")};
-  /* When collapsed, position below the TOC expand button (120px + 40px + 16px gap) */
-  top: ${(props) => (props.$tocCollapsed ? "176px" : "120px")};
+  right: 24px;
+  top: 120px;
 
-  /* Hide on smaller screens where TOC is hidden */
+  /* Hide on smaller screens - mobile uses MobileTOCBar instead */
   @media (max-width: 1200px) {
     display: none;
   }
@@ -432,74 +313,178 @@ const Divider = styled.div`
   margin: 4px auto;
 `;
 
-// Mobile toolbar styles
-const MobileToolbarWrapper = styled.div`
-  display: none;
+// Exported mobile toolbar content component for use in MobileTOCBar
+export function MobileToolbarContent({
+  postId,
+  postSlug,
+  postTitle,
+  headings,
+  activeHeading,
+  highlightCount,
+  onOpenHighlights,
+  onClose,
+  commentSectionRef,
+  thanksSectionRef,
+}: MobileToolbarContentProps) {
+  const { isSignedIn } = useUser();
+  const router = useRouter();
+  const [showReactionFan, setShowReactionFan] = useState(false);
+  const [reportModalOpen, setReportModalOpen] = useState(false);
 
-  @media (max-width: 1200px) {
-    display: block;
-  }
-`;
+  // Check if user can edit this post
+  const canEdit = useQuery(api.blogPosts.canEdit, { postId });
 
-const MobileToolbarOverlay = styled(m.div)`
-  position: fixed;
-  inset: 0;
-  z-index: 98;
-`;
-
-const MobileToolbarButton = styled(m.button)<{ $isOpen: boolean }>`
-  position: fixed;
-  top: 128px; /* Below TOC button (80px + 40px height + 8px gap) */
-  right: 24px;
-  z-index: 100;
-  width: 40px;
-  height: 40px;
-  border-radius: 8px;
-  background: ${(props) => (props.$isOpen ? "rgba(144, 116, 242, 0.3)" : "rgba(0, 0, 0, 0.75)")};
-  border: none;
-  color: white;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.15s ease;
-
-  &:hover {
-    background: rgba(144, 116, 242, 0.3);
-  }
-`;
-
-const MobileToolbarExpanded = styled(m.div)`
-  position: fixed;
-  top: 176px; /* Below the button (128px + 40px + 8px gap) */
-  right: 24px;
-  z-index: 100;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 8px;
-  background: rgba(16, 13, 27, 0.95);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid ${LOUNGE_COLORS.glassBorder};
-  border-radius: 14px;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
-
-  /* Short viewport: move to the left of button when toolbar won't fit below */
-  @media (max-width: 1200px) and (max-height: 600px) {
-    top: 80px;
-    right: 72px; /* To the left of button (24px + 40px + 8px gap) */
-    max-height: calc(100vh - 96px);
-    overflow-y: auto;
-
-    /* Hide scrollbar but keep functionality */
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-    &::-webkit-scrollbar {
-      display: none;
+  // Navigation functions
+  const scrollToHeading = useCallback((id: string) => {
+    const element = document.getElementById(id);
+    if (element) {
+      const offset = 120;
+      const elementPosition = element.getBoundingClientRect().top + window.scrollY;
+      window.scrollTo({ top: elementPosition - offset, behavior: "smooth" });
     }
-  }
-`;
+  }, []);
+
+  const navigateToNextSection = useCallback(() => {
+    const currentIndex = headings.findIndex((h) => h.id === activeHeading);
+    const nextHeading = headings[currentIndex + 1];
+    if (nextHeading) {
+      scrollToHeading(nextHeading.id);
+    }
+  }, [headings, activeHeading, scrollToHeading]);
+
+  const navigateToPrevSection = useCallback(() => {
+    const currentIndex = headings.findIndex((h) => h.id === activeHeading);
+    const prevHeading = headings[currentIndex - 1];
+    if (prevHeading) {
+      scrollToHeading(prevHeading.id);
+    }
+  }, [headings, activeHeading, scrollToHeading]);
+
+  const scrollToTop = useCallback(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, []);
+
+  const handleShare = useCallback(async () => {
+    const url = `https://nev.so/learn/${postSlug}`;
+    const shareData = {
+      title: postTitle,
+      text: `Check out "${postTitle}" on Nevulo`,
+      url,
+    };
+
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+      } catch (err) {
+        console.log("Share cancelled");
+      }
+    } else {
+      await navigator.clipboard.writeText(url);
+      alert("Link copied to clipboard!");
+    }
+    onClose();
+  }, [postSlug, postTitle, onClose]);
+
+  const handleComment = useCallback(() => {
+    if (!isSignedIn) {
+      router.push(`/sign-in?redirect_url=/learn/${postSlug}`);
+      return;
+    }
+
+    if (commentSectionRef?.current) {
+      commentSectionRef.current.scrollIntoView({ behavior: "instant", block: "start" });
+    } else {
+      thanksSectionRef.current?.scrollIntoView({ behavior: "instant", block: "start" });
+    }
+    onClose();
+  }, [isSignedIn, router, postSlug, commentSectionRef, thanksSectionRef, onClose]);
+
+  const handleEdit = useCallback(() => {
+    router.push(`/editor/content/${postSlug}`);
+    onClose();
+  }, [router, postSlug, onClose]);
+
+  const currentIndex = headings.findIndex((h) => h.id === activeHeading);
+  const canGoNext = currentIndex < headings.length - 1;
+  const canGoPrev = currentIndex > 0;
+
+  return (
+    <>
+      {/* Reactions */}
+      <ReactionFan
+        postId={postId}
+        isExpanded={showReactionFan}
+        onToggle={() => setShowReactionFan(!showReactionFan)}
+        expandDirection="left"
+      />
+
+      {/* Highlights */}
+      <ToolbarButton
+        icon={Highlighter}
+        label="View highlights"
+        onClick={() => {
+          onOpenHighlights();
+          onClose();
+        }}
+        badge={highlightCount}
+      />
+
+      <MobileDivider />
+
+      {/* Navigation */}
+      <ToolbarButton
+        icon={ChevronUp}
+        label="Previous section"
+        onClick={navigateToPrevSection}
+        disabled={!canGoPrev}
+      />
+      <ToolbarButton
+        icon={ChevronDown}
+        label="Next section"
+        onClick={navigateToNextSection}
+        disabled={!canGoNext}
+      />
+      <ToolbarButton
+        icon={ChevronsUp}
+        label="Scroll to top"
+        onClick={() => {
+          scrollToTop();
+          onClose();
+        }}
+      />
+
+      <MobileDivider />
+
+      {/* Actions */}
+      <ToolbarButton icon={Share2} label="Share" onClick={handleShare} />
+      <ToolbarButton
+        icon={MessageSquare}
+        label={isSignedIn ? "Go to comments" : "Sign in to comment"}
+        onClick={handleComment}
+      />
+
+      {/* Edit (only for authorized users) */}
+      {canEdit && <ToolbarButton icon={Pencil} label="Edit post" onClick={handleEdit} />}
+
+      {/* Report */}
+      <ToolbarButton
+        icon={Flag}
+        label="Report an issue"
+        onClick={() => {
+          setReportModalOpen(true);
+        }}
+        variant="danger"
+      />
+
+      <ReportModal
+        isOpen={reportModalOpen}
+        onClose={() => setReportModalOpen(false)}
+        postId={postId}
+        postTitle={postTitle}
+      />
+    </>
+  );
+}
 
 const MobileDivider = styled.div`
   width: 24px;

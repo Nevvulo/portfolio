@@ -282,12 +282,13 @@ const TimelineBadge = styled.span`
 `;
 
 const MaintainedBadge = styled.span`
-  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(8px);
   padding: 3px 10px;
   border-radius: 4px;
   font-size: 10px;
   font-weight: 600;
-  color: white;
+  color: rgba(0, 0, 0, 0.8);
   letter-spacing: 0.02em;
   text-transform: uppercase;
 `;

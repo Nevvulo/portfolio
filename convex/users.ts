@@ -214,6 +214,7 @@ export const getOrCreateUser = action({
     // Call internal mutation to create/update user
     const userId: Id<"users"> = await ctx.runMutation(internal.users.createOrUpdateUserInternal, {
       clerkId,
+      username: clerkUser?.username || undefined,
       displayName: args.displayName || clerkUser?.first_name || clerkUser?.username || "Anonymous",
       avatarUrl: args.avatarUrl || clerkUser?.image_url,
       discordId,
@@ -237,6 +238,7 @@ export const getOrCreateUser = action({
 export const createOrUpdateUserInternal = internalMutation({
   args: {
     clerkId: v.string(),
+    username: v.optional(v.string()),
     displayName: v.string(),
     avatarUrl: v.optional(v.string()),
     discordId: v.optional(v.string()),
@@ -264,8 +266,9 @@ export const createOrUpdateUserInternal = internalMutation({
       .unique();
 
     if (existingUser) {
-      // Update user info
+      // Update user info (only update username if provided from Clerk)
       await ctx.db.patch(existingUser._id, {
+        ...(args.username !== undefined && { username: args.username }),
         displayName: args.displayName,
         avatarUrl: args.avatarUrl,
         tier: args.tier,
@@ -287,6 +290,7 @@ export const createOrUpdateUserInternal = internalMutation({
     // Create new user with verified data
     const userId = await ctx.db.insert("users", {
       clerkId: args.clerkId,
+      username: args.username,
       discordId: args.discordId,
       discordUsername: args.discordUsername,
       twitchUsername: args.twitchUsername,
@@ -725,6 +729,7 @@ export const refreshUser = action({
     // Call internal mutation to update the database
     await ctx.runMutation(internal.users.updateUserFromClerk, {
       clerkId: args.clerkId,
+      username: clerkUser.username || undefined,
       displayName: clerkUser.first_name || clerkUser.username,
       avatarUrl: clerkUser.image_url,
       discordId: discordId || undefined,
@@ -738,6 +743,7 @@ export const refreshUser = action({
 
     return {
       success: true,
+      username: clerkUser.username,
       displayName: clerkUser.first_name || clerkUser.username,
       avatarUrl: clerkUser.image_url,
       discordId,
@@ -757,6 +763,7 @@ export const refreshUser = action({
 export const updateUserFromClerk = internalMutation({
   args: {
     clerkId: v.string(),
+    username: v.optional(v.string()),
     displayName: v.optional(v.string()),
     avatarUrl: v.optional(v.string()),
     discordId: v.optional(v.string()),
@@ -810,6 +817,9 @@ export const updateUserFromClerk = internalMutation({
       updates.clerkPlanStatus = args.clerkPlanStatus;
     }
     // Add usernames if provided
+    if (args.username !== undefined) {
+      updates.username = args.username;
+    }
     if (args.discordUsername !== undefined) {
       updates.discordUsername = args.discordUsername;
     }
@@ -869,6 +879,20 @@ export const updateSupporterStatus = mutation({
     discordBooster: v.optional(v.boolean()),
     clerkPlan: v.optional(v.string()),
     clerkPlanStatus: v.optional(v.string()),
+    founderNumber: v.optional(
+      v.union(
+        v.literal(1),
+        v.literal(2),
+        v.literal(3),
+        v.literal(4),
+        v.literal(5),
+        v.literal(6),
+        v.literal(7),
+        v.literal(8),
+        v.literal(9),
+        v.literal(10),
+      ),
+    ),
     discordUsername: v.optional(v.string()),
     twitchUsername: v.optional(v.string()),
   },
@@ -894,8 +918,9 @@ export const updateSupporterStatus = mutation({
       return;
     }
 
-    // Update supporter fields
-    await ctx.db.patch(user._id, {
+    // Build update object - only include founderNumber if provided
+    // (founder status is permanent and should not be removed)
+    const updates: Record<string, unknown> = {
       discordHighestRole: args.discordHighestRole,
       twitchSubTier: args.twitchSubTier,
       discordBooster: args.discordBooster,
@@ -904,7 +929,14 @@ export const updateSupporterStatus = mutation({
       discordUsername: args.discordUsername,
       twitchUsername: args.twitchUsername,
       supporterSyncedAt: Date.now(),
-    });
+    };
+
+    // Only update founderNumber if provided (never remove it)
+    if (args.founderNumber !== undefined) {
+      updates.founderNumber = args.founderNumber;
+    }
+
+    await ctx.db.patch(user._id, updates);
   },
 });
 
@@ -989,106 +1021,6 @@ export const getAnalytics = query({
       },
       topContributors,
     };
-  },
-});
-
-/**
- * Check if a username is available
- */
-export const checkUsername = query({
-  args: { username: v.string() },
-  handler: async (ctx, args) => {
-    const username = args.username.toLowerCase().trim();
-
-    // Basic validation
-    if (username.length < 3) {
-      return { available: false, reason: "Username must be at least 3 characters" };
-    }
-    if (username.length > 20) {
-      return { available: false, reason: "Username must be 20 characters or less" };
-    }
-    if (!/^[a-z0-9_]+$/.test(username)) {
-      return {
-        available: false,
-        reason: "Username can only contain letters, numbers, and underscores",
-      };
-    }
-
-    // Reserved usernames (excluding nevulo/nev since you're the owner)
-    const reserved = [
-      "admin",
-      "support",
-      "help",
-      "moderator",
-      "mod",
-      "staff",
-      "official",
-      "system",
-    ];
-    if (reserved.includes(username)) {
-      return { available: false, reason: "This username is reserved" };
-    }
-
-    // Check if taken
-    const existing = await ctx.db
-      .query("users")
-      .withIndex("by_username", (q) => q.eq("username", username))
-      .unique();
-
-    if (existing) {
-      return { available: false, reason: "Username is already taken" };
-    }
-
-    return { available: true };
-  },
-});
-
-/**
- * Set username for current user
- */
-export const setUsername = mutation({
-  args: { username: v.string() },
-  handler: async (ctx, args) => {
-    const user = await requireUser(ctx);
-    const username = args.username.toLowerCase().trim();
-
-    // Validate username format
-    if (username.length < 3 || username.length > 20) {
-      throw new Error("Username must be 3-20 characters");
-    }
-    if (!/^[a-z0-9_]+$/.test(username)) {
-      throw new Error("Username can only contain letters, numbers, and underscores");
-    }
-
-    // Check reserved (creator can use any username)
-    const reserved = [
-      "admin",
-      "support",
-      "help",
-      "moderator",
-      "mod",
-      "staff",
-      "official",
-      "system",
-    ];
-    if (reserved.includes(username) && !user.isCreator) {
-      throw new Error("This username is reserved");
-    }
-
-    // Check if taken (by someone else)
-    const existing = await ctx.db
-      .query("users")
-      .withIndex("by_username", (q) => q.eq("username", username))
-      .unique();
-
-    if (existing && existing._id !== user._id) {
-      throw new Error("Username is already taken");
-    }
-
-    // Set username
-    await ctx.db.patch(user._id, { username });
-
-    return { success: true, username };
   },
 });
 
@@ -1383,5 +1315,257 @@ export const removeStaff = mutation({
     });
 
     return { success: true };
+  },
+});
+
+// ============================================
+// CREDITS PAGE
+// ============================================
+
+type CreditUser = {
+  _id: string;
+  displayName: string;
+  username: string | null;
+  avatarUrl: string | null;
+  tier: string;
+  twitchSubTier?: 1 | 2 | 3 | null;
+  discordBooster?: boolean | null;
+  clerkPlan?: string | null;
+  clerkPlanStatus?: string | null;
+  isCreator?: boolean;
+  role?: number;
+  isContributor?: boolean;
+};
+
+/**
+ * Get categorized supporters for the /credits page
+ * Only includes users who have opted in via showOnCredits
+ * Each section is paginated with a default limit
+ */
+export const getCreditsPage = query({
+  args: {
+    limit: v.optional(v.number()), // Per-section limit, default 50
+  },
+  handler: async (ctx, args) => {
+    const limit = args.limit ?? 50;
+
+    // Get all users who have opted into credits page
+    const allUsers = await ctx.db.query("users").collect();
+
+    // Helper to map user to credit display format
+    const mapUser = (u: (typeof allUsers)[0]): CreditUser => ({
+      _id: u._id,
+      displayName: u.displayName,
+      username: u.username ?? null,
+      avatarUrl: u.avatarUrl ?? null,
+      tier: u.tier,
+      twitchSubTier: u.twitchSubTier,
+      discordBooster: u.discordBooster,
+      clerkPlan: u.clerkPlan,
+      clerkPlanStatus: u.clerkPlanStatus,
+      isCreator: u.isCreator,
+      role: u.role,
+      isContributor: u.isContributor,
+    });
+
+    // Helper to paginate a section
+    const paginateSection = <T>(items: T[]) => {
+      const hasMore = items.length > limit;
+      return {
+        items: hasMore ? items.slice(0, limit) : items,
+        hasMore,
+        total: items.length,
+      };
+    };
+
+    // Staff - always shown (isCreator or role >= ROLE_STAFF)
+    const staffAll = allUsers
+      .filter((u) => u.isCreator || (u.role ?? 0) >= ROLE_STAFF)
+      .map(mapUser);
+    const staff = paginateSection(staffAll);
+
+    // Track users who have been assigned to a section to prevent duplicates
+    const assignedUserIds = new Set(staffAll.map((u) => u._id));
+
+    // Filter remaining users to only those who opted in AND not already assigned
+    const optedInUsers = allUsers.filter((u) => u.showOnCredits && !assignedUserIds.has(u._id));
+
+    // Super Legend II - active subscription (highest paid tier)
+    const superLegendIIAll = optedInUsers
+      .filter((u) => u.clerkPlan === "super_legend_2" && u.clerkPlanStatus === "active")
+      .map(mapUser);
+    const superLegendII = paginateSection(superLegendIIAll);
+    superLegendIIAll.forEach((u) => assignedUserIds.add(u._id));
+
+    // Super Legend I - active subscription (excluding those already in II)
+    const superLegendIAll = optedInUsers
+      .filter(
+        (u) =>
+          u.clerkPlan === "super_legend" &&
+          u.clerkPlanStatus === "active" &&
+          !assignedUserIds.has(u._id),
+      )
+      .map(mapUser);
+    const superLegendI = paginateSection(superLegendIAll);
+    superLegendIAll.forEach((u) => assignedUserIds.add(u._id));
+
+    // Twitch Subscribers - grouped by tier (excluding already assigned)
+    const twitchT3All = optedInUsers
+      .filter((u) => u.twitchSubTier === 3 && !assignedUserIds.has(u._id))
+      .map(mapUser);
+    const twitchT3 = paginateSection(twitchT3All);
+    twitchT3All.forEach((u) => assignedUserIds.add(u._id));
+
+    const twitchT2All = optedInUsers
+      .filter((u) => u.twitchSubTier === 2 && !assignedUserIds.has(u._id))
+      .map(mapUser);
+    const twitchT2 = paginateSection(twitchT2All);
+    twitchT2All.forEach((u) => assignedUserIds.add(u._id));
+
+    const twitchT1All = optedInUsers
+      .filter((u) => u.twitchSubTier === 1 && !assignedUserIds.has(u._id))
+      .map(mapUser);
+    const twitchT1 = paginateSection(twitchT1All);
+    twitchT1All.forEach((u) => assignedUserIds.add(u._id));
+
+    // Discord Boosters (excluding already assigned)
+    const discordBoostersAll = optedInUsers
+      .filter((u) => u.discordBooster && !assignedUserIds.has(u._id))
+      .map(mapUser);
+    const discordBoosters = paginateSection(discordBoostersAll);
+    discordBoostersAll.forEach((u) => assignedUserIds.add(u._id));
+
+    // Contributors (excluding already assigned)
+    const contributorsAll = optedInUsers
+      .filter((u) => u.isContributor && !assignedUserIds.has(u._id))
+      .map(mapUser);
+    const contributors = paginateSection(contributorsAll);
+
+    return {
+      staff,
+      superLegendII,
+      superLegendI,
+      twitch: {
+        tier3: twitchT3,
+        tier2: twitchT2,
+        tier1: twitchT1,
+      },
+      discordBoosters,
+      contributors,
+    };
+  },
+});
+
+/**
+ * Update showOnCredits preference (own profile only)
+ */
+export const updateShowOnCredits = mutation({
+  args: {
+    showOnCredits: v.boolean(),
+  },
+  handler: async (ctx, args) => {
+    const user = await requireUser(ctx);
+
+    await ctx.db.patch(user._id, {
+      showOnCredits: args.showOnCredits,
+    });
+
+    return { success: true };
+  },
+});
+
+/**
+ * Set contributor status (creator only)
+ */
+export const setContributor = mutation({
+  args: {
+    userId: v.id("users"),
+    isContributor: v.boolean(),
+  },
+  handler: async (ctx, args) => {
+    await requireCreator(ctx);
+
+    const user = await ctx.db.get(args.userId);
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    await ctx.db.patch(args.userId, {
+      isContributor: args.isContributor,
+    });
+
+    return { success: true };
+  },
+});
+
+// ============================================
+// FOUNDER SYSTEM
+// ============================================
+
+/**
+ * Update founder status for a user.
+ * Called from the webhook after a founder slot is claimed in Redis.
+ * This is an HTTP mutation (no auth required) because it's called from server-side.
+ */
+export const updateFounderStatus = mutation({
+  args: {
+    clerkId: v.string(),
+    founderNumber: v.union(
+      v.literal(1),
+      v.literal(2),
+      v.literal(3),
+      v.literal(4),
+      v.literal(5),
+      v.literal(6),
+      v.literal(7),
+      v.literal(8),
+      v.literal(9),
+      v.literal(10),
+    ),
+  },
+  handler: async (ctx, args) => {
+    // Find user by Clerk ID
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerkId", (q) => q.eq("clerkId", args.clerkId))
+      .unique();
+
+    if (!user) {
+      console.log(`[updateFounderStatus] User not found for clerkId: ${args.clerkId}`);
+      return { success: false, error: "User not found" };
+    }
+
+    // Update founder number (this is permanent, never removed)
+    await ctx.db.patch(user._id, {
+      founderNumber: args.founderNumber,
+    });
+
+    console.log(
+      `[updateFounderStatus] Set founderNumber=${args.founderNumber} for user ${user._id}`,
+    );
+    return { success: true };
+  },
+});
+
+/**
+ * Get founder statistics for display
+ */
+export const getFounderStats = query({
+  handler: async (ctx) => {
+    // Count users with founderNumber set
+    const allUsers = await ctx.db.query("users").collect();
+    const founders = allUsers.filter((u) => u.founderNumber != null);
+
+    return {
+      totalFounders: founders.length,
+      spotsRemaining: Math.max(0, 10 - founders.length),
+      founders: founders
+        .sort((a, b) => (a.founderNumber ?? 0) - (b.founderNumber ?? 0))
+        .map((u) => ({
+          founderNumber: u.founderNumber,
+          displayName: u.displayName,
+          avatarUrl: u.avatarUrl ?? null,
+        })),
+    };
   },
 });

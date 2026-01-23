@@ -2,6 +2,30 @@ import { useUser } from "@clerk/nextjs";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { SupporterStatus } from "../types/supporter";
 
+/**
+ * Check if a supporter status has any displayable badges
+ */
+function hasAnyBadge(status: SupporterStatus | null): boolean {
+  if (!status) return false;
+
+  // Founder badge (first 10 supporters)
+  if (status.founderNumber) return true;
+
+  // Twitch subscription badge
+  if (status.twitchSubTier) return true;
+
+  // Discord server booster
+  if (status.discordBooster) return true;
+
+  // Discord role badge
+  if (status.discordHighestRole) return true;
+
+  // Active Clerk subscription (Super Legend I or II)
+  if (status.clerkPlan && status.clerkPlanStatus === "active") return true;
+
+  return false;
+}
+
 interface SupporterStatusResponse {
   status: SupporterStatus | null;
   needsSync: boolean;
@@ -78,12 +102,7 @@ export function useSupporterStatus() {
   const status = data?.status ?? null;
   const needsSync = data?.needsSync ?? false;
 
-  const hasBadges =
-    status !== null &&
-    (status.twitchSubTier !== null ||
-      status.discordBooster ||
-      status.discordHighestRole !== null ||
-      (status.clerkPlan !== null && status.clerkPlanStatus === "active"));
+  const hasBadges = hasAnyBadge(status);
 
   const syncStatus = async () => {
     await syncMutation.mutateAsync();

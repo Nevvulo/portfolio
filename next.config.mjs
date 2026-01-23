@@ -33,6 +33,11 @@ const nextConfig = {
         hostname: "raw.githubusercontent.com",
       },
       {
+        // GitHub user avatars
+        protocol: "https",
+        hostname: "avatars.githubusercontent.com",
+      },
+      {
         protocol: "https",
         hostname: "images.unsplash.com",
       },
@@ -60,6 +65,11 @@ const nextConfig = {
         // Discord media proxy for attachments
         protocol: "https",
         hostname: "media.discordapp.net",
+      },
+      {
+        // Clerk user avatars
+        protocol: "https",
+        hostname: "img.clerk.com",
       },
     ],
     // Configure valid quality values to prevent warnings

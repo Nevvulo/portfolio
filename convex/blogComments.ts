@@ -68,57 +68,120 @@ async function getAuthorInfo(ctx: any, authorId: Id<"users"> | undefined) {
 // ============================================
 
 /**
- * List comments for a post
+ * List comments for a post with cursor-based pagination
  */
 export const list = query({
   args: {
     postId: v.id("blogPosts"),
     limit: v.optional(v.number()),
+    cursor: v.optional(v.number()), // createdAt timestamp for cursor
   },
   handler: async (ctx, args) => {
     await canAccessPost(ctx, args.postId);
-    const limit = args.limit ?? 50;
+    const limit = args.limit ?? 20;
 
     // Get top-level comments (no parentId)
-    const comments = await ctx.db
+    let commentsQuery = ctx.db
       .query("blogComments")
       .withIndex("by_post", (q) => q.eq("postId", args.postId))
-      .order("desc")
-      .take(limit);
+      .order("desc");
 
-    // Filter to top-level only
+    // Apply cursor if provided
+    if (args.cursor) {
+      commentsQuery = commentsQuery.filter((q) => q.lt(q.field("createdAt"), args.cursor!));
+    }
+
+    // Fetch more than needed to filter and check hasMore
+    const comments = await commentsQuery.take(limit * 3);
+
+    // Filter to top-level only and not deleted
     const topLevel = comments.filter((c) => !c.parentId && !c.isDeleted);
+
+    // Take only the limit we need
+    const paginatedTopLevel = topLevel.slice(0, limit + 1);
+    const hasMore = paginatedTopLevel.length > limit;
+    const items = hasMore ? paginatedTopLevel.slice(0, -1) : paginatedTopLevel;
 
     // Get replies and author info for each
     const commentsWithReplies = await Promise.all(
-      topLevel.map(async (comment) => {
+      items.map(async (comment) => {
         const author = await getAuthorInfo(ctx, comment.authorId);
 
-        // Get replies
+        // Get replies (limited to first 5, with hasMoreReplies flag)
         const replies = await ctx.db
           .query("blogComments")
           .withIndex("by_parent", (q) => q.eq("parentId", comment._id))
           .order("asc")
-          .collect();
+          .take(6);
+
+        const filteredReplies = replies.filter((r) => !r.isDeleted);
+        const hasMoreReplies = filteredReplies.length > 5;
+        const limitedReplies = hasMoreReplies ? filteredReplies.slice(0, 5) : filteredReplies;
 
         const repliesWithAuthors = await Promise.all(
-          replies
-            .filter((r) => !r.isDeleted)
-            .map(async (reply) => ({
-              ...reply,
-              author: await getAuthorInfo(ctx, reply.authorId),
-            })),
+          limitedReplies.map(async (reply) => ({
+            ...reply,
+            author: await getAuthorInfo(ctx, reply.authorId),
+          })),
         );
 
         return {
           ...comment,
           author,
           replies: repliesWithAuthors,
+          hasMoreReplies,
         };
       }),
     );
 
-    return commentsWithReplies;
+    return {
+      comments: commentsWithReplies,
+      hasMore,
+      nextCursor: hasMore && items.length > 0 ? items[items.length - 1]!.createdAt : null,
+    };
+  },
+});
+
+/**
+ * List replies for a comment with cursor-based pagination
+ */
+export const listReplies = query({
+  args: {
+    parentId: v.id("blogComments"),
+    limit: v.optional(v.number()),
+    cursor: v.optional(v.number()), // createdAt timestamp for cursor
+  },
+  handler: async (ctx, args) => {
+    const limit = args.limit ?? 10;
+
+    let repliesQuery = ctx.db
+      .query("blogComments")
+      .withIndex("by_parent", (q) => q.eq("parentId", args.parentId))
+      .order("asc");
+
+    // Apply cursor if provided
+    if (args.cursor) {
+      repliesQuery = repliesQuery.filter((q) => q.gt(q.field("createdAt"), args.cursor!));
+    }
+
+    const replies = await repliesQuery.take(limit + 1);
+    const filteredReplies = replies.filter((r) => !r.isDeleted);
+
+    const hasMore = filteredReplies.length > limit;
+    const items = hasMore ? filteredReplies.slice(0, -1) : filteredReplies;
+
+    const repliesWithAuthors = await Promise.all(
+      items.map(async (reply) => ({
+        ...reply,
+        author: await getAuthorInfo(ctx, reply.authorId),
+      })),
+    );
+
+    return {
+      replies: repliesWithAuthors,
+      hasMore,
+      nextCursor: hasMore && items.length > 0 ? items[items.length - 1]!.createdAt : null,
+    };
   },
 });
 

@@ -12,10 +12,10 @@ import { ConvexHttpClient } from "convex/browser";
 import type { NextApiRequest, NextApiResponse } from "next";
 import { api } from "../../convex/_generated/api";
 import {
+  type HealthCheckResult,
   logger,
   runHealthCheck,
   withErrorHandling,
-  type HealthCheckResult,
 } from "../../lib/observability";
 
 // Initialize clients lazily

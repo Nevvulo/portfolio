@@ -22,7 +22,9 @@ import {
   Eye,
   FileText,
   Heart,
+  Info,
   Lightbulb,
+  Lock,
   MessageCircle,
   MessageSquare,
   Newspaper,
@@ -1459,20 +1461,6 @@ export function PostEditor({ post, onClose }: { post: BlogPost | null; onClose: 
             </Select>
           </FormGroup>
           <FormGroup>
-            <Label>Visibility</Label>
-            <Select
-              value={form.visibility}
-              onChange={(e) =>
-                setForm({ ...form, visibility: e.target.value as typeof form.visibility })
-              }
-            >
-              <option value="public">Public</option>
-              <option value="members">Members Only</option>
-              <option value="tier1">Tier 1+</option>
-              <option value="tier2">Tier 2 Only</option>
-            </Select>
-          </FormGroup>
-          <FormGroup>
             <Label>Bento Size</Label>
             <Select
               value={form.bentoSize}
@@ -1488,6 +1476,37 @@ export function PostEditor({ post, onClose }: { post: BlogPost | null; onClose: 
             </Select>
           </FormGroup>
         </FormRow>
+
+        <VisibilitySection>
+          <FormGroup style={{ flex: 1, maxWidth: "300px" }}>
+            <VisibilityLabel>
+              <Lock size={14} />
+              Access Visibility
+            </VisibilityLabel>
+            <VisibilitySelect
+              value={form.visibility}
+              onChange={(e) =>
+                setForm({ ...form, visibility: e.target.value as typeof form.visibility })
+              }
+              $restricted={form.visibility !== "public"}
+            >
+              <option value="public">Public - Anyone can view</option>
+              <option value="members">Members Only - Logged in users</option>
+              <option value="tier1">Super Legend - Tier 1+ supporters</option>
+              <option value="tier2">Super Legend II - Tier 2 only</option>
+            </VisibilitySelect>
+          </FormGroup>
+          {form.visibility !== "public" && (
+            <VisibilityHint>
+              <Info size={14} />
+              Tier-restricted articles automatically appear in the{" "}
+              <a href="/vault" target="_blank" rel="noopener">
+                /vault
+              </a>{" "}
+              page
+            </VisibilityHint>
+          )}
+        </VisibilitySection>
 
         {form.contentType === "video" && (
           <FormGroup>
@@ -2206,6 +2225,60 @@ const FieldHint = styled.p`
     &:hover {
       text-decoration: underline;
     }
+  }
+`;
+
+const VisibilitySection = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  background: rgba(144, 116, 242, 0.05);
+  border: 1px solid rgba(144, 116, 242, 0.2);
+  border-radius: 12px;
+  margin-bottom: 16px;
+`;
+
+const VisibilityLabel = styled.label`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: ${(p) => p.theme.contrast};
+`;
+
+const VisibilitySelect = styled.select<{ $restricted?: boolean }>`
+  padding: 10px 12px;
+  border: 1px solid ${(p) => (p.$restricted ? "rgba(168, 85, 247, 0.4)" : p.theme.borderColor || "#333")};
+  border-radius: 8px;
+  background: ${(p) => (p.$restricted ? "rgba(168, 85, 247, 0.1)" : p.theme.background)};
+  color: ${(p) => p.theme.contrast};
+  font-size: 14px;
+
+  &:focus {
+    outline: none;
+    border-color: rgba(144, 116, 242, 0.6);
+  }
+`;
+
+const VisibilityHint = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: rgba(168, 85, 247, 0.9);
+  padding: 8px 12px;
+  background: rgba(168, 85, 247, 0.1);
+  border-radius: 6px;
+
+  a {
+    color: rgba(168, 85, 247, 1);
+    text-decoration: underline;
+  }
+
+  svg {
+    flex-shrink: 0;
   }
 `;
 

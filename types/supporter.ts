@@ -17,6 +17,10 @@ export interface SupporterStatus {
   clerkPlan: "super_legend" | "super_legend_2" | null;
   clerkPlanStatus: "active" | "past_due" | "canceled" | null;
 
+  // Founder status (first 10 subscribers, permanent badge)
+  // 1-10 = founder number, null = not a founder
+  founderNumber: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | null;
+
   lastSyncedAt: string;
 }
 

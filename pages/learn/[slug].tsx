@@ -37,10 +37,11 @@ import {
   type TextAnchor,
   useTextSelection,
 } from "../../components/learn/highlights";
+import { MobileTOCBar } from "../../components/learn/MobileTOCBar";
 import { CreditsModal, ShareModal } from "../../components/learn/modals";
 import { ReactionBar } from "../../components/learn/ReactionBar";
 import { TableOfContents, type TOCItem } from "../../components/learn/TableOfContents";
-import { FloatingToolbar, ReportModal } from "../../components/learn/toolbar";
+import { FloatingToolbar, MobileToolbarContent, ReportModal } from "../../components/learn/toolbar";
 import { useArticleWatchTime } from "../../components/learn/useArticleWatchTime";
 import { useTimeTracking } from "../../components/learn/useTimeTracking";
 import {
@@ -92,6 +93,8 @@ interface PostData {
   devToUrl?: string;
   author?: AuthorInfo | null;
   collaborators?: AuthorInfo[];
+  hasAccess?: boolean;
+  requiredTier?: string;
 }
 
 type LearnPostProps = {
@@ -191,6 +194,30 @@ export default function LearnPost({
     );
   }
 
+  // Gated content - user doesn't have access to this tier
+  if (post.hasAccess === false) {
+    const tierLabel =
+      post.requiredTier === "tier2"
+        ? "Super Legend II"
+        : post.requiredTier === "tier1"
+          ? "Super Legend"
+          : "members";
+    return (
+      <BlogView>
+        <SimpleNavbar backRoute="/learn" />
+        <GatedContainer>
+          <GatedIcon>🔒</GatedIcon>
+          <GatedTitle>{post.title}</GatedTitle>
+          <GatedDescription>{post.description}</GatedDescription>
+          <GatedMessage>
+            This content is exclusive to <strong>{tierLabel}</strong> supporters.
+          </GatedMessage>
+          <GatedCTA href="/support">Become a Super Legend</GatedCTA>
+        </GatedContainer>
+      </BlogView>
+    );
+  }
+
   return (
     <UserPopoutProvider>
       <DiscordWidgetContext.Provider value={discordWidget}>
@@ -259,13 +286,51 @@ function PostBody({
   const [isHighlighting, setIsHighlighting] = useState(false);
 
   // Toolbar state
-  const [tocCollapsed, setTocCollapsed] = useState(false);
   const [tocHeadings, setTocHeadings] = useState<TOCItem[]>([]);
   const [activeHeading, setActiveHeading] = useState<string>("");
   const [reportModalOpen, setReportModalOpen] = useState(false);
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [creditsModalOpen, setCreditsModalOpen] = useState(false);
   const commentSectionRef = useRef<HTMLDivElement>(null);
+
+  // Mobile TOC bar state
+  const [tocCollapsed, setTocCollapsed] = useState(false);
+  const [readProgress, setReadProgress] = useState(0);
+  const [mobileBarVisible, setMobileBarVisible] = useState(false);
+
+  // Track scroll progress and mobile bar visibility
+  useEffect(() => {
+    const handleScroll = () => {
+      // Calculate read progress based on how far we've scrolled through the content
+      if (contentRef.current && thanksSectionRef.current) {
+        const contentTop = contentRef.current.getBoundingClientRect().top + window.scrollY;
+        const thanksTop = thanksSectionRef.current.getBoundingClientRect().top + window.scrollY;
+        const scrollY = window.scrollY;
+        const viewportHeight = window.innerHeight;
+
+        // Progress from content start to thanks section
+        const contentHeight = thanksTop - contentTop;
+        const scrollProgress = scrollY - contentTop + viewportHeight * 0.3;
+        const progress = Math.max(0, Math.min(100, (scrollProgress / contentHeight) * 100));
+        setReadProgress(progress);
+      }
+
+      // Show mobile bar when hero is out of view AND we haven't reached thanks section
+      if (heroContainerRef.current && thanksSectionRef.current) {
+        const heroRect = heroContainerRef.current.getBoundingClientRect();
+        const thanksRect = thanksSectionRef.current.getBoundingClientRect();
+        const heroOutOfView = heroRect.bottom < 0;
+        // Hide when thanks section comes into view (with small offset)
+        const thanksReached = thanksRect.top <= window.innerHeight - 100;
+        setMobileBarVisible(heroOutOfView && !thanksReached);
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll(); // Initial call
+
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   // Comment input state
   const [pendingComment, setPendingComment] = useState<{
@@ -706,12 +771,40 @@ function PostBody({
             headings={tocHeadings}
             activeHeading={activeHeading}
             highlightCount={highlightCounts?.total || 0}
-            tocCollapsed={tocCollapsed}
-            onTocCollapseChange={setTocCollapsed}
             onOpenHighlights={() => setHighlightModalOpen(true)}
             heroRef={heroContainerRef}
             thanksSectionRef={thanksSectionRef}
             commentSectionRef={commentSectionRef}
+          />
+          <MobileTOCBar
+            articleTitle={post.title}
+            headings={tocHeadings}
+            activeHeading={activeHeading}
+            readProgress={readProgress}
+            isVisible={mobileBarVisible && tocHeadings.length > 0}
+            onHeadingClick={(id) => {
+              const element = document.getElementById(id);
+              if (element) {
+                // Use larger offset for mobile TOC bar height (~90px) + some padding
+                const offset = 110;
+                const elementPosition = element.getBoundingClientRect().top + window.scrollY;
+                window.scrollTo({ top: elementPosition - offset, behavior: "instant" });
+              }
+            }}
+            toolbarContent={
+              <MobileToolbarContent
+                postId={post._id}
+                postSlug={post.slug}
+                postTitle={post.title}
+                headings={tocHeadings}
+                activeHeading={activeHeading}
+                highlightCount={highlightCounts?.total || 0}
+                onOpenHighlights={() => setHighlightModalOpen(true)}
+                onClose={() => {}}
+                commentSectionRef={commentSectionRef}
+                thanksSectionRef={thanksSectionRef}
+              />
+            }
           />
         </>
       )}
@@ -796,58 +889,66 @@ function PostBody({
             <h3>{post.description}</h3>
           </HeroDescriptionWrapper>
 
-          {post.labels?.length ? (
-            <Labels>
-              {post.labels
-                .map((labelText) => labelText.replace(/-/g, " "))
-                .slice(0, 3)
-                .map((label) => (
-                  <Label key={label}>{label}</Label>
-                ))}
-            </Labels>
-          ) : null}
+          <HeroBottomSection>
+            {post.labels?.length ? (
+              <Labels>
+                {post.labels
+                  .map((labelText) => labelText.replace(/-/g, " "))
+                  .slice(0, 3)
+                  .map((label) => (
+                    <Label key={label}>{label}</Label>
+                  ))}
+              </Labels>
+            ) : null}
 
-          {/* Reactions and Highlights */}
-          <HeroActionsRow>
-            <ReactionBar postId={post._id} variant="hero" />
-            {highlightCounts && highlightCounts.total > 0 && (
-              <HighlightCount
-                count={highlightCounts.total}
-                uniqueUsers={highlightCounts.uniqueUsers}
-                onClick={() => setHighlightModalOpen(true)}
-              />
-            )}
-          </HeroActionsRow>
+            {/* Reactions and Highlights */}
+            <HeroActionsRow>
+              <ReactionBar postId={post._id} variant="hero" />
+              {highlightCounts && highlightCounts.total > 0 && (
+                <HighlightCount
+                  count={highlightCounts.total}
+                  uniqueUsers={highlightCounts.uniqueUsers}
+                  onClick={() => setHighlightModalOpen(true)}
+                />
+              )}
+            </HeroActionsRow>
 
-          <IconContainer direction="row">
-            <HeroActionButton onClick={() => setShareModalOpen(true)} title="Share this article">
-              <Share2 />
-            </HeroActionButton>
-            <HeroActionButton onClick={() => setCreditsModalOpen(true)} title="View credits">
-              <FileText />
-            </HeroActionButton>
-            {post.mediumUrl && (
-              <IconLink
-                icon={faMedium}
-                target="_blank"
-                href={post.mediumUrl}
-                width="24"
-                height="24"
-              />
-            )}
-            {post.hashnodeUrl && (
-              <IconLink
-                icon={faHashnode}
-                target="_blank"
-                href={post.hashnodeUrl}
-                width="24"
-                height="24"
-              />
-            )}
-            {post.devToUrl && (
-              <IconLink icon={faDev} target="_blank" href={post.devToUrl} width="24" height="24" />
-            )}
-          </IconContainer>
+            <IconContainer direction="row">
+              <HeroActionButton onClick={() => setShareModalOpen(true)} title="Share this article">
+                <Share2 />
+              </HeroActionButton>
+              <HeroActionButton onClick={() => setCreditsModalOpen(true)} title="View credits">
+                <FileText />
+              </HeroActionButton>
+              {post.mediumUrl && (
+                <IconLink
+                  icon={faMedium}
+                  target="_blank"
+                  href={post.mediumUrl}
+                  width="24"
+                  height="24"
+                />
+              )}
+              {post.hashnodeUrl && (
+                <IconLink
+                  icon={faHashnode}
+                  target="_blank"
+                  href={post.hashnodeUrl}
+                  width="24"
+                  height="24"
+                />
+              )}
+              {post.devToUrl && (
+                <IconLink
+                  icon={faDev}
+                  target="_blank"
+                  href={post.devToUrl}
+                  width="24"
+                  height="24"
+                />
+              )}
+            </IconContainer>
+          </HeroBottomSection>
         </PostHeader>
       </PostHeroImg>
 
@@ -1363,6 +1464,65 @@ const NotFoundContainer = styled.div`
   }
 `;
 
+const GatedContainer = styled.div`
+  text-align: center;
+  padding: 80px 20px;
+  max-width: 600px;
+  margin: 0 auto;
+`;
+
+const GatedIcon = styled.div`
+  font-size: 64px;
+  margin-bottom: 24px;
+`;
+
+const GatedTitle = styled.h1`
+  font-size: 28px;
+  font-weight: 700;
+  color: ${(props) => props.theme.contrast};
+  margin: 0 0 12px;
+`;
+
+const GatedDescription = styled.p`
+  font-size: 16px;
+  color: ${(props) => props.theme.textColor};
+  margin: 0 0 32px;
+  line-height: 1.6;
+`;
+
+const GatedMessage = styled.p`
+  font-size: 15px;
+  color: ${(props) => props.theme.textColor};
+  margin: 0 0 24px;
+  padding: 16px 24px;
+  background: rgba(147, 51, 234, 0.1);
+  border: 1px solid rgba(147, 51, 234, 0.2);
+  border-radius: 12px;
+
+  strong {
+    color: #a855f7;
+  }
+`;
+
+const GatedCTA = styled(Link)`
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 28px;
+  background: linear-gradient(135deg, #9333ea, #7c3aed);
+  color: white;
+  font-size: 15px;
+  font-weight: 600;
+  border-radius: 10px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(147, 51, 234, 0.3);
+  }
+`;
+
 const VideoContainer = styled.div`
   max-width: 1100px;
   margin: 0 auto 40px;
@@ -1397,11 +1557,20 @@ const FallbackContent = styled.div`
 
 const IconContainer = styled(Container).attrs({ direction: "row" })`
   margin: 1em 0 0 0;
+  min-height: 36px; /* Reserve space to prevent CLS */
 
   * {
     margin-left: 6px;
     margin-right: 6px;
     height: 32px;
+  }
+`;
+
+const HeroBottomSection = styled.div`
+  min-height: 140px; /* Reserve space for labels + reactions + icons to prevent CLS */
+
+  @media (max-width: 480px) {
+    min-height: 160px;
   }
 `;
 
@@ -1411,6 +1580,7 @@ const HeroActionsRow = styled.div`
   gap: 8px;
   flex-wrap: wrap;
   margin-top: 16px;
+  min-height: 48px; /* Reserve space to prevent CLS */
 `;
 
 const HighlightableContent = styled.div`
@@ -1469,6 +1639,11 @@ const ReadingFocusOverlayStyled = styled.div<{ $showTopShadow: boolean }>`
     -webkit-mask-image: linear-gradient(to bottom, black 0%, transparent 100%);
     opacity: ${(props) => (props.$showTopShadow ? 1 : 0)};
     transition: opacity 0.2s ease;
+
+    /* Hide top gradient on mobile - the mobile TOC bar provides the visual boundary */
+    @media (max-width: 1200px) {
+      display: none;
+    }
   }
 
   &::after {
@@ -1806,8 +1981,13 @@ const PostContainer = styled(m.div)`
   width: 90%;
   padding: 0 1em;
 
+  @media (max-width: 1200px) {
+    padding-right: 36px;
+  }
+
   @media (max-width: 480px) {
     padding: 0 0.5em;
+    padding-right: 36px;
     width: 95%;
     margin: 0.25em;
   }
@@ -1883,6 +2063,9 @@ const HeroActionButton = styled.button`
   justify-content: center;
   width: 36px;
   height: 36px;
+  min-width: 36px;
+  min-height: 36px;
+  flex-shrink: 0;
   background: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 8px;
@@ -1893,6 +2076,8 @@ const HeroActionButton = styled.button`
   svg {
     width: 18px;
     height: 18px;
+    min-width: 18px;
+    min-height: 18px;
   }
 
   &:hover {
@@ -2023,23 +2208,50 @@ const ReportLink = styled.button`
 `;
 
 // Fetch post from Convex and serialize MDX server-side
-export async function getServerSideProps({ params }: { params: { slug: string } }) {
+export async function getServerSideProps({
+  params,
+  req,
+}: {
+  params: { slug: string };
+  req: import("next").GetServerSidePropsContext["req"];
+}) {
   const { slug } = params;
 
   // Check feature flag for title animation
   const enableTitleAnimation = await isLearnTitleAnimationEnabled();
 
-  // Create Convex HTTP client
+  // Create Convex HTTP client with auth
   const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
+  // Get Clerk auth token and pass to Convex for tier-gated content access
+  const { getToken } = await import("@clerk/nextjs/server").then((m) => m.getAuth(req));
+  const token = await getToken({ template: "convex" });
+  if (token) {
+    convex.setAuth(token);
+  }
+
   try {
-    // Fetch post from Convex
+    // Fetch post from Convex (now with user's auth context for tier checking)
     const post = await convex.query(api.blogPosts.getBySlug, { slug });
 
     if (!post || post.status !== "published") {
       return {
         props: {
           post: null,
+          mdxSource: null,
+          discordWidget: null,
+          enableTitleAnimation,
+          hasDuplicateTitle: false,
+          hasDuplicateDescription: false,
+        },
+      };
+    }
+
+    // If user doesn't have access (tier-locked), return post metadata without MDX
+    if (post.hasAccess === false) {
+      return {
+        props: {
+          post,
           mdxSource: null,
           discordWidget: null,
           enableTitleAnimation,

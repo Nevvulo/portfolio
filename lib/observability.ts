@@ -111,12 +111,7 @@ export const logger = {
   },
 
   // Special method for API request logging
-  api(
-    req: NextApiRequest,
-    status: number,
-    duration: number,
-    context?: LogContext,
-  ): void {
+  api(req: NextApiRequest, status: number, duration: number, context?: LogContext): void {
     const logData = {
       method: req.method,
       path: req.url,
@@ -146,12 +141,7 @@ export class AppError extends Error {
   code: string;
   isOperational: boolean;
 
-  constructor(
-    message: string,
-    statusCode = 500,
-    code = "INTERNAL_ERROR",
-    isOperational = true,
-  ) {
+  constructor(message: string, statusCode = 500, code = "INTERNAL_ERROR", isOperational = true) {
     super(message);
     this.name = "AppError";
     this.statusCode = statusCode;
@@ -229,9 +219,7 @@ function formatErrorResponse(
   const isAppError = error instanceof AppError;
 
   // Don't expose internal error details in production
-  const message = isAppError || !isProduction
-    ? error.message
-    : "An unexpected error occurred";
+  const message = isAppError || !isProduction ? error.message : "An unexpected error occurred";
 
   const statusCode = isAppError ? error.statusCode : 500;
   const code = isAppError ? error.code : "INTERNAL_ERROR";
@@ -253,10 +241,7 @@ function formatErrorResponse(
 // API Route Wrapper with Error Handling
 // =============================================================================
 
-type ApiHandler = (
-  req: NextApiRequest,
-  res: NextApiResponse,
-) => Promise<void> | void;
+type ApiHandler = (req: NextApiRequest, res: NextApiResponse) => Promise<void> | void;
 
 interface WithErrorHandlingOptions {
   /** Log all requests, not just errors */
@@ -288,9 +273,7 @@ export function withErrorHandling(
       const duration = Date.now() - startTime;
 
       // Transform error if transformer provided
-      const processedError = options.transformError
-        ? options.transformError(error)
-        : error;
+      const processedError = options.transformError ? options.transformError(error) : error;
 
       // Log the error
       logger.error("API request failed", {
@@ -402,7 +385,8 @@ export async function runHealthCheck(
   );
 
   const failedCount = results.filter((r) => r.status === "fail").length;
-  const status = failedCount === 0 ? "healthy" : failedCount < results.length ? "degraded" : "unhealthy";
+  const status =
+    failedCount === 0 ? "healthy" : failedCount < results.length ? "degraded" : "unhealthy";
 
   return {
     status,
