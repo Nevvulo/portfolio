@@ -164,6 +164,7 @@ export async function setDiscordToClerkMapping(
  * Get the number of remaining founder spots (0-10)
  */
 export async function getFounderSpotsRemaining(): Promise<number> {
+  if (!redis) return MAX_FOUNDERS;
   const count = (await redis.get<number>(FOUNDER_COUNT_KEY)) || 0;
   return Math.max(0, MAX_FOUNDERS - count);
 }
@@ -172,6 +173,7 @@ export async function getFounderSpotsRemaining(): Promise<number> {
  * Get current founder count
  */
 export async function getFounderCount(): Promise<number> {
+  if (!redis) return 0;
   return (await redis.get<number>(FOUNDER_COUNT_KEY)) || 0;
 }
 
@@ -182,6 +184,7 @@ export async function getFounderCount(): Promise<number> {
 export async function getUserFounderNumber(
   clerkUserId: string,
 ): Promise<1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | null> {
+  if (!redis) return null;
   const slot = await redis.get<number>(`${FOUNDER_USER_PREFIX}${clerkUserId}`);
   if (slot && slot >= 1 && slot <= 10) {
     return slot as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
@@ -193,6 +196,7 @@ export async function getUserFounderNumber(
  * Get the Clerk user ID for a founder slot
  */
 export async function getFounderBySlot(slot: number): Promise<string | null> {
+  if (!redis) return null;
   if (slot < 1 || slot > MAX_FOUNDERS) return null;
   return (await redis.get<string>(`${FOUNDER_SLOT_PREFIX}${slot}`)) || null;
 }
@@ -207,6 +211,8 @@ export async function getFounderBySlot(slot: number): Promise<string | null> {
 export async function claimFounderSlot(
   clerkUserId: string,
 ): Promise<1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | null> {
+  if (!redis) return null;
+
   // Check if user is already a founder (idempotent)
   const existingSlot = await getUserFounderNumber(clerkUserId);
   if (existingSlot) {
@@ -238,6 +244,8 @@ export async function claimFounderSlot(
  * @returns Array of { slot, clerkUserId } ordered by slot number
  */
 export async function getAllFounders(): Promise<Array<{ slot: number; clerkUserId: string }>> {
+  if (!redis) return [];
+
   const founders: Array<{ slot: number; clerkUserId: string }> = [];
 
   for (let slot = 1; slot <= MAX_FOUNDERS; slot++) {
