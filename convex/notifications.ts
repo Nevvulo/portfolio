@@ -123,17 +123,18 @@ export const create = mutation({
       v.literal("mention"),
       v.literal("reply"),
       v.literal("new_content"),
-      v.literal("reward"),
-      v.literal("giveaway_win"),
-      v.literal("channel_message"),
+      v.literal("comment_reply"),
+      v.literal("collaborator_added"),
+      v.literal("comment_reaction"),
+      v.literal("feed_reply"),
+      v.literal("feed_reaction"),
     ),
     title: v.string(),
     body: v.string(),
     referenceType: v.optional(
-      v.union(v.literal("message"), v.literal("contentPost"), v.literal("reward")),
+      v.union(v.literal("blogComment"), v.literal("blogPost"), v.literal("feedPost")),
     ),
     referenceId: v.optional(v.string()),
-    channelId: v.optional(v.id("channels")),
   },
   handler: async (ctx, args) => {
     // Check if user has notifications enabled
@@ -148,7 +149,6 @@ export const create = mutation({
       body: args.body,
       referenceType: args.referenceType,
       referenceId: args.referenceId,
-      channelId: args.channelId,
       isRead: false,
       createdAt: Date.now(),
     });

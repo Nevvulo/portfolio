@@ -3,7 +3,7 @@ import { AnimatePresence, m } from "framer-motion";
 import { Image, Loader2, Send, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import styled from "styled-components";
-import { LOUNGE_COLORS } from "@/constants/lounge";
+import { LOUNGE_COLORS } from "@/constants/theme";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { validateContent } from "@/lib/safeMd";

@@ -14,12 +14,10 @@ import NProgress from "nprogress";
 import React, { useEffect, useState } from "react";
 import { createGlobalStyle, ThemeProvider } from "styled-components";
 import { ErrorBoundary } from "../components/ErrorBoundary";
-import { JungleMiniPlayer } from "../components/lounge/JungleMiniPlayer";
 import { AuthenticatedUserProvider } from "../components/providers/AuthenticatedUserProvider";
 import { DarkTheme, LightTheme } from "../constants/theme";
 import { useTheme } from "../hooks/useTheme";
 import { ConvexClientProvider } from "../lib/convex";
-import { LiveKitProvider } from "../lib/lounge/LiveKitContext";
 import "../styles/globals.css"; // Tailwind CSS
 import "./nprogress.css"; //styles for nprogress
 
@@ -137,7 +135,6 @@ export default function MyApp({ Component, router, pageProps }: AppProps) {
           <ClerkProvider appearance={clerkAppearance}>
             <ConvexClientProvider>
               <AuthenticatedUserProvider>
-                <LiveKitProvider>
                   <ThemeProvider theme={theme}>
                     <LazyMotion key="app" strict features={loadMotionFeatures}>
                       <GlobalStyle />
@@ -145,12 +142,10 @@ export default function MyApp({ Component, router, pageProps }: AppProps) {
                       <div id="scroll-container">
                         <Component {...pageProps} />
                       </div>
-                      <JungleMiniPlayer />
                       <Analytics />
                       <SpeedInsights />
                     </LazyMotion>
                   </ThemeProvider>
-                </LiveKitProvider>
               </AuthenticatedUserProvider>
             </ConvexClientProvider>
           </ClerkProvider>

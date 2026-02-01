@@ -5,8 +5,8 @@ import type React from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import styled from "styled-components";
-import { UserPopoutTrigger } from "@/components/lounge/user-popout";
-import { LOUNGE_COLORS } from "@/constants/lounge";
+import { UserPopoutTrigger } from "@/components/shared/UserPopout";
+import { LOUNGE_COLORS } from "@/constants/theme";
 import type { Id } from "@/convex/_generated/dataModel";
 
 interface Comment {

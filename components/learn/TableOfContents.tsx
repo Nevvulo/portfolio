@@ -2,7 +2,7 @@ import { AnimatePresence, m } from "framer-motion";
 import { ChevronLeft, List } from "lucide-react";
 import { type RefObject, useCallback, useEffect, useState } from "react";
 import styled from "styled-components";
-import { LOUNGE_COLORS } from "@/constants/lounge";
+import { LOUNGE_COLORS } from "@/constants/theme";
 
 export interface TOCItem {
   id: string;

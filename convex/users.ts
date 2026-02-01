@@ -98,6 +98,13 @@ export const getOrCreateUser = action({
     );
     const twitchUsername = twitchAccount?.username;
 
+    // Get Roblox account (custom OAuth provider)
+    const robloxAccount = clerkUser?.external_accounts?.find(
+      (a: { provider: string }) => a.provider === "oauth_custom_roblox",
+    );
+    const robloxUserId = robloxAccount?.provider_user_id || robloxAccount?.external_id || undefined;
+    const robloxUsername = robloxAccount?.username;
+
     // Fetch Clerk subscription for tier (only if Clerk API is available)
     let clerkPlan: string | undefined;
     let clerkPlanStatus: string | undefined;
@@ -220,6 +227,8 @@ export const getOrCreateUser = action({
       discordId,
       discordUsername,
       twitchUsername,
+      robloxUserId,
+      robloxUsername,
       tier,
       isCreator,
       discordHighestRole,
@@ -244,6 +253,8 @@ export const createOrUpdateUserInternal = internalMutation({
     discordId: v.optional(v.string()),
     discordUsername: v.optional(v.string()),
     twitchUsername: v.optional(v.string()),
+    robloxUserId: v.optional(v.string()),
+    robloxUsername: v.optional(v.string()),
     tier: v.union(v.literal("free"), v.literal("tier1"), v.literal("tier2")),
     isCreator: v.boolean(),
     discordHighestRole: v.optional(
@@ -275,6 +286,9 @@ export const createOrUpdateUserInternal = internalMutation({
         discordId: args.discordId,
         discordUsername: args.discordUsername,
         twitchUsername: args.twitchUsername,
+        robloxUserId: args.robloxUserId,
+        robloxUsername: args.robloxUsername,
+        ...(args.robloxUserId && { robloxVerifiedAt: Date.now() }),
         isCreator: args.isCreator,
         discordHighestRole: args.discordHighestRole,
         discordBooster: args.discordBooster,
@@ -294,6 +308,9 @@ export const createOrUpdateUserInternal = internalMutation({
       discordId: args.discordId,
       discordUsername: args.discordUsername,
       twitchUsername: args.twitchUsername,
+      robloxUserId: args.robloxUserId,
+      robloxUsername: args.robloxUsername,
+      robloxVerifiedAt: args.robloxUserId ? Date.now() : undefined,
       displayName: args.displayName,
       avatarUrl: args.avatarUrl,
       tier: args.tier,
@@ -955,10 +972,6 @@ export const getAnalytics = query({
     // Get all users
     const allUsers = await ctx.db.query("users").collect();
 
-    // Get all messages (excluding deleted)
-    const allMessages = await ctx.db.query("messages").collect();
-    const visibleMessages = allMessages.filter((m) => !m.isDeleted);
-
     // Calculate stats
     const totalUsers = allUsers.length;
     const tier1Users = allUsers.filter((u) => u.tier === "tier1").length;
@@ -968,38 +981,10 @@ export const getAnalytics = query({
     const activeToday = allUsers.filter((u) => u.lastSeenAt && u.lastSeenAt > oneDayAgo).length;
     const activeWeek = allUsers.filter((u) => u.lastSeenAt && u.lastSeenAt > oneWeekAgo).length;
 
-    const totalMessages = visibleMessages.length;
-    const messagesToday = visibleMessages.filter((m) => m.createdAt > oneDayAgo).length;
-    const messagesWeek = visibleMessages.filter((m) => m.createdAt > oneWeekAgo).length;
-    const messagesMonth = visibleMessages.filter((m) => m.createdAt > oneMonthAgo).length;
-
     // New users
     const newUsersToday = allUsers.filter((u) => u.createdAt && u.createdAt > oneDayAgo).length;
     const newUsersWeek = allUsers.filter((u) => u.createdAt && u.createdAt > oneWeekAgo).length;
     const newUsersMonth = allUsers.filter((u) => u.createdAt && u.createdAt > oneMonthAgo).length;
-
-    // Top contributors (most messages, excluding deleted)
-    const messageCounts = visibleMessages.reduce(
-      (acc, msg) => {
-        const authorId = msg.authorId?.toString() ?? "unknown";
-        acc[authorId] = (acc[authorId] || 0) + 1;
-        return acc;
-      },
-      {} as Record<string, number>,
-    );
-
-    const topContributors = Object.entries(messageCounts)
-      .sort(([, a], [, b]) => b - a)
-      .slice(0, 5)
-      .map(([id, count]) => {
-        const user = allUsers.find((u) => u._id.toString() === id);
-        return {
-          userId: id,
-          displayName: user?.displayName ?? "Unknown",
-          avatarUrl: user?.avatarUrl,
-          messageCount: count,
-        };
-      });
 
     return {
       users: {
@@ -1013,13 +998,6 @@ export const getAnalytics = query({
         newWeek: newUsersWeek,
         newMonth: newUsersMonth,
       },
-      messages: {
-        total: totalMessages,
-        today: messagesToday,
-        week: messagesWeek,
-        month: messagesMonth,
-      },
-      topContributors,
     };
   },
 });

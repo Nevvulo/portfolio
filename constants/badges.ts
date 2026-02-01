@@ -15,7 +15,7 @@ export const BadgeNames: Record<BadgeType, string> = {
   [BadgeType.TWITCH_SUB_T3]: "Twitch Sub T3",
   [BadgeType.DISCORD_BOOSTER]: "Server Booster",
   [BadgeType.DISCORD_ROLE]: "Discord Role",
-  [BadgeType.SUPER_LEGEND]: "Super Legend I",
+  [BadgeType.SUPER_LEGEND]: "Super Legend",
   [BadgeType.SUPER_LEGEND_2]: "Super Legend II",
   [BadgeType.FOUNDER]: "Founder",
 };

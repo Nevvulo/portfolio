@@ -17,11 +17,12 @@ describe("Contact Page", () => {
   test("displays contact page title and main sections", () => {
     renderWithTheme(<Contact />);
 
-    const titleWithEmoji = screen.getAllByText("📧 Contact");
+    // The navbar shows "Contact" without emoji
+    const contactTexts = screen.getAllByText(/Contact/i);
     const socialsHeadings = screen.getAllByText("Socials");
     const securityHeadings = screen.getAllByText(/Security & Privacy/i);
 
-    expect(titleWithEmoji.length).toBeGreaterThan(0);
+    expect(contactTexts.length).toBeGreaterThan(0);
     expect(socialsHeadings.length).toBeGreaterThan(0);
     expect(securityHeadings.length).toBeGreaterThan(0);
   });

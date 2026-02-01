@@ -1,7 +1,7 @@
 import { m } from "framer-motion";
 import { Highlighter } from "lucide-react";
 import styled from "styled-components";
-import { LOUNGE_COLORS } from "@/constants/lounge";
+import { LOUNGE_COLORS } from "@/constants/theme";
 
 interface HighlightCountProps {
   /** Total number of highlights */

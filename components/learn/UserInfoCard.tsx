@@ -66,7 +66,7 @@ export function UserInfoCard({ className }: UserInfoCardProps) {
           </XpNumbers>
         </XpDisplay>
 
-        <NotificationButton href="/lounge/notifications">
+        <NotificationButton href="/account">
           <Bell size={14} />
           {unreadCount > 0 && (
             <NotificationBadge>{unreadCount > 99 ? "99+" : unreadCount}</NotificationBadge>

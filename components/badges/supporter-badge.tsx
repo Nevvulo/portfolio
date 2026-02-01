@@ -3,7 +3,6 @@ import { faCrown, faStar } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Image from "next/image";
 import styled from "styled-components";
-import SuperLegendIcon from "../../assets/img/super-legend.png";
 import SuperLegend2Icon from "../../assets/img/super-legend-2.png";
 import { BadgeColors, BadgeDescriptions, BadgeNames, BadgeType } from "../../constants/badges";
 
@@ -38,10 +37,6 @@ function isSuperLegendType(type: BadgeType): boolean {
   return type === BadgeType.SUPER_LEGEND || type === BadgeType.SUPER_LEGEND_2;
 }
 
-function getSuperLegendImage(type: BadgeType) {
-  return type === BadgeType.SUPER_LEGEND_2 ? SuperLegend2Icon : SuperLegendIcon;
-}
-
 export function SupporterBadge({
   type,
   size = "small",
@@ -71,21 +66,22 @@ export function SupporterBadge({
       $size={size}
       $expandOnHover={expandOnHover}
       $isFounder={isFounder}
+      $isSuperLegend={isSuperLegend}
       title={!expandOnHover ? description : undefined}
     >
-      {isSuperLegend ? (
+      {type === BadgeType.SUPER_LEGEND_2 ? (
         <Image
-          src={getSuperLegendImage(type)}
+          src={SuperLegend2Icon}
           alt={BadgeNames[type]}
           width={iconSize}
           height={iconSize}
           style={{ flexShrink: 0 }}
         />
-      ) : (
+      ) : type === BadgeType.SUPER_LEGEND ? null : (
         <FontAwesomeIcon icon={icon} style={{ width: size === "small" ? 12 : 14, flexShrink: 0 }} />
       )}
       {(showLabel || expandOnHover) && (
-        <BadgeLabel $expandOnHover={expandOnHover}>{label}</BadgeLabel>
+        <BadgeLabel $expandOnHover={expandOnHover} $isSuperLegend={isSuperLegend}>{label}</BadgeLabel>
       )}
     </BadgeContainer>
   );
@@ -96,23 +92,24 @@ const BadgeContainer = styled.div<{
   $size: string;
   $expandOnHover: boolean;
   $isFounder?: boolean;
+  $isSuperLegend?: boolean;
 }>`
 	display: inline-flex;
 	align-items: center;
 	gap: 4px;
 	padding: ${(p) => (p.$size === "small" ? "2px 6px" : "4px 10px")};
-	background: ${(p) => p.$color}22;
-	border: 1px solid ${(p) => p.$color}44;
+	background: ${(p) => p.$isSuperLegend ? "linear-gradient(135deg, #f7be5c, #e6a030, #d4912a)" : `${p.$color}22`};
+	border: 1px solid ${(p) => p.$isSuperLegend ? "#d4912a" : `${p.$color}44`};
 	border-radius: 4px;
 	font-size: ${(p) => (p.$size === "small" ? "10px" : "12px")};
-	color: ${(p) => p.$color};
+	color: ${(p) => p.$isSuperLegend ? "#2a2a2a" : p.$color};
 	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 	cursor: ${(p) => (p.$expandOnHover ? "pointer" : "default")};
 	overflow: hidden;
 
 	&:hover {
-		background: ${(p) => p.$color}33;
-		border-color: ${(p) => p.$color}66;
+		background: ${(p) => p.$isSuperLegend ? "linear-gradient(135deg, #fcc96e, #e6a030, #c4811a)" : `${p.$color}33`};
+		border-color: ${(p) => p.$isSuperLegend ? "#c4811a" : `${p.$color}66`};
 	}
 
 	/* Founder badge glow effect */
@@ -133,11 +130,11 @@ const BadgeContainer = styled.div<{
 	`}
 `;
 
-const BadgeLabel = styled.span<{ $expandOnHover: boolean }>`
-	font-family: var(--font-mono);
-	font-weight: 600;
+const BadgeLabel = styled.span<{ $expandOnHover: boolean; $isSuperLegend?: boolean }>`
+	font-family: ${(p) => p.$isSuperLegend ? "var(--font-sans), Inter, sans-serif" : "var(--font-mono)"};
+	font-weight: ${(p) => p.$isSuperLegend ? "800" : "600"};
 	text-transform: uppercase;
-	letter-spacing: 0.5px;
+	letter-spacing: ${(p) => p.$isSuperLegend ? "0.2px" : "0.5px"};
 	white-space: nowrap;
 
 	${(p) =>

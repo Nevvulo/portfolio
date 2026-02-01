@@ -1,5 +1,9 @@
 import { BLOCKED_WORDS, MAX_BIO_LENGTH, SPAM_PATTERNS } from "../constants/word-filter";
-import type { BioFilterResult } from "../types/user-popout";
+export interface BioFilterResult {
+  isValid: boolean;
+  reason?: string;
+  filtered?: string;
+}
 
 /**
  * Check if text contains any blocked words (whole word, case-insensitive)

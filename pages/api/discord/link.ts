@@ -1,3 +1,4 @@
+import { timingSafeEqual } from "crypto";
 import { ConvexHttpClient } from "convex/browser";
 import type { NextApiRequest, NextApiResponse } from "next";
 import { api } from "../../../convex/_generated/api";
@@ -27,9 +28,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return res.status(405).json({ success: false, error: "Method not allowed" });
   }
 
-  // Verify bot secret
-  const authHeader = req.headers["x-bot-secret"];
-  if (!DISCORD_BOT_SECRET || authHeader !== DISCORD_BOT_SECRET) {
+  // Verify bot secret (timing-safe comparison)
+  const authHeader = req.headers["x-bot-secret"] as string | undefined;
+  if (
+    !authHeader ||
+    !DISCORD_BOT_SECRET ||
+    authHeader.length !== DISCORD_BOT_SECRET.length ||
+    !timingSafeEqual(Buffer.from(authHeader), Buffer.from(DISCORD_BOT_SECRET))
+  ) {
     return res.status(401).json({ success: false, error: "Unauthorized" });
   }
 

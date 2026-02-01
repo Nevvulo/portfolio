@@ -5,7 +5,7 @@ import Link from "next/link";
 import { type ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import NevuloLogo from "@/assets/svg/nevulo-huge-bold-svg.svg";
-import { LOUNGE_COLORS } from "@/constants/lounge";
+import { LOUNGE_COLORS } from "@/constants/theme";
 import type { TOCItem } from "./TableOfContents";
 
 interface MobileTOCBarProps {

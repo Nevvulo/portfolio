@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import type { Doc, Id } from "./_generated/dataModel";
+import type { Id } from "./_generated/dataModel";
 import { mutation, query } from "./_generated/server";
 import { requireCreator } from "./auth";
 
@@ -131,7 +131,7 @@ export const getSubscriberVerification = query({
 
 /**
  * Get content delivery stats for a given month
- * Tracks "Early Drops" (messages in announcement channels) and "Special Access" (tier-locked blog posts)
+ * Tracks tier-locked blog posts published that month
  */
 export const getContentDeliveryStats = query({
   args: {
@@ -145,48 +145,6 @@ export const getContentDeliveryStats = query({
     const [year, monthNum] = args.month.split("-").map(Number);
     const monthStart = new Date(year!, monthNum! - 1, 1).getTime();
     const monthEnd = new Date(year!, monthNum!, 0, 23, 59, 59, 999).getTime();
-
-    // Get announcement channels (tier-locked)
-    const channels = await ctx.db.query("channels").collect();
-    const announcementChannels = channels.filter(
-      (c) =>
-        c.isAnnouncement === true &&
-        (args.tier ? c.requiredTier === args.tier : c.requiredTier !== "free"),
-    );
-
-    // Count messages in announcement channels for the month
-    let earlyDropsCount = 0;
-    const earlyDrops: Array<{
-      channelId: Id<"channels">;
-      channelName: string;
-      messageId: Id<"messages">;
-      content: string;
-      createdAt: number;
-    }> = [];
-
-    for (const channel of announcementChannels) {
-      const messages = await ctx.db
-        .query("messages")
-        .withIndex("by_channel", (q) => q.eq("channelId", channel._id))
-        .collect();
-
-      const monthMessages = messages.filter(
-        (m) => m.createdAt >= monthStart && m.createdAt <= monthEnd && !m.isDeleted,
-      );
-
-      earlyDropsCount += monthMessages.length;
-
-      for (const msg of monthMessages.slice(0, 10)) {
-        // Limit to 10 per channel
-        earlyDrops.push({
-          channelId: channel._id,
-          channelName: channel.name,
-          messageId: msg._id,
-          content: msg.content.slice(0, 100),
-          createdAt: msg.createdAt,
-        });
-      }
-    }
 
     // Get tier-locked blog posts published this month
     const blogPosts = await ctx.db.query("blogPosts").withIndex("by_status").collect();
@@ -211,32 +169,11 @@ export const getContentDeliveryStats = query({
       contentType: post.contentType,
     }));
 
-    // Count by tier
-    const tier1EarlyDrops = channels
-      .filter((c) => c.isAnnouncement && c.requiredTier === "tier1")
-      .reduce((sum, c) => {
-        const msgs = earlyDrops.filter((d) => d.channelId === c._id);
-        return sum + msgs.length;
-      }, 0);
-
-    const tier2EarlyDrops = channels
-      .filter((c) => c.isAnnouncement && c.requiredTier === "tier2")
-      .reduce((sum, c) => {
-        const msgs = earlyDrops.filter((d) => d.channelId === c._id);
-        return sum + msgs.length;
-      }, 0);
-
     const tier1SpecialAccess = tierLockedPosts.filter((p) => p.visibility === "tier1").length;
     const tier2SpecialAccess = tierLockedPosts.filter((p) => p.visibility === "tier2").length;
 
     return {
       month: args.month,
-      earlyDrops: {
-        total: earlyDropsCount,
-        tier1: tier1EarlyDrops,
-        tier2: tier2EarlyDrops,
-        recent: earlyDrops.sort((a, b) => b.createdAt - a.createdAt).slice(0, 20),
-      },
       specialAccess: {
         total: tierLockedPosts.length,
         tier1: tier1SpecialAccess,
@@ -245,88 +182,16 @@ export const getContentDeliveryStats = query({
       },
       quotaProgress: {
         tier1: {
-          earlyDrops: tier1EarlyDrops,
           specialAccess: tier1SpecialAccess,
-          totalDelivered: tier1EarlyDrops + tier1SpecialAccess,
-          quota: 2, // Tier 1 quota: 2 pieces/month
+          totalDelivered: tier1SpecialAccess,
+          quota: 2,
         },
         tier2: {
-          earlyDrops: tier2EarlyDrops,
           specialAccess: tier2SpecialAccess,
-          totalDelivered: tier2EarlyDrops + tier2SpecialAccess,
-          quota: 3, // Tier 2 quota: 3 pieces/month
+          totalDelivered: tier2SpecialAccess,
+          quota: 3,
         },
       },
-    };
-  },
-});
-
-/**
- * Get monthly loot box delivery status (Tier 2 only)
- */
-export const getLootBoxStatus = query({
-  args: {
-    month: v.optional(v.string()), // "2025-01" format, defaults to current month
-  },
-  handler: async (ctx, args) => {
-    await requireCreator(ctx);
-
-    // Default to current month
-    const now = new Date();
-    const month =
-      args.month ?? `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
-
-    // Get scheduled drops for this month targeting tier2
-    const scheduledDrops = await ctx.db
-      .query("scheduledDrops")
-      .withIndex("by_month", (q) => q.eq("month", month))
-      .collect();
-
-    const tier2Drops = scheduledDrops.filter(
-      (d) => d.targetTier === "tier2" || d.targetTier === "all",
-    );
-
-    // Check if any completed drops exist
-    const completedDrop = tier2Drops.find((d) => d.status === "completed");
-    const pendingDrop = tier2Drops.find((d) => d.status === "pending" || d.status === "processing");
-
-    // Determine if overdue (after 1st of month and no completed delivery)
-    const [year, monthNum] = month.split("-").map(Number);
-    const firstOfMonth = new Date(year!, monthNum! - 1, 2).getTime(); // 2nd of month as deadline
-    const isOverdue = !completedDrop && Date.now() > firstOfMonth;
-
-    // Get history of past months
-    const allDrops = await ctx.db.query("scheduledDrops").withIndex("by_status").collect();
-    const tier2History = allDrops
-      .filter((d) => d.targetTier === "tier2" || d.targetTier === "all")
-      .sort((a, b) => b.scheduledAt - a.scheduledAt)
-      .slice(0, 12);
-
-    return {
-      currentMonth: month,
-      status: completedDrop ? "delivered" : pendingDrop ? "pending" : "not_scheduled",
-      isOverdue,
-      daysOverdue: isOverdue ? Math.floor((Date.now() - firstOfMonth) / (1000 * 60 * 60 * 24)) : 0,
-      completedDrop: completedDrop
-        ? {
-            processedAt: completedDrop.processedAt,
-            processedCount: completedDrop.processedCount,
-            totalCount: completedDrop.totalCount,
-          }
-        : null,
-      pendingDrop: pendingDrop
-        ? {
-            scheduledAt: pendingDrop.scheduledAt,
-            status: pendingDrop.status,
-          }
-        : null,
-      history: tier2History.map((d) => ({
-        month: d.month,
-        status: d.status,
-        processedAt: d.processedAt,
-        processedCount: d.processedCount,
-        totalCount: d.totalCount,
-      })),
     };
   },
 });
@@ -447,16 +312,6 @@ export const getQuickStats = query({
     const now = new Date();
     const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
 
-    // Check loot box status
-    const scheduledDrops = await ctx.db
-      .query("scheduledDrops")
-      .withIndex("by_month", (q) => q.eq("month", currentMonth))
-      .collect();
-
-    const tier2LootDelivered = scheduledDrops.some(
-      (d) => (d.targetTier === "tier2" || d.targetTier === "all") && d.status === "completed",
-    );
-
     return {
       totalSubscribers: activeSubscribers.length,
       tier1Count,
@@ -467,7 +322,6 @@ export const getQuickStats = query({
           ? Math.round((discordLinked / activeSubscribers.length) * 100)
           : 0,
       currentMonth,
-      tier2LootDelivered,
     };
   },
 });

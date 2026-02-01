@@ -3,7 +3,7 @@ import { ChevronDown, ChevronRight, Highlighter, Trash2, X } from "lucide-react"
 import React, { useCallback, useState } from "react";
 import { createPortal } from "react-dom";
 import styled from "styled-components";
-import { LOUNGE_COLORS } from "@/constants/lounge";
+import { LOUNGE_COLORS } from "@/constants/theme";
 import type { Id } from "@/convex/_generated/dataModel";
 
 interface HighlightWithUser {

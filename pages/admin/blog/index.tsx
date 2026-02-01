@@ -58,7 +58,7 @@ import {
 } from "../../../components/learn/DraggableBentoGrid";
 import { SimpleNavbar } from "../../../components/navbar/simple";
 import type { Doc, Id } from "../../../convex/_generated/dataModel";
-import { useTierAccess } from "../../../hooks/lounge/useTierAccess";
+import { useTierAccess } from "../../../hooks/useTierAccess";
 
 export const getServerSideProps = () => ({ props: {} });
 

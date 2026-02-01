@@ -1,3 +1,4 @@
+import { createHmac } from "crypto";
 import { ConvexHttpClient } from "convex/browser";
 import type { NextApiRequest, NextApiResponse } from "next";
 import { api } from "../../../convex/_generated/api";
@@ -9,12 +10,22 @@ export const config = {
   },
 };
 
-async function getRawBody(req: NextApiRequest): Promise<string> {
+async function getRawBody(req: NextApiRequest): Promise<Buffer> {
   const chunks: Buffer[] = [];
   for await (const chunk of req) {
     chunks.push(typeof chunk === "string" ? Buffer.from(chunk) : chunk);
   }
-  return Buffer.concat(chunks).toString("utf8");
+  return Buffer.concat(chunks);
+}
+
+function verifySignature(rawBody: Buffer, signature: string | undefined, secret: string): boolean {
+  if (!signature) return false;
+  // YouTube sends X-Hub-Signature as "sha1=<hex>"
+  const [algo, hash] = signature.split("=");
+  if (algo !== "sha1" || !hash) return false;
+  const expected = createHmac("sha1", secret).update(rawBody).digest("hex");
+  // Constant-time comparison via matching length + digest comparison
+  return expected.length === hash.length && expected === hash;
 }
 
 // Simple XML parser for YouTube Atom feed
@@ -60,10 +71,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (req.method === "POST") {
     try {
       const rawBody = await getRawBody(req);
-      console.log("Received YouTube notification:", rawBody.slice(0, 500));
+
+      // Verify HMAC signature if secret is configured
+      const webhookSecret = process.env.YOUTUBE_WEBHOOK_SECRET;
+      if (webhookSecret) {
+        const signature = req.headers["x-hub-signature"] as string | undefined;
+        if (!verifySignature(rawBody, signature, webhookSecret)) {
+          console.error("YouTube webhook signature verification failed");
+          return res.status(403).json({ error: "Invalid signature" });
+        }
+      }
+
+      const body = rawBody.toString("utf8");
+      console.log("Received YouTube notification:", body.slice(0, 500));
 
       // Parse the Atom feed
-      const parsed = parseYouTubeAtom(rawBody);
+      const parsed = parseYouTubeAtom(body);
 
       if (!parsed) {
         console.log("Could not parse video data from notification");
@@ -73,7 +96,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       console.log(`Parsed video: ${parsed.videoId} - ${parsed.title}`);
 
       // Check if this is a deletion notification (deleted entries have different format)
-      if (rawBody.includes("<at:deleted-entry")) {
+      if (body.includes("<at:deleted-entry")) {
         console.log("Ignoring deletion notification");
         return res.status(200).json({ received: true, processed: false, reason: "deletion" });
       }

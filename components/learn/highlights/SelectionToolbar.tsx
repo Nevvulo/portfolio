@@ -3,7 +3,7 @@ import { ChevronDown, Highlighter, MessageSquare, Smile } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import styled from "styled-components";
-import { LOUNGE_COLORS } from "@/constants/lounge";
+import { LOUNGE_COLORS } from "@/constants/theme";
 import type { TextAnchor } from "./textAnchor";
 
 // Reaction emojis for inline reactions

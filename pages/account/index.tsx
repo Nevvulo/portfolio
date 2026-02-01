@@ -267,42 +267,46 @@ export default function AccountPage() {
           </BadgesCard>
         </Section>
 
-        <Section>
-          <SectionTitle>Privacy Settings</SectionTitle>
-          <SectionDescription>
-            Control how your profile appears to others on the site.
-          </SectionDescription>
-          <SettingsCard>
-            <SettingRow>
-              <SettingInfo>
-                <SettingLabel>Show on credits page</SettingLabel>
-                <SettingDescription>
-                  Display your profile on the <CreditsLink href="/credits">/credits</CreditsLink>{" "}
-                  page to show your support
-                </SettingDescription>
-              </SettingInfo>
-              <ToggleSwitch
-                $enabled={convexUser?.showOnCredits ?? false}
-                $disabled={!convexUser || creditsToggleSaving}
-                onClick={handleCreditsToggle}
-              >
-                <ToggleKnob $enabled={convexUser?.showOnCredits ?? false} />
-              </ToggleSwitch>
-            </SettingRow>
-          </SettingsCard>
-        </Section>
+        {hasBadges && (
+          <Section>
+            <SectionTitle>Privacy Settings</SectionTitle>
+            <SectionDescription>
+              Control how your profile appears to others on the site.
+            </SectionDescription>
+            <SettingsCard>
+              <SettingRow>
+                <SettingInfo>
+                  <SettingLabel>Show on credits page</SettingLabel>
+                  <SettingDescription>
+                    Display your profile on the <CreditsLink href="/credits">/credits</CreditsLink>{" "}
+                    page to show your support
+                  </SettingDescription>
+                </SettingInfo>
+                <ToggleSwitch
+                  $enabled={convexUser?.showOnCredits ?? false}
+                  $disabled={!convexUser || creditsToggleSaving}
+                  onClick={handleCreditsToggle}
+                >
+                  <ToggleKnob $enabled={convexUser?.showOnCredits ?? false} />
+                </ToggleSwitch>
+              </SettingRow>
+            </SettingsCard>
+          </Section>
+        )}
 
         <Section>
           <SectionTitle>Subscription</SectionTitle>
-          <SupporterCard $hasSubscription={!!subscription}>
-            <SupporterIcon>{subscription ? <StarIcon /> : <SparklesIcon />}</SupporterIcon>
+          <SupporterCard $hasSubscription={!!subscription && subscription.status === "active"}>
+            <SupporterIcon>
+              {subscription && subscription.status === "active" ? <StarIcon /> : <SparklesIcon />}
+            </SupporterIcon>
             <SupporterInfo>
               {subLoading ? (
                 <>
                   <SupporterTitle>Loading...</SupporterTitle>
                   <SupporterDescription>Checking your subscription status...</SupporterDescription>
                 </>
-              ) : subscription ? (
+              ) : subscription && subscription.status === "active" ? (
                 <>
                   <SupporterTitle>
                     {subscription.subscriptionItems?.[0]?.plan?.name || "Supporter"}
@@ -330,7 +334,9 @@ export default function AccountPage() {
                 </>
               )}
             </SupporterInfo>
-            <SupporterLink href="/support">{subscription ? "Manage" : "View Plans"}</SupporterLink>
+            <SupporterLink href="/support">
+              {subscription && subscription.status === "active" ? "Manage" : "View Plans"}
+            </SupporterLink>
           </SupporterCard>
         </Section>
 

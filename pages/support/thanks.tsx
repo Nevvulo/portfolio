@@ -126,7 +126,7 @@ export default function SupportThanks() {
                 <ExternalLink size={14} />
               </WhatNextItem>
 
-              <WhatNextItem href="/lounge">
+              <WhatNextItem href="https://lounge.nev.so">
                 <ItemCheck>
                   <Check size={14} />
                 </ItemCheck>

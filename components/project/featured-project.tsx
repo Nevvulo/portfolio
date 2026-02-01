@@ -13,35 +13,44 @@ const projectBanners = {
 } as const;
 
 function getProjectBanner(slug: string) {
-  return projectBanners[slug as keyof typeof projectBanners] || FluxBanner;
+  return projectBanners[slug as keyof typeof projectBanners] || null;
+}
+
+function hasProjectBanner(slug: string): boolean {
+  return slug in projectBanners;
 }
 
 interface FeaturedProjectCardProps {
   project: Doc<"projects">;
   href: string;
   isSmaller?: boolean;
+  isSmallest?: boolean;
 }
 
 export function FeaturedProjectCard({
   project,
   href,
   isSmaller = false,
+  isSmallest = false,
 }: FeaturedProjectCardProps) {
   const banner = getProjectBanner(project.slug);
+  const hasBanner = hasProjectBanner(project.slug);
 
   return (
     <LinkWrapper href={href}>
-      <Container isSmaller={isSmaller}>
-        <ImageWrapper>
-          <Image
-            src={banner}
-            alt={`${project.name} project banner`}
-            fill
-            style={{ objectFit: "cover" }}
-            priority
-          />
-        </ImageWrapper>
-        <ColorGradient $gradient={project.background} />
+      <Container $isSmaller={isSmaller} $isSmallest={isSmallest}>
+        {hasBanner && banner ? (
+          <ImageWrapper>
+            <Image
+              src={banner}
+              alt={`${project.name} project banner`}
+              fill
+              style={{ objectFit: "cover" }}
+              priority
+            />
+          </ImageWrapper>
+        ) : null}
+        <ColorGradient $gradient={project.background} $fullCover={!hasBanner} />
         <ContentWrapper>
           {project.logoUrl && project.logoWidth && project.logoHeight ? (
             project.logoIncludesName ? (
@@ -82,14 +91,12 @@ const LinkWrapper = styled(StrippedLink)`
   width: 100%;
 `;
 
-const Container = styled.div.withConfig({
-  shouldForwardProp: (prop) => !["isSmaller"].includes(prop),
-})<{ isSmaller?: boolean }>`
+const Container = styled.div<{ $isSmaller?: boolean; $isSmallest?: boolean }>`
   position: relative;
   cursor: pointer;
   border-radius: 12px;
   width: 100%;
-  height: ${(props) => (props.isSmaller ? "280px" : "350px")};
+  height: ${(props) => (props.$isSmallest ? "140px" : props.$isSmaller ? "280px" : "350px")};
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
   overflow: hidden;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -100,7 +107,7 @@ const Container = styled.div.withConfig({
   }
 
   @media (max-width: 768px) {
-    height: ${(props) => (props.isSmaller ? "400px" : "450px")};
+    height: ${(props) => (props.$isSmallest ? "120px" : props.$isSmaller ? "400px" : "450px")};
   }
 `;
 
@@ -119,17 +126,19 @@ const ImageWrapper = styled.div`
   }
 `;
 
-const ColorGradient = styled.div<{ $gradient?: string }>`
+const ColorGradient = styled.div<{ $gradient?: string; $fullCover?: boolean }>`
   position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
   width: 100%;
-  height: 135%;
-  background: rgba(0, 0, 0, 0.3);
+  height: ${(props) => (props.$fullCover ? "100%" : "135%")};
+  background: ${(props) => (props.$fullCover ? "none" : "rgba(0, 0, 0, 0.3)")};
   background-image: ${(props) => props.$gradient || "none"};
-  -webkit-mask-image: linear-gradient(180deg, transparent 0%, rgb(0, 0, 0) 100%);
-  mask-image: linear-gradient(180deg, transparent 0%, rgb(0, 0, 0) 100%);
+  -webkit-mask-image: ${(props) =>
+    props.$fullCover ? "none" : "linear-gradient(180deg, transparent 0%, rgb(0, 0, 0) 100%)"};
+  mask-image: ${(props) =>
+    props.$fullCover ? "none" : "linear-gradient(180deg, transparent 0%, rgb(0, 0, 0) 100%)"};
   z-index: 1;
   pointer-events: none;
 `;

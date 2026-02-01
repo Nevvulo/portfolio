@@ -6,9 +6,8 @@ import { logger, trackMetric } from "../../../lib/observability";
 import { getSupporterKey, redis } from "../../../lib/redis";
 import { syncDiscordRoles } from "../discord/roles";
 
-// Discord webhook for Super Legend purchase notifications
-const SUPPORT_WEBHOOK_URL =
-  "https://discord.com/api/webhooks/1464343392837439500/xw9H8NeA37ZVDjmjxPx7qoPsJdXWEGAo-3q9a9MvjTEZlgu9qBWLIDQiok49s7kzxEci";
+// Discord webhook for Super Legend purchase notifications (from env)
+const SUPPORT_WEBHOOK_URL = process.env.DISCORD_SUPPORT_WEBHOOK_URL;
 
 /**
  * Send a celebratory Discord webhook when a new Super Legend subscribes
@@ -40,6 +39,11 @@ async function sendSuperLegendWebhook(
       },
       timestamp: new Date().toISOString(),
     };
+
+    if (!SUPPORT_WEBHOOK_URL) {
+      logger.warn("Discord support webhook URL not configured, skipping notification");
+      return;
+    }
 
     await fetch(SUPPORT_WEBHOOK_URL, {
       method: "POST",

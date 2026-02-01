@@ -1,18 +1,12 @@
 import { useMutation, useQuery } from "convex/react";
 import {
-  AlertTriangle,
   Bell,
   CheckCircle2,
   ChevronDown,
   ChevronRight,
   Crown,
-  Download,
   ExternalLink,
   FileText,
-  Gift,
-  MessageSquare,
-  Package,
-  RefreshCw,
   Send,
   Users,
   XCircle,
@@ -25,11 +19,11 @@ import { BlogView } from "../../../components/layout/blog";
 import { SimpleNavbar } from "../../../components/navbar/simple";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
-import { useTierAccess } from "../../../hooks/lounge/useTierAccess";
+import { useTierAccess } from "../../../hooks/useTierAccess";
 
 export const getServerSideProps = () => ({ props: {} });
 
-type TabType = "subscribers" | "content" | "lootbox" | "notifications";
+type TabType = "subscribers" | "content" | "notifications";
 
 export default function SupportAdminPage() {
   const [mounted, setMounted] = useState(false);
@@ -97,10 +91,6 @@ export default function SupportAdminPage() {
               <FileText size={16} />
               Content Delivery
             </Tab>
-            <Tab $active={activeTab === "lootbox"} onClick={() => setActiveTab("lootbox")}>
-              <Gift size={16} />
-              Monthly Boxes
-            </Tab>
             <Tab
               $active={activeTab === "notifications"}
               onClick={() => setActiveTab("notifications")}
@@ -113,7 +103,6 @@ export default function SupportAdminPage() {
           <TabContent>
             {activeTab === "subscribers" && <SubscribersTab />}
             {activeTab === "content" && <ContentDeliveryTab />}
-            {activeTab === "lootbox" && <LootBoxTab />}
             {activeTab === "notifications" && <NotificationsTab />}
           </TabContent>
         </AdminContainer>
@@ -157,12 +146,6 @@ function QuickStats() {
       <StatCard>
         <StatValue>{stats.discordLinkedPercent}%</StatValue>
         <StatLabel>Discord Linked</StatLabel>
-      </StatCard>
-      <StatCard $accent={stats.tier2LootDelivered ? "green" : "red"}>
-        <StatValue>
-          {stats.tier2LootDelivered ? <CheckCircle2 size={20} /> : <XCircle size={20} />}
-        </StatValue>
-        <StatLabel>{stats.currentMonth} Loot</StatLabel>
       </StatCard>
     </StatsBar>
   );
@@ -358,7 +341,6 @@ function ContentDeliveryTab() {
                 />
               </QuotaBar>
               <QuotaDetails>
-                <span>Early Drops: {stats.quotaProgress.tier1.earlyDrops}</span>
                 <span>Special Access: {stats.quotaProgress.tier1.specialAccess}</span>
               </QuotaDetails>
             </QuotaCard>
@@ -381,40 +363,10 @@ function ContentDeliveryTab() {
                 />
               </QuotaBar>
               <QuotaDetails>
-                <span>Early Drops: {stats.quotaProgress.tier2.earlyDrops}</span>
                 <span>Special Access: {stats.quotaProgress.tier2.specialAccess}</span>
               </QuotaDetails>
             </QuotaCard>
           </QuotaSection>
-
-          {/* Early Drops Section */}
-          <ContentSection>
-            <ContentSectionHeader>
-              <MessageSquare size={18} />
-              Early Drops (Lounge)
-            </ContentSectionHeader>
-            <ContentSectionDesc>Posts in tier-locked announcement channels</ContentSectionDesc>
-            {stats.earlyDrops.recent.length === 0 ? (
-              <EmptyText>No early drops this month</EmptyText>
-            ) : (
-              <ContentList>
-                {stats.earlyDrops.recent.map((drop) => (
-                  <ContentItem key={drop.messageId}>
-                    <ContentItemIcon>
-                      <MessageSquare size={14} />
-                    </ContentItemIcon>
-                    <ContentItemInfo>
-                      <ContentItemTitle>#{drop.channelName}</ContentItemTitle>
-                      <ContentItemDesc>{drop.content}...</ContentItemDesc>
-                    </ContentItemInfo>
-                    <ContentItemDate>
-                      {new Date(drop.createdAt).toLocaleDateString()}
-                    </ContentItemDate>
-                  </ContentItem>
-                ))}
-              </ContentList>
-            )}
-          </ContentSection>
 
           {/* Special Access Section */}
           <ContentSection>
@@ -452,119 +404,6 @@ function ContentDeliveryTab() {
               </ContentList>
             )}
           </ContentSection>
-        </>
-      )}
-    </Section>
-  );
-}
-
-// ============================================
-// Loot Box Tab
-// ============================================
-
-function LootBoxTab() {
-  const status = useQuery(api.supportAdmin.getLootBoxStatus, {});
-
-  return (
-    <Section>
-      <SectionHeader>
-        <SectionTitle>Monthly Loot Boxes</SectionTitle>
-        <TierBadge $tier="tier2">Tier II Only</TierBadge>
-      </SectionHeader>
-
-      {!status ? (
-        <LoadingText>Loading loot box status...</LoadingText>
-      ) : (
-        <>
-          {/* Current Month Status */}
-          <LootStatusCard $status={status.status} $overdue={status.isOverdue}>
-            <LootStatusHeader>
-              <LootStatusIcon>
-                {status.status === "delivered" ? (
-                  <CheckCircle2 size={24} />
-                ) : status.isOverdue ? (
-                  <AlertTriangle size={24} />
-                ) : (
-                  <Package size={24} />
-                )}
-              </LootStatusIcon>
-              <LootStatusInfo>
-                <LootStatusTitle>
-                  {new Date(status.currentMonth + "-01").toLocaleDateString("en-US", {
-                    month: "long",
-                    year: "numeric",
-                  })}
-                </LootStatusTitle>
-                <LootStatusDesc>
-                  {status.status === "delivered"
-                    ? `Delivered on ${status.completedDrop?.processedAt ? new Date(status.completedDrop.processedAt).toLocaleDateString() : "unknown"}`
-                    : status.status === "pending"
-                      ? "Scheduled for delivery"
-                      : status.isOverdue
-                        ? `${status.daysOverdue} days overdue!`
-                        : "Not yet scheduled"}
-                </LootStatusDesc>
-              </LootStatusInfo>
-              {status.completedDrop && (
-                <LootStatusCount>
-                  {status.completedDrop.processedCount} / {status.completedDrop.totalCount}{" "}
-                  delivered
-                </LootStatusCount>
-              )}
-            </LootStatusHeader>
-
-            {status.isOverdue && (
-              <OverdueWarning>
-                <AlertTriangle size={16} />
-                Super Legends have not received their monthly box!
-                <Link href="/admin/rewards">
-                  <DeliverButton>
-                    <Gift size={14} />
-                    Deliver Now
-                  </DeliverButton>
-                </Link>
-              </OverdueWarning>
-            )}
-          </LootStatusCard>
-
-          {/* History */}
-          <HistorySection>
-            <HistoryTitle>Delivery History</HistoryTitle>
-            <HistoryList>
-              {status.history.map((item) => (
-                <HistoryItem key={item.month} $status={item.status}>
-                  <HistoryMonth>
-                    {new Date(item.month + "-01").toLocaleDateString("en-US", {
-                      month: "short",
-                      year: "numeric",
-                    })}
-                  </HistoryMonth>
-                  <HistoryStatus $status={item.status}>
-                    {item.status === "completed" ? (
-                      <>
-                        <CheckCircle2 size={12} /> Delivered
-                      </>
-                    ) : item.status === "pending" ? (
-                      <>
-                        <RefreshCw size={12} /> Pending
-                      </>
-                    ) : item.status === "failed" ? (
-                      <>
-                        <XCircle size={12} /> Failed
-                      </>
-                    ) : (
-                      item.status
-                    )}
-                  </HistoryStatus>
-                  {item.processedCount !== undefined && (
-                    <HistoryCount>
-                      {item.processedCount}/{item.totalCount}
-                    </HistoryCount>
-                  )}
-                </HistoryItem>
-              ))}
-            </HistoryList>
-          </HistorySection>
         </>
       )}
     </Section>
@@ -1183,91 +1022,6 @@ const ContentItemDate = styled.div`
   white-space: nowrap;
 `;
 
-// Loot Box
-const LootStatusCard = styled.div<{ $status: string; $overdue: boolean }>`
-  background: ${(props) =>
-    props.$overdue
-      ? "rgba(239, 68, 68, 0.1)"
-      : props.$status === "delivered"
-        ? "rgba(34, 197, 94, 0.1)"
-        : "rgba(255, 255, 255, 0.02)"};
-  border: 1px solid
-    ${(props) =>
-      props.$overdue
-        ? "rgba(239, 68, 68, 0.3)"
-        : props.$status === "delivered"
-          ? "rgba(34, 197, 94, 0.3)"
-          : "rgba(255, 255, 255, 0.05)"};
-  border-radius: 12px;
-  padding: 20px;
-`;
-
-const LootStatusHeader = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 16px;
-`;
-
-const LootStatusIcon = styled.div`
-  color: ${(props) => props.theme.linkColor};
-`;
-
-const LootStatusInfo = styled.div`
-  flex: 1;
-`;
-
-const LootStatusTitle = styled.h3`
-  margin: 0;
-  font-size: 16px;
-  font-weight: 600;
-  color: ${(props) => props.theme.contrast};
-`;
-
-const LootStatusDesc = styled.p`
-  margin: 4px 0 0;
-  font-size: 13px;
-  color: ${(props) => props.theme.textColor};
-  opacity: 0.7;
-`;
-
-const LootStatusCount = styled.div`
-  font-size: 13px;
-  color: ${(props) => props.theme.textColor};
-`;
-
-const OverdueWarning = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-top: 16px;
-  padding: 12px;
-  background: rgba(239, 68, 68, 0.15);
-  border-radius: 8px;
-  color: #ef4444;
-  font-size: 13px;
-  font-weight: 500;
-`;
-
-const DeliverButton = styled.button`
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-left: auto;
-  padding: 8px 14px;
-  background: #ef4444;
-  border: none;
-  border-radius: 6px;
-  color: white;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.15s ease;
-
-  &:hover {
-    background: #dc2626;
-  }
-`;
-
 // History
 const HistorySection = styled.div`
   margin-top: 24px;
@@ -1278,48 +1032,6 @@ const HistoryTitle = styled.h3`
   font-size: 14px;
   font-weight: 600;
   color: ${(props) => props.theme.contrast};
-`;
-
-const HistoryList = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-`;
-
-const HistoryItem = styled.div<{ $status: string }>`
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 12px;
-  background: rgba(255, 255, 255, 0.02);
-  border-radius: 8px;
-`;
-
-const HistoryMonth = styled.div`
-  font-size: 13px;
-  font-weight: 500;
-  color: ${(props) => props.theme.contrast};
-  min-width: 80px;
-`;
-
-const HistoryStatus = styled.div<{ $status: string }>`
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  color: ${(props) =>
-    props.$status === "completed"
-      ? "#22c55e"
-      : props.$status === "failed"
-        ? "#ef4444"
-        : props.theme.textColor};
-`;
-
-const HistoryCount = styled.div`
-  margin-left: auto;
-  font-size: 12px;
-  color: ${(props) => props.theme.textColor};
-  opacity: 0.6;
 `;
 
 // Notifications

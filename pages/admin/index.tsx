@@ -18,7 +18,7 @@ import { BlogView } from "../../components/layout/blog";
 import { SimpleNavbar } from "../../components/navbar/simple";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
-import { useTierAccess } from "../../hooks/lounge/useTierAccess";
+import { useTierAccess } from "../../hooks/useTierAccess";
 
 export const getServerSideProps = () => ({ props: {} });
 
@@ -129,6 +129,16 @@ function QuickLinks() {
         <LinkContent>
           <LinkTitle>Blog Admin</LinkTitle>
           <LinkDesc>Manage posts & analytics</LinkDesc>
+        </LinkContent>
+        <ChevronRight size={16} />
+      </QuickLink>
+      <QuickLink href="/admin/software">
+        <LinkIcon $color="#10b981">
+          <Shield size={20} />
+        </LinkIcon>
+        <LinkContent>
+          <LinkTitle>Software</LinkTitle>
+          <LinkDesc>Manage software projects & games</LinkDesc>
         </LinkContent>
         <ChevronRight size={16} />
       </QuickLink>

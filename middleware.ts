@@ -5,7 +5,6 @@ import { type Context, createSource } from "./lib/generated/hypertune";
 // Routes that require authentication
 const isProtectedRoute = createRouteMatcher([
   "/account(.*)",
-  "/lounge(.*)", // nevulounge requires authentication
 ]);
 
 // Auth routes should never be protected

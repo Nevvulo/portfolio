@@ -1,16 +1,16 @@
 import type { TwitchSubscriptionResponse, TwitchTokenResponse } from "../types/twitch";
 
 const TWITCH_USERNAME = "Nevvulo";
-const TWITCH_USER_ID = "92360014"; // Nevvulo's Twitch user ID
+export const TWITCH_USER_ID = "92360014"; // Nevvulo's Twitch user ID
 
-const TWITCH_CLIENT_ID = process.env.TWITCH_CLIENT_ID;
+export const TWITCH_CLIENT_ID = process.env.TWITCH_CLIENT_ID;
 const TWITCH_CLIENT_SECRET = process.env.TWITCH_CLIENT_SECRET;
 const TWITCH_BROADCASTER_REFRESH_TOKEN = process.env.TWITCH_BROADCASTER_REFRESH_TOKEN;
 
 let cachedToken: { access_token: string; expires_at: number } | null = null;
 let broadcasterToken: { access_token: string; expires_at: number } | null = null;
 
-async function getTwitchAccessToken(): Promise<string> {
+export async function getTwitchAccessToken(): Promise<string> {
   // Check if we have a valid cached token
   if (cachedToken && cachedToken.expires_at > Date.now()) {
     return cachedToken.access_token;

@@ -19,10 +19,10 @@ import { useMutation, useQuery } from "convex/react";
 import { formatDistanceToNow } from "date-fns";
 import React, { useState } from "react";
 import styled from "styled-components";
-import { LOUNGE_COLORS } from "../../constants/lounge";
+import { LOUNGE_COLORS } from "../../constants/theme";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
-import { UserPopoutTrigger } from "../lounge/user-popout";
+import { UserPopoutTrigger } from "../shared/UserPopout";
 
 // Reaction types for comments
 const COMMENT_REACTIONS = [

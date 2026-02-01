@@ -10,9 +10,9 @@ import { SimpleNavbar } from "@/components/navbar/simple";
 import { SupporterBadges } from "../../components/badges/supporter-badges";
 import { ContributionsModal } from "../../components/profile/ContributionsModal";
 import { FeedList } from "../../components/user-feed/FeedList";
-import { LOUNGE_COLORS, TIER_INFO } from "../../constants/lounge";
+import { LOUNGE_COLORS, TIER_INFO } from "../../constants/theme";
 import { api } from "../../convex/_generated/api";
-import type { Tier } from "../../types/lounge";
+import type { Tier } from "../../types/tiers";
 
 export const getServerSideProps = () => ({ props: {} });
 
@@ -155,7 +155,7 @@ export default function ProfilePage() {
 
             {/* Action Buttons */}
             <Actions>
-              <ActionLink href="/lounge">
+              <ActionLink href="https://lounge.nev.so">
                 Visit Lounge
                 <ExternalLink size={14} />
               </ActionLink>

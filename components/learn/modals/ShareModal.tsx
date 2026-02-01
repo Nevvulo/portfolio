@@ -2,16 +2,10 @@ import { useUser } from "@clerk/nextjs";
 import { useMutation, useQuery } from "convex/react";
 import { AnimatePresence, m } from "framer-motion";
 import {
-  ArrowLeft,
   Check,
-  ChevronRight,
   Copy,
-  FileText,
-  Hash,
   Loader2,
   Lock,
-  Megaphone,
-  MessageSquare,
   Repeat2,
   Share2,
   X,
@@ -20,9 +14,8 @@ import type React from "react";
 import { useCallback, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import styled from "styled-components";
-import { LOUNGE_COLORS } from "@/constants/lounge";
+import { LOUNGE_COLORS } from "@/constants/theme";
 import { api } from "@/convex/_generated/api";
-import type { Id } from "@/convex/_generated/dataModel";
 
 interface ShareModalProps {
   isOpen: boolean;
@@ -32,25 +25,14 @@ interface ShareModalProps {
   postTitle: string;
 }
 
-type ScreenState = "options" | "channel-picker" | "success";
-
-const CHANNEL_ICONS: Record<string, React.ReactNode> = {
-  chat: <Hash size={16} />,
-  announcements: <Megaphone size={16} />,
-  content: <FileText size={16} />,
-};
+type ScreenState = "options" | "success";
 
 export function ShareModal({ isOpen, onClose, postId, postSlug, postTitle }: ShareModalProps) {
   const [mounted, setMounted] = useState(false);
   const [screen, setScreen] = useState<ScreenState>("options");
   const [copied, setCopied] = useState(false);
-  const [isSharing, setIsSharing] = useState(false);
-  const [selectedChannel, setSelectedChannel] = useState<Id<"channels"> | null>(null);
-  const [shareComment, setShareComment] = useState("");
 
   const { isSignedIn } = useUser();
-  const channels = useQuery(api.channels.list);
-  const shareToLounge = useMutation(api.messages.shareLearnPost);
   const repostToFeed = useMutation(api.userFeed.repostBlogPost);
   const hasReposted = useQuery(
     api.userFeed.hasUserRepostedBlogPost,
@@ -70,8 +52,6 @@ export function ShareModal({ isOpen, onClose, postId, postSlug, postTitle }: Sha
     if (isOpen) {
       setScreen("options");
       setCopied(false);
-      setSelectedChannel(null);
-      setShareComment("");
     }
   }, [isOpen]);
 
@@ -132,31 +112,6 @@ export function ShareModal({ isOpen, onClose, postId, postSlug, postTitle }: Sha
     }
   }, [canNativeShare, postTitle, postUrl, handleCopyLink]);
 
-  const handleShareToChannel = useCallback(async () => {
-    if (!selectedChannel) return;
-
-    setIsSharing(true);
-    try {
-      await shareToLounge({
-        channelId: selectedChannel,
-        postId,
-        comment: shareComment || undefined,
-      });
-      setScreen("success");
-    } catch (err) {
-      console.error("Failed to share:", err);
-      alert("Failed to share to channel. Please try again.");
-    } finally {
-      setIsSharing(false);
-    }
-  }, [selectedChannel, shareToLounge, postId, shareComment]);
-
-  const handleBack = useCallback(() => {
-    setScreen("options");
-    setSelectedChannel(null);
-    setShareComment("");
-  }, []);
-
   const handleRepostToFeed = useCallback(async () => {
     if (!isSignedIn || isReposting || hasReposted) return;
 
@@ -171,8 +126,6 @@ export function ShareModal({ isOpen, onClose, postId, postSlug, postTitle }: Sha
       setIsReposting(false);
     }
   }, [isSignedIn, isReposting, hasReposted, repostToFeed, postId]);
-
-  const accessibleChannels = channels?.filter((c) => c.hasAccess) || [];
 
   if (!mounted) return null;
 
@@ -197,11 +150,6 @@ export function ShareModal({ isOpen, onClose, postId, postSlug, postTitle }: Sha
             >
               <ModalHeader>
                 <HeaderLeft>
-                  {screen === "channel-picker" && (
-                    <BackButton onClick={handleBack}>
-                      <ArrowLeft size={16} />
-                    </BackButton>
-                  )}
                   <HeaderTitle>
                     <Share2 size={18} />
                     <span>Share</span>
@@ -259,30 +207,6 @@ export function ShareModal({ isOpen, onClose, postId, postSlug, postTitle }: Sha
                       <SectionTitle>Share on Nevulo</SectionTitle>
                       <OptionsList>
                         {isSignedIn ? (
-                          <OptionButton onClick={() => setScreen("channel-picker")}>
-                            <OptionIcon>
-                              <MessageSquare size={18} />
-                            </OptionIcon>
-                            <OptionText>
-                              <OptionLabel>Share to Lounge</OptionLabel>
-                              <OptionDescription>Post in a lounge channel</OptionDescription>
-                            </OptionText>
-                            <ChevronRight size={16} />
-                          </OptionButton>
-                        ) : (
-                          <OptionButton disabled>
-                            <OptionIcon $disabled>
-                              <MessageSquare size={18} />
-                            </OptionIcon>
-                            <OptionText>
-                              <OptionLabel $disabled>Share to Lounge</OptionLabel>
-                              <OptionDescription>Sign in to share in the lounge</OptionDescription>
-                            </OptionText>
-                            <Lock size={14} />
-                          </OptionButton>
-                        )}
-
-                        {isSignedIn ? (
                           <OptionButton
                             onClick={handleRepostToFeed}
                             disabled={isReposting || hasReposted === true}
@@ -322,60 +246,6 @@ export function ShareModal({ isOpen, onClose, postId, postSlug, postTitle }: Sha
                     </ScreenContainer>
                   )}
 
-                  {screen === "channel-picker" && (
-                    <ScreenContainer
-                      key="channel-picker"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      transition={{ duration: 0.15 }}
-                    >
-                      <ScreenTitle>Choose a channel</ScreenTitle>
-                      <ScreenSubtitle>
-                        Select where you'd like to share this article.
-                      </ScreenSubtitle>
-
-                      <ChannelList>
-                        {accessibleChannels.map((channel) => (
-                          <ChannelButton
-                            key={channel._id}
-                            $selected={selectedChannel === channel._id}
-                            onClick={() => setSelectedChannel(channel._id)}
-                          >
-                            <ChannelIcon>
-                              {CHANNEL_ICONS[channel.type] || <Hash size={16} />}
-                            </ChannelIcon>
-                            <ChannelName>{channel.name}</ChannelName>
-                            {selectedChannel === channel._id && (
-                              <SelectedIndicator>
-                                <Check size={14} />
-                              </SelectedIndicator>
-                            )}
-                          </ChannelButton>
-                        ))}
-                      </ChannelList>
-
-                      {selectedChannel && (
-                        <>
-                          <CommentLabel>Add a comment (optional)</CommentLabel>
-                          <CommentInput
-                            value={shareComment}
-                            onChange={(e) => setShareComment(e.target.value)}
-                            placeholder="Say something about this article..."
-                            maxLength={500}
-                          />
-                        </>
-                      )}
-
-                      <ShareButton
-                        onClick={handleShareToChannel}
-                        disabled={!selectedChannel || isSharing}
-                      >
-                        {isSharing ? "Sharing..." : "Share to Channel"}
-                      </ShareButton>
-                    </ScreenContainer>
-                  )}
-
                   {screen === "success" && (
                     <ScreenContainer
                       key="success"
@@ -388,7 +258,7 @@ export function ShareModal({ isOpen, onClose, postId, postSlug, postTitle }: Sha
                         <Check size={32} />
                       </SuccessIcon>
                       <ScreenTitle>Shared!</ScreenTitle>
-                      <ScreenSubtitle>Your article has been shared to the channel.</ScreenSubtitle>
+                      <ScreenSubtitle>Your article has been shared.</ScreenSubtitle>
                       <DoneButton onClick={onClose}>Done</DoneButton>
                     </ScreenContainer>
                   )}
@@ -449,25 +319,6 @@ const HeaderLeft = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
-`;
-
-const BackButton = styled.button`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border: none;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 6px;
-  color: rgba(255, 255, 255, 0.7);
-  cursor: pointer;
-  transition: all 0.15s ease;
-
-  &:hover {
-    background: rgba(255, 255, 255, 0.15);
-    color: white;
-  }
 `;
 
 const HeaderTitle = styled.div`
@@ -634,108 +485,6 @@ const ScreenSubtitle = styled.p`
   line-height: 1.5;
 `;
 
-const ChannelList = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-bottom: 16px;
-  max-height: 200px;
-  overflow-y: auto;
-`;
-
-const ChannelButton = styled.button<{ $selected?: boolean }>`
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-  padding: 10px 12px;
-  background: ${(p) => (p.$selected ? "rgba(144, 116, 242, 0.15)" : "rgba(255, 255, 255, 0.03)")};
-  border: 1px solid
-    ${(p) => (p.$selected ? "rgba(144, 116, 242, 0.4)" : "rgba(255, 255, 255, 0.08)")};
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  text-align: left;
-
-  &:hover {
-    background: ${(p) => (p.$selected ? "rgba(144, 116, 242, 0.2)" : "rgba(255, 255, 255, 0.06)")};
-  }
-`;
-
-const ChannelIcon = styled.div`
-  color: rgba(255, 255, 255, 0.5);
-`;
-
-const ChannelName = styled.span`
-  flex: 1;
-  font-size: 14px;
-  font-weight: 500;
-  color: white;
-`;
-
-const SelectedIndicator = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 20px;
-  height: 20px;
-  background: ${LOUNGE_COLORS.tier1};
-  border-radius: 50%;
-  color: white;
-`;
-
-const CommentLabel = styled.label`
-  display: block;
-  font-size: 12px;
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.6);
-  margin-bottom: 8px;
-`;
-
-const CommentInput = styled.textarea`
-  width: 100%;
-  padding: 10px 12px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 8px;
-  color: white;
-  font-size: 13px;
-  font-family: inherit;
-  resize: none;
-  height: 80px;
-  margin-bottom: 16px;
-
-  &::placeholder {
-    color: rgba(255, 255, 255, 0.4);
-  }
-
-  &:focus {
-    outline: none;
-    border-color: ${LOUNGE_COLORS.tier1};
-  }
-`;
-
-const ShareButton = styled.button`
-  width: 100%;
-  padding: 12px 20px;
-  background: ${LOUNGE_COLORS.tier1};
-  border: none;
-  border-radius: 10px;
-  color: white;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.15s ease;
-
-  &:hover:not(:disabled) {
-    background: #7c5dd3;
-  }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-`;
 
 const SuccessIcon = styled.div`
   display: flex;

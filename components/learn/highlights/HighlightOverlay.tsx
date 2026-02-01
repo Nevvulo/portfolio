@@ -2,7 +2,7 @@ import { AnimatePresence, m } from "framer-motion";
 import type React from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import styled, { css, keyframes } from "styled-components";
-import { LOUNGE_COLORS } from "@/constants/lounge";
+import { LOUNGE_COLORS } from "@/constants/theme";
 import type { Id } from "@/convex/_generated/dataModel";
 import { findAllHighlightPositions, mergeOverlappingPositions } from "./textAnchor";
 

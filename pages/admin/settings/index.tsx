@@ -16,7 +16,7 @@ import styled from "styled-components";
 import { BlogView } from "../../../components/layout/blog";
 import { SimpleNavbar } from "../../../components/navbar/simple";
 import { api } from "../../../convex/_generated/api";
-import { useTierAccess } from "../../../hooks/lounge/useTierAccess";
+import { useTierAccess } from "../../../hooks/useTierAccess";
 
 export const getServerSideProps = () => ({ props: {} });
 

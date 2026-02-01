@@ -1,6 +1,8 @@
 import { Download, Eye, File, FileText, Film, Image, Lock, Package, Play } from "lucide-react";
 import Link from "next/link";
 import styled from "styled-components";
+import { SupporterBadge } from "../badges/supporter-badge";
+import { BadgeType } from "../../constants/badges";
 
 type FileType = "pdf" | "video" | "document" | "image" | "archive";
 type ContentType = "file" | "article" | "video";
@@ -58,12 +60,20 @@ const VISIBILITY_LABELS: Record<Visibility, string> = {
   tier2: "Super Legend II",
 };
 
-const VISIBILITY_COLORS: Record<Visibility, string> = {
-  public: "#22c55e",
-  members: "#3b82f6",
-  tier1: "#f59e0b",
-  tier2: "#a855f7",
-};
+function VisibilityDisplay({ visibility }: { visibility: Visibility }) {
+  if (visibility === "tier1") {
+    return <SupporterBadge type={BadgeType.SUPER_LEGEND} showLabel size="small" />;
+  }
+  if (visibility === "tier2") {
+    return <SupporterBadge type={BadgeType.SUPER_LEGEND_2} showLabel size="small" />;
+  }
+  return (
+    <MutedBadge>
+      {visibility !== "public" && <Lock size={10} />}
+      {VISIBILITY_LABELS[visibility]}
+    </MutedBadge>
+  );
+}
 
 export function VaultCard({ item, onPreview }: VaultCardProps) {
   const isFile = item.type === "file";
@@ -91,7 +101,7 @@ export function VaultCard({ item, onPreview }: VaultCardProps) {
               <ThumbnailImage src={thumbnail} alt={item.title} />
             ) : (
               <ThumbnailPlaceholder>
-                {isVideo ? <Film size={32} /> : <FileText size={32} />}
+                {isVideo ? <Film size={24} /> : <FileText size={24} />}
               </ThumbnailPlaceholder>
             )}
             {isVideo && (
@@ -112,13 +122,11 @@ export function VaultCard({ item, onPreview }: VaultCardProps) {
             {item.description && <CardDescription>{item.description}</CardDescription>}
             <CardMeta>
               <TypeBadge $type={item.contentType === "video" ? "video" : "article"}>
-                {item.contentType === "video" ? <Film size={12} /> : <FileText size={12} />}
-                {item.contentType === "video" ? "Video" : "Article"}
+                {item.contentType === "video" ? "video" : "article"}
               </TypeBadge>
-              <VisibilityBadge $visibility={item.visibility}>
-                {item.visibility !== "public" && <Lock size={10} />}
-                {VISIBILITY_LABELS[item.visibility]}
-              </VisibilityBadge>
+              <VisibilityWrapper>
+                <VisibilityDisplay visibility={item.visibility} />
+              </VisibilityWrapper>
             </CardMeta>
           </CardContent>
         </Card>
@@ -133,8 +141,8 @@ export function VaultCard({ item, onPreview }: VaultCardProps) {
         {thumbnail ? (
           <ThumbnailImage src={thumbnail} alt={item.title} />
         ) : (
-          <ThumbnailPlaceholder $type={item.fileType}>
-            <Icon size={32} />
+          <ThumbnailPlaceholder>
+            <Icon size={24} />
           </ThumbnailPlaceholder>
         )}
         {isVideo && (
@@ -155,14 +163,12 @@ export function VaultCard({ item, onPreview }: VaultCardProps) {
         {item.description && <CardDescription>{item.description}</CardDescription>}
         <CardMeta>
           <TypeBadge $type={item.fileType || "document"}>
-            <Icon size={12} />
-            {item.fileType?.toUpperCase() || "FILE"}
+            {(item.fileType || "file").toLowerCase()}
           </TypeBadge>
           {item.fileSize && <SizeBadge>{formatFileSize(item.fileSize)}</SizeBadge>}
-          <VisibilityBadge $visibility={item.visibility}>
-            {item.visibility !== "public" && <Lock size={10} />}
-            {VISIBILITY_LABELS[item.visibility]}
-          </VisibilityBadge>
+          <VisibilityWrapper>
+            <VisibilityDisplay visibility={item.visibility} />
+          </VisibilityWrapper>
         </CardMeta>
 
         {item.hasAccess && (
@@ -201,8 +207,8 @@ const CardLink = styled(Link)`
 `;
 
 const Card = styled.div<{ $hasAccess: boolean; $clickable?: boolean }>`
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: ${(p) => p.theme.postBackground};
+  border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 16px;
   overflow: hidden;
   transition: all 0.2s;
@@ -228,40 +234,14 @@ const ThumbnailImage = styled.img`
   object-fit: cover;
 `;
 
-const ThumbnailPlaceholder = styled.div<{ $type?: FileType }>`
+const ThumbnailPlaceholder = styled.div`
   width: 100%;
   height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: ${(p) => {
-    switch (p.$type) {
-      case "pdf":
-        return "linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(239, 68, 68, 0.05) 100%)";
-      case "video":
-        return "linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(59, 130, 246, 0.05) 100%)";
-      case "image":
-        return "linear-gradient(135deg, rgba(34, 197, 94, 0.2) 0%, rgba(34, 197, 94, 0.05) 100%)";
-      case "archive":
-        return "linear-gradient(135deg, rgba(168, 85, 247, 0.2) 0%, rgba(168, 85, 247, 0.05) 100%)";
-      default:
-        return "linear-gradient(135deg, rgba(144, 116, 242, 0.2) 0%, rgba(144, 116, 242, 0.05) 100%)";
-    }
-  }};
-  color: ${(p) => {
-    switch (p.$type) {
-      case "pdf":
-        return "#ef4444";
-      case "video":
-        return "#3b82f6";
-      case "image":
-        return "#22c55e";
-      case "archive":
-        return "#a855f7";
-      default:
-        return "#9074f2";
-    }
-  }};
+  background: linear-gradient(135deg, rgba(144, 116, 242, 0.12) 0%, rgba(144, 116, 242, 0.04) 100%);
+  color: rgba(144, 116, 242, 0.5);
 `;
 
 const PlayOverlay = styled.div`
@@ -335,63 +315,92 @@ const TypeBadge = styled.span<{ $type: string }>`
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 4px 8px;
+  padding: 0.1em 0.6em;
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: lowercase;
+  letter-spacing: 0.3px;
+  font-family: var(--font-mono);
+  border-radius: 4px;
   background: ${(p) => {
     switch (p.$type) {
-      case "pdf":
-        return "rgba(239, 68, 68, 0.15)";
-      case "video":
-        return "rgba(59, 130, 246, 0.15)";
-      case "image":
-        return "rgba(34, 197, 94, 0.15)";
-      case "archive":
-        return "rgba(168, 85, 247, 0.15)";
       case "article":
-        return "rgba(144, 116, 242, 0.15)";
+      case "document":
+      case "pdf":
+        return "rgba(79,77,193,0.15)";
+      case "video":
+        return "rgba(193,77,120,0.15)";
+      case "image":
+        return "rgba(77,193,120,0.15)";
+      case "archive":
+        return "rgba(193,160,77,0.15)";
       default:
-        return "rgba(255, 255, 255, 0.1)";
+        return "rgba(79,77,193,0.15)";
+    }
+  }};
+  border: 1px solid ${(p) => {
+    switch (p.$type) {
+      case "article":
+      case "document":
+      case "pdf":
+        return "rgba(79,77,193,0.3)";
+      case "video":
+        return "rgba(193,77,120,0.3)";
+      case "image":
+        return "rgba(77,193,120,0.3)";
+      case "archive":
+        return "rgba(193,160,77,0.3)";
+      default:
+        return "rgba(79,77,193,0.3)";
     }
   }};
   color: ${(p) => {
     switch (p.$type) {
-      case "pdf":
-        return "#ef4444";
-      case "video":
-        return "#3b82f6";
-      case "image":
-        return "#22c55e";
-      case "archive":
-        return "#a855f7";
       case "article":
-        return "#9074f2";
+      case "document":
+      case "pdf":
+        return "#a5a3f5";
+      case "video":
+        return "#f5a3bf";
+      case "image":
+        return "#a3f5bf";
+      case "archive":
+        return "#f5dba3";
       default:
-        return "inherit";
+        return "#a5a3f5";
     }
   }};
-  border-radius: 4px;
-  font-size: 11px;
-  font-weight: 500;
-  text-transform: uppercase;
 `;
 
 const SizeBadge = styled.span`
-  padding: 4px 8px;
+  padding: 0.1em 0.6em;
   background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 4px;
   font-size: 11px;
+  font-family: var(--font-mono);
   color: ${(props) => props.theme.textColor};
+  opacity: 0.6;
 `;
 
-const VisibilityBadge = styled.span<{ $visibility: Visibility }>`
+const MutedBadge = styled.span`
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 4px 8px;
-  background: ${(p) => `${VISIBILITY_COLORS[p.$visibility]}20`};
-  color: ${(p) => VISIBILITY_COLORS[p.$visibility]};
+  padding: 2px 6px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 4px;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 500;
+  font-family: var(--font-mono);
+  text-transform: lowercase;
+  letter-spacing: 0.3px;
+  color: ${(props) => props.theme.textColor};
+  opacity: 0.6;
+`;
+
+const VisibilityWrapper = styled.div`
   margin-left: auto;
 `;
 
@@ -400,19 +409,19 @@ const CardActions = styled.div`
   gap: 8px;
   margin-top: 12px;
   padding-top: 12px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
 `;
 
 const ActionButton = styled.button`
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 8px 12px;
+  padding: 6px 10px;
   background: rgba(144, 116, 242, 0.1);
   border: 1px solid rgba(144, 116, 242, 0.2);
   border-radius: 6px;
   color: ${(props) => props.theme.contrast};
-  font-size: 13px;
+  font-size: 12px;
   cursor: pointer;
   transition: all 0.2s;
   text-decoration: none;

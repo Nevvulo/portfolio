@@ -1,6 +1,7 @@
 import { faClock, faPlay, faTimes } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { DollarSign } from "lucide-react";
+import { BadgeType } from "../../constants/badges";
+import { SupporterBadge } from "../badges/supporter-badge";
 import Link from "next/link";
 import { useState } from "react";
 import styled from "styled-components";
@@ -872,51 +873,22 @@ const PlayButton = styled.div<{ $large?: boolean; $small?: boolean }>`
 `;
 
 // ========== LEGEND BADGE ==========
-const TierBadgeBase = styled.div<{ $small?: boolean }>`
+const TierBadgeWrapper = styled.div<{ $small?: boolean }>`
   position: absolute;
   top: ${(props) => (props.$small ? "8px" : "12px")};
   right: ${(props) => (props.$small ? "8px" : "12px")};
   z-index: 10;
-  padding: ${(props) => (props.$small ? "3px 6px" : "4px 8px")};
-  border-radius: 4px;
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(4px);
-  display: flex;
-  align-items: center;
-  gap: 3px;
 `;
 
-const TierBadgeText = styled.span<{ $small?: boolean }>`
-  font-family: "Fira Code", monospace;
-  font-size: ${(props) => (props.$small ? "11px" : "12px")};
-  font-weight: 700;
-  letter-spacing: -0.8px;
-  background: linear-gradient(135deg, #ffd700, #ff8c00);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-`;
-
-const TierBadgeIcon = styled.div<{ $small?: boolean }>`
-  display: flex;
-  align-items: center;
-  color: #f59e0b;
-
-  svg {
-    width: ${(props) => (props.$small ? "12px" : "14px")};
-    height: ${(props) => (props.$small ? "12px" : "14px")};
-    stroke-width: 2.5px;
-  }
-`;
-
-function TierBadge({ small }: { tier: "tier1" | "tier2"; small?: boolean }) {
+function TierBadge({ tier, small }: { tier: "tier1" | "tier2"; small?: boolean }) {
   return (
-    <TierBadgeBase $small={small}>
-      <TierBadgeIcon $small={small}>
-        <DollarSign />
-      </TierBadgeIcon>
-      <TierBadgeText $small={small}>Legend</TierBadgeText>
-    </TierBadgeBase>
+    <TierBadgeWrapper $small={small}>
+      <SupporterBadge
+        type={tier === "tier2" ? BadgeType.SUPER_LEGEND_2 : BadgeType.SUPER_LEGEND}
+        size={small ? "small" : "medium"}
+        showLabel
+      />
+    </TierBadgeWrapper>
   );
 }
 

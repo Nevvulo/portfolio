@@ -48,7 +48,7 @@ import {
   UserPopout,
   UserPopoutProvider,
   UserPopoutTrigger,
-} from "../../components/lounge/user-popout";
+} from "../../components/shared/UserPopout";
 import { SimpleNavbar } from "../../components/navbar/simple";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
@@ -1671,7 +1671,6 @@ const BlogStyle = createGlobalStyle`
   pre {
     font-size: 0.9em;
     margin: 1.5em 0;
-    border-radius: 8px;
 
     @media (max-width: 768px) {
       font-size: 0.85em;
@@ -1684,11 +1683,13 @@ const BlogStyle = createGlobalStyle`
 
   h1, h2, h3, h4, h5, h6, p, span, li, ul {
     code {
-      background: rgba(150, 150, 150, 0.25);
-      padding: 0.15em 0.4em;
-      border-radius: 4px;
+      background: rgba(144, 116, 242, 0.12);
+      padding: 0.15em 0.45em;
+      border-radius: 5px;
       font-weight: 500;
-      color: ${(props) => props.theme.contrast};
+      color: #e0def4;
+      border: 1px solid rgba(144, 116, 242, 0.1);
+      font-size: 0.9em;
     }
   }
 
@@ -1700,6 +1701,7 @@ const BlogStyle = createGlobalStyle`
 
   a > code {
     text-decoration-thickness: 0.1em;
+    color: #c4a7e7;
   }
 
   a {
@@ -1708,12 +1710,14 @@ const BlogStyle = createGlobalStyle`
   }
 
   blockquote {
-    border-left: 3px solid rgba(255, 255, 255, 0.3);
+    border-left: 3px solid rgba(144, 116, 242, 0.4);
     margin: 1.5em 0;
     padding: 0.5em 0 0.5em 1.5em;
     font-style: italic;
     font-size: 1em;
     opacity: 0.9;
+    background: rgba(144, 116, 242, 0.05);
+    border-radius: 0 8px 8px 0;
   }
 `;
 
@@ -2211,9 +2215,11 @@ const ReportLink = styled.button`
 export async function getServerSideProps({
   params,
   req,
+  res,
 }: {
   params: { slug: string };
   req: import("next").GetServerSidePropsContext["req"];
+  res: import("next").GetServerSidePropsContext["res"];
 }) {
   const { slug } = params;
 
@@ -2381,6 +2387,14 @@ export async function getServerSideProps({
 
     // Fetch Discord widget
     const discordWidget = await fetchDiscordWidget();
+
+    // Cache public (non-tier-gated) articles at the CDN edge
+    if (!post.requiredTier) {
+      res.setHeader(
+        "Cache-Control",
+        "public, s-maxage=60, stale-while-revalidate=300"
+      );
+    }
 
     return {
       props: {

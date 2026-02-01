@@ -1,7 +1,75 @@
 // @ts-nocheck
 import { Highlight, themes } from "prism-react-renderer";
 
-const theme = themes.shadesOfPurple;
+// Custom dark purple theme based on shadesOfPurple but with better contrast
+const theme = {
+  plain: {
+    color: "#e0def4",
+    backgroundColor: "#1a1525",
+  },
+  styles: [
+    {
+      types: ["comment", "prolog", "doctype", "cdata"],
+      style: { color: "#6e6a86", fontStyle: "italic" },
+    },
+    {
+      types: ["punctuation"],
+      style: { color: "#908caa" },
+    },
+    {
+      types: ["namespace"],
+      style: { opacity: 0.7 },
+    },
+    {
+      types: ["tag", "operator", "number"],
+      style: { color: "#eb6f92" },
+    },
+    {
+      types: ["property", "function"],
+      style: { color: "#c4a7e7" },
+    },
+    {
+      types: ["tag-id", "selector", "atrule-id"],
+      style: { color: "#f6c177" },
+    },
+    {
+      types: ["attr-name"],
+      style: { color: "#f6c177" },
+    },
+    {
+      types: ["boolean", "string", "entity", "url", "attr-value", "keyword", "control", "directive", "unit", "statement", "regex", "atrule"],
+      style: { color: "#9ccfd8" },
+    },
+    {
+      types: ["placeholder", "variable"],
+      style: { color: "#e0def4" },
+    },
+    {
+      types: ["deleted"],
+      style: { textDecorationLine: "line-through", color: "#eb6f92" },
+    },
+    {
+      types: ["inserted"],
+      style: { textDecorationLine: "underline", color: "#31748f" },
+    },
+    {
+      types: ["italic"],
+      style: { fontStyle: "italic" },
+    },
+    {
+      types: ["important", "bold"],
+      style: { fontWeight: "bold" },
+    },
+    {
+      types: ["important"],
+      style: { color: "#c4a7e7" },
+    },
+    {
+      types: ["class-name"],
+      style: { color: "#ebbcba" },
+    },
+  ],
+};
 
 import styled from "styled-components";
 
@@ -9,36 +77,74 @@ import styled from "styled-components";
 
 const Pre = styled.pre`
   text-align: left;
-  margin: 1em 0;
-  overflow: scroll;
-  padding: 1em;
-  border-radius: 4px;
-  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.7);
+  margin: 1.5em 0;
+  overflow: auto;
+  padding: 1.25em;
+  border-radius: 12px;
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.3),
+    0 2px 4px -2px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(144, 116, 242, 0.15);
+  background: linear-gradient(135deg, #1a1525 0%, #1e1730 100%) !important;
+
+  /* Custom scrollbar - webkit browsers */
+  &::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, rgba(144, 116, 242, 0.4), rgba(144, 116, 242, 0.25));
+    border-radius: 4px;
+    border: 1px solid rgba(144, 116, 242, 0.2);
+
+    &:hover {
+      background: linear-gradient(135deg, rgba(144, 116, 242, 0.6), rgba(144, 116, 242, 0.4));
+    }
+  }
+
+  &::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+
+  /* Firefox scrollbar */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(144, 116, 242, 0.4) rgba(0, 0, 0, 0.2);
 
   @media (max-width: 450px) {
-    margin: 0 -2em;
-    padding: 1.35em;
+    margin: 1em -1.5em;
+    padding: 1em 1.25em;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
   }
 `;
 
 const Line = styled.div`
   display: table-row;
+  line-height: 1.6;
 `;
 
 const LineNo = styled.span`
   display: table-cell;
   text-align: right;
-  padding-right: 1em;
+  padding-right: 1.25em;
   user-select: none;
-  opacity: 0.5;
+  opacity: 0.35;
+  color: #908caa;
+  font-size: 0.85em;
+  min-width: 2em;
 `;
 
 const LineContent = styled.span`
   display: table-cell;
-
-  span.token {
-    color: #9efeff;
-  }
+  word-break: break-word;
 `;
 
 // biome-ignore lint/suspicious/noExplicitAny: MDX children type
@@ -76,10 +182,12 @@ function WithLineNumbers({ children }: { children?: any }) {
 }
 
 export const Inline = styled.span`
-  background: rgba(150, 150, 150, 0.3);
-  padding: 0.1em 0.35em;
-  border-radius: 3px;
-  font-weight: 600;
+  background: rgba(144, 116, 242, 0.15);
+  padding: 0.15em 0.4em;
+  border-radius: 4px;
+  font-weight: 500;
+  color: #e0def4;
+  border: 1px solid rgba(144, 116, 242, 0.1);
 `;
 
 export default WithLineNumbers;

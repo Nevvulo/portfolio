@@ -1,7 +1,7 @@
 import { m } from "framer-motion";
 import type { LucideIcon } from "lucide-react";
 import styled from "styled-components";
-import { LOUNGE_COLORS } from "@/constants/lounge";
+import { LOUNGE_COLORS } from "@/constants/theme";
 
 interface ToolbarButtonProps {
   icon: LucideIcon;

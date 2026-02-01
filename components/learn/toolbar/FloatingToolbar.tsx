@@ -14,7 +14,7 @@ import {
 import { useRouter } from "next/router";
 import { type RefObject, useCallback, useEffect, useState } from "react";
 import styled from "styled-components";
-import { LOUNGE_COLORS } from "@/constants/lounge";
+import { LOUNGE_COLORS } from "@/constants/theme";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { ReactionFan } from "./ReactionFan";

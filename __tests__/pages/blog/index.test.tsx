@@ -57,7 +57,8 @@ describe("Blog Page", () => {
   test("displays blog title and content", () => {
     renderWithTheme(<Blog posts={mockPosts} />);
 
-    const title = screen.getAllByText(/📖/);
+    // SimpleNavbar renders "Blog" without emoji
+    const title = screen.getAllByText(/Blog/i);
     expect(title.length).toBeGreaterThan(0);
   });
 
@@ -86,7 +87,8 @@ describe("Blog Page", () => {
   test("handles empty posts array gracefully", () => {
     renderWithTheme(<Blog posts={[]} />);
 
-    const navbar = screen.getAllByText(/📖/);
+    // SimpleNavbar renders "Blog" without emoji
+    const navbar = screen.getAllByText(/Blog/i);
     expect(navbar.length).toBeGreaterThan(0);
   });
 });

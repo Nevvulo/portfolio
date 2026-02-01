@@ -19,7 +19,7 @@ import Link from "next/link";
 import React, { useCallback, useState } from "react";
 import { createPortal } from "react-dom";
 import styled from "styled-components";
-import { LOUNGE_COLORS } from "@/constants/lounge";
+import { LOUNGE_COLORS } from "@/constants/theme";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 

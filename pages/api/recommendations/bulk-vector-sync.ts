@@ -28,11 +28,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  // Optional: Add auth check here for production
-  // const authHeader = req.headers.authorization;
-  // if (authHeader !== `Bearer ${process.env.ADMIN_SECRET}`) {
-  //   return res.status(401).json({ error: "Unauthorized" });
-  // }
+  // Auth check for production - require ADMIN_SECRET
+  const authHeader = req.headers.authorization;
+  if (!process.env.ADMIN_SECRET || authHeader !== `Bearer ${process.env.ADMIN_SECRET}`) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
 
   try {
     // First, check vector DB stats

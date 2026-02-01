@@ -20,7 +20,7 @@ import { BlogView } from "../../../components/layout/blog";
 import { SimpleNavbar } from "../../../components/navbar/simple";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
-import { useTierAccess } from "../../../hooks/lounge/useTierAccess";
+import { useTierAccess } from "../../../hooks/useTierAccess";
 
 // Migration data for seeding
 const TECHNOLOGIES_SEED = [

@@ -14,16 +14,15 @@ describe("About Page", () => {
     renderWithTheme(<About />);
   });
 
-  test("displays page title and main sections", () => {
+  test("displays page title and main content", () => {
     renderWithTheme(<About />);
 
-    const titleWithEmoji = screen.getAllByText("👋 About Me");
-    const whoAmIHeadings = screen.getAllByText("Who am I?");
-    const whatIDoHeadings = screen.getAllByText(/What do I do/i);
+    // The page shows "Hi, I'm Blake" as the main title
+    const hiTexts = screen.getAllByText(/Hi,/i);
+    const blakeTexts = screen.getAllByText(/Blake/i);
 
-    expect(titleWithEmoji.length).toBeGreaterThan(0);
-    expect(whoAmIHeadings.length).toBeGreaterThan(0);
-    expect(whatIDoHeadings.length).toBeGreaterThan(0);
+    expect(hiTexts.length).toBeGreaterThan(0);
+    expect(blakeTexts.length).toBeGreaterThan(0);
   });
 
   test("displays personal and professional information", () => {

@@ -45,6 +45,8 @@ export default class MyDocument extends Document {
           <meta httpEquiv="Content-Type" content="text/html; charset=utf-8" />
           <meta charSet="utf-8" />
           <meta name="theme-color" content="#100d1b" />
+          <link rel="me" href="https://lounge.nev.so/@nevulo" />
+          <link rel="me" href="https://github.com/Nevvulo" />
         </Head>
         <body>
           <Main />

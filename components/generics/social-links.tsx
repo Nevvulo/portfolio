@@ -1,6 +1,7 @@
 import {
   faGithub,
   faLinkedin,
+  faMastodon,
   faReddit,
   faTiktok,
   faTwitch,
@@ -16,7 +17,7 @@ import { AnimatedContainer, type ContainerProps } from "../container";
 
 const IconContainer = styled(m.a).attrs(() => ({
   target: "_blank",
-  rel: "noreferrer",
+  rel: "me noreferrer",
 }))`
   flex: 1;
   display: flex;
@@ -59,6 +60,7 @@ interface ExtraSocialLinks {
   linkedIn?: boolean;
   email?: boolean;
   tiktok?: boolean;
+  mastodon?: boolean;
 }
 
 export const SocialLinks: React.FC<
@@ -145,6 +147,16 @@ export const SocialLinks: React.FC<
           onMouseLeave={() => handleHover(false, "linkedin")}
         >
           <Icon color={color} icon={faLinkedin} />
+        </IconContainer>
+      )}
+      {include.mastodon && (
+        <IconContainer
+          aria-label="Mastodon"
+          href={Socials.Mastodon}
+          onMouseEnter={() => handleHover(true, "mastodon")}
+          onMouseLeave={() => handleHover(false, "mastodon")}
+        >
+          <Icon color={color} icon={faMastodon} />
         </IconContainer>
       )}
     </SocialLinksContainer>

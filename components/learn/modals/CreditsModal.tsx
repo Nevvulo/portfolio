@@ -8,7 +8,7 @@ import {
   type AIDisclosureStatus,
   getEffectiveAIStatus,
 } from "@/components/badges/ai-disclosure-badge";
-import { LOUNGE_COLORS } from "@/constants/lounge";
+import { LOUNGE_COLORS } from "@/constants/theme";
 import type { Id } from "@/convex/_generated/dataModel";
 
 interface AuthorInfo {

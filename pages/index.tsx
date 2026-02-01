@@ -13,6 +13,7 @@ import { SocialLinks } from "../components/generics";
 import { AnnouncementBanner } from "../components/generics/announcement-banner";
 import { Skeleton } from "../components/generics/skeleton";
 import { FadeIn, FadeUp } from "../components/home/animation";
+import { AuthenticatedHome } from "../components/home/AuthenticatedHome";
 import { CanvasIntro } from "../components/home/canvas-intro";
 import { type BentoCardProps, BentoGrid } from "../components/learn";
 import { FeaturedProjectCard } from "../components/project/featured-project";
@@ -110,9 +111,11 @@ export default function Home({ discordWidget, isLive: serverIsLive }: HomeProps)
     );
   }
 
-  // Get featured projects from Convex
+  // Get featured projects from Convex (unloan, flux, compass)
   const projects = useQuery(api.projects.listActive);
-  const featuredProjects = projects?.filter((p) => p.slug === "unloan" || p.slug === "flux") ?? [];
+  const featuredProjects = projects?.filter((p) =>
+    p.slug === "unloan" || p.slug === "flux" || p.slug === "compass"
+  ) ?? [];
 
   // Get shorts for Live section carousel
   const shortsPosts =
@@ -150,11 +153,18 @@ export default function Home({ discordWidget, isLive: serverIsLive }: HomeProps)
 
   return (
     <>
-      {showCanvasIntro && <CanvasIntro onComplete={handleIntroComplete} />}
+      {/* Authenticated users see personalized dashboard */}
+      <SignedIn>
+        <AuthenticatedHome isLive={isLive} discordWidget={discordWidget} />
+      </SignedIn>
 
-      {showContent && (
-        <>
-          <TopNavBar>
+      {/* Non-authenticated users see the marketing homepage */}
+      <SignedOut>
+        {showCanvasIntro && <CanvasIntro onComplete={handleIntroComplete} />}
+
+        {showContent && (
+          <>
+            <TopNavBar>
             {/* Mobile hamburger menu */}
             <MobileMenuWrapper ref={mobileMenuRef}>
               <HamburgerButton
@@ -269,6 +279,12 @@ export default function Home({ discordWidget, isLive: serverIsLive }: HomeProps)
                       onHoverChange={setIsSocialHovered}
                     />
                   </FadeIn>
+                  {/* IndieWeb h-card microformat for identity verification */}
+                  <div className="h-card" style={{ position: "absolute", width: 1, height: 1, overflow: "hidden", clip: "rect(0,0,0,0)", whiteSpace: "nowrap" }}>
+                    <a className="u-url" rel="me" href="https://nev.so">Blake</a>
+                    <a rel="me" href="https://lounge.nev.so/@nevulo">Mastodon</a>
+                    <a rel="me" href="https://github.com/Nevvulo">GitHub</a>
+                  </div>
                 </SocialContainer>
 
                 <HeaderContainer>
@@ -618,28 +634,173 @@ export default function Home({ discordWidget, isLive: serverIsLive }: HomeProps)
             </GamesSectionContent>
           </Section>
 
-          {/* Projects Section */}
+          {/* Software Section */}
           <Section>
-            <SectionContent>
+            <SoftwareSectionContent>
               <SectionHeader>
                 <SectionTitle>
-                  <SectionTitlePrimary>latest</SectionTitlePrimary>
-                  <SectionTitleSecondary>projects</SectionTitleSecondary>
+                  <SectionTitlePrimary>my</SectionTitlePrimary>
+                  <SectionTitleSecondary>software</SectionTitleSecondary>
                 </SectionTitle>
-                <ViewAllLink href={ROUTES.PROJECTS.ROOT}>View all projects →</ViewAllLink>
               </SectionHeader>
 
-              <ProjectsContainer>
-                {featuredProjects.map((project) => (
+              <SoftwareGrid>
+                {/* Nevi Discord Bot - Featured */}
+                <SoftwareCard $size="featured" $accent="#5865f2" href="https://github.com/Nevvulo/nevi" target="_blank">
+                  <SoftwareCardGlow $color="#5865f2" />
+                  <SoftwareCardContent>
+                    <SoftwareIcon $color="#5865f2">
+                      <svg viewBox="0 0 24 24" fill="currentColor" width="32" height="32">
+                        <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z" />
+                      </svg>
+                    </SoftwareIcon>
+                    <SoftwareBadgeRow>
+                      <SoftwareBadge $color="#5865f2">Discord Bot</SoftwareBadge>
+                      <SoftwareStatus $status="active">Active</SoftwareStatus>
+                    </SoftwareBadgeRow>
+                    <SoftwareTitle>Nevi</SoftwareTitle>
+                    <SoftwareDesc>Multi-purpose Discord bot with moderation, music, and custom commands. Powers multiple community servers.</SoftwareDesc>
+                    <SoftwareStats>
+                      <SoftwareStat>
+                        <span>10+</span>
+                        <label>Servers</label>
+                      </SoftwareStat>
+                      <SoftwareStat>
+                        <span>50+</span>
+                        <label>Commands</label>
+                      </SoftwareStat>
+                    </SoftwareStats>
+                  </SoftwareCardContent>
+                  <SoftwareCardScanlines />
+                </SoftwareCard>
+
+                {/* Feed / Link-in-bio */}
+                <SoftwareCard $size="medium" $accent="#9074f2" href="/feed">
+                  <SoftwareCardGlow $color="#9074f2" />
+                  <SoftwareCardContent>
+                    <SoftwareIcon $color="#9074f2">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="28" height="28">
+                        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+                      </svg>
+                    </SoftwareIcon>
+                    <SoftwareBadgeRow>
+                      <SoftwareBadge $color="#9074f2">Link-in-bio</SoftwareBadge>
+                    </SoftwareBadgeRow>
+                    <SoftwareTitle>nev.so/@you</SoftwareTitle>
+                    <SoftwareDesc>Custom profile pages with social links, posts, and personalization.</SoftwareDesc>
+                  </SoftwareCardContent>
+                  <SoftwareCardScanlines />
+                </SoftwareCard>
+
+                {/* Netvulo */}
+                <SoftwareCard $size="medium" $accent="#22c55e" href="https://github.com/Nevvulo/netvulo" target="_blank">
+                  <SoftwareCardGlow $color="#22c55e" />
+                  <SoftwareCardContent>
+                    <SoftwareIcon $color="#22c55e">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="28" height="28">
+                        <circle cx="12" cy="12" r="10" />
+                        <line x1="2" y1="12" x2="22" y2="12" />
+                        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                      </svg>
+                    </SoftwareIcon>
+                    <SoftwareBadgeRow>
+                      <SoftwareBadge $color="#22c55e">Framework</SoftwareBadge>
+                      <SoftwareStatus $status="active">Active</SoftwareStatus>
+                    </SoftwareBadgeRow>
+                    <SoftwareTitle>Netvulo</SoftwareTitle>
+                    <SoftwareDesc>Custom networking layer & event handler for real-time applications.</SoftwareDesc>
+                  </SoftwareCardContent>
+                  <SoftwareCardScanlines />
+                </SoftwareCard>
+
+                {/* Continuous - Course Builder */}
+                <SoftwareCard $size="small" $accent="#ec4899" href="https://github.com/Nevvulo/continuous" target="_blank">
+                  <SoftwareCardGlow $color="#ec4899" />
+                  <SoftwareCardContent>
+                    <SoftwareIcon $color="#ec4899">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="24" height="24">
+                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+                        <path d="M8 7h8M8 11h8M8 15h5" />
+                      </svg>
+                    </SoftwareIcon>
+                    <SoftwareBadgeRow>
+                      <SoftwareBadge $color="#ec4899">E-Learning</SoftwareBadge>
+                      <SoftwareStatus $status="beta">WIP</SoftwareStatus>
+                    </SoftwareBadgeRow>
+                    <SoftwareTitle>Continuous</SoftwareTitle>
+                    <SoftwareDesc>Cross-platform course builder app</SoftwareDesc>
+                  </SoftwareCardContent>
+                  <SoftwareCardScanlines />
+                </SoftwareCard>
+
+                {/* GYST - Coming Soon */}
+                <SoftwareCard $size="small" $accent="#f59e0b" $comingSoon>
+                  <SoftwareCardGlow $color="#f59e0b" />
+                  <SoftwareCardContent>
+                    <SoftwareIcon $color="#f59e0b">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="24" height="24">
+                        <rect x="3" y="3" width="7" height="7" rx="1" />
+                        <rect x="14" y="3" width="7" height="7" rx="1" />
+                        <rect x="3" y="14" width="7" height="7" rx="1" />
+                        <rect x="14" y="14" width="7" height="7" rx="1" />
+                      </svg>
+                    </SoftwareIcon>
+                    <SoftwareBadgeRow>
+                      <SoftwareBadge $color="#f59e0b">Productivity</SoftwareBadge>
+                      <SoftwareStatus $status="soon">Idea</SoftwareStatus>
+                    </SoftwareBadgeRow>
+                    <SoftwareTitle>GYST</SoftwareTitle>
+                    <SoftwareDesc>Get Your Shit Together - the organizer</SoftwareDesc>
+                  </SoftwareCardContent>
+                  <SoftwareCardScanlines />
+                </SoftwareCard>
+              </SoftwareGrid>
+            </SoftwareSectionContent>
+          </Section>
+
+          {/* Work History Section */}
+          <Section>
+            <WorkSectionContent>
+              <SectionHeader>
+                <SectionTitle>
+                  <SectionTitlePrimary>work</SectionTitlePrimary>
+                  <SectionTitleSecondary>history</SectionTitleSecondary>
+                </SectionTitle>
+                <ViewAllLink href={ROUTES.PROJECTS.ROOT}>View full timeline →</ViewAllLink>
+              </SectionHeader>
+
+              <WorkGrid>
+                {/* Featured Current Work - Unloan */}
+                {featuredProjects[0] && (
                   <FeaturedProjectCard
-                    key={project.slug}
-                    project={project}
-                    href={`/projects?expand=${project.slug}`}
-                    isSmaller={project.slug === "flux"}
+                    project={featuredProjects[0]}
+                    href={`/projects?expand=${featuredProjects[0].slug}`}
                   />
-                ))}
-              </ProjectsContainer>
-            </SectionContent>
+                )}
+
+                {/* Side Cards - Flux then Compass */}
+                <WorkSideCards>
+                  {/* Flux */}
+                  {featuredProjects.find(p => p.slug === "flux") && (
+                    <FeaturedProjectCard
+                      project={featuredProjects.find(p => p.slug === "flux")!}
+                      href="/projects?expand=flux"
+                      isSmaller
+                    />
+                  )}
+                  {/* Compass - smallest */}
+                  {featuredProjects.find(p => p.slug === "compass") && (
+                    <FeaturedProjectCard
+                      project={featuredProjects.find(p => p.slug === "compass")!}
+                      href="/projects?expand=compass"
+                      isSmallest
+                    />
+                  )}
+                </WorkSideCards>
+              </WorkGrid>
+            </WorkSectionContent>
           </Section>
 
           {/* Support Section */}
@@ -706,6 +867,7 @@ export default function Home({ discordWidget, isLive: serverIsLive }: HomeProps)
           </Head>
         </>
       )}
+      </SignedOut>
     </>
   );
 }
@@ -1271,6 +1433,355 @@ const ProjectsContainer = styled.div`
   flex-direction: column;
   gap: 1.5rem;
   width: 100%;
+`;
+
+// ============================================
+// SOFTWARE SECTION STYLES
+// ============================================
+
+const SoftwareSectionContent = styled.div`
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+`;
+
+const SoftwareGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: auto auto;
+  gap: 1rem;
+
+  @media (max-width: 900px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+  }
+`;
+
+const SoftwareCardScanlines = styled.div`
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.03) 2px,
+    rgba(0, 0, 0, 0.03) 4px
+  );
+  pointer-events: none;
+  opacity: 0.5;
+  border-radius: inherit;
+`;
+
+const SoftwareCard = styled.a<{ $size: "featured" | "medium" | "small"; $accent: string; $comingSoon?: boolean }>`
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 1.25rem;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(20, 15, 35, 0.9) 0%, rgba(30, 25, 50, 0.8) 100%);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid ${(props) => props.$accent}30;
+  text-decoration: none;
+  color: ${(props) => props.theme.contrast};
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: ${(props) => (props.$comingSoon ? "default" : "pointer")};
+
+  ${(props) => {
+    if (props.$size === "featured") {
+      return `
+        grid-column: span 2;
+        grid-row: span 2;
+        min-height: 320px;
+      `;
+    }
+    if (props.$size === "medium") {
+      return `
+        grid-column: span 1;
+        grid-row: span 1;
+        min-height: 200px;
+      `;
+    }
+    return `
+      grid-column: span 1;
+      grid-row: span 1;
+      min-height: 160px;
+    `;
+  }}
+
+  ${(props) =>
+    props.$comingSoon &&
+    `
+    opacity: 0.7;
+    border-style: dashed;
+  `}
+
+  &:hover {
+    transform: ${(props) => (props.$comingSoon ? "none" : "translateY(-4px)")};
+    border-color: ${(props) => props.$accent}60;
+    box-shadow: ${(props) =>
+      props.$comingSoon
+        ? "none"
+        : `0 20px 40px rgba(0, 0, 0, 0.3), 0 0 60px ${props.$accent}15`};
+  }
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, ${(props) => props.$accent}50, transparent);
+  }
+
+  @media (max-width: 900px) {
+    ${(props) => props.$size === "featured" && `
+      grid-column: span 2;
+      grid-row: span 1;
+      min-height: 240px;
+    `}
+  }
+
+  @media (max-width: 600px) {
+    grid-column: span 1 !important;
+    min-height: auto;
+    padding: 1rem;
+  }
+`;
+
+const SoftwareCardGlow = styled.div<{ $color: string }>`
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle at center, ${(props) => props.$color}08 0%, transparent 50%);
+  pointer-events: none;
+`;
+
+const SoftwareCardContent = styled.div`
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+`;
+
+const SoftwareIcon = styled.div<{ $color: string }>`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  background: ${(props) => props.$color}15;
+  border: 1px solid ${(props) => props.$color}30;
+  border-radius: 14px;
+  color: ${(props) => props.$color};
+  margin-bottom: 1rem;
+  box-shadow: 0 0 20px ${(props) => props.$color}10;
+`;
+
+const SoftwareBadgeRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  flex-wrap: wrap;
+`;
+
+const SoftwareBadge = styled.span<{ $color: string }>`
+  display: inline-flex;
+  padding: 3px 10px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-radius: 4px;
+  background: ${(props) => props.$color}15;
+  color: ${(props) => props.$color};
+  border: 1px solid ${(props) => props.$color}30;
+`;
+
+const SoftwareStatus = styled.span<{ $status: "active" | "soon" | "beta" }>`
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-radius: 4px;
+  background: ${(props) =>
+    props.$status === "active"
+      ? "rgba(34, 197, 94, 0.15)"
+      : props.$status === "beta"
+        ? "rgba(234, 179, 8, 0.15)"
+        : "rgba(255, 255, 255, 0.05)"};
+  color: ${(props) =>
+    props.$status === "active"
+      ? "#22c55e"
+      : props.$status === "beta"
+        ? "#eab308"
+        : "rgba(255, 255, 255, 0.5)"};
+  border: 1px solid ${(props) =>
+    props.$status === "active"
+      ? "rgba(34, 197, 94, 0.3)"
+      : props.$status === "beta"
+        ? "rgba(234, 179, 8, 0.3)"
+        : "rgba(255, 255, 255, 0.1)"};
+
+  &::before {
+    content: '';
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: currentColor;
+    ${(props) => props.$status === "active" && `
+      animation: statusPulse 2s ease-in-out infinite;
+    `}
+  }
+
+  @keyframes statusPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+`;
+
+const SoftwareTitle = styled.h3`
+  font-family: var(--font-sans);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: ${(props) => props.theme.contrast};
+  margin: 0 0 0.375rem 0;
+  letter-spacing: -0.5px;
+`;
+
+const SoftwareDesc = styled.p`
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  color: ${(props) => props.theme.contrast}70;
+  margin: 0;
+  line-height: 1.5;
+  flex: 1;
+`;
+
+const SoftwareStats = styled.div`
+  display: flex;
+  gap: 1.5rem;
+  margin-top: auto;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+`;
+
+const SoftwareStat = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  span {
+    font-family: var(--font-mono);
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: ${(props) => props.theme.contrast};
+  }
+
+  label {
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: ${(props) => props.theme.contrast}50;
+  }
+`;
+
+// ============================================
+// WORK SECTION STYLES
+// ============================================
+
+const WorkSectionContent = styled.div`
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+`;
+
+const WorkGrid = styled.div`
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 1rem;
+
+  @media (max-width: 900px) {
+    grid-template-columns: 1fr;
+  }
+`;
+
+const WorkSideCards = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+`;
+
+const WorkCTACard = styled(Link)`
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+  border-radius: 14px;
+  background: transparent;
+  border: 1px dashed rgba(144, 116, 242, 0.3);
+  text-decoration: none;
+  color: ${(props) => props.theme.contrast};
+  transition: all 0.25s ease;
+  min-height: 80px;
+
+  &:hover {
+    background: rgba(144, 116, 242, 0.05);
+    border-color: rgba(144, 116, 242, 0.5);
+    border-style: solid;
+  }
+`;
+
+const WorkCTAContent = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+`;
+
+const WorkCTAIcon = styled.div`
+  color: rgba(144, 116, 242, 0.6);
+`;
+
+const WorkCTAText = styled.span`
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: rgba(144, 116, 242, 0.8);
+`;
+
+const WorkCTAArrow = styled.span`
+  font-size: 1.25rem;
+  color: rgba(144, 116, 242, 0.6);
+  transition: transform 0.2s ease;
+
+  ${WorkCTACard}:hover & {
+    transform: translateX(4px);
+  }
 `;
 
 // Games section styles

@@ -1,6 +1,7 @@
 import {
   faGithub,
   faLinkedin,
+  faMastodon,
   faReddit,
   faTiktok,
   faTwitch,
@@ -24,23 +25,23 @@ export default function Contact() {
       <ContactBox>
         <Subtitle color="white">Socials</Subtitle>
         <SocialsList>
-          <SocialLink href={Socials.Twitch} target="_blank" rel="noreferrer">
+          <SocialLink href={Socials.Twitch} target="_blank" rel="me noreferrer">
             <SocialIcon icon={faTwitch} />
             <SocialUsername>@Nevvulo</SocialUsername>
           </SocialLink>
-          <SocialLink href={Socials.YouTube} target="_blank" rel="noreferrer">
+          <SocialLink href={Socials.YouTube} target="_blank" rel="me noreferrer">
             <SocialIcon icon={faYoutube} />
             <SocialUsername>@Nevvulo</SocialUsername>
           </SocialLink>
-          <SocialLink href={Socials.TikTok} target="_blank" rel="noreferrer">
+          <SocialLink href={Socials.TikTok} target="_blank" rel="me noreferrer">
             <SocialIcon icon={faTiktok} />
             <SocialUsername>@nevulo</SocialUsername>
           </SocialLink>
-          <SocialLink href={Socials.Reddit} target="_blank" rel="noreferrer">
+          <SocialLink href={Socials.Reddit} target="_blank" rel="me noreferrer">
             <SocialIcon icon={faReddit} />
             <SocialUsername>r/Nevulo</SocialUsername>
           </SocialLink>
-          <SocialLink href={Socials.GitHub} target="_blank" rel="noreferrer">
+          <SocialLink href={Socials.GitHub} target="_blank" rel="me noreferrer">
             <SocialIcon icon={faGithub} />
             <SocialUsername>@Nevvulo</SocialUsername>
           </SocialLink>
@@ -48,9 +49,13 @@ export default function Contact() {
             <SocialIcon icon={faEnvelope} />
             <SocialUsername>{Socials.Email}</SocialUsername>
           </SocialLink>
-          <SocialLink href={Socials.LinkedIn} target="_blank" rel="noreferrer">
+          <SocialLink href={Socials.LinkedIn} target="_blank" rel="me noreferrer">
             <SocialIcon icon={faLinkedin} />
             <SocialUsername>LinkedIn</SocialUsername>
+          </SocialLink>
+          <SocialLink href={Socials.Mastodon} target="_blank" rel="me noreferrer">
+            <SocialIcon icon={faMastodon} />
+            <SocialUsername>@nevulo</SocialUsername>
           </SocialLink>
         </SocialsList>
         <Subtitle color="white">Security & Privacy</Subtitle>

@@ -792,7 +792,7 @@ const PricingGrid = styled.div`
 // Pricing Card Styles
 const PricingCard = styled.div<{ $isActive?: boolean }>`
   position: relative;
-  background: rgba(30, 30, 40, 0.6);
+  background: ${(props) => props.theme.postBackground};
   border: 1.5px solid rgba(79, 77, 193, 0.3);
   border-radius: 12px;
   padding: 1.5rem;
@@ -886,7 +886,7 @@ const ToggleSwitch = styled.button<{ $active: boolean }>`
   height: 22px;
   border-radius: 11px;
   border: none;
-  background: ${(p) => (p.$active ? "#4f4dc1" : "rgba(255, 255, 255, 0.2)")};
+  background: ${(p) => (p.$active ? "#4f4dc1" : p.theme.isDark ? "rgba(255, 255, 255, 0.2)" : "rgba(0, 0, 0, 0.15)")};
   cursor: pointer;
   position: relative;
   transition: background 0.2s ease;
@@ -897,7 +897,8 @@ const ToggleKnob = styled.div<{ $active: boolean }>`
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  background: white;
+  background: ${(p) => (p.$active ? "white" : p.theme.isDark ? "white" : "#fff")};
+  box-shadow: ${(p) => (p.theme.isDark ? "none" : "0 1px 3px rgba(0,0,0,0.2)")};
   position: absolute;
   top: 2px;
   left: ${(p) => (p.$active ? "20px" : "2px")};
@@ -913,7 +914,7 @@ const BillingLabel = styled.span`
 
 const Divider = styled.div`
   height: 1px;
-  background: rgba(255, 255, 255, 0.1);
+  background: ${(props) => props.theme.isDark ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)"};
   margin: 1rem 0;
 `;
 
@@ -1059,11 +1060,11 @@ const ManageButton = styled.button`
   ${buttonStyles}
   background: transparent;
   color: ${(props) => props.theme.textColor};
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid ${(props) => props.theme.isDark ? "rgba(255, 255, 255, 0.2)" : "rgba(0, 0, 0, 0.15)"};
 
   &:hover {
-    background: rgba(255, 255, 255, 0.05);
-    border-color: rgba(255, 255, 255, 0.3);
+    background: ${(props) => props.theme.isDark ? "rgba(255, 255, 255, 0.05)" : "rgba(0, 0, 0, 0.05)"};
+    border-color: ${(props) => props.theme.isDark ? "rgba(255, 255, 255, 0.3)" : "rgba(0, 0, 0, 0.25)"};
   }
 `;
 
@@ -1103,7 +1104,7 @@ const SkeletonBase = styled.div`
 
 const SkeletonCard = styled.div`
   position: relative;
-  background: rgba(30, 30, 40, 0.6);
+  background: ${(props) => props.theme.postBackground};
   border: 1.5px solid rgba(79, 77, 193, 0.3);
   border-radius: 12px;
   padding: 1.5rem;
