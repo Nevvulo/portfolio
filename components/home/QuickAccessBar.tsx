@@ -149,7 +149,6 @@ const ShortcutCard = styled.div<{ $locked?: boolean }>`
   &:hover {
     background: rgba(255, 255, 255, 0.04);
     border-color: rgba(144, 116, 242, 0.2);
-    transform: translateY(-1px);
   }
 
   @media (max-width: 480px) {

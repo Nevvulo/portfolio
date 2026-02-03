@@ -14,12 +14,28 @@ import { WidgetContainer } from "./WidgetContainer";
 export function SoftwareWidget() {
   const featured = useQuery(api.software.listFeaturedSoftware);
 
+  const getHref = (software: NonNullable<typeof featured>[number]) => {
+    if (software.openExternally) {
+      if (software.links?.website) return software.links.website;
+      if (software.links?.github) return software.links.github;
+    }
+    return `/software/${software.slug}`;
+  };
+
   return (
     <WidgetContainer title="Software" icon={<Code2 size={16} />} headerAction={<Link href="/software">View all</Link>}>
       <SoftwareGrid>
-        {featured?.map((software) => (
-          <SoftwareCard key={software._id} href={`/software/${software.slug}`}>
-            <SoftwareImageContainer $gradient={software.background || undefined}>
+        {featured?.map((software) => {
+          const href = getHref(software);
+          const isExternal = href.startsWith("http");
+          return (
+          <SoftwareCard
+            key={software._id}
+            href={href}
+            target={isExternal ? "_blank" : undefined}
+            rel={isExternal ? "noopener noreferrer" : undefined}
+          >
+            <SoftwareImageContainer $gradient={software.background || "linear-gradient(135deg, rgba(144,116,242,0.2), rgba(59,130,246,0.15))"}>
               {software.bannerUrl ? (
                 <Image
                   src={software.bannerUrl}
@@ -29,17 +45,6 @@ export function SoftwareWidget() {
                   style={{ objectFit: "cover" }}
                   unoptimized={software.bannerUrl.includes("convex.cloud")}
                 />
-              ) : software.logoUrl ? (
-                <LogoWrapper>
-                  <Image
-                    src={software.logoUrl}
-                    alt={software.name}
-                    width={64}
-                    height={64}
-                    style={{ objectFit: "contain" }}
-                    unoptimized={software.logoUrl.includes("convex.cloud")}
-                  />
-                </LogoWrapper>
               ) : (
                 <PlaceholderIcon>
                   <Code2 size={28} />
@@ -62,7 +67,8 @@ export function SoftwareWidget() {
               <SoftwareCardDesc>{software.shortDescription}</SoftwareCardDesc>
             </SoftwareCardInfo>
           </SoftwareCard>
-        ))}
+          );
+        })}
       </SoftwareGrid>
     </WidgetContainer>
   );
@@ -153,15 +159,27 @@ export function GamesWidget() {
           const isGolfquest = game.slug === "golfquest";
           const currentPlayers = isGolfquest ? playerCount : (stats?.playing ?? 0);
 
+          // Games with openExternally go to roblox/website
+          const getGameHref = () => {
+            if (game.openExternally) {
+              if (game.links?.roblox) return game.links.roblox;
+              if (game.links?.website) return game.links.website;
+            }
+            return `/software/${game.slug}`;
+          };
+          const href = getGameHref();
+          const isExternal = href.startsWith("http");
+
           return (
-            <GameCard key={game._id} href={`/software/${game.slug}`}>
-              <GameImageContainer $gradient={game.background || undefined}>
+            <GameCard
+              key={game._id}
+              href={href}
+              target={isExternal ? "_blank" : undefined}
+              rel={isExternal ? "noopener noreferrer" : undefined}
+            >
+              <GameImageContainer $gradient={game.background || "linear-gradient(135deg, rgba(16,185,129,0.2), rgba(59,130,246,0.15))"}>
                 {game.bannerUrl ? (
                   <GameBannerImage src={game.bannerUrl} alt={game.name} />
-                ) : game.logoUrl ? (
-                  <LogoWrapper>
-                    <LogoImage src={game.logoUrl} alt={game.name} />
-                  </LogoWrapper>
                 ) : (
                   <PlaceholderIcon>
                     <Gamepad2 size={28} />
@@ -366,21 +384,6 @@ const PlayerDot = styled.div`
   border-radius: 50%;
   background: #4ade80;
   box-shadow: 0 0 4px #4ade80;
-`;
-
-const LogoWrapper = styled.div`
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 16px;
-`;
-
-const LogoImage = styled.img`
-  max-width: 80%;
-  max-height: 80%;
-  object-fit: contain;
 `;
 
 const CardOverlay = styled.div`

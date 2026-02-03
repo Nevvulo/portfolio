@@ -2,6 +2,7 @@ import { useQuery } from "convex/react";
 import { AnimatePresence } from "framer-motion";
 import dynamic from "next/dynamic";
 import Head from "next/head";
+import { useRouter } from "next/router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import { BackButton } from "../../components/generics";
@@ -48,11 +49,13 @@ const TimelineScene = dynamic(
 );
 
 export default function ProjectsPage() {
+  const router = useRouter();
   const viewport = useViewport();
   const [scrollProgress, setScrollProgress] = useState(0);
   const [targetProgress, setTargetProgress] = useState(0);
   const [isLoaded, setIsLoaded] = useState(false);
   const [expandedProject, setExpandedProject] = useState<Doc<"projects"> | null>(null);
+  const [hasHandledExpand, setHasHandledExpand] = useState(false);
   const animationRef = useRef<number>();
   const touchStartRef = useRef<{ y: number; progress: number } | null>(null);
 
@@ -199,6 +202,32 @@ export default function ProjectsPage() {
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [expandedProject, handleClose]);
+
+  // Handle ?expand=slug query parameter
+  useEffect(() => {
+    if (hasHandledExpand || !router.isReady || projectsList.length === 0 || yearsList.length === 0) return;
+
+    const expandSlug = router.query.expand;
+    if (typeof expandSlug === "string") {
+      const project = projectsList.find((p) => p.slug === expandSlug);
+      if (project) {
+        // Expand the project
+        setExpandedProject(project);
+        // Update URL to the proper project URL (without query param)
+        window.history.replaceState({}, "", `/projects/${project.slug}`);
+
+        // Scroll timeline to the project's year
+        const projectYear = project.timeline.startYear;
+        const yearIndex = yearsList.indexOf(projectYear);
+        if (yearIndex !== -1) {
+          const progress = yearIndex / Math.max(1, yearsList.length - 1);
+          setTargetProgress(progress);
+          setScrollProgress(progress);
+        }
+      }
+      setHasHandledExpand(true);
+    }
+  }, [router.isReady, router.query.expand, projectsList, yearsList, hasHandledExpand]);
 
   return (
     <>

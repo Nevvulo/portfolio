@@ -62,7 +62,7 @@ export default function SoftwarePage() {
         />
       </Head>
 
-      <SimpleNavbar title="Software" />
+      <SimpleNavbar />
 
       <PageContainer>
         <PageHeader>
@@ -88,24 +88,73 @@ export default function SoftwarePage() {
         <ProjectGrid>
           {filtered?.map((item) => {
             const status = STATUS_LABELS[item.status] ?? STATUS_LABELS.active;
+            const isGame = item.type === "game";
+
+            // Determine href - openExternally=true means link to external site, not /software/[slug]
+            const getExternalUrl = () => {
+              if (isGame && item.links?.roblox) return item.links.roblox;
+              if (item.links?.website) return item.links.website;
+              if (item.links?.github) return item.links.github;
+              return null;
+            };
+
+            const externalUrl = getExternalUrl();
+            const href = item.openExternally && externalUrl ? externalUrl : `/software/${item.slug}`;
+            const isExternal = href.startsWith("http");
+
             return (
-              <ProjectCard key={item._id} href={`/software/${item.slug}`}>
-                {item.bannerUrl ? (
-                  <CardBanner style={{ backgroundImage: `url(${item.bannerUrl})` }} />
-                ) : item.background ? (
-                  <CardBanner style={{ background: item.background }} />
-                ) : (
-                  <CardBanner style={{ background: "linear-gradient(135deg, rgba(144,116,242,0.2), rgba(59,130,246,0.15))" }} />
-                )}
+              <ProjectCard
+                key={item._id}
+                href={href}
+                target={isExternal ? "_blank" : undefined}
+                rel={isExternal ? "noopener noreferrer" : undefined}
+                $accent={item.accentColor}
+              >
+                <CardBannerWrapper>
+                  {item.bannerUrl ? (
+                    <CardBanner style={{ backgroundImage: `url(${item.bannerUrl})` }} />
+                  ) : (
+                    <CardBanner style={{ background: item.background || "linear-gradient(135deg, rgba(144,116,242,0.2), rgba(59,130,246,0.15))" }} />
+                  )}
+                  <CardBannerOverlay />
+                  {isExternal && (
+                    <ExternalBadge>
+                      <ArrowUpRight size={10} />
+                    </ExternalBadge>
+                  )}
+                </CardBannerWrapper>
                 <CardBody>
                   <CardTop>
                     <StatusBadge $color={status.color}>{status.label}</StatusBadge>
+                    <TypeBadge $type={item.type}>{item.type}</TypeBadge>
                     {item.platforms?.map((p) => (
                       <PlatformBadge key={p}>{p}</PlatformBadge>
                     ))}
                   </CardTop>
                   <CardTitle>{item.name}</CardTitle>
                   <CardDesc>{item.shortDescription}</CardDesc>
+                  {item.stats && (item.stats.players || item.stats.downloads || item.stats.stars) && (
+                    <StatsRow>
+                      {item.stats.players != null && (
+                        <StatItem>
+                          <span>{item.stats.players.toLocaleString()}</span>
+                          <label>Players</label>
+                        </StatItem>
+                      )}
+                      {item.stats.downloads != null && (
+                        <StatItem>
+                          <span>{item.stats.downloads.toLocaleString()}</span>
+                          <label>Downloads</label>
+                        </StatItem>
+                      )}
+                      {item.stats.stars != null && (
+                        <StatItem>
+                          <span>{item.stats.stars.toLocaleString()}</span>
+                          <label>Stars</label>
+                        </StatItem>
+                      )}
+                    </StatsRow>
+                  )}
                   {item.technologies && item.technologies.length > 0 && (
                     <TechRow>
                       {item.technologies.slice(0, 4).map((t) => (
@@ -113,38 +162,6 @@ export default function SoftwarePage() {
                       ))}
                     </TechRow>
                   )}
-                  <CardFooter>
-                    {item.links?.github && (
-                      <FooterLink
-                        href={item.links.github}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        GitHub <ArrowUpRight size={12} />
-                      </FooterLink>
-                    )}
-                    {item.links?.website && (
-                      <FooterLink
-                        href={item.links.website}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        Website <ArrowUpRight size={12} />
-                      </FooterLink>
-                    )}
-                    {item.links?.roblox && (
-                      <FooterLink
-                        href={item.links.roblox}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        Play on Roblox <ArrowUpRight size={12} />
-                      </FooterLink>
-                    )}
-                  </CardFooter>
                 </CardBody>
               </ProjectCard>
             );
@@ -224,30 +241,68 @@ const ProjectGrid = styled.div`
   }
 `;
 
-const ProjectCard = styled(Link)`
+const ProjectCard = styled(Link)<{ $accent?: string }>`
   display: block;
-  border-radius: 14px;
+  border-radius: 16px;
   overflow: hidden;
-  background: ${(props) => props.theme.postBackground};
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(135deg, rgba(20, 15, 35, 0.9) 0%, rgba(30, 25, 50, 0.8) 100%);
+  border: 1px solid ${(p) => p.$accent ? `${p.$accent}30` : "rgba(255, 255, 255, 0.08)"};
   text-decoration: none;
-  transition: all 0.2s ease;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 
   &:hover {
-    transform: translateY(-2px);
-    border-color: rgba(255, 255, 255, 0.15);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    transform: translateY(-4px);
+    border-color: ${(p) => p.$accent ? `${p.$accent}50` : "rgba(255, 255, 255, 0.2)"};
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.3), ${(p) => p.$accent ? `0 0 40px ${p.$accent}15` : "none"};
+  }
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, ${(p) => p.$accent || "rgba(255,255,255,0.2)"}50, transparent);
   }
 `;
 
+const CardBannerWrapper = styled.div`
+  position: relative;
+  height: 140px;
+  overflow: hidden;
+`;
+
 const CardBanner = styled.div`
-  height: 120px;
+  position: absolute;
+  inset: 0;
   background-size: cover;
   background-position: center;
 `;
 
+const CardBannerOverlay = styled.div`
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, transparent 40%, rgba(20, 15, 35, 0.9) 100%);
+`;
+
+const ExternalBadge = styled.div`
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.8);
+`;
+
 const CardBody = styled.div`
-  padding: 16px;
+  padding: 16px 20px 20px;
 `;
 
 const CardTop = styled.div`
@@ -259,81 +314,125 @@ const CardTop = styled.div`
 `;
 
 const StatusBadge = styled.span<{ $color: string }>`
-  font-size: 11px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.3px;
-  padding: 2px 8px;
+  letter-spacing: 0.4px;
+  padding: 3px 8px;
   border-radius: 4px;
-  background: ${(p) => p.$color}20;
+  background: ${(p) => p.$color}18;
   color: ${(p) => p.$color};
+  border: 1px solid ${(p) => p.$color}30;
+
+  &::before {
+    content: '';
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: ${(p) => p.$color};
+  }
+`;
+
+const TYPE_COLORS: Record<string, string> = {
+  game: "#10b981",
+  app: "#6366f1",
+  tool: "#f59e0b",
+  library: "#3b82f6",
+  website: "#8b5cf6",
+  bot: "#ec4899",
+};
+
+const TypeBadge = styled.span<{ $type: string }>`
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  background: ${(p) => TYPE_COLORS[p.$type] || "#6366f1"}18;
+  color: ${(p) => TYPE_COLORS[p.$type] || "#6366f1"};
+  border: 1px solid ${(p) => TYPE_COLORS[p.$type] || "#6366f1"}30;
 `;
 
 const PlatformBadge = styled.span`
-  font-size: 10px;
-  font-weight: 500;
+  font-size: 9px;
+  font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.3px;
   padding: 2px 6px;
   border-radius: 3px;
   background: rgba(255, 255, 255, 0.06);
   color: rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 `;
 
 const CardTitle = styled.h3`
-  margin: 0 0 4px;
-  font-size: 18px;
+  margin: 0 0 6px;
+  font-size: 1.25rem;
   font-weight: 700;
   color: ${(props) => props.theme.contrast};
   font-family: var(--font-sans);
+  letter-spacing: -0.3px;
 `;
 
 const CardDesc = styled.p`
-  margin: 0 0 12px;
-  font-size: 13px;
+  margin: 0 0 14px;
+  font-size: 0.8125rem;
   color: ${(props) => props.theme.textColor};
   opacity: 0.7;
-  line-height: 1.4;
+  line-height: 1.5;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 `;
 
+const StatsRow = styled.div`
+  display: flex;
+  gap: 1.25rem;
+  margin-bottom: 14px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+`;
+
+const StatItem = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  span {
+    font-family: var(--font-mono);
+    font-size: 1rem;
+    font-weight: 700;
+    color: ${(props) => props.theme.contrast};
+  }
+
+  label {
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: rgba(255, 255, 255, 0.4);
+  }
+`;
+
 const TechRow = styled.div`
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
-  margin-bottom: 12px;
+  gap: 6px;
 `;
 
 const TechTag = styled.span`
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 500;
-  padding: 2px 8px;
+  padding: 3px 8px;
   border-radius: 4px;
   background: rgba(59, 130, 246, 0.1);
   color: #60a5fa;
-`;
-
-const CardFooter = styled.div`
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-`;
-
-const FooterLink = styled.a`
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 12px;
-  font-weight: 500;
-  color: ${LOUNGE_COLORS.tier1};
-  text-decoration: none;
-  transition: opacity 0.15s ease;
-  &:hover {
-    opacity: 0.8;
-  }
+  border: 1px solid rgba(59, 130, 246, 0.2);
 `;
 
 const EmptyState = styled.div`

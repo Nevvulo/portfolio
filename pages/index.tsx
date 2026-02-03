@@ -6,10 +6,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import styled, { keyframes } from "styled-components";
-import GolfquestBanner from "../assets/img/games/golfquest.png";
 import NevuloLogoSrc from "../assets/svg/nevulo-huge-bold-svg.svg";
 import { GrainOverlay } from "../components/backgrounds/GrainOverlay";
+import { SupporterBadge } from "../components/badges/supporter-badge";
 import { SupporterBadges } from "../components/badges/supporter-badges";
+import { BadgeType } from "../constants/badges";
 import { SocialLinks } from "../components/generics";
 import { AnnouncementBanner } from "../components/generics/announcement-banner";
 import { Skeleton } from "../components/generics/skeleton";
@@ -93,16 +94,16 @@ export default function Home({ discordWidget, isLive: serverIsLive }: HomeProps)
 
   const isLive = isLiveOverride !== null ? isLiveOverride : serverIsLive;
 
-  // Fetch learn posts from Convex (same as /learn: exclude news and shorts)
-  const learnPosts = useQuery(api.blogPosts.getForBento, { excludeNews: true, excludeShorts: true });
+  // Fetch learn posts from Convex (exclude news, but keep shorts for Live section)
+  const learnPosts = useQuery(api.blogPosts.getForBento, { excludeNews: true });
 
   const handleIntroComplete = () => {
     setShowCanvasIntro(false);
     setShowContent(true);
   };
 
-  // Get first 5 posts for homepage learn section
-  const latestLearnPosts = learnPosts?.slice(0, 5) ?? [];
+  // Get first 5 posts for homepage learn section (excluding shorts)
+  const latestLearnPosts = learnPosts?.filter((p) => !p.labels?.includes("short"))?.slice(0, 5) ?? [];
 
   // DEBUG: Check bento sizes from Convex
   if (learnPosts?.length) {
@@ -118,8 +119,8 @@ export default function Home({ discordWidget, isLive: serverIsLive }: HomeProps)
     p.slug === "unloan" || p.slug === "flux" || p.slug === "compass"
   ) ?? [];
 
-  // Get featured software from Convex
-  const featuredSoftware = useQuery(api.software.listFeaturedSoftware);
+  // Get featured software & games from Convex
+  const featuredSoftware = useQuery(api.software.listFeatured);
 
   // Get shorts for Live section carousel
   const shortsPosts =
@@ -168,18 +169,6 @@ export default function Home({ discordWidget, isLive: serverIsLive }: HomeProps)
     return duration;
   };
 
-  // Get game-related posts for Games section
-  const gamePosts =
-    learnPosts
-      ?.filter((p) =>
-        p.labels?.some(
-          (label: string) =>
-            label.toLowerCase().includes("game") ||
-            label.toLowerCase().includes("roblox") ||
-            label.toLowerCase().includes("golfquest"),
-        ),
-      )
-      ?.slice(0, 3) ?? [];
 
   return (
     <>
@@ -600,86 +589,12 @@ export default function Home({ discordWidget, isLive: serverIsLive }: HomeProps)
             </TwitchSectionContent>
           </Section>
 
-          {/* Games Section */}
-          <Section>
-            <GamesSectionContent>
-              <SectionHeader>
-                <SectionTitle>
-                  <SectionTitleSecondary>games</SectionTitleSecondary>
-                </SectionTitle>
-                <ViewAllLink href="/games">View all →</ViewAllLink>
-              </SectionHeader>
-
-              {/* Featured Games Row */}
-              <GamesCardsRow>
-                <GolfquestCard href="/games/golfquest">
-                  <GolfquestImageWrapper>
-                    <Image
-                      src={GolfquestBanner}
-                      alt="Golfquest"
-                      fill
-                      style={{ objectFit: "cover" }}
-                    />
-                    <GolfquestOverlay />
-                  </GolfquestImageWrapper>
-                  <GolfquestContent>
-                    <GolfquestBadges>
-                      <GolfquestBadge>Coming 2026</GolfquestBadge>
-                      <GolfquestPlatform>Roblox</GolfquestPlatform>
-                    </GolfquestBadges>
-                    <GolfquestTitle>Golfquest</GolfquestTitle>
-                    <GolfquestDesc>Golf adventure with precision mechanics</GolfquestDesc>
-                  </GolfquestContent>
-                </GolfquestCard>
-
-                <SecretGameCard>
-                  <SecretGameContent>
-                    <SecretGameIcon>?</SecretGameIcon>
-                    <SecretGameBadge>Coming 2027</SecretGameBadge>
-                    <SecretGameTitle>Secret Project</SecretGameTitle>
-                    <SecretGameDesc>Reveal coming soon...</SecretGameDesc>
-                  </SecretGameContent>
-                  <SecretGameGlow />
-                </SecretGameCard>
-              </GamesCardsRow>
-
-              {/* Game Articles Row - 3x1 on desktop, 1x3 on mobile */}
-              {gamePosts.length > 0 && (
-                <GamesArticleGrid>
-                  {gamePosts.map((post) => (
-                    <GameArticleCard key={post._id} href={`/learn/${post.slug}`}>
-                      <GameArticleThumbnail>
-                        {post.coverImage ? (
-                          <Image
-                            src={post.coverImage}
-                            alt={post.title}
-                            fill
-                            style={{ objectFit: "cover" }}
-                          />
-                        ) : (
-                          <GameArticlePlaceholder />
-                        )}
-                        <GameArticleOverlay />
-                      </GameArticleThumbnail>
-                      <GameArticleContent>
-                        {post.labels?.length > 0 && (
-                          <GameArticleLabel>{post.labels[0]}</GameArticleLabel>
-                        )}
-                        <GameArticleTitle>{post.title}</GameArticleTitle>
-                      </GameArticleContent>
-                    </GameArticleCard>
-                  ))}
-                </GamesArticleGrid>
-              )}
-            </GamesSectionContent>
-          </Section>
-
-          {/* Software Section */}
+          {/* Software & Games Section */}
           <Section>
             <SoftwareSectionContent>
               <SectionHeader>
                 <SectionTitle>
-                  <SectionTitleSecondary>software</SectionTitleSecondary>
+                  <SectionTitleSecondary>software & games</SectionTitleSecondary>
                 </SectionTitle>
               </SectionHeader>
 
@@ -696,9 +611,23 @@ export default function Home({ discordWidget, isLive: serverIsLive }: HomeProps)
                 ) : (
                   featuredSoftware.map((sw) => {
                     const accent = sw.accentColor ?? "#6366f1";
-                    const size = sw.displaySize ?? "medium";
+                    // Only order exactly 0 should be hero (strict check)
+                    const isHero = typeof sw.order === "number" && sw.order === 0;
+                    const size = isHero ? "hero" : (sw.displaySize ?? "medium");
                     const isComingSoon = sw.status === "coming-soon";
-                    const href = sw.links?.website ?? sw.links?.github ?? (isComingSoon ? undefined : `/software/${sw.slug}`);
+                    const isGame = sw.type === "game";
+                    const hasBanner = !!sw.bannerUrl;
+
+                    // Determine href based on openExternally flag
+                    const getHref = () => {
+                      if (sw.openExternally) {
+                        if (isGame && sw.links?.roblox) return sw.links.roblox;
+                        if (sw.links?.website) return sw.links.website;
+                        if (sw.links?.github) return sw.links.github;
+                      }
+                      return isComingSoon ? undefined : `/software/${sw.slug}`;
+                    };
+                    const href = getHref();
                     const isExternal = href?.startsWith("http");
                     const statusMap: Record<string, "active" | "beta" | "soon"> = {
                       "active": "active",
@@ -711,24 +640,33 @@ export default function Home({ discordWidget, isLive: serverIsLive }: HomeProps)
                       "coming-soon": "Idea",
                     };
 
+                    // Hero cards use different content wrapper with banner as full background
+                    const ContentWrapper = isHero ? SoftwareHeroContent : (hasBanner ? SoftwareCardContentWithBanner : SoftwareCardContent);
+
                     return (
                       <SoftwareCard
                         key={sw._id}
                         $size={size}
                         $accent={accent}
                         $comingSoon={isComingSoon}
+                        $hasBanner={hasBanner}
+                        $isHero={isHero}
+                        $heroBanner={isHero ? sw.bannerUrl : undefined}
                         href={isComingSoon ? undefined : href}
                         target={isExternal ? "_blank" : undefined}
                       >
                         <SoftwareCardGlow $color={accent} />
-                        <SoftwareCardContent>
-                          <SoftwareIcon $color={accent}>
-                            {sw.logoUrl ? (
-                              <img src={sw.logoUrl} alt={sw.name} width={28} height={28} style={{ objectFit: "contain", borderRadius: 4 }} />
-                            ) : (
-                              <Package size={28} />
-                            )}
-                          </SoftwareIcon>
+                        {hasBanner && !isHero && <SoftwareCardBanner $src={sw.bannerUrl!} />}
+                        <ContentWrapper>
+                          {!hasBanner && !isHero && (
+                            <SoftwareIcon $color={accent} $hasLogo={!!sw.logoUrl}>
+                              {sw.logoUrl ? (
+                                <img src={sw.logoUrl} alt={sw.name} style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: 10 }} />
+                              ) : (
+                                <Package size={28} />
+                              )}
+                            </SoftwareIcon>
+                          )}
                           <SoftwareBadgeRow>
                             <SoftwareBadge $color={accent}>{sw.type.toUpperCase()}</SoftwareBadge>
                             {sw.status !== "archived" && (
@@ -736,9 +674,28 @@ export default function Home({ discordWidget, isLive: serverIsLive }: HomeProps)
                                 {statusLabel[sw.status] ?? sw.status}
                               </SoftwareStatus>
                             )}
+                            {sw.platforms?.map((platform) => (
+                              <SoftwarePlatformBadge key={platform}>{platform}</SoftwarePlatformBadge>
+                            ))}
                           </SoftwareBadgeRow>
-                          <SoftwareTitle>{sw.name}</SoftwareTitle>
-                          <SoftwareDesc>{sw.shortDescription}</SoftwareDesc>
+                          {isHero ? (
+                            <>
+                              <SoftwareHeroTitleRow>
+                                {sw.logoUrl && (
+                                  <SoftwareHeroIcon>
+                                    <img src={sw.logoUrl} alt={sw.name} style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: 10 }} />
+                                  </SoftwareHeroIcon>
+                                )}
+                                <SoftwareHeroTitle>{sw.name}</SoftwareHeroTitle>
+                              </SoftwareHeroTitleRow>
+                              <SoftwareHeroDesc>{sw.shortDescription}</SoftwareHeroDesc>
+                            </>
+                          ) : (
+                            <>
+                              <SoftwareTitle>{sw.name}</SoftwareTitle>
+                              <SoftwareDesc>{sw.shortDescription}</SoftwareDesc>
+                            </>
+                          )}
                           {sw.stats && (sw.stats.players || sw.stats.downloads || sw.stats.stars) && (
                             <SoftwareStats>
                               {sw.stats.players != null && (
@@ -761,7 +718,7 @@ export default function Home({ discordWidget, isLive: serverIsLive }: HomeProps)
                               )}
                             </SoftwareStats>
                           )}
-                        </SoftwareCardContent>
+                        </ContentWrapper>
                         <SoftwareCardScanlines />
                       </SoftwareCard>
                     );
@@ -831,7 +788,7 @@ export default function Home({ discordWidget, isLive: serverIsLive }: HomeProps)
 
               <SupportTiers>
                 <SupportTierCard href="/support" $featured>
-                  <TierBadge $tier="legend">Super Legend</TierBadge>
+                  <SupporterBadge type={BadgeType.SUPER_LEGEND} size="medium" showLabel />
                   <TierPrice>
                     $5<span>/mo</span>
                   </TierPrice>
@@ -1496,13 +1453,15 @@ const SoftwareCardScanlines = styled.div`
   border-radius: inherit;
 `;
 
-const SoftwareCard = styled.a<{ $size: "featured" | "medium" | "small"; $accent: string; $comingSoon?: boolean }>`
+const SoftwareCard = styled.a<{ $size: "featured" | "medium" | "small" | "hero"; $accent: string; $comingSoon?: boolean; $hasBanner?: boolean; $isHero?: boolean; $heroBanner?: string }>`
   position: relative;
   display: flex;
   flex-direction: column;
-  padding: 1.25rem;
+  padding: ${(props) => props.$isHero ? "0" : props.$hasBanner ? "0" : "1.25rem"};
   border-radius: 16px;
-  background: linear-gradient(135deg, rgba(20, 15, 35, 0.9) 0%, rgba(30, 25, 50, 0.8) 100%);
+  background: ${(props) => props.$isHero && props.$heroBanner
+    ? `linear-gradient(135deg, rgba(20, 15, 35, 0.85) 0%, rgba(30, 25, 50, 0.7) 100%)`
+    : `linear-gradient(135deg, rgba(20, 15, 35, 0.9) 0%, rgba(30, 25, 50, 0.8) 100%)`};
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid ${(props) => props.$accent}30;
@@ -1512,7 +1471,27 @@ const SoftwareCard = styled.a<{ $size: "featured" | "medium" | "small"; $accent:
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: ${(props) => (props.$comingSoon ? "default" : "pointer")};
 
+  ${(props) => props.$isHero && props.$heroBanner && `
+    &::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: url(${props.$heroBanner});
+      background-size: cover;
+      background-position: center;
+      z-index: 0;
+      opacity: 0.4;
+    }
+  `}
+
   ${(props) => {
+    if (props.$size === "hero") {
+      return `
+        grid-column: span 2;
+        grid-row: span 1;
+        min-height: 200px;
+      `;
+    }
     if (props.$size === "featured") {
       return `
         grid-column: span 2;
@@ -1558,10 +1537,11 @@ const SoftwareCard = styled.a<{ $size: "featured" | "medium" | "small"; $accent:
     right: 0;
     height: 1px;
     background: linear-gradient(90deg, transparent, ${(props) => props.$accent}50, transparent);
+    z-index: 2;
   }
 
   @media (max-width: 900px) {
-    ${(props) => props.$size === "featured" && `
+    ${(props) => (props.$size === "featured" || props.$size === "hero") && `
       grid-column: span 2;
       grid-row: span 1;
       min-height: 240px;
@@ -1571,8 +1551,110 @@ const SoftwareCard = styled.a<{ $size: "featured" | "medium" | "small"; $accent:
   @media (max-width: 600px) {
     grid-column: span 1 !important;
     min-height: auto;
-    padding: 1rem;
+    padding: ${(props) => props.$isHero ? "0" : props.$hasBanner ? "0" : "1rem"};
   }
+`;
+
+const SoftwareCardBanner = styled.div<{ $src: string }>`
+  position: relative;
+  width: 100%;
+  height: 140px;
+  background-image: url(${(props) => props.$src});
+  background-size: cover;
+  background-position: center;
+  flex-shrink: 0;
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom, transparent 30%, rgba(20, 15, 35, 0.95) 100%);
+  }
+`;
+
+const SoftwareCardContentWithBanner = styled.div`
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 1rem 1.25rem 1.25rem;
+  margin-top: -2rem;
+  flex: 1;
+`;
+
+const SoftwareHeroContent = styled.div`
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 1.5rem 2rem;
+  flex: 1;
+`;
+
+const SoftwareHeroTitleRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+`;
+
+const SoftwareHeroIcon = styled.div`
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+
+  @media (max-width: 600px) {
+    width: 40px;
+    height: 40px;
+  }
+`;
+
+const SoftwareHeroTitle = styled.h3`
+  font-family: var(--font-sans);
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: ${(props) => props.theme.contrast};
+  margin: 0;
+  letter-spacing: -0.5px;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+
+  @media (max-width: 600px) {
+    font-size: 1.5rem;
+  }
+`;
+
+const SoftwareHeroDesc = styled.p`
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  color: ${(props) => props.theme.contrast}cc;
+  margin: 0;
+  line-height: 1.5;
+  flex: 1;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+  max-width: 80%;
+
+  @media (max-width: 600px) {
+    font-size: 0.875rem;
+    max-width: 100%;
+  }
+`;
+
+const SoftwarePlatformBadge = styled.span`
+  display: inline-flex;
+  padding: 2px 6px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 `;
 
 const SoftwareCardGlow = styled.div<{ $color: string }>`
@@ -1583,6 +1665,7 @@ const SoftwareCardGlow = styled.div<{ $color: string }>`
   height: 200%;
   background: radial-gradient(circle at center, ${(props) => props.$color}08 0%, transparent 50%);
   pointer-events: none;
+  z-index: 1;
 `;
 
 const SoftwareCardContent = styled.div`
@@ -1593,18 +1676,19 @@ const SoftwareCardContent = styled.div`
   height: 100%;
 `;
 
-const SoftwareIcon = styled.div<{ $color: string }>`
+const SoftwareIcon = styled.div<{ $color: string; $hasLogo?: boolean }>`
   display: flex;
   align-items: center;
   justify-content: center;
   width: 56px;
   height: 56px;
-  background: ${(props) => props.$color}15;
-  border: 1px solid ${(props) => props.$color}30;
+  background: ${(props) => props.$hasLogo ? "transparent" : `${props.$color}15`};
+  border: ${(props) => props.$hasLogo ? "none" : `1px solid ${props.$color}30`};
   border-radius: 14px;
   color: ${(props) => props.$color};
   margin-bottom: 1rem;
-  box-shadow: 0 0 20px ${(props) => props.$color}10;
+  box-shadow: ${(props) => props.$hasLogo ? "none" : `0 0 20px ${props.$color}10`};
+  overflow: hidden;
 `;
 
 const SoftwareBadgeRow = styled.div`
@@ -1844,266 +1928,6 @@ const WorkCTAArrow = styled.span`
   ${WorkCTACard}:hover & {
     transform: translateX(4px);
   }
-`;
-
-// Games section styles
-const GamesSectionContent = styled.div`
-  width: 100%;
-  max-width: 1100px;
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-  min-height: 450px; /* Prevent CLS */
-`;
-
-const GamesCardsRow = styled.div`
-  display: grid;
-  grid-template-columns: 1.5fr 1fr;
-  gap: 1rem;
-
-  @media (max-width: 768px) {
-    grid-template-columns: 1fr;
-  }
-`;
-
-const GolfquestCard = styled(Link)`
-  display: flex;
-  flex-direction: column;
-  border-radius: 14px;
-  overflow: hidden;
-  background: rgba(30, 25, 45, 0.7);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(79, 77, 193, 0.25);
-  text-decoration: none;
-  transition: all 0.2s ease;
-
-  &:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 16px 32px rgba(0, 0, 0, 0.25);
-    border-color: rgba(16, 185, 129, 0.4);
-    background: rgba(30, 25, 45, 0.85);
-  }
-`;
-
-const GolfquestImageWrapper = styled.div`
-  position: relative;
-  height: 140px;
-  background: linear-gradient(135deg, #065f46, #047857);
-`;
-
-const GolfquestOverlay = styled.div`
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, rgba(6, 95, 70, 0.3), rgba(4, 120, 87, 0.2));
-`;
-
-const GolfquestContent = styled.div`
-  padding: 1rem;
-`;
-
-const GolfquestBadges = styled.div`
-  display: flex;
-  gap: 0.5rem;
-  margin-bottom: 0.5rem;
-`;
-
-const GolfquestBadge = styled.span`
-  display: inline-flex;
-  padding: 3px 8px;
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 600;
-  text-transform: uppercase;
-  border-radius: 4px;
-  background: rgba(16, 185, 129, 0.15);
-  color: #10b981;
-  border: 1px solid rgba(16, 185, 129, 0.3);
-`;
-
-const GolfquestPlatform = styled.span`
-  display: inline-flex;
-  padding: 3px 8px;
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 600;
-  text-transform: uppercase;
-  border-radius: 4px;
-  background: ${(props) => props.theme.contrast}08;
-  color: ${(props) => props.theme.contrast}70;
-`;
-
-const GolfquestTitle = styled.h3`
-  font-family: var(--font-sans);
-  font-size: 1.125rem;
-  font-weight: 700;
-  color: ${(props) => props.theme.contrast};
-  margin: 0 0 0.25rem 0;
-`;
-
-const GolfquestDesc = styled.p`
-  font-family: var(--font-sans);
-  font-size: 0.8125rem;
-  color: ${(props) => props.theme.contrast}70;
-  margin: 0;
-  line-height: 1.4;
-`;
-
-const SecretGameCard = styled.div`
-  position: relative;
-  border-radius: 14px;
-  overflow: hidden;
-  background: rgba(30, 25, 45, 0.6);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px dashed rgba(168, 85, 247, 0.3);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 200px;
-`;
-
-const SecretGameContent = styled.div`
-  position: relative;
-  z-index: 1;
-  text-align: center;
-  padding: 1.5rem;
-`;
-
-const SecretGameIcon = styled.div`
-  width: 48px;
-  height: 48px;
-  margin: 0 auto 0.75rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--font-mono);
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #a855f7;
-  background: rgba(168, 85, 247, 0.1);
-  border: 2px dashed rgba(168, 85, 247, 0.3);
-  border-radius: 12px;
-`;
-
-const SecretGameBadge = styled.span`
-  display: inline-flex;
-  padding: 3px 8px;
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 600;
-  text-transform: uppercase;
-  border-radius: 4px;
-  background: rgba(168, 85, 247, 0.15);
-  color: #a855f7;
-  margin-bottom: 0.5rem;
-`;
-
-const SecretGameTitle = styled.h3`
-  font-family: var(--font-sans);
-  font-size: 1rem;
-  font-weight: 700;
-  color: ${(props) => props.theme.contrast};
-  margin: 0 0 0.25rem 0;
-`;
-
-const SecretGameDesc = styled.p`
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  color: #a855f7;
-  margin: 0;
-  opacity: 0.8;
-`;
-
-const SecretGameGlow = styled.div`
-  position: absolute;
-  width: 150px;
-  height: 150px;
-  background: radial-gradient(circle, rgba(168, 85, 247, 0.1) 0%, transparent 70%);
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  pointer-events: none;
-`;
-
-const GamesArticleGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1rem;
-
-  @media (max-width: 768px) {
-    grid-template-columns: 1fr;
-  }
-`;
-
-const GameArticleCard = styled(Link)`
-  display: flex;
-  flex-direction: column;
-  border-radius: 12px;
-  overflow: hidden;
-  background: rgba(30, 25, 45, 0.7);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(79, 77, 193, 0.2);
-  text-decoration: none;
-  transition: all 0.2s ease;
-
-  &:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.25);
-    border-color: rgba(79, 77, 193, 0.4);
-    background: rgba(30, 25, 45, 0.85);
-  }
-`;
-
-const GameArticleThumbnail = styled.div`
-  position: relative;
-  aspect-ratio: 16 / 9;
-  background: linear-gradient(135deg, #065f46, #047857);
-  overflow: hidden;
-`;
-
-const GameArticlePlaceholder = styled.div`
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.3), rgba(5, 150, 105, 0.2));
-`;
-
-const GameArticleOverlay = styled.div`
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(to bottom, transparent 40%, rgba(0, 0, 0, 0.5) 100%);
-`;
-
-const GameArticleContent = styled.div`
-  padding: 0.75rem;
-`;
-
-const GameArticleLabel = styled.span`
-  display: inline-flex;
-  padding: 2px 6px;
-  font-family: var(--font-mono);
-  font-size: 9px;
-  font-weight: 600;
-  text-transform: uppercase;
-  border-radius: 3px;
-  background: rgba(16, 185, 129, 0.15);
-  color: #10b981;
-  margin-bottom: 0.375rem;
-`;
-
-const GameArticleTitle = styled.h3`
-  font-family: var(--font-sans);
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: ${(props) => props.theme.contrast};
-  margin: 0;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  line-height: 1.3;
 `;
 
 // Live section styles
@@ -3155,23 +2979,6 @@ const SupportTierCard = styled(Link)<{ $featured?: boolean }>`
     transform: translateY(-4px);
     box-shadow: 0 20px 40px rgba(144, 116, 242, 0.2);
   }
-`;
-
-const TierBadge = styled.span<{ $tier: string }>`
-  display: inline-flex;
-  padding: 0.375rem 1rem;
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  border-radius: 20px;
-  background: ${(props) =>
-    props.$tier === "legend"
-      ? "linear-gradient(135deg, #9074f2, #6366f1)"
-      : "rgba(255, 255, 255, 0.1)"};
-  color: white;
-  margin-bottom: 1rem;
 `;
 
 const TierPrice = styled.div`

@@ -676,6 +676,7 @@ export default defineSchema({
     isFeatured: v.boolean(),
     accentColor: v.optional(v.string()), // Hex color for card accent on homepage (e.g. "#5865f2")
     displaySize: v.optional(v.union(v.literal("featured"), v.literal("medium"), v.literal("small"))), // Controls grid span on homepage
+    openExternally: v.optional(v.boolean()), // If true, links go to website/roblox instead of /software/[slug] page
     createdAt: v.number(),
     updatedAt: v.optional(v.number()),
   })

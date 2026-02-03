@@ -287,6 +287,7 @@ function EditSoftwareModal({ item, onClose, onSave }: EditSoftwareModalProps) {
   const [discord, setDiscord] = useState(item?.links?.discord ?? "");
   const [appStore, setAppStore] = useState(item?.links?.appStore ?? "");
   const [playStore, setPlayStore] = useState(item?.links?.playStore ?? "");
+  const [openExternally, setOpenExternally] = useState(item?.openExternally ?? false);
 
   // Technologies & Platforms
   const [technologies, setTechnologies] = useState(item?.technologies?.join(", ") ?? "");
@@ -357,6 +358,7 @@ function EditSoftwareModal({ item, onClose, onSave }: EditSoftwareModalProps) {
         status,
         order,
         isFeatured,
+        openExternally,
         technologies: technologies
           .split(",")
           .map((t) => t.trim())
@@ -609,6 +611,19 @@ function EditSoftwareModal({ item, onClose, onSave }: EditSoftwareModalProps) {
 
           {activeTab === "links" && (
             <FormSection>
+              <FormGroup>
+                <CheckboxLabel>
+                  <input
+                    type="checkbox"
+                    checked={openExternally}
+                    onChange={(e) => setOpenExternally(e.target.checked)}
+                  />
+                  Open externally (link to website/roblox instead of /software page)
+                </CheckboxLabel>
+                <HintText>
+                  When enabled, clicking this software will open the website or Roblox link directly instead of the detail page.
+                </HintText>
+              </FormGroup>
               <FormGroup>
                 <Label>GitHub</Label>
                 <Input
@@ -1207,6 +1222,14 @@ const CheckboxLabel = styled.label`
     height: 18px;
     cursor: pointer;
   }
+`;
+
+const HintText = styled.p`
+  font-size: 12px;
+  color: ${(p) => p.theme.textColor};
+  opacity: 0.6;
+  margin: 0;
+  line-height: 1.4;
 `;
 
 const ActionButton = styled.button<{ $secondary?: boolean }>`

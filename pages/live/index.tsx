@@ -35,7 +35,7 @@ export default function LivePage({ discordWidget, isLive }: LivePageProps) {
   return (
     <PageWrapper>
       <Background />
-      <SimpleNavbar title="Live & Videos" />
+      <SimpleNavbar />
 
       <MainContent>
         <PageHeader>

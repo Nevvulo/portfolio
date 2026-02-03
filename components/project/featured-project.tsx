@@ -51,6 +51,7 @@ export function FeaturedProjectCard({
           </ImageWrapper>
         ) : null}
         <ColorGradient $gradient={project.background} $fullCover={!hasBanner} />
+        <DarkCornerOverlay $topLeft={isSmallest} />
         <ContentWrapper>
           {project.logoUrl && project.logoWidth && project.logoHeight ? (
             project.logoIncludesName ? (
@@ -143,6 +144,33 @@ const ColorGradient = styled.div<{ $gradient?: string; $fullCover?: boolean }>`
   pointer-events: none;
 `;
 
+const DarkCornerOverlay = styled.div<{ $topLeft?: boolean }>`
+  position: absolute;
+  inset: 0;
+  background: ${({ $topLeft }) =>
+    $topLeft
+      ? `radial-gradient(
+          ellipse 130% 110% at 0% 0%,
+          rgba(0, 0, 0, 0.7) 0%,
+          rgba(0, 0, 0, 0.55) 15%,
+          rgba(0, 0, 0, 0.4) 30%,
+          rgba(0, 0, 0, 0.2) 50%,
+          rgba(0, 0, 0, 0.05) 70%,
+          transparent 85%
+        )`
+      : `radial-gradient(
+          ellipse 130% 110% at 0% 100%,
+          rgba(0, 0, 0, 0.7) 0%,
+          rgba(0, 0, 0, 0.55) 15%,
+          rgba(0, 0, 0, 0.4) 30%,
+          rgba(0, 0, 0, 0.2) 50%,
+          rgba(0, 0, 0, 0.05) 70%,
+          transparent 85%
+        )`};
+  z-index: 1;
+  pointer-events: none;
+`;
+
 const ContentWrapper = styled.div`
   position: absolute;
   bottom: 0;
@@ -211,6 +239,7 @@ export function FeaturedProjectPreview({
           />
         </ImageWrapper>
         <ColorGradient $gradient={background} />
+        <DarkCornerOverlay />
         <ContentWrapper>{Preview && <Preview />}</ContentWrapper>
       </Container>
     </LinkWrapper>
