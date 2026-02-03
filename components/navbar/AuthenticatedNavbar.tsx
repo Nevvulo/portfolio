@@ -1,5 +1,4 @@
 import { UserButton } from "@clerk/nextjs";
-import { AnimatePresence, m } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -9,7 +8,11 @@ import NevuloLogo from "../../assets/svg/nevulo-huge-bold-svg.svg";
 import { SupporterBadges } from "../badges/supporter-badges";
 import { ROUTES } from "../../constants/routes";
 
-export function AuthenticatedNavbar() {
+interface AuthenticatedNavbarProps {
+  hideBadges?: boolean;
+}
+
+export function AuthenticatedNavbar({ hideBadges = false }: AuthenticatedNavbarProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -47,16 +50,18 @@ export function AuthenticatedNavbar() {
         <LeftSection>
           <Link href="/" style={{ textDecoration: "none" }}>
             <LogoContainer>
-              <Image src={NevuloLogo} alt="Nevulo" width={28} height={28} />
+              <Image src={NevuloLogo} alt="Nevulo" width={20} height={20} />
               <LogoText>nevulo</LogoText>
             </LogoContainer>
           </Link>
         </LeftSection>
 
         <RightSection ref={menuRef}>
-          <DesktopOnly>
-            <SupporterBadges size="small" expandOnHover />
-          </DesktopOnly>
+          {!hideBadges && (
+            <DesktopOnly>
+              <SupporterBadges size="small" expandOnHover />
+            </DesktopOnly>
+          )}
 
           <UserButton
             afterSignOutUrl="/"
@@ -70,62 +75,54 @@ export function AuthenticatedNavbar() {
             }}
           >
             <UserButton.MenuItems>
-              <UserButton.Link href="/account" label="My Account" labelIcon={<AccountIcon />} />
+              <UserButton.Link href="/account" label="Your profile" labelIcon={<AccountIcon />} />
             </UserButton.MenuItems>
           </UserButton>
 
-          <MobileMenuToggle
-            onClick={() => setMenuOpen(!menuOpen)}
-            aria-label={menuOpen ? "Close menu" : "Open menu"}
-          >
-            {menuOpen ? <X size={20} /> : <Menu size={20} />}
-          </MobileMenuToggle>
-
-          <AnimatePresence>
+          <MobileMenuWrapper>
+            <HamburgerButton
+              onClick={() => setMenuOpen(!menuOpen)}
+              aria-label={menuOpen ? "Close menu" : "Open menu"}
+            >
+              {menuOpen ? <X size={20} /> : <Menu size={20} />}
+            </HamburgerButton>
             {menuOpen && (
-              <>
-                <MobileOverlay
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.15 }}
-                  onClick={() => setMenuOpen(false)}
-                />
-                <MobileMenu
-                  initial={{ opacity: 0, y: -8, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: -8, scale: 0.95 }}
-                  transition={{ duration: 0.15, ease: "easeOut" }}
-                >
-                  <MobileNavLink href={ROUTES.BLOG.ROOT} onClick={() => setMenuOpen(false)}>
-                    Explore
-                  </MobileNavLink>
-                  <MobileNavLink href={ROUTES.ABOUT} onClick={() => setMenuOpen(false)}>
-                    About
-                  </MobileNavLink>
-                  <MobileNavLink href={ROUTES.PROJECTS.ROOT} onClick={() => setMenuOpen(false)}>
-                    Projects
-                  </MobileNavLink>
-                  <MobileNavLink href="/games" onClick={() => setMenuOpen(false)}>
-                    Games
-                  </MobileNavLink>
-                  <MobileNavLink href="/live" onClick={() => setMenuOpen(false)}>
-                    Live
-                  </MobileNavLink>
-                  <MobileNavLink href="/support" onClick={() => setMenuOpen(false)}>
-                    Support
-                  </MobileNavLink>
-                  <MobileNavLink href="/account" onClick={() => setMenuOpen(false)}>
-                    Account
-                  </MobileNavLink>
-                  <MenuDivider />
-                  <MobileBadgesSection>
-                    <SupporterBadges direction="row" showLabels size="small" />
-                  </MobileBadgesSection>
-                </MobileMenu>
-              </>
+              <MobileMenu>
+                <MobileNavLink href={ROUTES.ABOUT} onClick={() => setMenuOpen(false)}>
+                  About
+                </MobileNavLink>
+                <MobileNavLink href={ROUTES.CONTACT} onClick={() => setMenuOpen(false)}>
+                  Contact
+                </MobileNavLink>
+                <MobileNavLink href={ROUTES.BLOG.ROOT} onClick={() => setMenuOpen(false)}>
+                  Explore
+                </MobileNavLink>
+                <MobileNavLink href={ROUTES.PROJECTS.ROOT} onClick={() => setMenuOpen(false)}>
+                  Work
+                </MobileNavLink>
+                <MobileNavLink href="/software" onClick={() => setMenuOpen(false)}>
+                  Software
+                </MobileNavLink>
+                <MobileNavLink href="/live" onClick={() => setMenuOpen(false)}>
+                  Live
+                </MobileNavLink>
+                <MobileNavLink href="/support" onClick={() => setMenuOpen(false)}>
+                  Support
+                </MobileNavLink>
+                <MobileNavLink href="/account" onClick={() => setMenuOpen(false)}>
+                  Account
+                </MobileNavLink>
+                {!hideBadges && (
+                  <>
+                    <MobileMenuSeparator />
+                    <MobileBadgesSection>
+                      <SupporterBadges direction="column" showLabels size="small" />
+                    </MobileBadgesSection>
+                  </>
+                )}
+              </MobileMenu>
             )}
-          </AnimatePresence>
+          </MobileMenuWrapper>
         </RightSection>
       </NavContent>
     </NavWrapper>
@@ -203,27 +200,6 @@ const LogoText = styled.span`
   letter-spacing: -0.5px;
 `;
 
-const CenterNav = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 32px;
-
-  @media (max-width: 768px) {
-    display: none;
-  }
-`;
-
-const NavLink = styled(Link)`
-  font-size: 14px;
-  font-weight: 500;
-  color: ${(props) => props.theme.textColor};
-  text-decoration: none;
-  transition: color 0.15s ease;
-
-  &:hover {
-    color: ${(props) => props.theme.contrast};
-  }
-`;
 
 const RightSection = styled.div`
   display: flex;
@@ -237,75 +213,82 @@ const DesktopOnly = styled.div`
   display: flex;
   align-items: center;
 
-  @media (max-width: 768px) {
+  @media (max-width: 650px) {
     display: none;
   }
 `;
 
-const MobileMenuToggle = styled.button`
+const MobileMenuWrapper = styled.div`
   display: none;
+  z-index: 10000;
+  position: relative;
+
+  @media (max-width: 650px) {
+    display: flex;
+    align-items: center;
+  }
+`;
+
+const HamburgerButton = styled.button`
+  display: flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
   background: transparent;
   border: none;
-  color: ${(props) => props.theme.textColor};
+  color: ${(props) => props.theme.contrast};
+  padding: 0;
   cursor: pointer;
-  transition: all 0.15s ease;
-  border-radius: 8px;
+  opacity: 0.8;
+  transition: opacity 0.2s ease;
 
   &:hover {
-    background: rgba(255, 255, 255, 0.05);
-    color: ${(props) => props.theme.contrast};
-  }
-
-  @media (max-width: 768px) {
-    display: flex;
+    opacity: 1;
   }
 `;
 
-const MobileOverlay = styled(m.div)`
-  position: fixed;
-  inset: 0;
-  z-index: 98;
-`;
-
-const MobileMenu = styled(m.div)`
+const MobileMenu = styled.div`
   position: absolute;
   top: calc(100% + 8px);
   right: 0;
-  z-index: 99;
-  min-width: 200px;
-  padding: 8px;
-  background: ${(props) => props.theme.postBackground};
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 16px;
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4);
+  background: ${(props) => props.theme.menuBackground};
+  backdrop-filter: blur(10px);
+  border: 1px solid ${(props) => props.theme.menuBorder};
+  border-radius: 8px;
+  padding: 0.5rem 0;
+  min-width: 150px;
+  box-shadow: 0 4px 20px ${(props) => props.theme.menuShadow};
+  z-index: 10000;
 `;
 
 const MobileNavLink = styled(Link)`
   display: block;
-  padding: 12px 14px;
-  font-size: 15px;
-  font-weight: 500;
-  color: ${(props) => props.theme.textColor};
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: ${(props) => props.theme.contrast};
   text-decoration: none;
-  border-radius: 10px;
-  transition: all 0.15s ease;
+  padding: 0.75rem 1rem;
+  opacity: 0.7;
+  transition: all 0.2s ease;
 
   &:hover {
-    background: rgba(255, 255, 255, 0.05);
-    color: ${(props) => props.theme.contrast};
+    opacity: 1;
+    background: rgba(79, 77, 193, 0.1);
   }
 `;
 
-const MenuDivider = styled.div`
+const MobileMenuSeparator = styled.div`
   height: 1px;
-  background: rgba(255, 255, 255, 0.08);
-  margin: 8px 0;
+  background: rgba(79, 77, 193, 0.2);
+  margin: 0.5rem 1rem;
 `;
 
 const MobileBadgesSection = styled.div`
-  padding: 8px 14px;
+  padding: 0.5rem 1rem 0.75rem;
+
+  > div {
+    align-items: flex-start;
+  }
 `;

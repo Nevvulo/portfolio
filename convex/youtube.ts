@@ -216,6 +216,11 @@ export const processVideoNotification = action({
     const seconds = parseInt(durationMatch?.[3] || "0");
     const totalMinutes = Math.ceil(hours * 60 + minutes + seconds / 60);
 
+    // Parse YouTube publish date
+    const youtubePublishedAt = video.snippet.publishedAt
+      ? new Date(video.snippet.publishedAt).getTime()
+      : undefined;
+
     // Create blog post
     await ctx.runMutation(internal.youtube.createVideoPost, {
       videoId: args.videoId,
@@ -230,6 +235,7 @@ export const processVideoNotification = action({
       autoPublish: settings.youtube.autoPublish,
       labels: settings.youtube.defaultLabels,
       visibility: settings.youtube.defaultVisibility,
+      youtubePublishedAt,
     });
 
     // Mark as processed
@@ -255,6 +261,7 @@ export const createVideoPost = internalMutation({
       v.literal("tier1"),
       v.literal("tier2"),
     ),
+    youtubePublishedAt: v.optional(v.number()), // Actual YouTube publish date
   },
   handler: async (ctx, args) => {
     // Get creator user (isCreator = true)
@@ -294,6 +301,8 @@ export const createVideoPost = internalMutation({
     }
 
     const now = Date.now();
+    // Use YouTube publish date if provided, otherwise fall back to now
+    const publishDate = args.youtubePublishedAt ?? now;
 
     // Insert new video at the top (bentoOrder = 0)
     const postId = await ctx.db.insert("blogPosts", {
@@ -312,8 +321,8 @@ export const createVideoPost = internalMutation({
       bentoSize: "medium",
       bentoOrder: 0,
       viewCount: 0,
-      publishedAt: args.autoPublish ? now : undefined,
-      createdAt: now,
+      publishedAt: args.autoPublish ? publishDate : undefined,
+      createdAt: publishDate,
     });
 
     // If auto-published, also publish to Discord
@@ -635,6 +644,11 @@ export const syncAllVideos = action({
         // Determine if it's a Short (under 60 seconds)
         const isShort = durationMins <= 1;
 
+        // Parse YouTube publish date
+        const youtubePublishedAt = video.snippet.publishedAt
+          ? new Date(video.snippet.publishedAt).getTime()
+          : undefined;
+
         await ctx.runMutation(internal.youtube.createVideoPost, {
           videoId: video.id,
           title: video.snippet.title,
@@ -644,6 +658,7 @@ export const syncAllVideos = action({
           autoPublish: args.autoPublish ?? true,
           labels: args.defaultLabels ?? (isShort ? ["short"] : ["video"]),
           visibility: args.visibility ?? "public",
+          youtubePublishedAt,
         });
 
         newVideos++;
@@ -847,6 +862,11 @@ export const syncAllVideosInternal = internalAction({
         const durationMins = parseDuration(video.contentDetails?.duration || "PT0S");
         const isShort = durationMins <= 1;
 
+        // Parse YouTube publish date
+        const youtubePublishedAt = video.snippet.publishedAt
+          ? new Date(video.snippet.publishedAt).getTime()
+          : undefined;
+
         await ctx.runMutation(internal.youtube.createVideoPost, {
           videoId: video.id,
           title: video.snippet.title,
@@ -856,6 +876,7 @@ export const syncAllVideosInternal = internalAction({
           autoPublish: args.autoPublish ?? true,
           labels: args.defaultLabels ?? (isShort ? ["short"] : ["video"]),
           visibility: args.visibility ?? "public",
+          youtubePublishedAt,
         });
 
         newVideos++;
@@ -872,5 +893,24 @@ export const syncAllVideosInternal = internalAction({
       skipped,
       errors,
     };
+  },
+});
+
+// Delete all video posts (for re-sync)
+export const deleteAllVideos = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const videos = await ctx.db
+      .query("blogPosts")
+      .filter((q) => q.eq(q.field("contentType"), "video"))
+      .collect();
+
+    let deleted = 0;
+    for (const video of videos) {
+      await ctx.db.delete(video._id);
+      deleted++;
+    }
+
+    return { deleted };
   },
 });

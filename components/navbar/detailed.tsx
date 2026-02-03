@@ -33,7 +33,7 @@ export function DetailedNavbar({ style }: NavbarProps) {
           </CustomLink>
           <CustomLink href={ROUTES.PROJECTS.ROOT}>
             <ButtonLink as="span" style={btnStyle}>
-              Projects
+              Work
             </ButtonLink>
           </CustomLink>
           {smallDisplay ? (

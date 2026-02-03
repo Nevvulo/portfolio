@@ -1,3 +1,4 @@
+import dynamic from "next/dynamic";
 import { SignedIn, SignedOut } from "@clerk/nextjs";
 import {
   CheckoutButton,
@@ -10,6 +11,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Head from "next/head";
 import Image from "next/image";
 import Link from "next/link";
+import { CornerDownRight } from "lucide-react";
 import { useState } from "react";
 import styled, { css, keyframes } from "styled-components";
 import useSWR from "swr";
@@ -21,6 +23,11 @@ import { AnimatedMinimalView } from "../../components/layout/minimal";
 import { useSupporterStatus } from "../../hooks/useSupporterStatus";
 import { PLANS } from "../../lib/clerk";
 import type { FounderSpotsResponse } from "../api/founder/spots";
+
+const LightRays = dynamic(
+  () => import("../../components/backgrounds/LightRays").then((m) => ({ default: m.LightRays })),
+  { ssr: false },
+);
 
 const PLAN_ICONS = {
   [PLANS.SUPER_LEGEND]: SuperLegendIcon,
@@ -180,10 +187,12 @@ function PlanCard({
       <PlanHeader>
         {planIcon && (
           <PlanIconWrapper>
-            <Image src={planIcon} alt={meta.name} width={28} height={28} />
+            <Image src={planIcon} alt={meta.name} width={14} height={14} />
           </PlanIconWrapper>
         )}
-        <PlanName>{meta.name}</PlanName>
+        <PlanName>
+          Super Legend{meta.name.includes("II") && <PlanNumeral> II</PlanNumeral>}
+        </PlanName>
       </PlanHeader>
 
       <PriceRow>
@@ -209,7 +218,7 @@ function PlanCard({
           "isSpecial" in feature && feature.isSpecial ? (
             <IncludesAllFeature key={index}>
               <IncludesAllIcon>
-                <FontAwesomeIcon icon={faChevronRight} />
+                <CornerDownRight size={14} />
               </IncludesAllIcon>
               <IncludesAllContent>
                 <IncludesAllTitle>All 7 features from Super Legend I</IncludesAllTitle>
@@ -374,8 +383,8 @@ function SubscriberBenefits() {
     activePlanSlug === PLANS.SUPER_LEGEND || activePlanSlug === PLANS.SUPER_LEGEND_2;
   const isSubscribed = subAny?.status === "active" && isPaidPlan;
 
-  // Only show if user is subscribed
-  if (subLoading || !isSubscribed) return null;
+  // Only show if user has an active paid subscription
+  if (subLoading || !subscription || !activePlanSlug || !isSubscribed) return null;
 
   const isFounder = status?.founderNumber !== undefined && status?.founderNumber !== null;
 
@@ -457,6 +466,21 @@ function PricingSkeletons() {
 export default function Support() {
   return (
     <SupportView>
+      <RaysBackground>
+        <LightRays
+          raysOrigin="top-center"
+          raysColor="#6b69d6"
+          raysSpeed={0.4}
+          lightSpread={1.2}
+          rayLength={2.5}
+          pulsating
+          fadeDistance={1.2}
+          saturation={0.8}
+          followMouse
+          mouseInfluence={0.05}
+        />
+      </RaysBackground>
+
       <BackButtonWrapper>
         <BackButton href="/" />
       </BackButtonWrapper>
@@ -475,7 +499,7 @@ export default function Support() {
           <IntroDescription>
             If you enjoy my content and want to support what I do,
             <br />
-            consider becoming a <SuperLegend>Super Legend!</SuperLegend>
+            consider becoming a <SuperLegend>Super Legend</SuperLegend>!
             <br />
             Your support helps me create more awesome content 💖
           </IntroDescription>
@@ -581,15 +605,31 @@ const SupportView = styled(AnimatedMinimalView)`
   flex-direction: column;
   min-height: 100vh;
   padding-bottom: 4rem;
+  position: relative;
+  overflow: hidden;
+`;
+
+const RaysBackground = styled.div`
+  position: sticky;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  margin-bottom: -100vh;
+  z-index: 0;
+  opacity: 0.35;
+  pointer-events: none;
 `;
 
 const BackButtonWrapper = styled.div`
   position: absolute;
   top: 1.5rem;
   left: 1.5rem;
+  z-index: 1;
 `;
 
 const ContentContainer = styled.div`
+  position: relative;
   max-width: 1000px;
   margin: 0 auto;
   padding: 2rem 1rem;
@@ -649,8 +689,11 @@ const IntroDescription = styled.p`
 `;
 
 const SuperLegend = styled.span`
+  font-family: var(--font-sans);
   font-weight: 700;
-  font-size: 18px;
+  font-size: 17px;
+  letter-spacing: -0.32px;
+  text-transform: uppercase;
   background: linear-gradient(135deg, #ffd700, #ff8c00);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -836,13 +879,13 @@ const PlanHeader = styled.div`
 
 const PlanIconWrapper = styled.div`
   flex-shrink: 0;
-  width: 28px;
-  height: 28px;
+  width: 14px;
+  height: 14px;
 `;
 
 const PlanName = styled.h3`
-  font-family: var(--font-mono);
-  font-size: 19px;
+  font-family: var(--font-sans);
+  font-size: 17px;
   font-weight: 700;
   letter-spacing: -0.32px;
   text-transform: uppercase;
@@ -851,6 +894,10 @@ const PlanName = styled.h3`
   -webkit-text-fill-color: transparent;
   background-clip: text;
   margin: 0;
+`;
+
+const PlanNumeral = styled.span`
+  font-family: var(--font-mono);
 `;
 
 const PriceRow = styled.div`
@@ -982,25 +1029,15 @@ const FeatureDescription = styled.div`
 // Special "Includes All" feature for Super Legend II
 const IncludesAllFeature = styled.li`
   display: flex;
-  align-items: center;
   gap: 12px;
-  padding: 12px 14px;
-  background: linear-gradient(135deg, rgba(255, 215, 0, 0.08) 0%, rgba(255, 140, 0, 0.04) 100%);
-  border: 1px solid rgba(255, 215, 0, 0.2);
-  border-radius: 10px;
-  margin-bottom: 4px;
 `;
 
 const IncludesAllIcon = styled.span`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  background: linear-gradient(135deg, #ffd700, #ff8c00);
-  border-radius: 6px;
-  color: #1a1a1a;
-  font-size: 10px;
+  color: ${(p) => p.theme.textColor};
+  opacity: 0.4;
+  margin-top: 3px;
+  margin-left: -3px;
+  font-size: 12px;
 `;
 
 const IncludesAllContent = styled.div`
@@ -1011,17 +1048,15 @@ const IncludesAllTitle = styled.div`
   font-family: var(--font-sans);
   font-size: 14px;
   font-weight: 600;
-  background: linear-gradient(135deg, #ffd700, #ff8c00);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: ${(p) => p.theme.textColor};
+  opacity: 0.9;
 `;
 
 const IncludesAllSubtitle = styled.div`
   font-family: var(--font-sans);
   font-size: 12px;
-  color: ${(props) => props.theme.textColor};
-  opacity: 0.7;
+  color: ${(p) => p.theme.textColor};
+  opacity: 0.5;
   margin-top: 2px;
 `;
 

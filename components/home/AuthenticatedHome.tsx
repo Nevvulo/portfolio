@@ -4,13 +4,15 @@ import { ChevronRight, Sparkles } from "lucide-react";
 import Head from "next/head";
 import Image from "next/image";
 import Link from "next/link";
-import { type ReactNode, useCallback, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/router";
+import { type ReactNode } from "react";
 import styled from "styled-components";
 import { api } from "../../convex/_generated/api";
 import { LOUNGE_COLORS } from "../../constants/theme";
 import { useBentoLayout } from "../../hooks/useBentoLayout";
+import { useRecommendations } from "../../hooks/useRecommendations";
 import type { DiscordWidget } from "../../types/discord";
-import type { BentoCardProps } from "../learn/BentoCard";
+import { GrainOverlay } from "../backgrounds/GrainOverlay";
 import { AuthenticatedNavbar } from "../navbar/AuthenticatedNavbar";
 import { HomeFeed, HomeFeedSkeleton } from "./HomeFeed";
 import { LevelProgress } from "./LevelProgress";
@@ -27,22 +29,16 @@ import {
   LatestContentWidget,
   LiveWidget,
   MusicWidget,
+  PerksWidget,
   SoftwareWidget,
   VideosWidget,
   WidgetTracker,
 } from "./widgets";
 
-interface RecommendationScore {
-  slug: string;
-  score: number;
-}
-
 interface AuthenticatedHomeProps {
   isLive?: boolean;
   discordWidget?: DiscordWidget | null;
 }
-
-const POSTS_PER_PAGE = 12;
 
 function getGreeting(): string {
   const hour = new Date().getHours();
@@ -52,7 +48,9 @@ function getGreeting(): string {
 }
 
 export function AuthenticatedHome({ isLive = false, discordWidget }: AuthenticatedHomeProps) {
-  const { user: clerkUser, isSignedIn } = useUser();
+  const { user: clerkUser } = useUser();
+  const router = useRouter();
+  const mockLevel = router.query.mockLevel ? Number(router.query.mockLevel) : undefined;
   const convexUser = useQuery(api.users.getMe);
   const displayName = convexUser?.displayName || clerkUser?.firstName || "there";
   const avatarUrl = convexUser?.avatarUrl || clerkUser?.imageUrl;
@@ -68,146 +66,20 @@ export function AuthenticatedHome({ isLive = false, discordWidget }: Authenticat
     "activity":       () => <ActivityWidget />,
     "community":      () => <CommunityWidget discordWidget={discordWidget} />,
     "integrations":   () => <IntegrationsWidget />,
+    "perks":          () => <PerksWidget />,
     "videos":         () => <VideosWidget />,
     "software":       () => <SoftwareWidget />,
     "games":          () => <GamesWidget />,
   };
 
-  // Recommendation state
-  const [recScores, setRecScores] = useState<RecommendationScore[]>([]);
-  const [refreshKey] = useState(() => Date.now());
+  // Recommendations + infinite scroll (shared hook)
+  const { posts: articlePosts, isLoading, loadMoreRef, isLoadingMore } = useRecommendations({
+    excludeNews: true,
+    excludeShorts: true,
+    postsPerPage: 12,
+  });
 
-  // Infinite scroll state
-  const [offset, setOffset] = useState(0);
-  const [accumulatedPosts, setAccumulatedPosts] = useState<BentoCardProps[]>([]);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const loadMoreRef = useRef<HTMLDivElement>(null);
-  const hasResetRef = useRef(false);
-
-  // Queries
-  const watchHistory = useQuery(
-    api.articleWatchTime.getUserWatchHistory,
-    isSignedIn ? { limit: 50 } : "skip"
-  );
-  const basePosts = useQuery(api.blogPosts.getForBento, { excludeNews: true });
-
-  // Compute recommendations
-  useEffect(() => {
-    if (!isSignedIn || !clerkUser?.id || !basePosts || !watchHistory) return;
-
-    const fetchRecs = async () => {
-      try {
-        const response = await fetch("/api/recommendations/compute", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Cache-Control": "no-cache",
-          },
-          body: JSON.stringify({
-            clerkId: clerkUser.id,
-            watchHistory: watchHistory.map((w) => ({
-              slug: w.slug,
-              totalSeconds: w.totalSeconds,
-            })),
-            posts: basePosts.map((p) => ({
-              slug: p.slug,
-              publishedAt: p.publishedAt,
-              viewCount: p.viewCount,
-              contentType: p.contentType,
-            })),
-          }),
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          setRecScores(data.recommendations || []);
-        }
-      } catch {
-        // Silently fail, fall back to default ordering
-      }
-    };
-
-    fetchRecs();
-  }, [isSignedIn, clerkUser?.id, basePosts, watchHistory, refreshKey]);
-
-  // Paginated query
-  const paginatedResult = useQuery(
-    api.blogPosts.getForBentoPaginated,
-    basePosts
-      ? {
-          excludeNews: true,
-          recommendationScores: recScores.length > 0 ? recScores : undefined,
-          limit: POSTS_PER_PAGE,
-          offset,
-        }
-      : "skip"
-  );
-
-  // Reset on recScores change
-  useEffect(() => {
-    if (recScores.length > 0 && !hasResetRef.current) {
-      setAccumulatedPosts([]);
-      setOffset(0);
-      hasResetRef.current = true;
-    }
-  }, [recScores]);
-
-  // Accumulate posts
-  useEffect(() => {
-    if (paginatedResult?.posts) {
-      setAccumulatedPosts((prev) => {
-        if (offset === 0) {
-          return paginatedResult.posts as BentoCardProps[];
-        }
-        const existingIds = new Set(prev.map((p) => p._id));
-        const newPosts = paginatedResult.posts.filter((p) => !existingIds.has(p._id));
-        return [...prev, ...(newPosts as BentoCardProps[])];
-      });
-      setIsLoadingMore(false);
-    }
-  }, [paginatedResult, offset]);
-
-  // Infinite scroll observer
-  const hasMoreRef = useRef(false);
-  const isLoadingMoreRef = useRef(false);
-  hasMoreRef.current = paginatedResult?.hasMore ?? false;
-  isLoadingMoreRef.current = isLoadingMore;
-
-  const handleLoadMore = useCallback(() => {
-    if (hasMoreRef.current && !isLoadingMoreRef.current) {
-      setIsLoadingMore(true);
-      setOffset((prev) => prev + POSTS_PER_PAGE);
-    }
-  }, []);
-
-  const hasPosts = accumulatedPosts.length > 0;
-
-  useEffect(() => {
-    const element = loadMoreRef.current;
-    if (!element) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) {
-          handleLoadMore();
-        }
-      },
-      { threshold: 0.1, rootMargin: "200px" }
-    );
-
-    observer.observe(element);
-    return () => observer.disconnect();
-  }, [handleLoadMore, hasPosts]);
-
-  // Cache for preventing flash
-  const articlePostsCache = useRef<BentoCardProps[]>([]);
-  if (accumulatedPosts.length > 0) {
-    articlePostsCache.current = accumulatedPosts;
-  }
-  const articlePosts = accumulatedPosts.length > 0 ? accumulatedPosts : articlePostsCache.current;
-
-  const isLoading = articlePosts.length === 0;
-  const hasMore = paginatedResult?.hasMore ?? false;
+  const hasPosts = articlePosts.length > 0;
 
   return (
     <>
@@ -216,7 +88,9 @@ export function AuthenticatedHome({ isLive = false, discordWidget }: Authenticat
         <meta name="description" content="Your personalized dashboard on Nevulo" />
       </Head>
 
-      <AuthenticatedNavbar />
+      <AuthenticatedNavbar hideBadges />
+
+      <GrainOverlay />
 
       <PageContainer>
         {/* Welcome Header */}
@@ -235,7 +109,7 @@ export function AuthenticatedHome({ isLive = false, discordWidget }: Authenticat
             )}
             <WelcomeText>
               <WelcomeGreeting>{getGreeting()}, {displayName.split(" ")[0]}</WelcomeGreeting>
-              <LevelProgress compact tier={convexUser?.tier as any} />
+              <LevelProgress compact showBadges mockLevel={mockLevel} />
             </WelcomeText>
           </WelcomeContent>
         </WelcomeSection>
@@ -252,16 +126,24 @@ export function AuthenticatedHome({ isLive = false, discordWidget }: Authenticat
 
         {/* Bento widget grid — sorted by interaction count */}
         <BentoWidgetGrid loading={!interactions}>
-          {sortedWidgets.map((widget) => {
-            const content = WIDGET_RENDERERS[widget.id]?.(widget.effectiveSize);
-            if (!content) return null;
-            const size = BENTO_SIZES[widget.effectiveSize];
-            return (
-              <BentoCell key={widget.id} $cols={size.cols}>
-                <WidgetTracker widgetId={widget.id}>{content}</WidgetTracker>
-              </BentoCell>
-            );
-          })}
+          {sortedWidgets
+            .filter((widget) => {
+              // Hide perks widget for free users
+              if (widget.id === "perks" && convexUser?.tier === "free") {
+                return false;
+              }
+              return true;
+            })
+            .map((widget) => {
+              const content = WIDGET_RENDERERS[widget.id]?.(widget.effectiveSize);
+              if (!content) return null;
+              const size = BENTO_SIZES[widget.effectiveSize];
+              return (
+                <BentoCell key={widget.id} $cols={size.cols}>
+                  <WidgetTracker widgetId={widget.id}>{content}</WidgetTracker>
+                </BentoCell>
+              );
+            })}
         </BentoWidgetGrid>
 
         {/* For You Section */}
@@ -286,10 +168,7 @@ export function AuthenticatedHome({ isLive = false, discordWidget }: Authenticat
           {/* Infinite scroll trigger */}
           {hasPosts && (
             <LoadMoreTrigger ref={loadMoreRef}>
-              {isLoadingMore && <LoadingIndicator>Loading more...</LoadingIndicator>}
-              {!hasMore && articlePosts.length > 10 && (
-                <EndMessage>You've seen it all!</EndMessage>
-              )}
+              {isLoadingMore && <LoadingSpinner />}
             </LoadMoreTrigger>
           )}
         </FeedSection>
@@ -439,16 +318,19 @@ const LoadMoreTrigger = styled.div`
   margin-top: 24px;
 `;
 
-const LoadingIndicator = styled.span`
-  font-size: 14px;
-  color: ${(props) => props.theme.textColor};
-  opacity: 0.6;
-`;
+const LoadingSpinner = styled.div`
+  width: 24px;
+  height: 24px;
+  border: 2px solid rgba(144, 116, 242, 0.2);
+  border-top-color: #9074f2;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
 
-const EndMessage = styled.span`
-  font-size: 14px;
-  color: ${(props) => props.theme.textColor};
-  opacity: 0.5;
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
 `;
 
 const TierPromoSection = styled.section`

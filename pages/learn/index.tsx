@@ -1,7 +1,5 @@
-import { useUser } from "@clerk/nextjs";
 import { useQuery } from "convex/react";
 import Head from "next/head";
-import { useCallback, useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import { Skeleton } from "../../components/generics/skeleton";
 import { BlogView } from "../../components/layout/blog";
@@ -18,154 +16,17 @@ import {
 import { SimpleNavbar } from "../../components/navbar/simple";
 import { api } from "../../convex/_generated/api";
 import { useBlogSearch } from "../../hooks/useBlogSearch";
-
-interface RecommendationScore {
-  slug: string;
-  score: number;
-}
-
-const POSTS_PER_PAGE = 20;
+import { useRecommendations } from "../../hooks/useRecommendations";
 
 export default function Learn() {
-  const { user, isSignedIn } = useUser();
-  const [recScores, setRecScores] = useState<RecommendationScore[]>([]);
-  // Refresh key changes on each page load to ensure fresh recommendations
-  const [refreshKey] = useState(() => Date.now());
-
-  // Infinite scroll state
-  const [offset, setOffset] = useState(0);
-  const [accumulatedPosts, setAccumulatedPosts] = useState<BentoCardProps[]>([]);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const loadMoreRef = useRef<HTMLDivElement>(null);
-  const hasResetRef = useRef(false);
-
   const newsPosts = useQuery(api.blogPosts.getForBento, { contentType: "news" });
-  const watchHistory = useQuery(
-    api.articleWatchTime.getUserWatchHistory,
-    isSignedIn ? { limit: 50 } : "skip",
-  );
-  const basePosts = useQuery(api.blogPosts.getForBento, { excludeNews: true });
 
-  useEffect(() => {
-    if (!isSignedIn || !user?.id || !basePosts || !watchHistory) return;
-
-    const fetchRecs = async () => {
-      try {
-        const response = await fetch("/api/recommendations/compute", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Cache-Control": "no-cache", // Prevent browser caching
-          },
-          body: JSON.stringify({
-            clerkId: user.id,
-            watchHistory: watchHistory.map((w) => ({
-              slug: w.slug,
-              totalSeconds: w.totalSeconds,
-            })),
-            // Pass full post metadata for recency-aware recommendations
-            posts: basePosts.map((p) => ({
-              slug: p.slug,
-              publishedAt: p.publishedAt,
-              viewCount: p.viewCount,
-              contentType: p.contentType,
-            })),
-          }),
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          setRecScores(data.recommendations || []);
-        }
-      } catch {
-        // Silently fail, fall back to default ordering
-      }
-    };
-
-    fetchRecs();
-  }, [isSignedIn, user?.id, basePosts, watchHistory, refreshKey]);
-
-  // Paginated query for infinite scroll
-  const paginatedResult = useQuery(
-    api.blogPosts.getForBentoPaginated,
-    basePosts
-      ? {
-          excludeNews: true,
-          recommendationScores: recScores.length > 0 ? recScores : undefined,
-          limit: POSTS_PER_PAGE,
-          offset,
-        }
-      : "skip",
-  );
-
-  // Reset accumulated posts when recScores change (personalization updated)
-  useEffect(() => {
-    if (recScores.length > 0 && !hasResetRef.current) {
-      setAccumulatedPosts([]);
-      setOffset(0);
-      hasResetRef.current = true;
-    }
-  }, [recScores]);
-
-  // Accumulate posts as we load more
-  useEffect(() => {
-    if (paginatedResult?.posts) {
-      setAccumulatedPosts((prev) => {
-        if (offset === 0) {
-          // First page - replace entirely
-          return paginatedResult.posts as BentoCardProps[];
-        }
-        // Subsequent pages - append, avoiding duplicates
-        const existingIds = new Set(prev.map((p) => p._id));
-        const newPosts = paginatedResult.posts.filter((p) => !existingIds.has(p._id));
-        return [...prev, ...(newPosts as BentoCardProps[])];
-      });
-      setIsLoadingMore(false);
-    }
-  }, [paginatedResult, offset]);
-
-  // Intersection Observer for infinite scroll
-  // Use refs to avoid recreating observer on every state change
-  const hasMoreRef = useRef(false);
-  const isLoadingMoreRef = useRef(false);
-
-  // Keep refs in sync with state
-  hasMoreRef.current = paginatedResult?.hasMore ?? false;
-  isLoadingMoreRef.current = isLoadingMore;
-
-  const handleLoadMore = useCallback(() => {
-    if (hasMoreRef.current && !isLoadingMoreRef.current) {
-      setIsLoadingMore(true);
-      setOffset((prev) => prev + POSTS_PER_PAGE);
-    }
-  }, []); // No deps - always reads from refs
-
-  // Track if we have posts to show (determines if LoadMoreTrigger is rendered)
-  const hasPosts = accumulatedPosts.length > 0;
-
-  useEffect(() => {
-    const element = loadMoreRef.current;
-    if (!element) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) {
-          handleLoadMore();
-        }
-      },
-      { threshold: 0.1, rootMargin: "200px" },
-    );
-
-    observer.observe(element);
-    return () => observer.disconnect();
-  }, [handleLoadMore, hasPosts]); // Re-run when posts become available
-
-  // Cache for preventing flash
-  const articlePostsCache = useRef<BentoCardProps[]>([]);
-  if (accumulatedPosts.length > 0) {
-    articlePostsCache.current = accumulatedPosts;
-  }
-  const articlePosts = accumulatedPosts.length > 0 ? accumulatedPosts : articlePostsCache.current;
+  // Recommendations + infinite scroll (shared hook)
+  const { posts: articlePosts, isLoading: isRecLoading, hasMore, loadMoreRef, isLoadingMore } = useRecommendations({
+    excludeNews: true,
+    excludeShorts: true,
+    postsPerPage: 20,
+  });
 
   // Track time on site for XP
   useTimeTracking();
@@ -187,8 +48,7 @@ export default function Learn() {
   } = useBlogSearch();
 
   // Show skeleton until we have both news posts and article posts populated
-  const isLoading = newsPosts === undefined || articlePosts.length === 0;
-  const hasMore = paginatedResult?.hasMore ?? false;
+  const isLoading = newsPosts === undefined || isRecLoading;
 
   return (
     <BlogView>
@@ -205,24 +65,23 @@ export default function Learn() {
           <LoadingSkeleton />
         ) : (
           <>
-            {/* Top row: User card + News */}
-            <TopRow>
-              <UserInfoCard />
-              {newsPosts.length > 0 && (
+            {/* Top row: News */}
+            {newsPosts.length > 0 && (
+              <TopRow>
                 <NewsColumn>
                   <SectionHeader $align="right">
                     <SectionTitle>news</SectionTitle>
                   </SectionHeader>
                   <NewsBubbles posts={newsPosts as BentoCardProps[]} />
                 </NewsColumn>
-              )}
-            </TopRow>
+              </TopRow>
+            )}
 
             {/* Articles section */}
             <Section>
               <SectionHeader>
                 <ArticlesHeaderRow>
-                  <SectionTitle>content</SectionTitle>
+                  <UserInfoCard />
                   <SearchBar value={query} onChange={setQuery} />
                 </ArticlesHeaderRow>
               </SectionHeader>
@@ -356,21 +215,22 @@ const NavbarWrapper = styled.div`
 `;
 
 const PageHeader = styled.div`
-  padding: 0 48px 0;
+  padding: 0 48px;
   max-width: 1400px;
   margin: 0 auto;
   margin-top: -30px;
+  margin-bottom: 0;
   display: flex;
   justify-content: flex-start;
 
   @media (max-width: 900px) {
-    padding: 0 16px 0;
+    padding: 0 16px;
   }
 `;
 
 const HeaderTitle = styled.h1`
   margin: 0;
-  font-size: 80px;
+  font-size: 40px;
   position: relative;
   left: 20px;
   font-weight: 900;
@@ -381,7 +241,7 @@ const HeaderTitle = styled.h1`
   width: fit-content;
 
   @media (max-width: 640px) {
-    font-size: 56px;
+    font-size: 28px;
   }
 `;
 
@@ -561,14 +421,8 @@ const SKELETON_LABEL_WIDTHS = [52, 78, 64, 45, 88, 56, 72, 94, 48, 82, 60, 75, 6
 function LoadingSkeleton() {
   return (
     <>
-      {/* Top row: User card skeleton + News skeleton */}
+      {/* Top row: News skeleton */}
       <TopRow>
-        <UserCardSkeleton>
-          <SkeletonAvatar />
-          <SkeletonName />
-          <SkeletonXpBadge />
-          <SkeletonNotificationBtn />
-        </UserCardSkeleton>
         <NewsColumn>
           <SectionHeader $align="right">
             <SectionTitle>news</SectionTitle>
@@ -583,7 +437,13 @@ function LoadingSkeleton() {
       {/* Articles section skeleton */}
       <SkeletonContentSection>
         <SectionHeader>
-          <SectionTitle>content</SectionTitle>
+          <ArticlesHeaderRow>
+            <UserCardSkeleton>
+              <SkeletonAvatar />
+              <SkeletonName />
+              <SkeletonXpBadge />
+            </UserCardSkeleton>
+          </ArticlesHeaderRow>
         </SectionHeader>
 
         {/* Label filter skeleton */}

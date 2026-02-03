@@ -3,6 +3,7 @@ import { faCrown, faStar } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Image from "next/image";
 import styled from "styled-components";
+import SuperLegendIcon from "../../assets/img/super-legend.png";
 import SuperLegend2Icon from "../../assets/img/super-legend-2.png";
 import { BadgeColors, BadgeDescriptions, BadgeNames, BadgeType } from "../../constants/badges";
 
@@ -75,9 +76,19 @@ export function SupporterBadge({
           alt={BadgeNames[type]}
           width={iconSize}
           height={iconSize}
-          style={{ flexShrink: 0 }}
+          style={{ flexShrink: 0, filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.4))" }}
         />
-      ) : type === BadgeType.SUPER_LEGEND ? null : (
+      ) : type === BadgeType.SUPER_LEGEND ? (
+        !showLabel ? (
+          <Image
+            src={SuperLegendIcon}
+            alt={BadgeNames[type]}
+            width={iconSize}
+            height={iconSize}
+            style={{ flexShrink: 0, filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.4))" }}
+          />
+        ) : null
+      ) : (
         <FontAwesomeIcon icon={icon} style={{ width: size === "small" ? 12 : 14, flexShrink: 0 }} />
       )}
       {(showLabel || expandOnHover) && (
@@ -112,29 +123,44 @@ const BadgeContainer = styled.div<{
 		border-color: ${(p) => p.$isSuperLegend ? "#c4811a" : `${p.$color}66`};
 	}
 
-	/* Founder badge glow effect */
+	/* Founder badge shimmer effect */
 	${(p) =>
     p.$isFounder &&
     `
-		box-shadow: 0 0 8px ${p.$color}55, 0 0 16px ${p.$color}33;
-		animation: founderGlow 2s ease-in-out infinite alternate;
+		position: relative;
 
-		@keyframes founderGlow {
-			from {
-				box-shadow: 0 0 8px ${p.$color}55, 0 0 16px ${p.$color}33;
-			}
-			to {
-				box-shadow: 0 0 12px ${p.$color}77, 0 0 24px ${p.$color}44;
-			}
+		&::after {
+			content: "";
+			position: absolute;
+			top: 0;
+			left: -100%;
+			width: 100%;
+			height: 100%;
+			background: linear-gradient(
+				90deg,
+				transparent 0%,
+				${p.$color}22 30%,
+				${p.$color}55 50%,
+				${p.$color}22 70%,
+				transparent 100%
+			);
+			animation: founderShimmer 2.5s ease-in-out infinite;
+			pointer-events: none;
+			border-radius: inherit;
+		}
+
+		@keyframes founderShimmer {
+			0% { left: -100%; }
+			100% { left: 100%; }
 		}
 	`}
 `;
 
 const BadgeLabel = styled.span<{ $expandOnHover: boolean; $isSuperLegend?: boolean }>`
-	font-family: ${(p) => p.$isSuperLegend ? "var(--font-sans), Inter, sans-serif" : "var(--font-mono)"};
-	font-weight: ${(p) => p.$isSuperLegend ? "800" : "600"};
+	font-family: "Inter", var(--font-sans), sans-serif;
+	font-weight: 700;
 	text-transform: uppercase;
-	letter-spacing: ${(p) => p.$isSuperLegend ? "0.2px" : "0.5px"};
+	letter-spacing: 0.3px;
 	white-space: nowrap;
 
 	${(p) =>

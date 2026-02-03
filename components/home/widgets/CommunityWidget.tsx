@@ -1,7 +1,10 @@
 import { useQuery } from "convex/react";
-import { Globe, MessageCircle, Pencil, Plus, Users } from "lucide-react";
+import { Pencil, Plus, Users } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import styled from "styled-components";
+import loungeIcon from "../../../assets/img/lounge.png";
+import personalAtIcon from "../../../assets/img/personal-at.png";
 import { api } from "../../../convex/_generated/api";
 import { LOUNGE_COLORS } from "../../../constants/theme";
 import type { DiscordWidget } from "../../../types/discord";
@@ -55,12 +58,12 @@ export function CommunityWidget({ discordWidget }: CommunityWidgetProps) {
 
         <CommunityCard href="https://lounge.nev.so" target="_blank" rel="noopener noreferrer" $color={LOUNGE_COLORS.tier1}>
           <CardIcon $color={LOUNGE_COLORS.tier1}>
-            <MessageCircle size={18} />
+            <Image src={loungeIcon} alt="Lounge" width={18} height={18} />
           </CardIcon>
           <CardContent>
             <CardTitle>Lounge</CardTitle>
             <CardMeta>
-              <span>Supporter chat</span>
+              <span>lounge.nev.so</span>
             </CardMeta>
           </CardContent>
         </CommunityCard>
@@ -71,7 +74,7 @@ export function CommunityWidget({ discordWidget }: CommunityWidgetProps) {
         $color="#22c55e"
       >
         <CardIcon $color="#22c55e">
-          <Globe size={18} />
+          <Image src={personalAtIcon} alt="Personal page" width={18} height={18} />
         </CardIcon>
         <CardContent>
           <CardTitle>

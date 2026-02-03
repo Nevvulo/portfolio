@@ -15,11 +15,14 @@ const MDXEditor = dynamic(
 );
 
 import {
+  Archive,
   ArrowDown,
   ArrowUp,
   BarChart3,
   Calendar,
+  Edit2,
   Eye,
+  EyeOff,
   FileText,
   Heart,
   Info,
@@ -32,6 +35,7 @@ import {
   Plus,
   RefreshCw,
   Search,
+  Send,
   ThumbsUp,
   Trash2,
   TrendingUp,
@@ -52,10 +56,7 @@ import {
   YAxis,
 } from "recharts";
 import { BlogView } from "../../../components/layout/blog";
-import {
-  type AdminBentoCardProps,
-  DraggableBentoGrid,
-} from "../../../components/learn/DraggableBentoGrid";
+import { type AdminBentoCardProps } from "../../../components/learn/DraggableBentoGrid";
 import { SimpleNavbar } from "../../../components/navbar/simple";
 import type { Doc, Id } from "../../../convex/_generated/dataModel";
 import { useTierAccess } from "../../../hooks/useTierAccess";
@@ -1020,14 +1021,13 @@ function PostsAnalyticsTab({ postsData, days }: { postsData: any; days: number }
   );
 }
 
-// Posts Tab - matches Learn homepage structure with separate news and content sections
+// Posts Tab - Simple list sorted by most recent first
 function PostsTab() {
-  const posts = useQuery(api.blogPosts.list);
+  const posts = useQuery(api.blogPosts.list, {});
   const updateBentoLayout = useMutation(api.blogPosts.updateBentoLayout);
   const [filter, setFilter] = useState<"all" | "published" | "draft" | "archived">("all");
   const [editingPost, setEditingPost] = useState<BlogPost | null>(null);
   const [isCreating, setIsCreating] = useState(false);
-  const [localPosts, setLocalPosts] = useState<AdminBentoCardProps[]>([]);
   const [saving, setSaving] = useState(false);
 
   const deletePost = useMutation(api.blogPosts.deletePost);
@@ -1035,71 +1035,30 @@ function PostsTab() {
   const unpublishPost = useMutation(api.blogPosts.unpublish);
   const archivePost = useMutation(api.blogPosts.archive);
 
-  // Transform posts to AdminBentoCardProps and sort by bentoOrder
-  useEffect(() => {
-    if (posts) {
-      const sorted = [...posts].sort((a, b) => a.bentoOrder - b.bentoOrder);
-      const transformed: AdminBentoCardProps[] = sorted.map((p) => ({
-        _id: p._id,
-        slug: p.slug,
-        title: p.title,
-        description: p.description,
-        contentType: p.contentType,
-        coverImage: p.coverImage,
-        youtubeId: p.youtubeId,
-        labels: p.labels,
-        difficulty: p.difficulty,
-        readTimeMins: p.readTimeMins,
-        bentoSize: p.bentoSize,
-        viewCount: p.viewCount ?? 0,
-        publishedAt: p.publishedAt,
-        status: p.status,
-      }));
-      setLocalPosts(transformed);
-    }
-  }, [posts]);
+  // Sort by most recent first (publishedAt or createdAt)
+  const sortedPosts = posts
+    ? [...posts].sort((a, b) => {
+        const aDate = a.publishedAt ?? a.createdAt ?? 0;
+        const bDate = b.publishedAt ?? b.createdAt ?? 0;
+        return bDate - aDate; // Most recent first
+      })
+    : [];
 
-  // Filter posts based on current filter, then split into news vs content
-  const filteredPosts = localPosts.filter((post) => {
+  // Filter posts based on current filter
+  const filteredPosts = sortedPosts.filter((post) => {
     if (filter === "all") return true;
     return post.status === filter;
   });
 
-  // Split into news and content (articles/videos) - matching Learn homepage
-  const newsPosts = filteredPosts.filter((post) => post.contentType === "news");
-  const contentPosts = filteredPosts.filter((post) => post.contentType !== "news");
-
-  // Auto-save function for reorder/size changes
-  const autoSave = async (updatedPosts: AdminBentoCardProps[]) => {
+  const handleSizeChange = async (postId: string, size: AdminBentoCardProps["bentoSize"]) => {
     setSaving(true);
     try {
-      const updates = updatedPosts.map((post, index) => ({
-        postId: post._id,
-        bentoOrder: index,
-        bentoSize: post.bentoSize,
-      }));
-      await updateBentoLayout({ updates });
+      await updateBentoLayout({
+        updates: [{ postId: postId as Id<"blogPosts">, bentoSize: size }],
+      });
     } finally {
       setSaving(false);
     }
-  };
-
-  const handleNewsReorder = (reorderedNews: AdminBentoCardProps[]) => {
-    const allPosts = [...reorderedNews, ...contentPosts];
-    setLocalPosts(allPosts);
-    autoSave(allPosts);
-  };
-
-  const handleContentReorder = (reorderedContent: AdminBentoCardProps[]) => {
-    const allPosts = [...newsPosts, ...reorderedContent];
-    setLocalPosts(allPosts);
-    autoSave(allPosts);
-  };
-
-  const handleSizeChange = (postId: string, size: AdminBentoCardProps["bentoSize"]) => {
-    const newPosts = localPosts.map((p) => (p._id === postId ? { ...p, bentoSize: size } : p));
-    setLocalPosts(newPosts);
-    autoSave(newPosts);
   };
 
   const handleEdit = (postId: string) => {
@@ -1163,60 +1122,92 @@ function PostsTab() {
       </PostsHeader>
 
       <LayoutHint>
-        Drag posts to reorder. Click S/M/L/B/F to change size. Changes save automatically.
+        Click S/M/L/B/F to change size. Posts sorted by most recent first.
       </LayoutHint>
 
       {!posts ? (
         <p style={{ padding: "0 24px" }}>Loading posts...</p>
+      ) : filteredPosts.length === 0 ? (
+        <EmptyPostsState>
+          <h2>No {filter === "all" ? "" : filter} posts</h2>
+          <p>{filter === "all" ? "Create your first post to get started" : `No ${filter} posts found`}</p>
+        </EmptyPostsState>
       ) : (
-        <>
-          {/* NEWS SECTION - compact flex layout on top, matching Learn homepage */}
-          {newsPosts.length > 0 && (
-            <AdminSection>
-              <AdminSectionHeader>news</AdminSectionHeader>
-              <DraggableBentoGrid
-                posts={newsPosts}
-                onReorder={handleNewsReorder}
-                onSizeChange={handleSizeChange}
-                onEdit={handleEdit}
-                onDelete={handleDelete}
-                onPublish={handlePublish}
-                onUnpublish={handleUnpublish}
-                onArchive={handleArchive}
-                compact
-              />
-            </AdminSection>
-          )}
-
-          {/* CONTENT SECTION - 5-column bento grid, matching Learn homepage */}
-          <AdminSection>
-            <AdminSectionHeader>content</AdminSectionHeader>
-            <DraggableBentoGrid
-              posts={contentPosts}
-              onReorder={handleContentReorder}
-              onSizeChange={handleSizeChange}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
-              onPublish={handlePublish}
-              onUnpublish={handleUnpublish}
-              onArchive={handleArchive}
-              emptyMessage={
-                <>
-                  <h2
-                    style={{ margin: "0 0 8px", fontSize: "24px", fontFamily: "var(--font-sans)" }}
-                  >
-                    No {filter === "all" ? "" : filter} content
-                  </h2>
-                  <p style={{ margin: 0, fontSize: "16px", opacity: 0.7 }}>
-                    {filter === "all"
-                      ? "Create your first post to get started"
-                      : `No ${filter} posts found`}
-                  </p>
-                </>
-              }
-            />
-          </AdminSection>
-        </>
+        <AdminPostsList>
+          {filteredPosts.map((post) => (
+            <AdminPostCard key={post._id}>
+              <AdminPostCardInner
+                href={`/learn/${post.slug}`}
+                target="_blank"
+                onClick={(e) => e.preventDefault()}
+              >
+                {post.coverImage || post.youtubeId ? (
+                  <AdminPostImage>
+                    <img
+                      src={post.youtubeId ? `https://img.youtube.com/vi/${post.youtubeId}/mqdefault.jpg` : post.coverImage}
+                      alt={post.title}
+                    />
+                    {post.contentType === "video" && <VideoIndicator><Play size={16} /></VideoIndicator>}
+                  </AdminPostImage>
+                ) : (
+                  <AdminPostImagePlaceholder>
+                    {post.contentType === "news" ? <Newspaper size={24} /> : <FileText size={24} />}
+                  </AdminPostImagePlaceholder>
+                )}
+                <AdminPostInfo>
+                  <AdminPostTitle>{post.title}</AdminPostTitle>
+                  <AdminPostMeta>
+                    {post.difficulty && <DifficultyPill $difficulty={post.difficulty}>{post.difficulty}</DifficultyPill>}
+                    {post.labels[0] && <LabelPill>{post.labels[0].replace(/-/g, " ")}</LabelPill>}
+                    <TypePill $type={post.contentType}>{post.contentType}</TypePill>
+                    <StatusPill $status={post.status}>{post.status}</StatusPill>
+                  </AdminPostMeta>
+                  <AdminPostDate>
+                    {post.publishedAt
+                      ? new Date(post.publishedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+                      : "Draft"}
+                  </AdminPostDate>
+                </AdminPostInfo>
+              </AdminPostCardInner>
+              <AdminPostActions>
+                <SizeButtons>
+                  {(["small", "medium", "large", "banner", "featured"] as const).map((size) => (
+                    <SizeBtn
+                      key={size}
+                      $active={post.bentoSize === size}
+                      onClick={() => handleSizeChange(post._id, size)}
+                    >
+                      {size.charAt(0).toUpperCase()}
+                    </SizeBtn>
+                  ))}
+                </SizeButtons>
+                <ActionBtns>
+                  <ActionBtn onClick={() => handleEdit(post._id)} title="Edit">
+                    <Edit2 size={14} />
+                  </ActionBtn>
+                  {post.status === "draft" && (
+                    <ActionBtn onClick={() => handlePublish(post._id)} title="Publish" $success>
+                      <Send size={14} />
+                    </ActionBtn>
+                  )}
+                  {post.status === "published" && (
+                    <ActionBtn onClick={() => handleUnpublish(post._id)} title="Unpublish">
+                      <EyeOff size={14} />
+                    </ActionBtn>
+                  )}
+                  {post.status !== "archived" && (
+                    <ActionBtn onClick={() => handleArchive(post._id)} title="Archive">
+                      <Archive size={14} />
+                    </ActionBtn>
+                  )}
+                  <ActionBtn onClick={() => handleDelete(post._id)} title="Delete" $danger>
+                    <Trash2 size={14} />
+                  </ActionBtn>
+                </ActionBtns>
+              </AdminPostActions>
+            </AdminPostCard>
+          ))}
+        </AdminPostsList>
       )}
     </TabPanel>
   );
@@ -1942,37 +1933,6 @@ const StatLabel = styled.div`
   margin-top: 4px;
 `;
 
-const PostListItem = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px;
-  background: ${(p) => p.theme.borderColor || "#222"};
-  border-radius: 8px;
-`;
-
-const PostRank = styled.div`
-  font-size: 14px;
-  font-weight: 600;
-  color: ${(p) => p.theme.textColor};
-  width: 32px;
-`;
-
-const PostInfo = styled.div`
-  flex: 1;
-`;
-
-const PostTitle = styled.div`
-  font-size: 14px;
-  font-weight: 500;
-  color: ${(p) => p.theme.contrast};
-`;
-
-const PostMeta = styled.div`
-  font-size: 12px;
-  color: ${(p) => p.theme.textColor};
-`;
-
 const PostsHeader = styled.div`
   display: flex;
   justify-content: space-between;
@@ -2041,42 +2001,6 @@ const ActionButton = styled.button<{ $secondary?: boolean; $danger?: boolean }>`
   }
 `;
 
-const PostCard = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px;
-  background: ${(p) => p.theme.borderColor || "#222"};
-  border-radius: 10px;
-`;
-
-const PostCardContent = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 12px;
-`;
-
-const PostCardIcon = styled.div`
-  color: ${(p) => p.theme.textColor};
-`;
-
-const PostCardInfo = styled.div``;
-
-const PostCardTitle = styled.div`
-  font-size: 15px;
-  font-weight: 500;
-  color: ${(p) => p.theme.contrast};
-`;
-
-const PostCardMeta = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 12px;
-  color: ${(p) => p.theme.textColor};
-  margin-top: 4px;
-`;
-
 const StatusBadge = styled.span<{ $status: string }>`
   padding: 2px 8px;
   border-radius: 4px;
@@ -2086,53 +2010,6 @@ const StatusBadge = styled.span<{ $status: string }>`
   background: ${(p) =>
     p.$status === "published" ? "#22c55e" : p.$status === "draft" ? "#f59e0b" : "#6b7280"};
   color: white;
-`;
-
-const PostCardActions = styled.div`
-  display: flex;
-  gap: 8px;
-`;
-
-const IconButton = styled.button<{ $danger?: boolean; $success?: boolean }>`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border: none;
-  border-radius: 6px;
-  background: transparent;
-  color: ${(p) => (p.$danger ? "#ef4444" : p.$success ? "#22c55e" : p.theme.textColor)};
-  cursor: pointer;
-  transition: all 0.2s;
-
-  &:hover {
-    background: ${(p) => p.theme.background};
-  }
-
-  &:disabled {
-    cursor: default;
-    opacity: 0.7;
-  }
-
-  .spin {
-    animation: spin 1s linear infinite;
-  }
-
-  @keyframes spin {
-    from {
-      transform: rotate(0deg);
-    }
-    to {
-      transform: rotate(360deg);
-    }
-  }
-`;
-
-const EmptyState = styled.div`
-  text-align: center;
-  padding: 40px;
-  color: ${(p) => p.theme.textColor};
 `;
 
 // Editor Styles
@@ -2282,51 +2159,10 @@ const VisibilityHint = styled.div`
   }
 `;
 
-const TextArea = styled.textarea`
-  padding: 12px;
-  border: 1px solid ${(p) => p.theme.borderColor || "#333"};
-  border-radius: 8px;
-  background: ${(p) => p.theme.background};
-  color: ${(p) => p.theme.contrast};
-  font-size: 14px;
-  font-family: "JetBrains Mono", monospace;
-  resize: vertical;
-  min-height: 300px;
-
-  &:focus {
-    outline: none;
-    border-color: ${(p) => p.theme.contrast};
-  }
-`;
-
-// Bento Layout Styles
-const LayoutHeader = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px;
-`;
-
 const LayoutHint = styled.p`
   font-size: 13px;
   color: ${(p) => p.theme.textColor};
   margin: 0 0 20px;
-  padding: 0 24px;
-`;
-
-// Admin section styling - matches Learn homepage
-const AdminSection = styled.div`
-  margin-bottom: 40px;
-`;
-
-const AdminSectionHeader = styled.h2`
-  font-size: 14px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 1.5px;
-  color: ${(p) => p.theme.textColor};
-  opacity: 0.6;
-  margin: 0 0 16px;
   padding: 0 24px;
 `;
 
@@ -2352,25 +2188,6 @@ const SavingIndicator = styled.span`
   }
 `;
 
-const BentoSectionLabel = styled.h3`
-  font-size: 14px;
-  font-weight: 600;
-  color: ${(p) => p.theme.contrast};
-  margin: 0 0 12px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid ${(p) => p.theme.borderColor || "#333"};
-`;
-
-const EmptySection = styled.div`
-  padding: 24px;
-  text-align: center;
-  color: ${(p) => p.theme.textColor};
-  background: ${(p) => p.theme.borderColor || "#222"};
-  border-radius: 10px;
-  font-size: 14px;
-  opacity: 0.7;
-`;
-
 // Migration Styles
 const MigrationActions = styled.div`
   display: flex;
@@ -2385,94 +2202,6 @@ const WarningBox = styled.div`
   border-radius: 8px;
   color: #92400e;
   font-size: 14px;
-`;
-
-// ============================================
-// DISCORD TAB STYLES
-// ============================================
-
-const DiscordSection = styled.div`
-  margin-top: 24px;
-  padding: 24px;
-  background: ${(p) => p.theme.postBackground || "rgba(255, 255, 255, 0.03)"};
-  border: 1px solid ${(p) => p.theme.borderColor || "#333"};
-  border-radius: 12px;
-`;
-
-const WebhookInputContainer = styled.div`
-  position: relative;
-`;
-
-const WebhookHint = styled.div`
-  margin-top: 8px;
-  font-size: 12px;
-  color: ${(p) => p.theme.textColor};
-  opacity: 0.7;
-  font-family: monospace;
-`;
-
-const ToggleRow = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 0;
-  border-top: 1px solid ${(p) => p.theme.borderColor || "#333"};
-  margin-top: 16px;
-`;
-
-const ToggleLabel = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 14px;
-  font-weight: 500;
-  color: ${(p) => p.theme.contrast};
-`;
-
-const Toggle = styled.button<{ $active: boolean }>`
-  width: 48px;
-  height: 26px;
-  border-radius: 13px;
-  border: none;
-  background: ${(p) => (p.$active ? "#22c55e" : p.theme.borderColor || "#333")};
-  cursor: pointer;
-  position: relative;
-  transition: background 0.2s;
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-`;
-
-const ToggleKnob = styled.div<{ $active: boolean }>`
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: white;
-  position: absolute;
-  top: 3px;
-  left: ${(p) => (p.$active ? "25px" : "3px")};
-  transition: left 0.2s;
-`;
-
-const Message = styled.div<{ $type: "success" | "error" }>`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 16px;
-  border-radius: 8px;
-  margin: 16px 0;
-  font-size: 14px;
-  background: ${(p) => (p.$type === "success" ? "#22c55e20" : "#ef444420")};
-  color: ${(p) => (p.$type === "success" ? "#22c55e" : "#ef4444")};
-  border: 1px solid ${(p) => (p.$type === "success" ? "#22c55e40" : "#ef444440")};
-`;
-
-const DiscordActions = styled.div`
-  display: flex;
-  gap: 12px;
-  margin-top: 20px;
 `;
 
 const InfoBox = styled.div`
@@ -3143,4 +2872,264 @@ const NoResults = styled.div`
   font-size: 13px;
   color: ${(p) => p.theme.textColor};
   opacity: 0.5;
+`;
+
+// ========== ADMIN POSTS LIST STYLES ==========
+const EmptyPostsState = styled.div`
+  padding: 60px 24px;
+  text-align: center;
+  color: ${(p) => p.theme.textColor};
+
+  h2 {
+    margin: 0 0 8px;
+    font-size: 24px;
+    font-family: var(--font-sans);
+    color: ${(p) => p.theme.contrast};
+  }
+
+  p {
+    margin: 0;
+    font-size: 16px;
+    opacity: 0.7;
+  }
+`;
+
+const AdminPostsList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 0 24px;
+`;
+
+const AdminPostCard = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 16px;
+  background: ${(p) => p.theme.postBackground};
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  transition: border-color 0.2s ease;
+
+  &:hover {
+    border-color: rgba(144, 116, 242, 0.4);
+  }
+`;
+
+const AdminPostCardInner = styled.a`
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex: 1;
+  min-width: 0;
+  text-decoration: none;
+  color: inherit;
+`;
+
+const AdminPostImage = styled.div`
+  position: relative;
+  width: 120px;
+  height: 68px;
+  flex-shrink: 0;
+  border-radius: 8px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.05);
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+`;
+
+const AdminPostImagePlaceholder = styled.div`
+  width: 120px;
+  height: 68px;
+  flex-shrink: 0;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.3);
+`;
+
+const VideoIndicator = styled.div`
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 32px;
+  height: 32px;
+  background: rgba(0, 0, 0, 0.7);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+`;
+
+const AdminPostInfo = styled.div`
+  flex: 1;
+  min-width: 0;
+`;
+
+const AdminPostTitle = styled.h3`
+  margin: 0 0 6px;
+  font-size: 16px;
+  font-weight: 600;
+  color: ${(p) => p.theme.contrast};
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
+
+const AdminPostMeta = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+`;
+
+const AdminPostDate = styled.span`
+  font-size: 12px;
+  color: ${(p) => p.theme.textColor};
+  opacity: 0.6;
+`;
+
+const DifficultyPill = styled.span<{ $difficulty: string }>`
+  font-size: 10px;
+  font-weight: 500;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  text-transform: lowercase;
+  background: ${(p) =>
+    p.$difficulty === "beginner" ? "rgba(34, 197, 94, 0.12)" :
+    p.$difficulty === "intermediate" ? "rgba(251, 191, 36, 0.12)" :
+    "rgba(239, 68, 68, 0.12)"};
+  border: 1px solid ${(p) =>
+    p.$difficulty === "beginner" ? "rgba(34, 197, 94, 0.3)" :
+    p.$difficulty === "intermediate" ? "rgba(251, 191, 36, 0.3)" :
+    "rgba(239, 68, 68, 0.3)"};
+  color: ${(p) =>
+    p.$difficulty === "beginner" ? "#4ade80" :
+    p.$difficulty === "intermediate" ? "#fbbf24" :
+    "#f87171"};
+`;
+
+const LabelPill = styled.span`
+  font-size: 10px;
+  font-weight: 500;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(144, 116, 242, 0.15);
+  border: 1px solid rgba(144, 116, 242, 0.3);
+  color: #a5a3f5;
+`;
+
+const TypePill = styled.span<{ $type: string }>`
+  font-size: 10px;
+  font-weight: 500;
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-transform: capitalize;
+  background: ${(p) =>
+    p.$type === "video" ? "rgba(239, 68, 68, 0.12)" :
+    p.$type === "news" ? "rgba(59, 130, 246, 0.12)" :
+    "rgba(255, 255, 255, 0.08)"};
+  border: 1px solid ${(p) =>
+    p.$type === "video" ? "rgba(239, 68, 68, 0.3)" :
+    p.$type === "news" ? "rgba(59, 130, 246, 0.3)" :
+    "rgba(255, 255, 255, 0.15)"};
+  color: ${(p) =>
+    p.$type === "video" ? "#f87171" :
+    p.$type === "news" ? "#60a5fa" :
+    "rgba(255, 255, 255, 0.7)"};
+`;
+
+const StatusPill = styled.span<{ $status?: string }>`
+  font-size: 10px;
+  font-weight: 500;
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-transform: capitalize;
+  background: ${(p) =>
+    p.$status === "published" ? "rgba(34, 197, 94, 0.12)" :
+    p.$status === "archived" ? "rgba(107, 114, 128, 0.12)" :
+    "rgba(251, 191, 36, 0.12)"};
+  border: 1px solid ${(p) =>
+    p.$status === "published" ? "rgba(34, 197, 94, 0.3)" :
+    p.$status === "archived" ? "rgba(107, 114, 128, 0.3)" :
+    "rgba(251, 191, 36, 0.3)"};
+  color: ${(p) =>
+    p.$status === "published" ? "#4ade80" :
+    p.$status === "archived" ? "#9ca3af" :
+    "#fbbf24"};
+`;
+
+const AdminPostActions = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+`;
+
+const SizeButtons = styled.div`
+  display: flex;
+  gap: 4px;
+`;
+
+const SizeBtn = styled.button<{ $active?: boolean }>`
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 1px solid ${(p) => p.$active ? "rgba(144, 116, 242, 0.6)" : "rgba(255, 255, 255, 0.1)"};
+  background: ${(p) => p.$active ? "rgba(144, 116, 242, 0.3)" : "rgba(255, 255, 255, 0.05)"};
+  color: ${(p) => p.$active ? "#fff" : p.theme.textColor};
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover {
+    background: rgba(144, 116, 242, 0.2);
+    border-color: rgba(144, 116, 242, 0.4);
+  }
+`;
+
+const ActionBtns = styled.div`
+  display: flex;
+  gap: 4px;
+`;
+
+const ActionBtn = styled.button<{ $danger?: boolean; $success?: boolean }>`
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 1px solid ${(p) =>
+    p.$danger ? "rgba(239, 68, 68, 0.3)" :
+    p.$success ? "rgba(34, 197, 94, 0.3)" :
+    "rgba(255, 255, 255, 0.1)"};
+  background: ${(p) =>
+    p.$danger ? "rgba(239, 68, 68, 0.1)" :
+    p.$success ? "rgba(34, 197, 94, 0.1)" :
+    "rgba(255, 255, 255, 0.05)"};
+  color: ${(p) =>
+    p.$danger ? "#f87171" :
+    p.$success ? "#4ade80" :
+    p.theme.textColor};
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+
+  &:hover {
+    background: ${(p) =>
+      p.$danger ? "rgba(239, 68, 68, 0.2)" :
+      p.$success ? "rgba(34, 197, 94, 0.2)" :
+      "rgba(255, 255, 255, 0.1)"};
+  }
 `;

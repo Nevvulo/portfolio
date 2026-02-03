@@ -1,7 +1,5 @@
 import { SignInButton, UserButton, useUser } from "@clerk/nextjs";
 import { useQuery } from "convex/react";
-import { Bell } from "lucide-react";
-import Link from "next/link";
 import styled, { keyframes } from "styled-components";
 import { api } from "../../convex/_generated/api";
 
@@ -12,7 +10,6 @@ interface UserInfoCardProps {
 export function UserInfoCard({ className }: UserInfoCardProps) {
   const { isSignedIn, user, isLoaded } = useUser();
   const experienceData = useQuery(api.experience.getMyExperience);
-  const notifications = useQuery(api.notifications.getUnreadCount, isSignedIn ? {} : "skip");
 
   if (!isLoaded) {
     return (
@@ -34,8 +31,6 @@ export function UserInfoCard({ className }: UserInfoCardProps) {
   const currentXp = experienceData?.currentXp ?? 0;
   const xpForNextLevel = experienceData?.xpForNextLevel ?? 10;
   const progressPercent = experienceData?.progressPercent ?? 0;
-  const unreadCount = notifications ?? 0;
-
   return (
     <CardContainer className={className}>
       <CardContent>
@@ -65,13 +60,6 @@ export function UserInfoCard({ className }: UserInfoCardProps) {
             {currentXp}/{xpForNextLevel}
           </XpNumbers>
         </XpDisplay>
-
-        <NotificationButton href="/account">
-          <Bell size={14} />
-          {unreadCount > 0 && (
-            <NotificationBadge>{unreadCount > 99 ? "99+" : unreadCount}</NotificationBadge>
-          )}
-        </NotificationButton>
       </CardContent>
     </CardContainer>
   );
@@ -91,7 +79,7 @@ function SignedOutState() {
     <SignedOutContainer>
       <SignedOutText>Sign in for a personalized experience</SignedOutText>
       <SignInButton mode="modal">
-        <SignInBtn>Sign In</SignInBtn>
+        <SignInBtn>login</SignInBtn>
       </SignInButton>
     </SignedOutContainer>
   );
@@ -143,8 +131,8 @@ function CircularProgress({ progress, children }: { progress: number; children: 
 const CardContainer = styled.div`
   background: linear-gradient(135deg, rgba(144, 116, 242, 0.15) 0%, rgba(144, 116, 242, 0.05) 100%);
   border: 1px solid rgba(144, 116, 242, 0.3);
-  border-radius: 12px;
-  padding: 12px 16px;
+  border-radius: 10px;
+  padding: 8px 14px;
   backdrop-filter: blur(10px);
   flex-shrink: 0;
   width: fit-content;
@@ -220,40 +208,6 @@ const DisplayName = styled.div`
   font-family: var(--font-sans);
 `;
 
-const NotificationButton = styled(Link)`
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  background: rgba(255, 255, 255, 0.08);
-  border-radius: 6px;
-  color: ${(props) => props.theme.textColor};
-  text-decoration: none;
-  transition: all 0.2s;
-  position: relative;
-  margin-left: auto;
-
-  &:hover {
-    background: rgba(144, 116, 242, 0.2);
-    color: ${(props) => props.theme.contrast};
-  }
-`;
-
-const NotificationBadge = styled.span`
-  position: absolute;
-  top: -4px;
-  right: -4px;
-  background: #e74c3c;
-  color: white;
-  font-size: 9px;
-  font-weight: 700;
-  padding: 2px 5px;
-  border-radius: 8px;
-  min-width: 14px;
-  text-align: center;
-`;
-
 // Loading state styles
 const pulse = keyframes`
   0%, 100% { opacity: 0.4; }
@@ -297,20 +251,22 @@ const SignedOutText = styled.p`
 `;
 
 const SignInBtn = styled.button`
-  padding: 8px 16px;
-  background: linear-gradient(135deg, #9074f2, #7c5ce0);
-  border: none;
-  border-radius: 6px;
-  color: white;
-  font-size: 13px;
+  font-family: var(--font-mono);
+  font-size: 11px;
   font-weight: 600;
+  letter-spacing: 1.2px;
+  color: ${(props) => props.theme.contrast};
+  background: rgba(79, 77, 193, 0.2);
+  border: 1px solid rgba(79, 77, 193, 0.4);
+  padding: 6px 12px;
+  border-radius: 6px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
   margin-left: auto;
 
   &:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(144, 116, 242, 0.4);
+    background: rgba(79, 77, 193, 0.3);
+    border-color: rgba(79, 77, 193, 0.6);
   }
 `;
 

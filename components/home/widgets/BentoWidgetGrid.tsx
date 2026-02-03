@@ -144,12 +144,12 @@ export function BentoCell({ $cols, children }: BentoCellProps) {
 function BentoSkeleton() {
   return (
     <SkeletonContainer>
-      <SkeletonCard $width="66%" $height="220px" />
-      <SkeletonCard $width="32%" $height="100px" />
-      <SkeletonCard $width="32%" $height="180px" />
-      <SkeletonCard $width="32%" $height="160px" />
-      <SkeletonCard $width="32%" $height="200px" />
-      <SkeletonCard $width="100%" $height="140px" />
+      <SkeletonCard $col="span 2" $height="220px" />
+      <SkeletonCard $col="span 1" $height="100px" />
+      <SkeletonCard $col="span 1" $height="180px" />
+      <SkeletonCard $col="span 1" $height="160px" />
+      <SkeletonCard $col="span 1" $height="200px" />
+      <SkeletonCard $col="span 3" $height="140px" />
     </SkeletonContainer>
   );
 }
@@ -160,21 +160,26 @@ const shimmer = keyframes`
 `;
 
 const SkeletonContainer = styled.div`
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
   gap: ${GAP}px;
   padding: 0 48px;
   max-width: 1200px;
   margin: 0 auto 24px;
 
+  @media (max-width: 1199px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
   @media (max-width: 768px) {
+    grid-template-columns: 1fr;
     padding: 0 16px;
     margin-bottom: 16px;
   }
 `;
 
-const SkeletonCard = styled.div<{ $width: string; $height: string }>`
-  width: calc(${(p) => p.$width} - 8px);
+const SkeletonCard = styled.div<{ $col: string; $height: string }>`
+  grid-column: ${(p) => p.$col};
   height: ${(p) => p.$height};
   border-radius: 16px;
   background: linear-gradient(
@@ -186,8 +191,12 @@ const SkeletonCard = styled.div<{ $width: string; $height: string }>`
   background-size: 800px 100%;
   animation: ${shimmer} 1.5s infinite linear;
 
+  @media (max-width: 1199px) {
+    grid-column: ${(p) => p.$col === "span 3" ? "span 2" : p.$col};
+  }
+
   @media (max-width: 768px) {
-    width: 100%;
+    grid-column: span 1;
   }
 `;
 

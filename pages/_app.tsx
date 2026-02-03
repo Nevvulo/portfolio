@@ -69,6 +69,19 @@ const clerkAppearance = {
     "userButtonPopoverActionButton:hover": {
       color: "#fff",
     },
+    userButtonPopoverCustomItemButton: {
+      color: "#fff",
+      "&:hover": {
+        color: "#fff",
+        backgroundColor: "rgba(79, 77, 193, 0.3)",
+      },
+    },
+    userButtonPopoverCustomItemButtonText: {
+      color: "#fff",
+    },
+    userButtonPopoverCustomItemButtonIcon: {
+      color: "#fff",
+    },
     userButtonPopoverFooter: {
       color: "#bdbdbd",
     },

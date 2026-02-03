@@ -1,13 +1,14 @@
 import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
 import { useQuery } from "convex/react";
-import { Calendar, ChevronLeft, ChevronRight, Menu, Play, X, Zap } from "lucide-react";
+import { Calendar, ChevronLeft, ChevronRight, Menu, Package, Play, Radio, X, Zap } from "lucide-react";
 import Head from "next/head";
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import styled, { keyframes } from "styled-components";
 import GolfquestBanner from "../assets/img/games/golfquest.png";
 import NevuloLogoSrc from "../assets/svg/nevulo-huge-bold-svg.svg";
+import { GrainOverlay } from "../components/backgrounds/GrainOverlay";
 import { SupporterBadges } from "../components/badges/supporter-badges";
 import { SocialLinks } from "../components/generics";
 import { AnnouncementBanner } from "../components/generics/announcement-banner";
@@ -92,8 +93,8 @@ export default function Home({ discordWidget, isLive: serverIsLive }: HomeProps)
 
   const isLive = isLiveOverride !== null ? isLiveOverride : serverIsLive;
 
-  // Fetch learn posts from Convex
-  const learnPosts = useQuery(api.blogPosts.getForBento, { excludeNews: true });
+  // Fetch learn posts from Convex (same as /learn: exclude news and shorts)
+  const learnPosts = useQuery(api.blogPosts.getForBento, { excludeNews: true, excludeShorts: true });
 
   const handleIntroComplete = () => {
     setShowCanvasIntro(false);
@@ -117,6 +118,9 @@ export default function Home({ discordWidget, isLive: serverIsLive }: HomeProps)
     p.slug === "unloan" || p.slug === "flux" || p.slug === "compass"
   ) ?? [];
 
+  // Get featured software from Convex
+  const featuredSoftware = useQuery(api.software.listFeaturedSoftware);
+
   // Get shorts for Live section carousel
   const shortsPosts =
     learnPosts
@@ -137,6 +141,32 @@ export default function Home({ discordWidget, isLive: serverIsLive }: HomeProps)
   // Get stream settings and events
   const streamSettings = useQuery(api.stream.getStreamSettings);
   const upcomingEvents = useQuery(api.stream.getUpcomingEvents);
+
+  // Twitch VODs
+  const [vods, setVods] = useState<Array<{ id: string; title: string; url: string; thumbnail_url: string; duration: string; created_at: string; view_count: number }>>([]);
+  const [vodIndex, setVodIndex] = useState(0);
+
+  useEffect(() => {
+    fetch("/api/twitch/vods")
+      .then((r) => r.json())
+      .then((data) => setVods(data.vods || []))
+      .catch(() => {});
+  }, []);
+
+  const visibleVods = vods.slice(vodIndex, vodIndex + 3);
+  const canPrevVods = vodIndex > 0;
+  const canNextVods = vodIndex + 3 < vods.length;
+  const prevVods = useCallback(() => setVodIndex((i) => Math.max(0, i - 3)), []);
+  const nextVods = useCallback(() => setVodIndex((i) => Math.min(vods.length - 3, i + 3)), [vods.length]);
+
+  const formatVodDuration = (duration: string) => {
+    const match = duration.match(/(\d+)h(\d+)m|(\d+)m(\d+)s|(\d+)h/);
+    if (!match) return duration;
+    if (match[1] && match[2]) return `${match[1]}h ${match[2]}m`;
+    if (match[3] && match[4]) return `${match[3]}m`;
+    if (match[5]) return `${match[5]}h`;
+    return duration;
+  };
 
   // Get game-related posts for Games section
   const gamePosts =
@@ -188,10 +218,10 @@ export default function Home({ discordWidget, isLive: serverIsLive }: HomeProps)
                     href={ROUTES.PROJECTS.ROOT}
                     onClick={() => setMobileMenuOpen(false)}
                   >
-                    Projects
+                    Work
                   </MobileNavLink>
-                  <MobileNavLink href="/games" onClick={() => setMobileMenuOpen(false)}>
-                    Games
+                  <MobileNavLink href="/software" onClick={() => setMobileMenuOpen(false)}>
+                    Software
                   </MobileNavLink>
                   <MobileNavLink href="/live" onClick={() => setMobileMenuOpen(false)}>
                     Live
@@ -214,8 +244,8 @@ export default function Home({ discordWidget, isLive: serverIsLive }: HomeProps)
               <NavLink href={ROUTES.ABOUT}>About</NavLink>
               <NavLink href={ROUTES.CONTACT}>Contact</NavLink>
               <NavLink href={ROUTES.BLOG.ROOT}>Explore</NavLink>
-              <NavLink href={ROUTES.PROJECTS.ROOT}>Projects</NavLink>
-              <NavLink href="/games">Games</NavLink>
+              <NavLink href={ROUTES.PROJECTS.ROOT}>Work</NavLink>
+              <NavLink href="/software">Software</NavLink>
               <NavLink href="/live">Live</NavLink>
               <NavLink href="/support">Support</NavLink>
             </DesktopNavLinks>
@@ -224,7 +254,7 @@ export default function Home({ discordWidget, isLive: serverIsLive }: HomeProps)
             <AuthContainer>
               <SignedOut>
                 <SignInButton mode="modal">
-                  <LoginButton>Login</LoginButton>
+                  <LoginButton>login</LoginButton>
                 </SignInButton>
               </SignedOut>
               <SignedIn>
@@ -255,6 +285,7 @@ export default function Home({ discordWidget, isLive: serverIsLive }: HomeProps)
           </TopNavBar>
 
           <BackgroundImage aria-hidden="true" />
+          <GrainOverlay />
 
           {/* Hero Section */}
           <Section>
@@ -360,124 +391,142 @@ export default function Home({ discordWidget, isLive: serverIsLive }: HomeProps)
             </LearnSectionContent>
           </Section>
 
-          {/* Live / Events & Videos Section */}
+          {/* Live Section */}
           <Section>
-            <LiveSectionContent>
-              <SectionHeader>
-                <SectionTitle>
-                  <SectionTitlePrimary>events &</SectionTitlePrimary>
-                  <SectionTitleSecondary>videos</SectionTitleSecondary>
-                </SectionTitle>
-                <ViewAllLink href="/live">View all →</ViewAllLink>
-              </SectionHeader>
-
-              {/* Top Row: Stream-O-Meter + Events Calendar */}
-              <LiveTopRow>
-                {/* Stream-O-Meter */}
-                <StreamOMeterCard href="https://twitch.tv/Nevvulo" target="_blank" $isLive={isLive}>
+            <TwitchSectionContent>
+              {/* Header row: "live" title + inline stream-o-meter centered */}
+              <TwitchHeaderRow>
+                <TwitchHeaderLeft>
+                  <SectionTitle>
+                    <SectionTitleSecondary>live</SectionTitleSecondary>
+                  </SectionTitle>
                   {isLive && (
                     <LiveBadge>
                       <LivePulse />
                       LIVE
                     </LiveBadge>
                   )}
-                  <StreamOMeterHeader>
-                    <Zap size={18} />
-                    <span>Stream-O-Meter</span>
-                  </StreamOMeterHeader>
-                  <StreamOMeterLabel $chance={streamSettings?.streamChance ?? 0}>
-                    {(streamSettings?.streamChance ?? 0) >= 80
-                      ? "Very likely!"
-                      : (streamSettings?.streamChance ?? 0) >= 50
-                        ? "Good chance"
-                        : (streamSettings?.streamChance ?? 0) >= 20
-                          ? "Maybe"
-                          : "Not today"}
-                  </StreamOMeterLabel>
-                  <StreamOMeterBar>
-                    <StreamOMeterSegments>
-                      {[...Array(10)].map((_, i) => (
-                        <StreamOMeterSegment
-                          key={i}
-                          $active={i < Math.ceil((streamSettings?.streamChance ?? 0) / 10)}
-                          $chance={streamSettings?.streamChance ?? 0}
-                        />
-                      ))}
-                    </StreamOMeterSegments>
-                  </StreamOMeterBar>
-                  <StreamOMeterValue $chance={streamSettings?.streamChance ?? 0}>
-                    {streamSettings?.streamChance ?? 0}%
-                  </StreamOMeterValue>
-                  {streamSettings?.streamChanceMessage && (
-                    <StreamOMeterMessage>{streamSettings.streamChanceMessage}</StreamOMeterMessage>
-                  )}
-                </StreamOMeterCard>
+                </TwitchHeaderLeft>
+                <TwitchHeaderCenter>
+                  <CartoonMeter>
+                    <CartoonMeterTitle>Stream-O-Meter</CartoonMeterTitle>
+                    <CartoonMeterRow>
+                      <CartoonMeterTrack>
+                        <CartoonMeterFill $percent={streamSettings?.streamChance ?? 0} />
+                      </CartoonMeterTrack>
+                      <CartoonMeterLabel>
+                        <Radio size={14} />
+                        <span>{streamSettings?.streamChance ?? 0}%</span>
+                        <CartoonMeterText>
+                          {(streamSettings?.streamChance ?? 0) >= 80
+                            ? "Very likely!"
+                            : (streamSettings?.streamChance ?? 0) >= 50
+                              ? "Good chance"
+                              : (streamSettings?.streamChance ?? 0) >= 20
+                                ? "Maybe"
+                                : "Not today"}
+                        </CartoonMeterText>
+                      </CartoonMeterLabel>
+                    </CartoonMeterRow>
+                  </CartoonMeter>
+                </TwitchHeaderCenter>
+                <TwitchHeaderRight>
+                  <TwitchLink href="https://twitch.tv/Nevvulo" target="_blank">
+                    twitch.tv/Nevvulo
+                  </TwitchLink>
+                </TwitchHeaderRight>
+              </TwitchHeaderRow>
 
-                {/* Events Calendar */}
-                <EventsCalendarCard>
-                  <EventsCalendarHeader>
-                    <Calendar size={16} />
-                    <span>Upcoming Events</span>
-                  </EventsCalendarHeader>
-                  {!upcomingEvents || upcomingEvents.length === 0 ? (
-                    <NoEventsState>
-                      <Calendar size={20} />
-                      <span>No upcoming events</span>
-                    </NoEventsState>
+              {/* Main content: VODs + Events + Discord in a full-width grid */}
+              <TwitchGrid>
+                {/* VODs section - takes up most of the space */}
+                <TwitchVodsArea>
+                  <TwitchVodsHeader>
+                    <TwitchVodsLabel>
+                      <svg viewBox="0 0 24 24" fill="#9146ff" width="16" height="16">
+                        <path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714Z" />
+                      </svg>
+                      <span>Recent VODs</span>
+                    </TwitchVodsLabel>
+                    {vods.length > 3 && (
+                      <TwitchVodNav>
+                        <TwitchNavBtn onClick={prevVods} disabled={!canPrevVods}><ChevronLeft size={16} /></TwitchNavBtn>
+                        <TwitchNavBtn onClick={nextVods} disabled={!canNextVods}><ChevronRight size={16} /></TwitchNavBtn>
+                      </TwitchVodNav>
+                    )}
+                  </TwitchVodsHeader>
+                  {visibleVods.length > 0 ? (
+                    <TwitchVodsGrid>
+                      {visibleVods.map((vod) => (
+                        <TwitchVodCard key={vod.id} href={vod.url} target="_blank" rel="noopener noreferrer">
+                          <TwitchVodThumb>
+                            <img src={vod.thumbnail_url} alt={vod.title} />
+                            <TwitchDurationBadge>{formatVodDuration(vod.duration)}</TwitchDurationBadge>
+                          </TwitchVodThumb>
+                          <TwitchVodTitle>{vod.title}</TwitchVodTitle>
+                        </TwitchVodCard>
+                      ))}
+                    </TwitchVodsGrid>
                   ) : (
-                    <EventsList>
-                      {upcomingEvents.slice(0, 3).map((event) => (
-                        <EventItem key={event._id}>
-                          <EventDate>
-                            {new Date(event.scheduledStartTime).toLocaleDateString(undefined, {
-                              weekday: "short",
-                              month: "short",
-                              day: "numeric",
-                            })}
-                          </EventDate>
-                          <EventName>{event.name}</EventName>
-                        </EventItem>
-                      ))}
-                    </EventsList>
+                    <TwitchVodsEmpty>
+                      <Play size={20} />
+                      <span>No VODs available</span>
+                    </TwitchVodsEmpty>
                   )}
-                </EventsCalendarCard>
-              </LiveTopRow>
+                </TwitchVodsArea>
 
-              {/* Twitch + Discord Embeds Row */}
-              <LiveEmbeds>
-                <LiveEmbedCard href="https://twitch.tv/Nevvulo" target="_blank" $isLive={isLive}>
-                  <LiveEmbedIcon $color="#9146ff">
-                    <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
-                      <path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714Z" />
-                    </svg>
-                  </LiveEmbedIcon>
-                  <LiveEmbedContent>
-                    <LiveEmbedTitle>{isLive ? "Live Now!" : "Twitch"}</LiveEmbedTitle>
-                    <LiveEmbedSubtitle>twitch.tv/Nevvulo</LiveEmbedSubtitle>
-                  </LiveEmbedContent>
-                </LiveEmbedCard>
+                {/* Sidebar: Events + Discord */}
+                <TwitchSidebar>
+                  {/* Events */}
+                  <TwitchSideCard>
+                    <TwitchSideCardHeader>
+                      <Calendar size={14} />
+                      <span>Upcoming Events</span>
+                    </TwitchSideCardHeader>
+                    {!upcomingEvents || upcomingEvents.length === 0 ? (
+                      <NoEventsState>
+                        <Calendar size={18} />
+                        <span>No upcoming events</span>
+                      </NoEventsState>
+                    ) : (
+                      <EventsList>
+                        {upcomingEvents.slice(0, 3).map((event) => (
+                          <EventItem key={event._id}>
+                            <EventDate>
+                              {new Date(event.scheduledStartTime).toLocaleDateString(undefined, {
+                                weekday: "short",
+                                month: "short",
+                                day: "numeric",
+                              })}
+                            </EventDate>
+                            <EventName>{event.name}</EventName>
+                          </EventItem>
+                        ))}
+                      </EventsList>
+                    )}
+                  </TwitchSideCard>
 
-                <LiveEmbedCard href={Socials.Discord} target="_blank">
-                  <LiveEmbedIcon $color="#5865f2">
-                    <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
-                      <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z" />
-                    </svg>
-                  </LiveEmbedIcon>
-                  <LiveEmbedContent>
-                    <LiveEmbedTitle>Discord</LiveEmbedTitle>
-                    <LiveEmbedSubtitle>
+                  {/* Discord */}
+                  <TwitchSideCard as="a" href={Socials.Discord} target="_blank" style={{ textDecoration: "none", color: "inherit" }}>
+                    <TwitchSideCardHeader>
+                      <svg viewBox="0 0 24 24" fill="#5865f2" width="14" height="14">
+                        <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z" />
+                      </svg>
+                      <span>Discord</span>
+                    </TwitchSideCardHeader>
+                    <TwitchDiscordInfo>
                       {discordWidget?.presence_count ? (
                         <OnlineIndicator>
                           <OnlineDot />
                           {discordWidget.presence_count} online
                         </OnlineIndicator>
                       ) : (
-                        "Join us"
+                        "Join the community"
                       )}
-                    </LiveEmbedSubtitle>
-                  </LiveEmbedContent>
-                </LiveEmbedCard>
-              </LiveEmbeds>
+                    </TwitchDiscordInfo>
+                  </TwitchSideCard>
+                </TwitchSidebar>
+              </TwitchGrid>
 
               {/* Shorts Carousel */}
               {shortsPosts.length > 0 && (
@@ -548,15 +597,7 @@ export default function Home({ discordWidget, isLive: serverIsLive }: HomeProps)
                   </ShortsCarousel>
                 </ShortsSection>
               )}
-
-              {/* Empty state if no shorts */}
-              {shortsPosts.length === 0 && (
-                <LiveVideosEmpty>
-                  <Play size={24} />
-                  <span>Videos coming soon</span>
-                </LiveVideosEmpty>
-              )}
-            </LiveSectionContent>
+            </TwitchSectionContent>
           </Section>
 
           {/* Games Section */}
@@ -564,7 +605,6 @@ export default function Home({ discordWidget, isLive: serverIsLive }: HomeProps)
             <GamesSectionContent>
               <SectionHeader>
                 <SectionTitle>
-                  <SectionTitlePrimary>explore</SectionTitlePrimary>
                   <SectionTitleSecondary>games</SectionTitleSecondary>
                 </SectionTitle>
                 <ViewAllLink href="/games">View all →</ViewAllLink>
@@ -639,123 +679,94 @@ export default function Home({ discordWidget, isLive: serverIsLive }: HomeProps)
             <SoftwareSectionContent>
               <SectionHeader>
                 <SectionTitle>
-                  <SectionTitlePrimary>my</SectionTitlePrimary>
                   <SectionTitleSecondary>software</SectionTitleSecondary>
                 </SectionTitle>
               </SectionHeader>
 
               <SoftwareGrid>
-                {/* Nevi Discord Bot - Featured */}
-                <SoftwareCard $size="featured" $accent="#5865f2" href="https://github.com/Nevvulo/nevi" target="_blank">
-                  <SoftwareCardGlow $color="#5865f2" />
-                  <SoftwareCardContent>
-                    <SoftwareIcon $color="#5865f2">
-                      <svg viewBox="0 0 24 24" fill="currentColor" width="32" height="32">
-                        <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z" />
-                      </svg>
-                    </SoftwareIcon>
-                    <SoftwareBadgeRow>
-                      <SoftwareBadge $color="#5865f2">Discord Bot</SoftwareBadge>
-                      <SoftwareStatus $status="active">Active</SoftwareStatus>
-                    </SoftwareBadgeRow>
-                    <SoftwareTitle>Nevi</SoftwareTitle>
-                    <SoftwareDesc>Multi-purpose Discord bot with moderation, music, and custom commands. Powers multiple community servers.</SoftwareDesc>
-                    <SoftwareStats>
-                      <SoftwareStat>
-                        <span>10+</span>
-                        <label>Servers</label>
-                      </SoftwareStat>
-                      <SoftwareStat>
-                        <span>50+</span>
-                        <label>Commands</label>
-                      </SoftwareStat>
-                    </SoftwareStats>
-                  </SoftwareCardContent>
-                  <SoftwareCardScanlines />
-                </SoftwareCard>
+                {featuredSoftware === undefined ? (
+                  // Loading skeleton
+                  <>
+                    <SoftwareCardSkeleton $size="featured" />
+                    <SoftwareCardSkeleton $size="medium" />
+                    <SoftwareCardSkeleton $size="medium" />
+                    <SoftwareCardSkeleton $size="small" />
+                    <SoftwareCardSkeleton $size="small" />
+                  </>
+                ) : (
+                  featuredSoftware.map((sw) => {
+                    const accent = sw.accentColor ?? "#6366f1";
+                    const size = sw.displaySize ?? "medium";
+                    const isComingSoon = sw.status === "coming-soon";
+                    const href = sw.links?.website ?? sw.links?.github ?? (isComingSoon ? undefined : `/software/${sw.slug}`);
+                    const isExternal = href?.startsWith("http");
+                    const statusMap: Record<string, "active" | "beta" | "soon"> = {
+                      "active": "active",
+                      "beta": "beta",
+                      "coming-soon": "soon",
+                    };
+                    const statusLabel: Record<string, string> = {
+                      "active": "Active",
+                      "beta": "WIP",
+                      "coming-soon": "Idea",
+                    };
 
-                {/* Feed / Link-in-bio */}
-                <SoftwareCard $size="medium" $accent="#9074f2" href="/feed">
-                  <SoftwareCardGlow $color="#9074f2" />
-                  <SoftwareCardContent>
-                    <SoftwareIcon $color="#9074f2">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="28" height="28">
-                        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-                        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
-                      </svg>
-                    </SoftwareIcon>
-                    <SoftwareBadgeRow>
-                      <SoftwareBadge $color="#9074f2">Link-in-bio</SoftwareBadge>
-                    </SoftwareBadgeRow>
-                    <SoftwareTitle>nev.so/@you</SoftwareTitle>
-                    <SoftwareDesc>Custom profile pages with social links, posts, and personalization.</SoftwareDesc>
-                  </SoftwareCardContent>
-                  <SoftwareCardScanlines />
-                </SoftwareCard>
-
-                {/* Netvulo */}
-                <SoftwareCard $size="medium" $accent="#22c55e" href="https://github.com/Nevvulo/netvulo" target="_blank">
-                  <SoftwareCardGlow $color="#22c55e" />
-                  <SoftwareCardContent>
-                    <SoftwareIcon $color="#22c55e">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="28" height="28">
-                        <circle cx="12" cy="12" r="10" />
-                        <line x1="2" y1="12" x2="22" y2="12" />
-                        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
-                      </svg>
-                    </SoftwareIcon>
-                    <SoftwareBadgeRow>
-                      <SoftwareBadge $color="#22c55e">Framework</SoftwareBadge>
-                      <SoftwareStatus $status="active">Active</SoftwareStatus>
-                    </SoftwareBadgeRow>
-                    <SoftwareTitle>Netvulo</SoftwareTitle>
-                    <SoftwareDesc>Custom networking layer & event handler for real-time applications.</SoftwareDesc>
-                  </SoftwareCardContent>
-                  <SoftwareCardScanlines />
-                </SoftwareCard>
-
-                {/* Continuous - Course Builder */}
-                <SoftwareCard $size="small" $accent="#ec4899" href="https://github.com/Nevvulo/continuous" target="_blank">
-                  <SoftwareCardGlow $color="#ec4899" />
-                  <SoftwareCardContent>
-                    <SoftwareIcon $color="#ec4899">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="24" height="24">
-                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-                        <path d="M8 7h8M8 11h8M8 15h5" />
-                      </svg>
-                    </SoftwareIcon>
-                    <SoftwareBadgeRow>
-                      <SoftwareBadge $color="#ec4899">E-Learning</SoftwareBadge>
-                      <SoftwareStatus $status="beta">WIP</SoftwareStatus>
-                    </SoftwareBadgeRow>
-                    <SoftwareTitle>Continuous</SoftwareTitle>
-                    <SoftwareDesc>Cross-platform course builder app</SoftwareDesc>
-                  </SoftwareCardContent>
-                  <SoftwareCardScanlines />
-                </SoftwareCard>
-
-                {/* GYST - Coming Soon */}
-                <SoftwareCard $size="small" $accent="#f59e0b" $comingSoon>
-                  <SoftwareCardGlow $color="#f59e0b" />
-                  <SoftwareCardContent>
-                    <SoftwareIcon $color="#f59e0b">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="24" height="24">
-                        <rect x="3" y="3" width="7" height="7" rx="1" />
-                        <rect x="14" y="3" width="7" height="7" rx="1" />
-                        <rect x="3" y="14" width="7" height="7" rx="1" />
-                        <rect x="14" y="14" width="7" height="7" rx="1" />
-                      </svg>
-                    </SoftwareIcon>
-                    <SoftwareBadgeRow>
-                      <SoftwareBadge $color="#f59e0b">Productivity</SoftwareBadge>
-                      <SoftwareStatus $status="soon">Idea</SoftwareStatus>
-                    </SoftwareBadgeRow>
-                    <SoftwareTitle>GYST</SoftwareTitle>
-                    <SoftwareDesc>Get Your Shit Together - the organizer</SoftwareDesc>
-                  </SoftwareCardContent>
-                  <SoftwareCardScanlines />
-                </SoftwareCard>
+                    return (
+                      <SoftwareCard
+                        key={sw._id}
+                        $size={size}
+                        $accent={accent}
+                        $comingSoon={isComingSoon}
+                        href={isComingSoon ? undefined : href}
+                        target={isExternal ? "_blank" : undefined}
+                      >
+                        <SoftwareCardGlow $color={accent} />
+                        <SoftwareCardContent>
+                          <SoftwareIcon $color={accent}>
+                            {sw.logoUrl ? (
+                              <img src={sw.logoUrl} alt={sw.name} width={28} height={28} style={{ objectFit: "contain", borderRadius: 4 }} />
+                            ) : (
+                              <Package size={28} />
+                            )}
+                          </SoftwareIcon>
+                          <SoftwareBadgeRow>
+                            <SoftwareBadge $color={accent}>{sw.type.toUpperCase()}</SoftwareBadge>
+                            {sw.status !== "archived" && (
+                              <SoftwareStatus $status={statusMap[sw.status] ?? "active"}>
+                                {statusLabel[sw.status] ?? sw.status}
+                              </SoftwareStatus>
+                            )}
+                          </SoftwareBadgeRow>
+                          <SoftwareTitle>{sw.name}</SoftwareTitle>
+                          <SoftwareDesc>{sw.shortDescription}</SoftwareDesc>
+                          {sw.stats && (sw.stats.players || sw.stats.downloads || sw.stats.stars) && (
+                            <SoftwareStats>
+                              {sw.stats.players != null && (
+                                <SoftwareStat>
+                                  <span>{sw.stats.players.toLocaleString()}</span>
+                                  <label>Players</label>
+                                </SoftwareStat>
+                              )}
+                              {sw.stats.downloads != null && (
+                                <SoftwareStat>
+                                  <span>{sw.stats.downloads.toLocaleString()}</span>
+                                  <label>Downloads</label>
+                                </SoftwareStat>
+                              )}
+                              {sw.stats.stars != null && (
+                                <SoftwareStat>
+                                  <span>{sw.stats.stars.toLocaleString()}</span>
+                                  <label>Stars</label>
+                                </SoftwareStat>
+                              )}
+                            </SoftwareStats>
+                          )}
+                        </SoftwareCardContent>
+                        <SoftwareCardScanlines />
+                      </SoftwareCard>
+                    );
+                  })
+                )}
               </SoftwareGrid>
             </SoftwareSectionContent>
           </Section>
@@ -765,8 +776,7 @@ export default function Home({ discordWidget, isLive: serverIsLive }: HomeProps)
             <WorkSectionContent>
               <SectionHeader>
                 <SectionTitle>
-                  <SectionTitlePrimary>work</SectionTitlePrimary>
-                  <SectionTitleSecondary>history</SectionTitleSecondary>
+                  <SectionTitleSecondary>work</SectionTitleSecondary>
                 </SectionTitle>
                 <ViewAllLink href={ROUTES.PROJECTS.ROOT}>View full timeline →</ViewAllLink>
               </SectionHeader>
@@ -807,7 +817,13 @@ export default function Home({ discordWidget, isLive: serverIsLive }: HomeProps)
           <Section>
             <SupportSectionContent>
               <SupportHeader>
-                <SupportTitle>support nevulo</SupportTitle>
+                <SupportTitle>
+                  <span>support</span>
+                  <SupportNevuloGroup>
+                    <SupportLogo src={NevuloLogoSrc.src ?? NevuloLogoSrc} alt="Nevulo Logo" />
+                    nevulo
+                  </SupportNevuloGroup>
+                </SupportTitle>
                 <SupportSubtitle>
                   Get exclusive perks, early access, and help support my work
                 </SupportSubtitle>
@@ -1080,6 +1096,8 @@ const BackgroundImage = styled.div`
   inset: 0;
   z-index: 0;
   background-color: ${(props) => props.theme.background};
+  transform: translateZ(0);
+  will-change: transform;
 
   &::after {
     content: '';
@@ -1089,6 +1107,7 @@ const BackgroundImage = styled.div`
     background-size: cover;
     background-position: center;
     opacity: 0.1;
+    transform: translateZ(0);
   }
 `;
 
@@ -1350,12 +1369,11 @@ const ViewAllLink = styled(Link)`
 // Learn section styles
 const LearnSectionContent = styled.div`
   width: 100%;
-  max-width: 1400px;
+  max-width: 1100px;
   margin: 0 auto;
-  padding: 6rem 0;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 1.25rem;
 `;
 
 const LearnSectionHeader = styled.div`
@@ -1702,6 +1720,50 @@ const SoftwareStat = styled.div`
     text-transform: uppercase;
     letter-spacing: 0.5px;
     color: ${(props) => props.theme.contrast}50;
+  }
+`;
+
+const SoftwareCardSkeleton = styled.div<{ $size: "featured" | "medium" | "small" }>`
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(20, 15, 35, 0.9) 0%, rgba(30, 25, 50, 0.8) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  animation: skeletonPulse 1.5s ease-in-out infinite;
+
+  ${(props) => {
+    if (props.$size === "featured") {
+      return `
+        grid-column: span 2;
+        grid-row: span 2;
+        min-height: 320px;
+      `;
+    }
+    if (props.$size === "medium") {
+      return `
+        min-height: 200px;
+      `;
+    }
+    return `
+      min-height: 160px;
+    `;
+  }}
+
+  @keyframes skeletonPulse {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 0.3; }
+  }
+
+  @media (max-width: 900px) {
+    ${(props) => props.$size === "featured" && `
+      grid-column: span 2;
+      grid-row: span 1;
+      min-height: 240px;
+    `}
+  }
+
+  @media (max-width: 600px) {
+    grid-column: span 1 !important;
+    min-height: auto;
+    height: 140px;
   }
 `;
 
@@ -2053,6 +2115,351 @@ const LiveSectionContent = styled.div`
   flex-direction: column;
   gap: 1.25rem;
   min-height: 500px; /* Prevent CLS */
+`;
+
+// ============================================
+// TWITCH SECTION (redesigned)
+// ============================================
+
+const TwitchSectionContent = styled.div`
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+`;
+
+const TwitchHeaderRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+`;
+
+const TwitchHeaderLeft = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-shrink: 0;
+`;
+
+const TwitchHeaderCenter = styled.div`
+  display: flex;
+  align-items: center;
+
+  @media (min-width: 769px) {
+    flex: 1;
+    justify-content: center;
+  }
+`;
+
+const TwitchHeaderRight = styled.div`
+  flex-shrink: 0;
+
+  @media (max-width: 768px) {
+    width: 100%;
+  }
+`;
+
+const TwitchLink = styled.a`
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: #9146ff;
+  text-decoration: none;
+  opacity: 0.8;
+  transition: opacity 0.2s;
+
+  &:hover {
+    opacity: 1;
+    text-decoration: underline;
+  }
+`;
+
+/* Cartoonish stream-o-meter */
+const CartoonMeter = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+
+  @media (min-width: 769px) {
+    align-items: center;
+    margin-top: 0.5rem;
+  }
+`;
+
+const CartoonMeterTitle = styled.span`
+  font-family: var(--font-mono);
+  font-size: 0.5625rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: white;
+  text-shadow:
+    -1px -1px 0 #000,
+     1px -1px 0 #000,
+    -1px  1px 0 #000,
+     1px  1px 0 #000,
+     0 0 4px rgba(0, 0, 0, 0.5);
+`;
+
+const CartoonMeterRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+`;
+
+const CartoonMeterTrack = styled.div`
+  position: relative;
+  width: 160px;
+  height: 20px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  border: 3px solid rgba(255, 255, 255, 0.15);
+  overflow: hidden;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+
+  @media (max-width: 480px) {
+    width: 120px;
+    height: 16px;
+    border-width: 2px;
+  }
+`;
+
+const CartoonMeterFill = styled.div<{ $percent: number }>`
+  height: 100%;
+  width: ${(props) => props.$percent}%;
+  border-radius: 999px;
+  background: ${(props) =>
+    props.$percent >= 80
+      ? "linear-gradient(90deg, #22c55e, #4ade80)"
+      : props.$percent >= 50
+        ? "linear-gradient(90deg, #eab308, #facc15)"
+        : props.$percent >= 20
+          ? "linear-gradient(90deg, #f97316, #fb923c)"
+          : "linear-gradient(90deg, #ef4444, #f87171)"};
+  transition: width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.3s ease;
+  box-shadow: ${(props) => {
+    const color = props.$percent >= 80 ? "#22c55e" : props.$percent >= 50 ? "#eab308" : props.$percent >= 20 ? "#f97316" : "#ef4444";
+    return `0 0 8px ${color}60, inset 0 1px 0 rgba(255, 255, 255, 0.3)`;
+  }};
+`;
+
+const CartoonMeterLabel = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: ${(props) => props.theme.contrast};
+
+  svg {
+    color: #9146ff;
+  }
+`;
+
+const CartoonMeterText = styled.span`
+  font-weight: 500;
+  font-size: 0.6875rem;
+  opacity: 0.6;
+  margin-left: 0.25rem;
+`;
+
+/* Main Twitch grid */
+const TwitchGrid = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  gap: 1rem;
+
+  @media (max-width: 900px) {
+    grid-template-columns: 1fr;
+  }
+`;
+
+const TwitchVodsArea = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1.25rem;
+  background: rgba(30, 25, 45, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(145, 70, 255, 0.15);
+  border-radius: 14px;
+`;
+
+const TwitchVodsHeader = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: ${(props) => props.theme.contrast}80;
+`;
+
+const TwitchVodsLabel = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+`;
+
+const TwitchVodNav = styled.div`
+  display: flex;
+  gap: 4px;
+`;
+
+const TwitchNavBtn = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  color: ${(props) => props.theme.contrast};
+  cursor: pointer;
+  transition: background 0.2s;
+
+  &:hover:not(:disabled) {
+    background: rgba(145, 70, 255, 0.2);
+  }
+
+  &:disabled {
+    opacity: 0.3;
+    cursor: default;
+  }
+`;
+
+const TwitchVodsGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+
+  @media (max-width: 640px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+`;
+
+const TwitchVodCard = styled.a`
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  text-decoration: none;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: opacity 0.2s, transform 0.2s;
+
+  &:hover {
+    opacity: 0.9;
+    transform: translateY(-2px);
+  }
+`;
+
+const TwitchVodThumb = styled.div`
+  position: relative;
+  aspect-ratio: 16 / 9;
+  border-radius: 8px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.05);
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+`;
+
+const TwitchDurationBadge = styled.span`
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  padding: 2px 6px;
+  background: rgba(0, 0, 0, 0.85);
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  color: white;
+  font-family: var(--font-mono);
+`;
+
+const TwitchVodTitle = styled.span`
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: ${(props) => props.theme.contrast};
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.3;
+`;
+
+const TwitchVodsEmpty = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 2rem;
+  color: ${(props) => props.theme.contrast};
+  opacity: 0.4;
+  font-size: 0.8125rem;
+`;
+
+/* Sidebar */
+const TwitchSidebar = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+
+  @media (max-width: 900px) {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  @media (max-width: 480px) {
+    grid-template-columns: 1fr;
+  }
+`;
+
+const TwitchSideCard = styled.div`
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+  background: rgba(30, 25, 45, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(79, 77, 193, 0.2);
+  border-radius: 12px;
+  flex: 1;
+  transition: border-color 0.2s, transform 0.2s;
+
+  &:hover {
+    border-color: rgba(79, 77, 193, 0.4);
+  }
+`;
+
+const TwitchSideCardHeader = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: ${(props) => props.theme.contrast}60;
+  margin-bottom: 0.75rem;
+`;
+
+const TwitchDiscordInfo = styled.div`
+  font-size: 0.8125rem;
+  color: ${(props) => props.theme.contrast};
+  opacity: 0.7;
 `;
 
 const LiveEmbeds = styled.div`
@@ -2677,8 +3084,6 @@ const EventName = styled.span`
 // Support section styles
 const SupportSectionContent = styled.div`
   width: 100%;
-  max-width: 600px;
-  margin: 0 auto;
   text-align: center;
 `;
 
@@ -2693,6 +3098,28 @@ const SupportTitle = styled.h2`
   color: ${(props) => props.theme.contrast};
   margin: 0 0 0.5rem 0;
   letter-spacing: -1px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  white-space: nowrap;
+
+  @media (max-width: 500px) {
+    flex-direction: column;
+    gap: 8px;
+  }
+`;
+
+const SupportNevuloGroup = styled.span`
+  display: flex;
+  align-items: center;
+  gap: 16px;
+`;
+
+const SupportLogo = styled.img`
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
 `;
 
 const SupportSubtitle = styled.p`

@@ -1,9 +1,11 @@
 import { useQuery } from "convex/react";
-import { Boxes, Compass, Download, Lock, MessageCircle, Newspaper, Settings } from "lucide-react";
+import { Boxes, Compass, Download, Newspaper, UserCircle } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import styled from "styled-components";
 import { api } from "../../convex/_generated/api";
 import { LOUNGE_COLORS } from "../../constants/theme";
+import loungeIcon from "../../assets/img/lounge.png";
 
 export function QuickAccessBar() {
   const user = useQuery(api.users.getMe);
@@ -13,34 +15,28 @@ export function QuickAccessBar() {
     <Wrapper>
       <ScrollContainer>
         <ShortcutLink href="https://lounge.nev.so" target="_blank" rel="noopener noreferrer">
-          <ShortcutCard $color="#5865f2">
-            <IconCircle $color="#5865f2">
-              <MessageCircle size={15} />
-            </IconCircle>
+          <ShortcutCard>
+            <Image src={loungeIcon} alt="Lounge" width={18} height={18} style={{ flexShrink: 0 }} />
             <ShortcutInfo>
-              <ShortcutLabel>Lounge</ShortcutLabel>
+              <LoungeLabel>nevulounge</LoungeLabel>
               <ShortcutDesc>Fediverse community</ShortcutDesc>
             </ShortcutInfo>
           </ShortcutCard>
         </ShortcutLink>
 
         <ShortcutLink href="/learn">
-          <ShortcutCard $color="#22c55e">
-            <IconCircle $color="#22c55e">
-              <Compass size={15} />
-            </IconCircle>
+          <ShortcutCard>
+            <Compass size={18} />
             <ShortcutInfo>
-              <ShortcutLabel>Explore</ShortcutLabel>
+              <ExploreLabel>explore</ExploreLabel>
               <ShortcutDesc>Browse all content</ShortcutDesc>
             </ShortcutInfo>
           </ShortcutCard>
         </ShortcutLink>
 
         <ShortcutLink href="/software">
-          <ShortcutCard $color="#3b82f6">
-            <IconCircle $color="#3b82f6">
-              <Boxes size={15} />
-            </IconCircle>
+          <ShortcutCard>
+            <Boxes size={18} />
             <ShortcutInfo>
               <ShortcutLabel>Software</ShortcutLabel>
               <ShortcutDesc>Apps & games</ShortcutDesc>
@@ -49,10 +45,8 @@ export function QuickAccessBar() {
         </ShortcutLink>
 
         <ShortcutLink href="/learn?filter=news">
-          <ShortcutCard $color="#f59e0b">
-            <IconCircle $color="#f59e0b">
-              <Newspaper size={15} />
-            </IconCircle>
+          <ShortcutCard>
+            <Newspaper size={18} />
             <ShortcutInfo>
               <ShortcutLabel>News</ShortcutLabel>
               <ShortcutDesc>Latest updates</ShortcutDesc>
@@ -61,10 +55,8 @@ export function QuickAccessBar() {
         </ShortcutLink>
 
         <ShortcutLink href="/account">
-          <ShortcutCard $color={LOUNGE_COLORS.tier1}>
-            <IconCircle $color={LOUNGE_COLORS.tier1}>
-              <Settings size={15} />
-            </IconCircle>
+          <ShortcutCard>
+            <UserCircle size={18} />
             <ShortcutInfo>
               <ShortcutLabel>Account</ShortcutLabel>
               <ShortcutDesc>Settings & profile</ShortcutDesc>
@@ -72,27 +64,13 @@ export function QuickAccessBar() {
           </ShortcutCard>
         </ShortcutLink>
 
-        {hasTier1Access ? (
+        {hasTier1Access && (
           <ShortcutLink href="/vault">
-            <ShortcutCard $color="#f7be5c">
-              <IconCircle $color="#f7be5c">
-                <Download size={15} />
-              </IconCircle>
+            <ShortcutCard>
+              <Download size={18} />
               <ShortcutInfo>
-                <ShortcutLabel>Vault</ShortcutLabel>
+                <ExploreLabel>vault</ExploreLabel>
                 <ShortcutDesc>Downloads & assets</ShortcutDesc>
-              </ShortcutInfo>
-            </ShortcutCard>
-          </ShortcutLink>
-        ) : (
-          <ShortcutLink href="/support">
-            <ShortcutCard $color="#6b7280" $locked>
-              <IconCircle $color="#6b7280" $locked>
-                <Lock size={15} />
-              </IconCircle>
-              <ShortcutInfo>
-                <ShortcutLabel $locked>Vault</ShortcutLabel>
-                <ShortcutDesc $locked>Super Legend only</ShortcutDesc>
               </ShortcutInfo>
             </ShortcutCard>
           </ShortcutLink>
@@ -121,6 +99,11 @@ const FadeEdge = styled.div`
   );
   pointer-events: none;
   z-index: 1;
+  display: none;
+
+  @media (max-width: 800px) {
+    display: block;
+  }
 `;
 
 const ScrollContainer = styled.div`
@@ -143,48 +126,35 @@ const ShortcutLink = styled(Link)`
   flex-shrink: 0;
 `;
 
-const ShortcutCard = styled.div<{ $color: string; $locked?: boolean }>`
+const ShortcutCard = styled.div<{ $locked?: boolean }>`
   display: flex;
   align-items: center;
   gap: 10px;
   padding: 8px 14px;
-  background: ${(props) => props.theme.postBackground};
+  background: transparent;
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 10px;
   transition: all 0.2s ease;
-  opacity: ${(props) => (props.$locked ? 0.6 : 1)};
+  opacity: ${(props) => (props.$locked ? 0.5 : 1)};
   white-space: nowrap;
+  color: white;
+
+  svg {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    opacity: 0.85;
+  }
 
   &:hover {
     background: rgba(255, 255, 255, 0.04);
-    border-color: ${(props) => (props.$locked ? "rgba(255, 255, 255, 0.08)" : `${props.$color}30`)};
+    border-color: rgba(144, 116, 242, 0.2);
     transform: translateY(-1px);
   }
 
   @media (max-width: 480px) {
     padding: 8px 12px;
     gap: 8px;
-  }
-`;
-
-const IconCircle = styled.div<{ $color: string; $locked?: boolean }>`
-  width: 30px;
-  height: 30px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: ${(props) => (props.$locked ? "rgba(107, 114, 128, 0.1)" : `${props.$color}10`)};
-  border-radius: 8px;
-  color: ${(props) => (props.$locked ? "rgba(255, 255, 255, 0.3)" : `${props.$color}99`)};
-  flex-shrink: 0;
-
-  svg {
-    width: 15px;
-    height: 15px;
-  }
-
-  ${ShortcutCard}:hover & {
-    background: ${(props) => (props.$locked ? "rgba(107, 114, 128, 0.15)" : `${props.$color}18`)};
   }
 `;
 
@@ -198,7 +168,23 @@ const ShortcutInfo = styled.div`
 const ShortcutLabel = styled.span<{ $locked?: boolean }>`
   font-size: 13px;
   font-weight: 600;
+  line-height: 1;
   color: ${(props) => (props.$locked ? "rgba(255, 255, 255, 0.4)" : props.theme.contrast)};
+`;
+
+const LoungeLabel = styled.span`
+  font-size: 12px;
+  font-family: "Sixtyfour", var(--font-mono);
+  color: ${(props) => props.theme.contrast};
+  line-height: 1;
+`;
+
+const ExploreLabel = styled.span`
+  font-size: 15px;
+  font-family: "Protest Revolution", sans-serif;
+  letter-spacing: 1.5px;
+  line-height: 1;
+  color: ${(props) => props.theme.contrast};
 `;
 
 const ShortcutDesc = styled.span<{ $locked?: boolean }>`

@@ -12,6 +12,7 @@ interface PostMetadata {
   publishedAt?: number;
   viewCount?: number;
   contentType?: "article" | "video" | "news";
+  labels?: string[];
 }
 
 interface RecommendationResult {
@@ -221,6 +222,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       if (metadata?.contentType === "video") {
         const currentScore = scores.get(slug) ?? 0;
         scores.set(slug, currentScore * 0.3); // 70% reduction
+      }
+    }
+
+    // =============================================================
+    // CONTENT TYPE PENALTY: Shorts get 95% reduction
+    // Shorts display poorly in bento grids and are low quality.
+    // This is a safety net — query-level excludeShorts should filter
+    // them out, but this ensures they're buried if they slip through.
+    // =============================================================
+    for (const slug of slugList) {
+      const metadata = postMetadata.get(slug);
+      if (metadata?.labels?.includes("short")) {
+        const currentScore = scores.get(slug) ?? 0;
+        scores.set(slug, currentScore * 0.05); // 95% reduction
       }
     }
 

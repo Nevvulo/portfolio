@@ -11,5 +11,6 @@ export { LatestContentWidget } from "./LatestContentWidget";
 export { MusicWidget } from "./MusicWidget";
 export { WidgetTracker } from "./WidgetTracker";
 export { BentoWidgetGrid, BentoCell } from "./BentoWidgetGrid";
+export { PerksWidget } from "./PerksWidget";
 export { BENTO_SIZES } from "./bento-config";
 export type { BentoWidgetSize, WidgetDefinition } from "./bento-config";

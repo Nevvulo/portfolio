@@ -1,20 +1,28 @@
 import { useQuery } from "convex/react";
-import { Star } from "lucide-react";
+import { ArrowUp } from "lucide-react";
 import styled from "styled-components";
 import { api } from "../../convex/_generated/api";
-import { BadgeType } from "../../constants/badges";
-import { LOUNGE_COLORS } from "../../constants/theme";
-import type { Tier } from "../../types/tiers";
-import { SupporterBadge } from "../badges/supporter-badge";
+import { SupporterBadges } from "../badges/supporter-badges";
+
+// Level color tiers
+function getLevelColor(level: number): string {
+  if (level <= 5) return "#b0b0b0";       // light grey
+  if (level <= 15) return "#5b8def";       // blue
+  if (level <= 25) return "#9074f2";       // purple
+  if (level <= 35) return "#f5c842";       // yellow
+  if (level <= 45) return "#f87171";       // light red
+  return "#f9a8d4";                         // light pink
+}
 
 interface LevelProgressProps {
   displayName?: string;
   compact?: boolean;
-  tier?: Tier;
+  showBadges?: boolean;
+  /** Override level for testing */
+  mockLevel?: number;
 }
 
-export function LevelProgress({ displayName, compact, tier }: LevelProgressProps) {
-  const isSuperLegend = tier === "tier1" || tier === "tier2";
+export function LevelProgress({ displayName, compact, showBadges, mockLevel }: LevelProgressProps) {
   const experience = useQuery(api.experience.getMyExperience);
 
   if (!experience) {
@@ -31,25 +39,27 @@ export function LevelProgress({ displayName, compact, tier }: LevelProgressProps
     );
   }
 
+  const level = mockLevel ?? experience.level;
+  const levelColor = getLevelColor(level);
+  const isShimmering = level > 45;
+
   if (compact) {
     return (
-      <CompactContainer>
-        {isSuperLegend && (
-          <SupporterBadge
-            type={tier === "tier2" ? BadgeType.SUPER_LEGEND_2 : BadgeType.SUPER_LEGEND}
-            size="small"
-            showLabel
-          />
-        )}
-        <CompactLevelBadge>
-          <Star size={12} />
-          <span>Level {experience.level}</span>
+      <CompactWrapper>
+        <CompactLevelBadge $color={levelColor}>
+          <ArrowUp size={12} />
+          {isShimmering ? (
+            <ShimmerText $color={levelColor}>Level {level}</ShimmerText>
+          ) : (
+            <span>Level {level}</span>
+          )}
         </CompactLevelBadge>
         <CompactXp>{experience.currentXp} / {experience.xpForNextLevel} XP</CompactXp>
         <CompactProgressBar>
-          <CompactProgressFill $percent={experience.progressPercent} />
+          <CompactProgressFill $percent={experience.progressPercent} $color={levelColor} />
         </CompactProgressBar>
-      </CompactContainer>
+        {showBadges && <SupporterBadges size="small" showLabels />}
+      </CompactWrapper>
     );
   }
 
@@ -61,40 +71,61 @@ export function LevelProgress({ displayName, compact, tier }: LevelProgressProps
         </WelcomeText>
       </WelcomeRow>
       <LevelRow>
-        <LevelBadge>
-          <Star size={14} />
-          <span>Level {experience.level}</span>
+        <LevelBadge $color={levelColor}>
+          <ArrowUp size={14} />
+          {isShimmering ? (
+            <ShimmerText $color={levelColor}>Level {level}</ShimmerText>
+          ) : (
+            <span>Level {level}</span>
+          )}
         </LevelBadge>
         <XpText>
           {experience.currentXp} / {experience.xpForNextLevel} XP
         </XpText>
       </LevelRow>
       <ProgressBarContainer>
-        <ProgressBarFill $percent={experience.progressPercent} />
+        <ProgressBarFill $percent={experience.progressPercent} $color={levelColor} />
       </ProgressBarContainer>
     </Container>
   );
 }
 
-// Compact styles for inline header display
-const CompactContainer = styled.div`
+const ShimmerText = styled.span<{ $color: string }>`
+  background: linear-gradient(
+    90deg,
+    ${(p) => p.$color} 0%,
+    rgba(255, 255, 255, 0.9) 45%,
+    rgba(255, 255, 255, 0.9) 55%,
+    ${(p) => p.$color} 100%
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: textShimmer 2.5s ease-in-out infinite;
+
+  @keyframes textShimmer {
+    0% { background-position: 100% 0; }
+    100% { background-position: -100% 0; }
+  }
+`;
+
+const CompactWrapper = styled.div`
   display: flex;
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
+  row-gap: 6px;
+  min-height: 26px;
 `;
 
-const CompactLevelBadge = styled.div`
+const CompactLevelBadge = styled.div<{ $color: string }>`
   display: flex;
   align-items: center;
   gap: 4px;
   font-size: 12px;
-  font-weight: 600;
-  color: ${LOUNGE_COLORS.tier1};
-
-  svg {
-    fill: ${LOUNGE_COLORS.tier1};
-  }
+  font-weight: 700;
+  color: ${(p) => p.$color};
 `;
 
 const CompactXp = styled.span`
@@ -116,19 +147,19 @@ const CompactProgressBar = styled.div`
   }
 `;
 
-const CompactProgressFill = styled.div<{ $percent: number }>`
+const CompactProgressFill = styled.div<{ $percent: number; $color: string }>`
   height: 100%;
   width: ${(props) => props.$percent}%;
-  background: ${LOUNGE_COLORS.tier1};
+  background: ${(p) => p.$color};
   border-radius: 2px;
   transition: width 0.5s ease;
 `;
 
 const CompactSkeleton = styled.div`
-  width: 120px;
-  height: 16px;
+  width: 280px;
+  height: 26px;
   background: rgba(255, 255, 255, 0.08);
-  border-radius: 4px;
+  border-radius: 6px;
   animation: pulse 1.5s ease-in-out infinite;
 
   @keyframes pulse {
@@ -174,20 +205,16 @@ const LevelRow = styled.div`
   gap: 12px;
 `;
 
-const LevelBadge = styled.div`
+const LevelBadge = styled.div<{ $color: string }>`
   display: flex;
   align-items: center;
   gap: 6px;
   font-size: 13px;
-  font-weight: 600;
-  color: ${LOUNGE_COLORS.tier1};
-  background: ${LOUNGE_COLORS.tier1}15;
+  font-weight: 700;
+  color: ${(p) => p.$color};
+  background: ${(p) => p.$color}15;
   padding: 4px 10px;
   border-radius: 6px;
-
-  svg {
-    fill: ${LOUNGE_COLORS.tier1};
-  }
 `;
 
 const XpText = styled.span`
@@ -205,13 +232,13 @@ const ProgressBarContainer = styled.div`
   overflow: hidden;
 `;
 
-const ProgressBarFill = styled.div<{ $percent: number }>`
+const ProgressBarFill = styled.div<{ $percent: number; $color: string }>`
   height: 100%;
   width: ${(props) => props.$percent}%;
   background: linear-gradient(
     90deg,
-    ${LOUNGE_COLORS.tier1} 0%,
-    ${LOUNGE_COLORS.tier1}cc 100%
+    ${(p) => p.$color} 0%,
+    ${(p) => p.$color}cc 100%
   );
   border-radius: 3px;
   transition: width 0.5s ease;

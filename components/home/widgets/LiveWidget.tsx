@@ -93,6 +93,12 @@ export function LiveWidget({ isLive }: LiveWidgetProps) {
 
   return (
     <WidgetContainer title="Live" icon={<Radio size={16} />} variant="accent" headerAction={<a href="https://twitch.tv/nevvulo" target="_blank" rel="noopener noreferrer">Watch on Twitch</a>}>
+      {/* Status line */}
+      <StatusRowTop>
+        <OfflineDot />
+        <StatusText>Nevulo is offline</StatusText>
+      </StatusRowTop>
+
       {/* Gauge */}
       <GaugeSection>
         <GaugeContainer>
@@ -105,12 +111,6 @@ export function LiveWidget({ isLive }: LiveWidgetProps) {
         </GaugeText>
         <Message>{message}</Message>
       </GaugeSection>
-
-      {/* Status line */}
-      <StatusRow>
-        <OfflineDot />
-        <StatusText>Nevulo is offline</StatusText>
-      </StatusRow>
 
       {/* Upcoming events */}
       {upcomingEvents && upcomingEvents.length > 0 && (
@@ -310,13 +310,13 @@ const Message = styled.p`
   line-height: 1.4;
 `;
 
-const StatusRow = styled.div`
+const StatusRowTop = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-top: 10px;
-  padding-top: 10px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 `;
 
 const OfflineDot = styled.div`

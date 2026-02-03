@@ -178,6 +178,9 @@ export const create = mutation({
     ),
     order: v.number(),
     isFeatured: v.boolean(),
+    accentColor: v.optional(v.string()),
+    displaySize: v.optional(v.union(v.literal("featured"), v.literal("medium"), v.literal("small"))),
+    robloxUniverseId: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const now = Date.now();
@@ -246,6 +249,9 @@ export const update = mutation({
     ),
     order: v.optional(v.number()),
     isFeatured: v.optional(v.boolean()),
+    accentColor: v.optional(v.string()),
+    displaySize: v.optional(v.union(v.literal("featured"), v.literal("medium"), v.literal("small"))),
+    robloxUniverseId: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const { id, ...fields } = args;

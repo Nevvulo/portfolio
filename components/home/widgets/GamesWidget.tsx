@@ -1,6 +1,8 @@
 import { useQuery } from "convex/react";
-import { Code2, Gamepad2, Users } from "lucide-react";
+import { Code2, Gamepad2, Users, Eye } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import styled from "styled-components";
 import { api } from "../../../convex/_generated/api";
 import { WidgetContainer } from "./WidgetContainer";
@@ -17,12 +19,26 @@ export function SoftwareWidget() {
       <SoftwareGrid>
         {featured?.map((software) => (
           <SoftwareCard key={software._id} href={`/software/${software.slug}`}>
-            <CardImageContainer $gradient={software.background || undefined}>
+            <SoftwareImageContainer $gradient={software.background || undefined}>
               {software.bannerUrl ? (
-                <BannerImage src={software.bannerUrl} alt={software.name} />
+                <Image
+                  src={software.bannerUrl}
+                  alt={software.name}
+                  fill
+                  sizes="(max-width: 480px) 100vw, 50vw"
+                  style={{ objectFit: "cover" }}
+                  unoptimized={software.bannerUrl.includes("convex.cloud")}
+                />
               ) : software.logoUrl ? (
                 <LogoWrapper>
-                  <LogoImage src={software.logoUrl} alt={software.name} />
+                  <Image
+                    src={software.logoUrl}
+                    alt={software.name}
+                    width={64}
+                    height={64}
+                    style={{ objectFit: "contain" }}
+                    unoptimized={software.logoUrl.includes("convex.cloud")}
+                  />
                 </LogoWrapper>
               ) : (
                 <PlaceholderIcon>
@@ -40,11 +56,11 @@ export function SoftwareWidget() {
                   {software.status === "beta" ? "Beta" : software.status}
                 </StatusBadge>
               )}
-            </CardImageContainer>
-            <CardInfo>
-              <CardTitle>{software.name}</CardTitle>
-              <CardDesc>{software.shortDescription}</CardDesc>
-            </CardInfo>
+            </SoftwareImageContainer>
+            <SoftwareCardInfo>
+              <SoftwareCardTitle>{software.name}</SoftwareCardTitle>
+              <SoftwareCardDesc>{software.shortDescription}</SoftwareCardDesc>
+            </SoftwareCardInfo>
           </SoftwareCard>
         ))}
       </SoftwareGrid>
@@ -57,10 +73,9 @@ export function SoftwareWidget() {
 // ============================================
 
 interface RobloxStats {
-  playing: number;
   visits: number;
+  playing: number;
   favoritedCount: number;
-  name: string;
 }
 
 export function GamesWidget() {
@@ -68,59 +83,143 @@ export function GamesWidget() {
   const playerCountStat = useQuery(api.netvulo.getLiveStat, { key: "golfquest_players" });
   const playerCount = typeof playerCountStat?.value === "number" ? playerCountStat.value : 0;
 
-  // TODO: Fetch Roblox stats when universe IDs are available on software entries
-  const robloxStats: Record<string, RobloxStats> = {};
+  // Roblox stats state
+  const [robloxStats, setRobloxStats] = useState<Record<string, RobloxStats>>({});
+
+  // Fetch Roblox stats on mount for games with universeId
+  useEffect(() => {
+    if (!featured) return;
+
+    featured.forEach(async (game) => {
+      if (game.robloxUniverseId) {
+        try {
+          const res = await fetch(`/api/roblox/universe-stats?universeId=${game.robloxUniverseId}`);
+          if (res.ok) {
+            const stats = await res.json();
+            setRobloxStats((prev) => ({ ...prev, [game.slug]: stats }));
+          }
+        } catch (error) {
+          console.error(`Failed to fetch Roblox stats for ${game.slug}:`, error);
+        }
+      }
+    });
+  }, [featured]);
+
+  // Listen for WebSocket player count updates
+  useEffect(() => {
+    const wsUrl = process.env.NEXT_PUBLIC_NETVULO_WS_URL;
+    if (!wsUrl) return;
+
+    let ws: WebSocket | null = null;
+    let reconnectTimeout: NodeJS.Timeout;
+
+    const connect = () => {
+      ws = new WebSocket(wsUrl);
+
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          if (data.event_type === "PLAYER_COUNT_UPDATE" && data.source === "golfquest") {
+            // Update is handled by Convex subscription, but we could also handle it here
+          }
+        } catch (e) {
+          // Ignore parse errors
+        }
+      };
+
+      ws.onclose = () => {
+        // Reconnect after 5 seconds
+        reconnectTimeout = setTimeout(connect, 5000);
+      };
+
+      ws.onerror = () => {
+        ws?.close();
+      };
+    };
+
+    connect();
+
+    return () => {
+      clearTimeout(reconnectTimeout);
+      ws?.close();
+    };
+  }, []);
 
   return (
     <WidgetContainer title="Games" icon={<Gamepad2 size={16} />}>
       <GamesList>
-        {featured?.map((game) => (
-          <GameCard key={game._id} href={`/software/${game.slug}`}>
-            <CardImageContainer $gradient={game.background || undefined}>
-              {game.bannerUrl ? (
-                <BannerImage src={game.bannerUrl} alt={game.name} />
-              ) : game.logoUrl ? (
-                <LogoWrapper>
-                  <LogoImage src={game.logoUrl} alt={game.name} />
-                </LogoWrapper>
-              ) : (
-                <PlaceholderIcon>
-                  <Gamepad2 size={28} />
-                </PlaceholderIcon>
-              )}
-              <CardOverlay />
-              {playerCount > 0 && game.slug === "golfquest" && (
-                <PlayerBadge>
-                  <PlayerDot />
-                  <Users size={10} />
-                  <span>{playerCount} playing</span>
-                </PlayerBadge>
-              )}
-              {game.status === "coming-soon" && (
-                <SoonOverlay>
-                  <SoonLabel>soon™</SoonLabel>
-                </SoonOverlay>
-              )}
-              {game.status !== "active" && game.status !== "coming-soon" && (
-                <StatusBadge $status={game.status}>
-                  {game.status === "beta" ? "Beta" : game.status}
-                </StatusBadge>
-              )}
-            </CardImageContainer>
-            <CardInfo>
-              <CardTitle>{game.name}</CardTitle>
-              <CardDesc>{game.shortDescription}</CardDesc>
-              {robloxStats[game.slug] != null && (
-                <StatsRow>
-                  <StatItem>{robloxStats[game.slug]!.visits.toLocaleString()} visits</StatItem>
-                </StatsRow>
-              )}
-            </CardInfo>
-          </GameCard>
-        ))}
+        {featured?.map((game) => {
+          const stats = robloxStats[game.slug];
+          const isGolfquest = game.slug === "golfquest";
+          const currentPlayers = isGolfquest ? playerCount : (stats?.playing ?? 0);
+
+          return (
+            <GameCard key={game._id} href={`/software/${game.slug}`}>
+              <GameImageContainer $gradient={game.background || undefined}>
+                {game.bannerUrl ? (
+                  <GameBannerImage src={game.bannerUrl} alt={game.name} />
+                ) : game.logoUrl ? (
+                  <LogoWrapper>
+                    <LogoImage src={game.logoUrl} alt={game.name} />
+                  </LogoWrapper>
+                ) : (
+                  <PlaceholderIcon>
+                    <Gamepad2 size={28} />
+                  </PlaceholderIcon>
+                )}
+
+                {/* Top-left gradient overlay for text */}
+                <GameOverlay />
+
+                {/* Title + stats in top-left */}
+                <GameInfo>
+                  <GameTitle>{game.name}</GameTitle>
+                  <GameStatsRow>
+                    {currentPlayers > 0 && (
+                      <GameStat $highlight>
+                        <PlayerDot />
+                        <Users size={11} />
+                        <span>{currentPlayers.toLocaleString()}</span>
+                      </GameStat>
+                    )}
+                    {stats?.visits != null && (
+                      <GameStat>
+                        <Eye size={11} />
+                        <span>{formatNumber(stats.visits)}</span>
+                      </GameStat>
+                    )}
+                  </GameStatsRow>
+                </GameInfo>
+
+                {/* Status badges */}
+                {game.status === "coming-soon" && (
+                  <SoonOverlayTopRight>
+                    <SoonLabel>soon™</SoonLabel>
+                  </SoonOverlayTopRight>
+                )}
+                {game.status !== "active" && game.status !== "coming-soon" && (
+                  <StatusBadgeTopRight $status={game.status}>
+                    {game.status === "beta" ? "Beta" : game.status}
+                  </StatusBadgeTopRight>
+                )}
+              </GameImageContainer>
+            </GameCard>
+          );
+        })}
       </GamesList>
     </WidgetContainer>
   );
+}
+
+// Format large numbers (e.g., 1.2M, 500K)
+function formatNumber(num: number): string {
+  if (num >= 1_000_000) {
+    return (num / 1_000_000).toFixed(1).replace(/\.0$/, "") + "M";
+  }
+  if (num >= 1_000) {
+    return (num / 1_000).toFixed(1).replace(/\.0$/, "") + "K";
+  }
+  return num.toLocaleString();
 }
 
 // ============================================
@@ -135,6 +234,32 @@ const SoftwareGrid = styled.div`
   @media (max-width: 480px) {
     grid-template-columns: 1fr;
   }
+`;
+
+const SoftwareImageContainer = styled.div<{ $gradient?: string }>`
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  ${(p) => p.$gradient && `background: ${p.$gradient};`}
+`;
+
+const SoftwareCardInfo = styled.div`
+  padding: 0.7em 0.8em;
+`;
+
+const SoftwareCardTitle = styled.h4`
+  margin: 0;
+  font-size: 1em;
+  font-weight: 600;
+  color: ${(props) => props.theme.contrast};
+`;
+
+const SoftwareCardDesc = styled.p`
+  margin: 0.2em 0 0;
+  font-size: 0.8em;
+  color: ${(props) => props.theme.textColor};
+  opacity: 0.6;
+  line-height: 1.4;
 `;
 
 const GamesList = styled.div`
@@ -161,33 +286,86 @@ const SoftwareCard = styled(Link)`
 `;
 
 const GameCard = styled(Link)`
-  display: flex;
-  flex-direction: column;
+  display: block;
   border-radius: 10px;
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.06);
   text-decoration: none;
   transition: all 0.2s ease;
 
   &:hover {
-    border-color: rgba(255, 255, 255, 0.12);
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   }
 `;
 
-const CardImageContainer = styled.div<{ $gradient?: string }>`
+const GameImageContainer = styled.div<{ $gradient?: string }>`
   position: relative;
   width: 100%;
-  aspect-ratio: 16 / 10;
+  aspect-ratio: 16 / 9;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  overflow: hidden;
   ${(p) => p.$gradient && `background: ${p.$gradient};`}
 `;
 
-const BannerImage = styled.img`
+const GameBannerImage = styled.img`
   width: 100%;
   height: 100%;
   object-fit: cover;
+`;
+
+const GameOverlay = styled.div`
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0.3) 40%, transparent 70%);
+  pointer-events: none;
+`;
+
+const GameInfo = styled.div`
+  position: absolute;
+  top: 10px;
+  left: 12px;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+`;
+
+const GameTitle = styled.h4`
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: white;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+`;
+
+const GameStatsRow = styled.div`
+  display: flex;
+  gap: 10px;
+  align-items: center;
+`;
+
+const GameStat = styled.div<{ $highlight?: boolean }>`
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  color: ${(p) => (p.$highlight ? "#4ade80" : "rgba(255, 255, 255, 0.8)")};
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+
+  svg {
+    opacity: 0.9;
+  }
+`;
+
+const PlayerDot = styled.div`
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #4ade80;
+  box-shadow: 0 0 4px #4ade80;
 `;
 
 const LogoWrapper = styled.div`
@@ -211,29 +389,6 @@ const CardOverlay = styled.div`
   background: linear-gradient(to bottom, transparent 50%, rgba(0, 0, 0, 0.4) 100%);
 `;
 
-const PlayerBadge = styled.div`
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 3px 7px;
-  background: rgba(0, 0, 0, 0.7);
-  border-radius: 4px;
-  font-size: 11px;
-  font-weight: 500;
-  color: #22c55e;
-  z-index: 2;
-`;
-
-const PlayerDot = styled.div`
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #22c55e;
-`;
-
 const StatusBadge = styled.div<{ $status?: string }>`
   position: absolute;
   top: 8px;
@@ -254,6 +409,12 @@ const StatusBadge = styled.div<{ $status?: string }>`
   color: white;
 `;
 
+const StatusBadgeTopRight = styled(StatusBadge)`
+  top: 8px;
+  left: auto;
+  right: 8px;
+`;
+
 const SoonOverlay = styled.div`
   position: absolute;
   inset: 0;
@@ -265,6 +426,8 @@ const SoonOverlay = styled.div`
   padding: 8px 10px;
   pointer-events: none;
 `;
+
+const SoonOverlayTopRight = styled(SoonOverlay)``;
 
 const SoonLabel = styled.span`
   font-family: "Fira Code", var(--font-mono), monospace;
@@ -282,34 +445,3 @@ const PlaceholderIcon = styled.div`
   justify-content: center;
   color: rgba(255, 255, 255, 0.3);
 `;
-
-const CardInfo = styled.div`
-  padding: 10px 12px;
-`;
-
-const CardTitle = styled.h4`
-  margin: 0;
-  font-size: 14px;
-  font-weight: 600;
-  color: ${(props) => props.theme.contrast};
-`;
-
-const CardDesc = styled.p`
-  margin: 2px 0 0;
-  font-size: 11px;
-  color: ${(props) => props.theme.textColor};
-  opacity: 0.6;
-`;
-
-const StatsRow = styled.div`
-  display: flex;
-  gap: 12px;
-  margin-top: 4px;
-`;
-
-const StatItem = styled.span`
-  font-size: 10px;
-  color: ${(props) => props.theme.textColor};
-  opacity: 0.5;
-`;
-

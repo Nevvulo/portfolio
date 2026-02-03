@@ -142,6 +142,16 @@ function QuickLinks() {
         </LinkContent>
         <ChevronRight size={16} />
       </QuickLink>
+      <QuickLink href="/admin/inventory">
+        <LinkIcon $color="#a855f7">
+          <Shield size={20} />
+        </LinkIcon>
+        <LinkContent>
+          <LinkTitle>Inventory</LinkTitle>
+          <LinkDesc>Items, lootboxes, tier rewards</LinkDesc>
+        </LinkContent>
+        <ChevronRight size={16} />
+      </QuickLink>
     </LinksGrid>
   );
 }

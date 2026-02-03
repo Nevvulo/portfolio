@@ -9,7 +9,10 @@ import { WidgetContainer } from "./WidgetContainer";
 
 export function VideosWidget() {
   const posts = useQuery(api.blogPosts.getForBento, { excludeNews: true });
-  const videoPosts = posts?.filter((p) => p.contentType === "video").slice(0, 10) ?? [];
+  const videoPosts = posts
+    ?.filter((p) => p.contentType === "video")
+    .sort((a, b) => (b.publishedAt ?? 0) - (a.publishedAt ?? 0))
+    .slice(0, 10) ?? [];
 
   const carouselRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);

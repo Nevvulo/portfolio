@@ -1,6 +1,7 @@
 import { useClerk, useUser } from "@clerk/nextjs";
 import { useSubscription } from "@clerk/nextjs/experimental";
 import { useMutation, useQuery } from "convex/react";
+import { Box, Sparkles } from "lucide-react";
 import Head from "next/head";
 import Link from "next/link";
 import { useRouter } from "next/router";
@@ -8,6 +9,11 @@ import { useEffect, useState } from "react";
 import styled from "styled-components";
 import { SupporterBadges } from "../../components/badges/supporter-badges";
 import { SimpleNavbar } from "../../components/navbar/simple";
+import { InventoryItemCard } from "../../components/vault/InventoryItemCard";
+import { ItemDetailModal } from "../../components/vault/ItemDetailModal";
+import { LootboxCard } from "../../components/vault/LootboxCard";
+import { LootboxOpenModal } from "../../components/vault/LootboxOpenModal";
+import { RARITY_COLORS, type Rarity } from "../../constants/rarity";
 import { api } from "../../convex/_generated/api";
 import { useSupporterStatus } from "../../hooks/useSupporterStatus";
 
@@ -30,6 +36,13 @@ export default function AccountPage() {
   const convexUser = useQuery(api.users.getMe);
   const updateShowOnCredits = useMutation(api.users.updateShowOnCredits);
   const [creditsToggleSaving, setCreditsToggleSaving] = useState(false);
+
+  // Inventory data
+  const inventory = useQuery(api.inventory.getMyInventory);
+  const lootboxes = useQuery(api.inventory.getMyLootboxes, { opened: false });
+  const [selectedEntry, setSelectedEntry] = useState<any>(null);
+  const [selectedLootbox, setSelectedLootbox] = useState<any>(null);
+  const [inventoryFilter, setInventoryFilter] = useState<string>("all");
 
   useEffect(() => {
     if (isLoaded && !isSignedIn) {
@@ -140,6 +153,13 @@ export default function AccountPage() {
     }
   };
 
+  const hasLootboxes = lootboxes && lootboxes.length > 0;
+  const hasInventory = inventory && inventory.length > 0;
+  const filteredInventory = inventory?.filter((entry: any) => {
+    if (inventoryFilter === "all") return true;
+    return entry.item.rarity === inventoryFilter || entry.item.type === inventoryFilter;
+  });
+
   return (
     <AccountView>
       <SimpleNavbar backRoute="/" />
@@ -159,6 +179,74 @@ export default function AccountPage() {
             </ProfileInfo>
           </ProfileCard>
         </Section>
+
+        {(hasLootboxes || hasInventory) && (
+          <Section>
+            <SectionTitle>Your Items</SectionTitle>
+            <SectionDescription>
+              Items and loot collected from supporting and engaging.
+            </SectionDescription>
+
+            {hasLootboxes && (
+              <ItemsCard style={{ marginBottom: "1rem" }}>
+                <ItemsSectionLabel>
+                  <Box size={16} /> Legend Loot
+                  <ItemCount>{lootboxes!.length} unopened</ItemCount>
+                </ItemsSectionLabel>
+                <CompactLootboxRow>
+                  {lootboxes!.map((box: any) => (
+                    <LootboxCard
+                      key={box._id}
+                      lootbox={box}
+                      onClick={() => setSelectedLootbox(box)}
+                    />
+                  ))}
+                </CompactLootboxRow>
+              </ItemsCard>
+            )}
+
+            {hasInventory && (
+              <ItemsCard>
+                <ItemsSectionLabel>
+                  <Sparkles size={16} /> Inventory
+                  <ItemCount>{inventory!.length} items</ItemCount>
+                </ItemsSectionLabel>
+                <CompactFilterBar>
+                  <CompactFilterChip $active={inventoryFilter === "all"} onClick={() => setInventoryFilter("all")}>
+                    All
+                  </CompactFilterChip>
+                  {["common", "uncommon", "rare", "epic", "legendary"].map((r) => {
+                    const config = RARITY_COLORS[r as Rarity];
+                    return (
+                      <CompactFilterChip
+                        key={r}
+                        $active={inventoryFilter === r}
+                        $color={config.color}
+                        onClick={() => setInventoryFilter(r)}
+                      >
+                        {config.label}
+                      </CompactFilterChip>
+                    );
+                  })}
+                </CompactFilterBar>
+                <CompactInventoryGrid>
+                  {filteredInventory?.map((entry: any) => (
+                    <InventoryItemCard
+                      key={entry._id}
+                      item={entry.item}
+                      quantity={entry.quantity}
+                      isUsed={entry.isUsed}
+                      onClick={() => setSelectedEntry(entry)}
+                    />
+                  ))}
+                  {filteredInventory?.length === 0 && (
+                    <CompactEmptyFilter>No items match this filter</CompactEmptyFilter>
+                  )}
+                </CompactInventoryGrid>
+              </ItemsCard>
+            )}
+          </Section>
+        )}
 
         <Section>
           <SectionTitle>Connected Accounts</SectionTitle>
@@ -342,6 +430,17 @@ export default function AccountPage() {
 
         <SignOutButton onClick={() => signOut({ redirectUrl: "/" })}>Sign Out</SignOutButton>
       </ContentContainer>
+
+      {selectedEntry && (
+        <ItemDetailModal entry={selectedEntry} onClose={() => setSelectedEntry(null)} />
+      )}
+      {selectedLootbox && (
+        <LootboxOpenModal
+          lootbox={selectedLootbox}
+          onClose={() => setSelectedLootbox(null)}
+          onOpened={() => setSelectedLootbox(null)}
+        />
+      )}
 
       <Head>
         <title>Account - Nevulo</title>
@@ -849,4 +948,86 @@ const ToggleKnob = styled.div<{ $enabled: boolean }>`
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
   transition: transform 0.2s ease;
   transform: translateX(${(props) => (props.$enabled ? "20px" : "0")});
+`;
+
+// Inventory styled components
+const ItemsCard = styled.div`
+  background: ${(props) => props.theme.postBackground};
+  border: 1.5px solid rgba(79, 77, 193, 0.2);
+  border-radius: 12px;
+  padding: 1.25rem;
+`;
+
+const ItemsSectionLabel = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 15px;
+  color: ${(props) => props.theme.contrast};
+  margin-bottom: 12px;
+
+  svg {
+    opacity: 0.7;
+  }
+`;
+
+const ItemCount = styled.span`
+  font-size: 12px;
+  font-weight: 500;
+  opacity: 0.5;
+  margin-left: auto;
+`;
+
+const CompactLootboxRow = styled.div`
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: thin;
+`;
+
+const CompactFilterBar = styled.div`
+  display: flex;
+  gap: 6px;
+  margin-bottom: 12px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: thin;
+`;
+
+const CompactFilterChip = styled.button<{ $active: boolean; $color?: string }>`
+  padding: 4px 12px;
+  background: ${(p) => (p.$active ? (p.$color ? `${p.$color}22` : "rgba(79, 77, 193, 0.2)") : "rgba(255, 255, 255, 0.05)")};
+  border: 1px solid ${(p) => (p.$active ? (p.$color || "rgba(79, 77, 193, 0.4)") : "rgba(255, 255, 255, 0.08)")};
+  border-radius: 16px;
+  color: ${(p) => (p.$active ? (p.$color || "#4f4dc1") : p.theme.contrast)};
+  opacity: ${(p) => (p.$active ? 1 : 0.7)};
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.08);
+  }
+`;
+
+const CompactInventoryGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 10px;
+`;
+
+const CompactEmptyFilter = styled.div`
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 24px;
+  color: ${(p) => p.theme.contrast};
+  opacity: 0.5;
+  font-family: var(--font-sans);
+  font-size: 13px;
 `;

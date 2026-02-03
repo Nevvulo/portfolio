@@ -35,6 +35,7 @@ export const WIDGET_DEFINITIONS: WidgetDefinition[] = [
   { id: "activity",       defaultSize: "medium", minSize: "small",  promotedSize: "large",  promotionThreshold: 25 },
   { id: "community",      defaultSize: "medium", minSize: "small" },
   { id: "integrations",   defaultSize: "medium", minSize: "medium", promotedSize: "large",  promotionThreshold: 15 },
+  { id: "perks",          defaultSize: "medium", minSize: "small" },
   { id: "videos",         defaultSize: "large",  minSize: "medium" },
   { id: "software",       defaultSize: "large",  minSize: "medium" },
   { id: "games",          defaultSize: "small",  minSize: "small" },

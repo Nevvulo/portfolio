@@ -28,6 +28,7 @@ import type * as discord from "../discord.js";
 import type * as experience from "../experience.js";
 import type * as featuredContent from "../featuredContent.js";
 import type * as http from "../http.js";
+import type * as inventory from "../inventory.js";
 import type * as lib_upstashPubsub from "../lib/upstashPubsub.js";
 import type * as netvulo from "../netvulo.js";
 import type * as notifications from "../notifications.js";
@@ -74,6 +75,7 @@ declare const fullApi: ApiFromModules<{
   experience: typeof experience;
   featuredContent: typeof featuredContent;
   http: typeof http;
+  inventory: typeof inventory;
   "lib/upstashPubsub": typeof lib_upstashPubsub;
   netvulo: typeof netvulo;
   notifications: typeof notifications;

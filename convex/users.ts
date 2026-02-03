@@ -1036,6 +1036,8 @@ export const getByUsername = query({
       discordBooster: user.discordBooster,
       // Feed privacy setting
       feedPrivacy: user.feedPrivacy,
+      // Profile links (Linktree-style)
+      profileLinks: user.profileLinks,
     };
   },
 });
@@ -1545,5 +1547,89 @@ export const getFounderStats = query({
           avatarUrl: u.avatarUrl ?? null,
         })),
     };
+  },
+});
+
+// ============================================
+// SERVICE LINKING (Super Legend Integrations)
+// ============================================
+
+/**
+ * Link a service to the user's account
+ * Called after successful assert-link from Netvulo
+ */
+export const linkService = mutation({
+  args: {
+    slug: v.string(),
+    serviceUserId: v.optional(v.string()),
+    serviceUsername: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const user = await requireUser(ctx);
+
+    // Get existing linked services or empty array
+    const existingServices = user.linkedServices ?? [];
+
+    // Check if already linked
+    const alreadyLinked = existingServices.some((s) => s.slug === args.slug);
+    if (alreadyLinked) {
+      // Update the existing link
+      const updatedServices = existingServices.map((s) =>
+        s.slug === args.slug
+          ? {
+              ...s,
+              serviceUserId: args.serviceUserId,
+              serviceUsername: args.serviceUsername,
+              linkedAt: Date.now(),
+            }
+          : s
+      );
+      await ctx.db.patch(user._id, { linkedServices: updatedServices });
+      return { success: true, updated: true };
+    }
+
+    // Add new link
+    const newServices = [
+      ...existingServices,
+      {
+        slug: args.slug,
+        serviceUserId: args.serviceUserId,
+        serviceUsername: args.serviceUsername,
+        linkedAt: Date.now(),
+      },
+    ];
+
+    await ctx.db.patch(user._id, { linkedServices: newServices });
+    return { success: true, updated: false };
+  },
+});
+
+/**
+ * Unlink a service from the user's account
+ */
+export const unlinkService = mutation({
+  args: {
+    slug: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const user = await requireUser(ctx);
+
+    const existingServices = user.linkedServices ?? [];
+    const newServices = existingServices.filter((s) => s.slug !== args.slug);
+
+    await ctx.db.patch(user._id, { linkedServices: newServices });
+    return { success: true };
+  },
+});
+
+/**
+ * Get linked services for the current user
+ */
+export const getLinkedServices = query({
+  handler: async (ctx) => {
+    const user = await getCurrentUser(ctx);
+    if (!user) return [];
+
+    return user.linkedServices ?? [];
   },
 });

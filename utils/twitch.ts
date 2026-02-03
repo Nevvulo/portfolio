@@ -1,7 +1,7 @@
 import type { TwitchSubscriptionResponse, TwitchTokenResponse } from "../types/twitch";
 
 const TWITCH_USERNAME = "Nevvulo";
-export const TWITCH_USER_ID = "92360014"; // Nevvulo's Twitch user ID
+export const TWITCH_USER_ID = "143069516"; // Nevvulo's Twitch user ID
 
 export const TWITCH_CLIENT_ID = process.env.TWITCH_CLIENT_ID;
 const TWITCH_CLIENT_SECRET = process.env.TWITCH_CLIENT_SECRET;

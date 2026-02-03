@@ -69,6 +69,13 @@ export default defineSchema({
     level: v.optional(v.number()), // Current level (starts at 1)
     experience: v.optional(v.number()), // XP towards next level
     totalExperience: v.optional(v.number()), // All-time XP earned
+    // Profile links (Linktree-style)
+    profileLinks: v.optional(v.array(v.object({
+      type: v.union(v.literal("service"), v.literal("custom")),
+      serviceKey: v.optional(v.string()),
+      url: v.string(),
+      title: v.optional(v.string()),
+    }))),
     // User feed settings
     feedPrivacy: v.optional(
       v.union(
@@ -80,6 +87,13 @@ export default defineSchema({
     // Credits page visibility
     showOnCredits: v.optional(v.boolean()), // Opt-in to appear on /credits page
     isContributor: v.optional(v.boolean()), // Show in contributors section
+    // Super Legend service linking - array of linked service slugs
+    linkedServices: v.optional(v.array(v.object({
+      slug: v.string(), // Service slug (e.g., "golfquest", "nevi")
+      serviceUserId: v.optional(v.string()), // Service-specific user ID
+      serviceUsername: v.optional(v.string()), // Display name on service
+      linkedAt: v.number(), // When the link was established
+    }))),
     createdAt: v.number(),
   })
     .index("by_clerkId", ["clerkId"])
@@ -101,6 +115,10 @@ export default defineSchema({
       v.literal("comment_reaction"),
       v.literal("feed_reply"),
       v.literal("feed_reaction"),
+      // Inventory system
+      v.literal("inventory_item"),
+      v.literal("lootbox_received"),
+      v.literal("tier_claimable_available"),
       // Legacy types (existing data)
       v.literal("reward"),
       v.literal("giveaway_win"),
@@ -653,8 +671,11 @@ export default defineSchema({
         stars: v.optional(v.number()),
       }),
     ),
+    robloxUniverseId: v.optional(v.string()), // For fetching visits from Roblox API
     order: v.number(),
     isFeatured: v.boolean(),
+    accentColor: v.optional(v.string()), // Hex color for card accent on homepage (e.g. "#5865f2")
+    displaySize: v.optional(v.union(v.literal("featured"), v.literal("medium"), v.literal("small"))), // Controls grid span on homepage
     createdAt: v.number(),
     updatedAt: v.optional(v.number()),
   })
@@ -966,4 +987,148 @@ export default defineSchema({
     .index("by_clerkId", ["clerkId", "status"])
     .index("by_code", ["verificationCode"])
     .index("by_robloxUserId", ["robloxUserId"]),
+
+  // ============================================
+  // INVENTORY & REWARDS SYSTEM
+  // ============================================
+
+  // Global item catalog (admin-defined)
+  inventoryItems: defineTable({
+    slug: v.string(), // Unique ID: "golden-crown"
+    name: v.string(),
+    description: v.string(),
+    iconUrl: v.optional(v.string()), // Icon/preview image
+    previewUrl: v.optional(v.string()), // Larger preview
+    backgroundColor: v.optional(v.string()), // Hex for card bg
+    rarity: v.union(
+      v.literal("common"),
+      v.literal("uncommon"),
+      v.literal("rare"),
+      v.literal("epic"),
+      v.literal("legendary"),
+    ),
+    type: v.union(
+      v.literal("cosmetic"),
+      v.literal("wallpaper"),
+      v.literal("consumable"),
+      v.literal("download"),
+      v.literal("code"),
+      v.literal("role"),
+      v.literal("collectible"),
+    ),
+    category: v.optional(v.string()), // DEPRECATED: use services instead
+    services: v.optional(v.array(v.string())), // Service slugs: ["nevi", "golfquest"]. Empty/undefined = all services
+    isStackable: v.boolean(),
+    isConsumable: v.boolean(),
+    maxPerUser: v.optional(v.number()),
+    assetUrl: v.optional(v.string()), // Download URL
+    code: v.optional(v.string()), // For code-type items
+    metadata: v.optional(v.any()), // Arbitrary (role IDs, effect configs, GQ item mappings)
+    onClaimEffects: v.optional(
+      v.array(
+        v.object({
+          service: v.string(),
+          action: v.string(),
+          payload: v.optional(v.any()),
+        }),
+      ),
+    ),
+    isArchived: v.boolean(),
+    createdAt: v.number(),
+  })
+    .index("by_slug", ["slug"])
+    .index("by_rarity", ["rarity"])
+    .index("by_type", ["type"])
+    .index("by_archived", ["isArchived"]),
+
+  // Items a user owns
+  userInventory: defineTable({
+    userId: v.id("users"),
+    itemId: v.id("inventoryItems"),
+    source: v.union(
+      v.literal("direct_send"),
+      v.literal("lootbox"),
+      v.literal("tier_claim"),
+      v.literal("purchase"),
+      v.literal("event"),
+      v.literal("migration"),
+    ),
+    sourceReferenceId: v.optional(v.string()), // Lootbox ID, tier claimable ID, etc.
+    quantity: v.number(), // 1 for non-stackable
+    isUsed: v.boolean(), // For consumables
+    usedAt: v.optional(v.number()),
+    acquiredAt: v.number(),
+    expiresAt: v.optional(v.number()),
+    metadata: v.optional(v.any()),
+  })
+    .index("by_user", ["userId"])
+    .index("by_user_item", ["userId", "itemId"])
+    .index("by_item", ["itemId"]),
+
+  // Admin-created lootbox definitions (simplified: all items guaranteed, tier2 only)
+  lootboxTemplates: defineTable({
+    name: v.string(), // "January 2026 Legend Loot"
+    description: v.optional(v.string()),
+    // New format: array of item IDs (all granted on open)
+    // Old format had: array of {itemId, weight?, guaranteed} objects — kept via v.any() compat
+    items: v.any(),
+    isActive: v.boolean(),
+    createdAt: v.number(),
+    // DEPRECATED fields (kept for existing data backward compat)
+    iconUrl: v.optional(v.string()),
+    boxStyle: v.optional(v.union(
+      v.literal("mystery_box"),
+      v.literal("chest"),
+      v.literal("envelope"),
+      v.literal("crate"),
+    )),
+    accentColor: v.optional(v.string()),
+    rollCount: v.optional(v.number()),
+    targetTiers: v.optional(v.array(v.string())),
+  }).index("by_active", ["isActive"]),
+
+  // Lootboxes in user's possession
+  userLootboxes: defineTable({
+    userId: v.id("users"),
+    templateId: v.optional(v.id("lootboxTemplates")), // null for custom one-offs
+    customName: v.optional(v.string()),
+    customItems: v.optional(v.array(v.id("inventoryItems"))),
+    isOpened: v.boolean(),
+    openedAt: v.optional(v.number()),
+    receivedItemIds: v.optional(v.array(v.id("inventoryItems"))), // Resolved items after opening
+    boxStyle: v.union(
+      v.literal("mystery_box"),
+      v.literal("chest"),
+      v.literal("envelope"),
+      v.literal("crate"),
+    ),
+    displayName: v.string(),
+    deliveredAt: v.number(),
+    expiresAt: v.optional(v.number()),
+  })
+    .index("by_user", ["userId", "isOpened", "deliveredAt"])
+    .index("by_template", ["templateId"]),
+
+  // Permanent items available to claim by tier
+  tierClaimables: defineTable({
+    itemId: v.id("inventoryItems"),
+    requiredTier: v.union(v.literal("tier1"), v.literal("tier2")),
+    displayOrder: v.number(),
+    headline: v.optional(v.string()), // "Claim your crown!"
+    isActive: v.boolean(),
+    availableFrom: v.optional(v.number()),
+    availableUntil: v.optional(v.number()), // null = permanent
+    createdAt: v.number(),
+  })
+    .index("by_tier", ["requiredTier", "isActive", "displayOrder"])
+    .index("by_item", ["itemId"]),
+
+  // Track who claimed what
+  tierClaimRecords: defineTable({
+    userId: v.id("users"),
+    tierClaimableId: v.id("tierClaimables"),
+    claimedAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_user_claimable", ["userId", "tierClaimableId"]),
 });

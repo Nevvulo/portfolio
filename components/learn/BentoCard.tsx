@@ -47,6 +47,7 @@ export function BentoCard(props: BentoCardProps) {
     contentType,
     youtubeId,
     labels,
+    difficulty,
     readTimeMins,
     publishedAt,
     visibility,
@@ -148,6 +149,7 @@ export function BentoCard(props: BentoCardProps) {
               <FeaturedTitle>{title}</FeaturedTitle>
               <FeaturedDesc>{description}</FeaturedDesc>
               <CardMeta>
+                {difficulty && <DifficultyBadge $difficulty={difficulty}>{difficulty}</DifficultyBadge>}
                 {labels[0] && <Label>{labels[0].replace(/-/g, " ")}</Label>}
                 {readTimeMins && (
                   <ReadTime>
@@ -195,6 +197,7 @@ export function BentoCard(props: BentoCardProps) {
                 <CardTitle>{title}</CardTitle>
                 <CardDesc>{description}</CardDesc>
                 <CardMeta>
+                  {difficulty && <DifficultyBadge $difficulty={difficulty}>{difficulty}</DifficultyBadge>}
                   {labels[0] && <Label>{labels[0].replace(/-/g, " ")}</Label>}
                   {readTimeMins && (
                     <ReadTime>
@@ -243,6 +246,7 @@ export function BentoCard(props: BentoCardProps) {
                 <CardTitle>{title}</CardTitle>
                 <CardDesc>{description}</CardDesc>
                 <CardMeta>
+                  {difficulty && <DifficultyBadge $difficulty={difficulty}>{difficulty}</DifficultyBadge>}
                   {labels[0] && <Label>{labels[0].replace(/-/g, " ")}</Label>}
                   {readTimeMins && (
                     <ReadTime>
@@ -288,7 +292,13 @@ export function BentoCard(props: BentoCardProps) {
                 )}
               </SmallImage>
               <SmallOverlay>
-                <SmallTitle>{title}</SmallTitle>
+                <SmallOverlayContent>
+                  <SmallMeta>
+                    {difficulty && <SmallDifficultyBadge $difficulty={difficulty}>{difficulty}</SmallDifficultyBadge>}
+                    {labels[0] && <SmallLabel>{labels[0].replace(/-/g, " ")}</SmallLabel>}
+                  </SmallMeta>
+                  <SmallTitle>{title}</SmallTitle>
+                </SmallOverlayContent>
               </SmallOverlay>
             </>
           )}
@@ -328,15 +338,18 @@ export function BentoCard(props: BentoCardProps) {
             </MediumImage>
             <MediumContent>
               <CardTitle $small>{title}</CardTitle>
-              <CardDesc $clamp={2}>{description}</CardDesc>
-              <CardMeta>
-                {labels[0] && <Label>{labels[0].replace(/-/g, " ")}</Label>}
+              <CardDesc $clamp={2} $small>{description}</CardDesc>
+              <MediumMeta>
+                <MediumMetaRow>
+                  {difficulty && <DifficultyBadge $difficulty={difficulty}>{difficulty}</DifficultyBadge>}
+                  {labels[0] && <Label>{labels[0].replace(/-/g, " ")}</Label>}
+                </MediumMetaRow>
                 {readTimeMins && (
                   <ReadTime>
                     <FontAwesomeIcon icon={faClock} size="xs" /> {readTimeMins} min
                   </ReadTime>
                 )}
-              </CardMeta>
+              </MediumMeta>
             </MediumContent>
           </>
         )}
@@ -761,12 +774,27 @@ const MediumImage = styled.div`
 `;
 
 const MediumContent = styled.div`
-  padding: 16px;
+  padding: 14px 16px 12px;
   display: flex;
   flex-direction: column;
   justify-content: center;
   flex: 1;
   overflow: hidden;
+`;
+
+const MediumMeta = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: auto;
+  padding-top: 8px;
+`;
+
+const MediumMetaRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
 `;
 
 // ========== SMALL ==========
@@ -820,17 +848,15 @@ const CardTitle = styled.h3<{ $small?: boolean }>`
   font-family: var(--font-sans);
 `;
 
-const CardDesc = styled.p<{ $clamp?: number }>`
+const CardDesc = styled.p<{ $clamp?: number; $small?: boolean }>`
   margin: 0;
-  font-size: 15px;
+  font-size: ${(props) => (props.$small ? "13px" : "15px")};
   color: ${(props) => props.theme.postDescriptionText};
-  line-height: 1.5;
+  line-height: 1.45;
   display: -webkit-box;
   -webkit-line-clamp: ${(props) => props.$clamp || 2};
   -webkit-box-orient: vertical;
   overflow: hidden;
-  text-overflow: ellipsis;
-  word-break: break-word;
 `;
 
 const CardMeta = styled.div`
@@ -870,6 +896,73 @@ const PlayButton = styled.div<{ $large?: boolean; $small?: boolean }>`
     background: rgba(144, 116, 242, 0.9);
     transform: translate(-50%, -50%) scale(1.1);
   }
+`;
+
+// ========== DIFFICULTY BADGE ==========
+const DIFFICULTY_STYLES: Record<string, { bg: string; border: string; color: string }> = {
+  beginner: { bg: "rgba(34, 197, 94, 0.12)", border: "rgba(34, 197, 94, 0.3)", color: "#4ade80" },
+  intermediate: { bg: "rgba(251, 191, 36, 0.12)", border: "rgba(251, 191, 36, 0.3)", color: "#fbbf24" },
+  advanced: { bg: "rgba(239, 68, 68, 0.12)", border: "rgba(239, 68, 68, 0.3)", color: "#f87171" },
+};
+
+const DifficultyBadge = styled.span<{ $difficulty: string }>`
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: lowercase;
+  letter-spacing: 0.3px;
+  padding: 0.1em 0.6em;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  white-space: nowrap;
+  background: ${(p) => DIFFICULTY_STYLES[p.$difficulty]?.bg ?? "rgba(255,255,255,0.08)"};
+  border: 1px solid ${(p) => DIFFICULTY_STYLES[p.$difficulty]?.border ?? "rgba(255,255,255,0.15)"};
+  color: ${(p) => DIFFICULTY_STYLES[p.$difficulty]?.color ?? "rgba(255,255,255,0.7)"};
+`;
+
+// Solid variants for small cards (over images)
+const SOLID_DIFFICULTY_STYLES: Record<string, { bg: string; color: string }> = {
+  beginner: { bg: "#166534", color: "#fff" },
+  intermediate: { bg: "#854d0e", color: "#fef3c7" },
+  advanced: { bg: "#991b1b", color: "#fff" },
+};
+
+const SmallDifficultyBadge = styled.span<{ $difficulty: string }>`
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: lowercase;
+  letter-spacing: 0.3px;
+  padding: 0.15em 0.6em;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  white-space: nowrap;
+  background: ${(p) => SOLID_DIFFICULTY_STYLES[p.$difficulty]?.bg ?? "#333"};
+  color: ${(p) => SOLID_DIFFICULTY_STYLES[p.$difficulty]?.color ?? "#fff"};
+`;
+
+const SmallLabel = styled.div`
+  background: #3730a3;
+  padding: 0.15em 0.6em;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 4px;
+  color: #e0e7ff;
+  text-transform: lowercase;
+`;
+
+const SmallOverlayContent = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  width: 100%;
+`;
+
+const SmallMeta = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
 `;
 
 // ========== LEGEND BADGE ==========

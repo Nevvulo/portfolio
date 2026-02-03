@@ -398,12 +398,13 @@ export const listSlugs = query({
 /**
  * Get posts for bento grid with layout info
  * Can filter by contentType to separate news from articles/videos
- * OPTIMIZED: Minimal fields returned - no author/difficulty (not displayed on cards)
+ * OPTIMIZED: Minimal fields returned - no author (not displayed on cards)
  */
 export const getForBento = query({
   args: {
     contentType: v.optional(contentTypeValidator),
     excludeNews: v.optional(v.boolean()),
+    excludeShorts: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     const user = await getCurrentUser(ctx);
@@ -430,6 +431,11 @@ export const getForBento = query({
       accessible = accessible.filter((p) => p.contentType !== "news");
     }
 
+    // Exclude shorts if requested (display poorly in bento grid)
+    if (args.excludeShorts) {
+      accessible = accessible.filter((p) => !p.labels.includes("short"));
+    }
+
     // Build result with MINIMAL fields (no author lookup - not displayed on cards)
     // Fields: only what BentoCard actually uses + viewCount for recommendations
     const bentoPosts = accessible.map((post) => ({
@@ -441,7 +447,7 @@ export const getForBento = query({
       coverImage: post.coverImage,
       youtubeId: post.youtubeId,
       labels: post.labels,
-      // difficulty removed - not displayed on BentoCard
+      difficulty: post.difficulty,
       readTimeMins: post.readTimeMins,
       bentoSize: post.bentoSize,
       // bentoOrder removed - only needed for sorting (done server-side)
@@ -458,6 +464,7 @@ export const getForBento = query({
 export const getForBentoPersonalized = query({
   args: {
     excludeNews: v.optional(v.boolean()),
+    excludeShorts: v.optional(v.boolean()),
     recommendationScores: v.optional(
       v.array(
         v.object({
@@ -479,6 +486,10 @@ export const getForBentoPersonalized = query({
 
     if (args.excludeNews) {
       accessible = accessible.filter((p) => p.contentType !== "news");
+    }
+
+    if (args.excludeShorts) {
+      accessible = accessible.filter((p) => !p.labels.includes("short"));
     }
 
     const scoreMap = new Map<string, number>();
@@ -548,6 +559,7 @@ export const getForBentoPersonalized = query({
       coverImage: post.coverImage,
       youtubeId: post.youtubeId,
       labels: post.labels,
+      difficulty: post.difficulty,
       readTimeMins: post.readTimeMins,
       bentoSize: post.bentoSize,
       viewCount: post.viewCount,
@@ -562,11 +574,12 @@ export const getForBentoPersonalized = query({
 /**
  * Paginated version of getForBentoPersonalized for infinite scroll
  * Returns posts in batches with cursor-based pagination
- * OPTIMIZED: Minimal fields returned - no author/difficulty (not displayed on cards)
+ * OPTIMIZED: Minimal fields returned - no author (not displayed on cards)
  */
 export const getForBentoPaginated = query({
   args: {
     excludeNews: v.optional(v.boolean()),
+    excludeShorts: v.optional(v.boolean()),
     recommendationScores: v.optional(
       v.array(
         v.object({
@@ -592,6 +605,10 @@ export const getForBentoPaginated = query({
 
     if (args.excludeNews) {
       accessible = accessible.filter((p) => p.contentType !== "news");
+    }
+
+    if (args.excludeShorts) {
+      accessible = accessible.filter((p) => !p.labels.includes("short"));
     }
 
     const scoreMap = new Map<string, number>();
@@ -668,6 +685,7 @@ export const getForBentoPaginated = query({
       coverImage: post.coverImage,
       youtubeId: post.youtubeId,
       labels: post.labels,
+      difficulty: post.difficulty,
       readTimeMins: post.readTimeMins,
       bentoSize: post.bentoSize,
       viewCount: post.viewCount,
@@ -1338,7 +1356,7 @@ export const updateBentoLayout = mutation({
     updates: v.array(
       v.object({
         postId: v.id("blogPosts"),
-        bentoOrder: v.number(),
+        bentoOrder: v.optional(v.number()),
         bentoSize: v.optional(bentoSizeValidator),
       }),
     ),
@@ -1348,13 +1366,16 @@ export const updateBentoLayout = mutation({
 
     for (const update of args.updates) {
       const patch: {
-        bentoOrder: number;
+        bentoOrder?: number;
         bentoSize?: "small" | "medium" | "large" | "banner" | "featured";
         updatedAt: number;
       } = {
-        bentoOrder: update.bentoOrder,
         updatedAt: Date.now(),
       };
+
+      if (update.bentoOrder !== undefined) {
+        patch.bentoOrder = update.bentoOrder;
+      }
 
       if (update.bentoSize) {
         patch.bentoSize = update.bentoSize;
