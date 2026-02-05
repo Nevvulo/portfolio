@@ -219,23 +219,26 @@ export default function AIDisclosure() {
       </Container>
 
       <Head key="ai-disclosure">
-        <title>AI Disclosure - Nevulo</title>
+        <title>nevulo - AI Disclosure</title>
         <meta
           name="description"
           content="Learn about how AI tools are (and aren't) used in creating content on nev.so. Committed to authentic, human-written content."
         />
-        <meta property="og:title" content="AI Disclosure - Nevulo" />
+        <meta property="og:title" content="nevulo - AI Disclosure" />
         <meta
           property="og:description"
           content="Learn about how AI tools are (and aren't) used in creating content on nev.so. Committed to authentic, human-written content."
         />
         <meta property="og:url" content="https://nev.so/ai-disclosure" />
+        <meta property="og:site_name" content="nevulo" />
         <meta
           property="og:image"
           content="https://nev.so/api/og?title=AI%20Disclosure&subtitle=Commitment%20to%20authentic%20content"
         />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="AI Disclosure - Nevulo" />
+        <meta name="twitter:title" content="nevulo - AI Disclosure" />
         <meta
           name="twitter:description"
           content="Learn about how AI tools are (and aren't) used in creating content on nev.so."

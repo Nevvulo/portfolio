@@ -209,14 +209,28 @@ export default function CreditsPage() {
       </ContentContainer>
 
       <Head>
-        <title>Credits - Nevulo</title>
+        <title>nevulo - Credits</title>
         <meta
           name="description"
           content="Thank you to all the amazing supporters who make this possible!"
         />
-        <meta property="og:title" content="Credits - Nevulo" />
-        <meta property="og:description" content="Thank you to all the amazing supporters!" />
+        <meta property="og:title" content="nevulo - Credits" />
+        <meta property="og:description" content="shout out to all the legends" />
         <meta property="og:url" content="https://nev.so/credits" />
+        <meta property="og:site_name" content="nevulo" />
+        <meta
+          property="og:image"
+          content="https://nev.so/api/og?title=Credits&subtitle=shout%20out%20to%20all%20the%20legends"
+        />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="nevulo - Credits" />
+        <meta name="twitter:description" content="shout out to all the legends" />
+        <meta
+          name="twitter:image"
+          content="https://nev.so/api/og?title=Credits&subtitle=shout%20out%20to%20all%20the%20legends"
+        />
       </Head>
     </CreditsView>
   );

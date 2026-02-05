@@ -580,17 +580,31 @@ export default function Support() {
       </ContentContainer>
 
       <Head>
-        <title>Support - Nevulo</title>
+        <title>nevulo - Support</title>
         <meta
           name="description"
           content="Support my work and become a Super Legend! Help me create more content and open source projects."
         />
-        <meta property="og:title" content="Support Nevulo" />
+        <meta property="og:title" content="nevulo - Support" />
         <meta
           property="og:description"
           content="Support my work and become a Super Legend! Help me create more content and open source projects."
         />
         <meta property="og:url" content="https://nev.so/support" />
+        <meta property="og:site_name" content="nevulo" />
+        <meta
+          property="og:image"
+          content="https://nev.so/api/og?title=Support&subtitle=Become%20a%20Super%20Legend"
+        />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="nevulo - Support" />
+        <meta name="twitter:description" content="Support my work and become a Super Legend!" />
+        <meta
+          name="twitter:image"
+          content="https://nev.so/api/og?title=Support&subtitle=Become%20a%20Super%20Legend"
+        />
       </Head>
     </SupportView>
   );

@@ -70,17 +70,31 @@ const Golfquest: React.FC = () => {
       </ProjectContainer>
 
       <Head>
-        <title>Golfquest - Roblox Golf Adventure Game</title>
+        <title>Golfquest - nevulo</title>
         <meta
           name="description"
           content="Golfquest is an exciting golf adventure game on Roblox. Explore unique courses, master golf mechanics, and compete with friends!"
         />
-        <meta property="og:title" content="Golfquest - Roblox Golf Adventure" />
+        <meta property="og:title" content="Golfquest - nevulo" />
         <meta
           property="og:description"
           content="An exciting golf adventure game on Roblox combining precision golf with exploration and multiplayer fun."
         />
         <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="nevulo" />
+        <meta
+          property="og:image"
+          content="https://nev.so/api/og?title=Golfquest&subtitle=Roblox%20Golf%20Adventure%20Game"
+        />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Golfquest - nevulo" />
+        <meta name="twitter:description" content="An exciting golf adventure game on Roblox." />
+        <meta
+          name="twitter:image"
+          content="https://nev.so/api/og?title=Golfquest&subtitle=Roblox%20Golf%20Adventure%20Game"
+        />
       </Head>
     </>
   );

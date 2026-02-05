@@ -234,7 +234,7 @@ export default function About() {
       </MainContent>
 
       <Head key="about">
-        <title>About - Nevulo</title>
+        <title>nevulo - About</title>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
@@ -245,21 +245,28 @@ export default function About() {
           name="description"
           content="Learn about Blake (Nevulo), a software engineer based in Melbourne, Australia. Building exceptional digital experiences at Unloan."
         />
-        <meta property="og:title" content="About Nevulo" />
+        <meta property="og:title" content="nevulo - About" />
         <meta
           property="og:description"
           content="Software engineer based in Melbourne, Australia. Building exceptional digital experiences."
         />
         <meta property="og:url" content="https://nev.so/about" />
+        <meta property="og:site_name" content="nevulo" />
         <meta
           property="og:image"
-          content="https://nev.so/api/og?title=About%20Blake&subtitle=Software%20Engineer%20%7C%20Melbourne%2C%20Australia"
+          content="https://nev.so/api/og?title=About&subtitle=Software%20Engineer%20%7C%20Melbourne%2C%20Australia"
         />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="About Nevulo" />
+        <meta name="twitter:title" content="nevulo - About" />
         <meta
           name="twitter:description"
           content="Software engineer based in Melbourne, Australia."
+        />
+        <meta
+          name="twitter:image"
+          content="https://nev.so/api/og?title=About&subtitle=Software%20Engineer%20%7C%20Melbourne%2C%20Australia"
         />
       </Head>
     </PageWrapper>

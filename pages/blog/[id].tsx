@@ -73,9 +73,12 @@ export default function Post({ content, properties, discordWidget }: PostProps) 
 
 function PostBody({ content, properties }: Omit<PostProps, "discordWidget">) {
   const location = `https://nev.so/blog/${properties.slug}`;
-  const ogImage = `${
+  const postImage = `${
     "window" in global ? window.location.origin : "https://nev.so"
   }/blog/${properties.slug}/images/${properties.image}`;
+  const ogImage = postImage
+    ? `https://nev.so/api/og?type=article&title=${encodeURIComponent(properties.title || "")}&subtitle=${encodeURIComponent(properties.description || "")}&image=${encodeURIComponent(postImage)}`
+    : `https://nev.so/api/og?title=${encodeURIComponent(properties.title || "")}&subtitle=${encodeURIComponent(properties.description || "")}`;
   const filename = `${properties.slug}.mdx`;
   const filepath = `posts/${filename}`;
   const creationDate = new Date(properties.createdAt);
@@ -280,7 +283,7 @@ function PostBody({ content, properties }: Omit<PostProps, "discordWidget">) {
       </PostContainer>
 
       <Head>
-        <title>{String(properties.title || "")} › Blog - Nevulo</title>
+        <title>{String(properties.title || "")} - nevulo</title>
         <meta name="title" content={properties.title} />
         <meta name="description" content={properties.description} />
         <meta name="author" content="Nevulo" />
@@ -291,7 +294,7 @@ function PostBody({ content, properties }: Omit<PostProps, "discordWidget">) {
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
         <meta property="og:image:alt" content={properties.title} />
-        <meta property="og:site_name" content="Nevulo Blog" />
+        <meta property="og:site_name" content="nevulo" />
         <meta property="og:url" content={location} />
         <meta property="og:type" content="article" />
         <meta property="og:article:published_time" content={creationDate.toISOString()} />

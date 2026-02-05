@@ -268,8 +268,9 @@ function PostBody({
   hasDuplicateDescription: boolean;
 }) {
   const location = `https://nev.so/learn/${post.slug}`;
-  const ogImage =
-    post.coverImage || `https://nev.so/api/og?title=${encodeURIComponent(post.title)}`;
+  const ogImage = post.coverImage
+    ? `https://nev.so/api/og?type=article&title=${encodeURIComponent(post.title)}&subtitle=${encodeURIComponent(post.description || "")}&image=${encodeURIComponent(post.coverImage)}`
+    : `https://nev.so/api/og?title=${encodeURIComponent(post.title)}&subtitle=${encodeURIComponent(post.description || "")}`;
   const creationDate = post.publishedAt ? new Date(post.publishedAt) : new Date();
 
   // Auth state
@@ -1167,7 +1168,7 @@ function PostBody({
       />
 
       <Head>
-        <title>{`${post.title || ""} - Learn - Nevulo`}</title>
+        <title>{`${post.title || ""} - nevulo`}</title>
         <meta name="title" content={post.title} />
         <meta name="description" content={post.description} />
         <meta name="author" content={post.author?.displayName || "Nevulo"} />
@@ -1178,7 +1179,7 @@ function PostBody({
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
         <meta property="og:image:alt" content={post.title} />
-        <meta property="og:site_name" content="Nevulo Learn" />
+        <meta property="og:site_name" content="nevulo" />
         <meta property="og:url" content={location} />
         <meta property="og:type" content="article" />
         <meta property="og:article:published_time" content={creationDate.toISOString()} />

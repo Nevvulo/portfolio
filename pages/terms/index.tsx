@@ -344,23 +344,26 @@ export default function Terms() {
       </Container>
 
       <Head key="terms">
-        <title>Terms of Service - Nevulo</title>
+        <title>nevulo - Terms</title>
         <meta
           name="description"
           content="Terms of Service for nev.so and Nevulounge. Read our terms governing the use of our services."
         />
-        <meta property="og:title" content="Terms of Service - Nevulo" />
+        <meta property="og:title" content="nevulo - Terms" />
         <meta
           property="og:description"
           content="Terms of Service for nev.so and Nevulounge. Read our terms governing the use of our services."
         />
         <meta property="og:url" content="https://nev.so/terms" />
+        <meta property="og:site_name" content="nevulo" />
         <meta
           property="og:image"
           content="https://nev.so/api/og?title=Terms%20of%20Service&subtitle=Rules%20and%20guidelines%20for%20using%20our%20services"
         />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Terms of Service - Nevulo" />
+        <meta name="twitter:title" content="nevulo - Terms" />
         <meta name="twitter:description" content="Terms of Service for nev.so and Nevulounge." />
         <meta
           name="twitter:image"

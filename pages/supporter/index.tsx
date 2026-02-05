@@ -387,17 +387,31 @@ export default function SupporterBenefits() {
       </ContentContainer>
 
       <Head>
-        <title>Supporter Benefits - Nevulo</title>
+        <title>nevulo - Supporter</title>
         <meta
           name="description"
           content="Discover all the benefits of being a Super Legend supporter. Exclusive content, VIP access, badges, and more!"
         />
-        <meta property="og:title" content="Supporter Benefits - Nevulo" />
+        <meta property="og:title" content="nevulo - Supporter" />
         <meta
           property="og:description"
           content="Discover all the benefits of being a Super Legend supporter."
         />
         <meta property="og:url" content="https://nev.so/supporter" />
+        <meta property="og:site_name" content="nevulo" />
+        <meta
+          property="og:image"
+          content="https://nev.so/api/og?title=Supporter%20Benefits&subtitle=Exclusive%20content%2C%20VIP%20access%2C%20badges%2C%20and%20more"
+        />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="nevulo - Supporter" />
+        <meta name="twitter:description" content="Discover all the benefits of being a Super Legend supporter." />
+        <meta
+          name="twitter:image"
+          content="https://nev.so/api/og?title=Supporter%20Benefits&subtitle=Exclusive%20content%2C%20VIP%20access%2C%20badges%2C%20and%20more"
+        />
       </Head>
     </SupporterView>
   );

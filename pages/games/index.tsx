@@ -62,27 +62,30 @@ export default function GamesPage() {
       </MainContent>
 
       <Head key="games">
-        <title>Games - Nevulo</title>
+        <title>nevulo - Games</title>
         <meta
           name="description"
           content="Explore games I'm developing, including Roblox experiences and other game projects."
         />
-        <meta property="og:title" content="Games by Nevulo" />
+        <meta property="og:title" content="nevulo - Games" />
         <meta
           property="og:description"
           content="Explore games I'm developing, including Roblox experiences and other game projects."
         />
         <meta property="og:url" content="https://nev.so/games" />
+        <meta property="og:site_name" content="nevulo" />
         <meta
           property="og:image"
-          content="https://nev.so/api/og?title=My%20Games&subtitle=Roblox%20%26%20Game%20Development"
+          content="https://nev.so/api/og?title=Games&subtitle=Roblox%20%26%20Game%20Development"
         />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Games by Nevulo" />
+        <meta name="twitter:title" content="nevulo - Games" />
         <meta name="twitter:description" content="Explore games I'm developing." />
         <meta
           name="twitter:image"
-          content="https://nev.so/api/og?title=My%20Games&subtitle=Roblox%20%26%20Game%20Development"
+          content="https://nev.so/api/og?title=Games&subtitle=Roblox%20%26%20Game%20Development"
         />
       </Head>
     </PageWrapper>

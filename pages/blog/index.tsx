@@ -25,32 +25,35 @@ export default function Blog({ posts }: BlogProps) {
       </PostContainer>
 
       <Head key="blog">
-        <title>Blog - Nevulo</title>
+        <title>nevulo - Blog</title>
         <meta
           name="description"
           content={`Read my latest thoughts on software engineering, web development, and technology. ${posts.length} articles and counting.`}
         />
-        <meta property="og:title" content="Nevulo's Blog - Software Engineering Insights" />
+        <meta property="og:title" content="nevulo - Blog" />
         <meta
           property="og:description"
           content={`Read my latest thoughts on software engineering, web development, and technology. ${posts.length} articles and counting.`}
         />
         <meta property="og:url" content="https://nev.so/blog" />
+        <meta property="og:site_name" content="nevulo" />
         <meta
           property="og:image"
-          content="https://nev.so/api/og?title=Blake's%20Blog&subtitle=Software%20Engineering%20Insights"
+          content="https://nev.so/api/og?title=Blog&subtitle=Software%20Engineering%20Insights"
         />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Nevulo's Blog - Software Engineering" />
+        <meta name="twitter:title" content="nevulo - Blog" />
         <meta
           name="twitter:description"
           content={`${posts.length} articles on software engineering and web development.`}
         />
         <meta
           name="twitter:image"
-          content="https://nev.so/api/og?title=Blake's%20Blog&subtitle=Software%20Engineering%20Insights"
+          content="https://nev.so/api/og?title=Blog&subtitle=Software%20Engineering%20Insights"
         />
-        <meta property="apple-mobile-web-app-title" content="Nevulo's Blog" />
+        <meta property="apple-mobile-web-app-title" content="nevulo - Blog" />
         <meta property="department" content="technology" />
         <meta property="audience" content="programmers" />
       </Head>

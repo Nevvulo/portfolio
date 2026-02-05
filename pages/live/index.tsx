@@ -182,21 +182,28 @@ export default function LivePage({ discordWidget, isLive }: LivePageProps) {
       />
 
       <Head key="live">
-        <title>Live & Videos - Nevulo</title>
+        <title>nevulo - Live</title>
         <meta
           name="description"
           content="Watch streams, videos, and clips from Nevulo. Catch live streams on Twitch and past videos on YouTube."
         />
-        <meta property="og:title" content="Live & Videos - Nevulo" />
+        <meta property="og:title" content="nevulo - Live" />
         <meta property="og:description" content="Watch streams, videos, and clips from Nevulo." />
         <meta property="og:url" content="https://nev.so/live" />
+        <meta property="og:site_name" content="nevulo" />
         <meta
           property="og:image"
-          content="https://nev.so/api/og?title=Live%20%26%20Videos&subtitle=Streams%20and%20Content"
+          content="https://nev.so/api/og?title=Live&subtitle=Streams%20and%20Content"
         />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Live & Videos - Nevulo" />
+        <meta name="twitter:title" content="nevulo - Live" />
         <meta name="twitter:description" content="Watch streams, videos, and clips from Nevulo." />
+        <meta
+          name="twitter:image"
+          content="https://nev.so/api/og?title=Live&subtitle=Streams%20and%20Content"
+        />
       </Head>
     </PageWrapper>
   );

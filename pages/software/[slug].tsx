@@ -63,13 +63,23 @@ export default function SoftwareDetailPage() {
   return (
     <>
       <Head>
-        <title>{software.name} - Nevulo</title>
+        <title>{software.name} - nevulo</title>
         <meta name="description" content={software.shortDescription} />
-        <meta property="og:title" content={`${software.name} - Nevulo`} />
+        <meta property="og:title" content={`${software.name} - nevulo`} />
         <meta property="og:description" content={software.shortDescription} />
         <meta property="og:url" content={`https://nev.so/software/${software.slug}`} />
+        <meta property="og:site_name" content="nevulo" />
         <meta
           property="og:image"
+          content={`https://nev.so/api/og?title=${encodeURIComponent(software.name)}&subtitle=${encodeURIComponent(software.shortDescription)}`}
+        />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={`${software.name} - nevulo`} />
+        <meta name="twitter:description" content={software.shortDescription} />
+        <meta
+          name="twitter:image"
           content={`https://nev.so/api/og?title=${encodeURIComponent(software.name)}&subtitle=${encodeURIComponent(software.shortDescription)}`}
         />
       </Head>

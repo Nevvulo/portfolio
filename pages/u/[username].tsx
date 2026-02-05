@@ -125,12 +125,15 @@ export default function ProfilePage() {
     <>
       <Head>
         <title>
-          {user.displayName} (@{user.username}) | nevulo
+          {user.displayName} (@{user.username}) - nevulo
         </title>
         <meta name="description" content={user.bio || `${user.displayName}'s profile on nevulo`} />
-        <meta property="og:title" content={`${user.displayName} | nevulo`} />
+        <meta property="og:title" content={`${user.displayName} - nevulo`} />
         <meta property="og:description" content={user.bio || `${user.displayName}'s profile`} />
+        <meta property="og:site_name" content="nevulo" />
         {user.avatarUrl && <meta property="og:image" content={user.avatarUrl} />}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={`${user.displayName} - nevulo`} />
       </Head>
 
       <Container>

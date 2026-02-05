@@ -174,7 +174,7 @@ export default function VaultPage() {
       {previewItem && <PreviewModal item={previewItem} onClose={() => setPreviewItem(null)} />}
 
       <Head key="vault">
-        <title>Vault - Nevulo</title>
+        <title>nevulo - Vault</title>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
@@ -182,16 +182,16 @@ export default function VaultPage() {
           rel="stylesheet"
         />
         <meta name="description" content="Access exclusive downloads, resources, and tier-restricted content in the vault." />
-        <meta property="og:title" content="Vault - Nevulo" />
+        <meta property="og:title" content="nevulo - Vault" />
         <meta property="og:description" content="Access exclusive downloads, resources, and tier-restricted content." />
         <meta property="og:url" content="https://nev.so/vault" />
         <meta property="og:image" content="https://nev.so/api/og?title=Vault&subtitle=Exclusive%20Content" />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
-        <meta property="og:site_name" content="Nevulo" />
+        <meta property="og:site_name" content="nevulo" />
         <meta property="og:type" content="website" />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Vault - Nevulo" />
+        <meta name="twitter:title" content="nevulo - Vault" />
         <meta name="twitter:description" content="Access exclusive downloads, resources, and tier-restricted content." />
         <meta name="twitter:image" content="https://nev.so/api/og?title=Vault&subtitle=Exclusive%20Content" />
         <link rel="canonical" href="https://nev.so/vault" />

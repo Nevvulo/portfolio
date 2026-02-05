@@ -327,23 +327,26 @@ export default function Privacy() {
       </Container>
 
       <Head key="privacy">
-        <title>Privacy Policy - Nevulo</title>
+        <title>nevulo - Privacy</title>
         <meta
           name="description"
           content="Privacy Policy for nev.so and Nevulounge. Learn how we collect, use, and protect your personal information."
         />
-        <meta property="og:title" content="Privacy Policy - Nevulo" />
+        <meta property="og:title" content="nevulo - Privacy" />
         <meta
           property="og:description"
           content="Privacy Policy for nev.so and Nevulounge. Learn how we collect, use, and protect your personal information."
         />
         <meta property="og:url" content="https://nev.so/privacy" />
+        <meta property="og:site_name" content="nevulo" />
         <meta
           property="og:image"
           content="https://nev.so/api/og?title=Privacy%20Policy&subtitle=How%20we%20handle%20your%20data"
         />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Privacy Policy - Nevulo" />
+        <meta name="twitter:title" content="nevulo - Privacy" />
         <meta name="twitter:description" content="Privacy Policy for nev.so and Nevulounge." />
         <meta
           name="twitter:image"

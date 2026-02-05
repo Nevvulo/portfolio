@@ -151,13 +151,13 @@ export default function Learn() {
       </ContentContainer>
 
       <Head key="learn">
-        <title>Learn - Nevulo</title>
+        <title>nevulo - Learn</title>
         <meta
           name="description"
           content="Learn software engineering, web development, and programming through articles, tutorials, and videos."
         />
         {/* OpenGraph tags */}
-        <meta property="og:title" content="Learn - Nevulo" />
+        <meta property="og:title" content="nevulo - Learn" />
         <meta
           property="og:description"
           content="Learn software engineering, web development, and programming through articles, tutorials, and videos."
@@ -169,11 +169,11 @@ export default function Learn() {
         />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
-        <meta property="og:site_name" content="Nevulo" />
+        <meta property="og:site_name" content="nevulo" />
         <meta property="og:type" content="website" />
         {/* Twitter/Discord card tags */}
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Learn - Nevulo" />
+        <meta name="twitter:title" content="nevulo - Learn" />
         <meta
           name="twitter:description"
           content="Learn software engineering and web development."

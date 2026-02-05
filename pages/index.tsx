@@ -805,37 +805,37 @@ export default function Home({ discordWidget, isLive: serverIsLive }: HomeProps)
           </Section>
 
           <Head>
-            <title>Nevulo - Software Engineer | Portfolio</title>
+            <title>nevulo</title>
             <meta
               name="description"
-              content="Software engineer based in Melbourne, Australia. Building exceptional digital experiences with modern web technologies."
+              content="Creating digital experiences, focused on community"
             />
 
-            <meta property="og:title" content="Nevulo - Software Engineer" />
+            <meta property="og:title" content="nevulo" />
             <meta
               property="og:description"
-              content="Software engineer based in Melbourne, Australia. Building exceptional digital experiences with modern web technologies."
+              content="Creating digital experiences, focused on community"
             />
             <meta property="og:type" content="website" />
             <meta property="og:url" content="https://nev.so" />
-            <meta property="og:site_name" content="Blake's Portfolio" />
+            <meta property="og:site_name" content="nevulo" />
             <meta
               property="og:image"
               content="https://nev.so/api/og"
             />
             <meta property="og:image:width" content="1200" />
             <meta property="og:image:height" content="630" />
-            <meta property="og:image:alt" content="Blake - Software Engineer Portfolio" />
+            <meta property="og:image:alt" content="Nevulo skull" />
 
             <meta name="twitter:card" content="summary_large_image" />
-            <meta name="twitter:title" content="Nevulo - Software Engineer" />
+            <meta name="twitter:title" content="nevulo" />
             <meta
               name="twitter:description"
-              content="Software engineer based in Melbourne, Australia. Building exceptional digital experiences with modern web technologies."
+              content="Engineer, producer, artist. Building exceptional digital experiences."
             />
             <meta
               name="twitter:image"
-              content="https://nev.so/api/og?title=Blake%20-%20Software%20Engineer&subtitle=Building%20exceptional%20digital%20experiences%20in%20Melbourne"
+              content="https://nev.so/api/og"
             />
           </Head>
         </>

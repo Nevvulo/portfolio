@@ -232,26 +232,33 @@ export default function ProjectsPage() {
   return (
     <>
       <Head key="projects">
-        <title>Projects Timeline - Nevulo</title>
+        <title>nevulo - Projects</title>
         <meta
           name="description"
           content={`Journey through ${projectsList.length} projects from ${yearsList[yearsList.length - 1] || 2016} to present.`}
         />
-        <meta property="og:title" content="Projects Timeline - Nevulo" />
+        <meta property="og:title" content="nevulo - Projects" />
         <meta
           property="og:description"
           content="An interactive 3D journey through my software engineering projects."
         />
         <meta property="og:url" content="https://nev.so/projects" />
+        <meta property="og:site_name" content="nevulo" />
         <meta
           property="og:image"
-          content="https://nev.so/api/og?title=Projects%20Timeline&subtitle=A%20Journey%20Through%20Code"
+          content="https://nev.so/api/og?title=Projects&subtitle=A%20Journey%20Through%20Code"
         />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Projects Timeline - Nevulo" />
+        <meta name="twitter:title" content="nevulo - Projects" />
         <meta
           name="twitter:description"
           content={`An interactive 3D journey through ${projectsList.length} projects.`}
+        />
+        <meta
+          name="twitter:image"
+          content="https://nev.so/api/og?title=Projects&subtitle=A%20Journey%20Through%20Code"
         />
       </Head>
 

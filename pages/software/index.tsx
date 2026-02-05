@@ -45,20 +45,30 @@ export default function SoftwarePage() {
   return (
     <>
       <Head>
-        <title>Software & Games - Nevulo</title>
+        <title>nevulo - Software</title>
         <meta
           name="description"
           content="Explore software, games, tools, and projects built by Nevulo."
         />
-        <meta property="og:title" content="Software & Games - Nevulo" />
+        <meta property="og:title" content="nevulo - Software" />
         <meta
           property="og:description"
           content="Explore software, games, tools, and projects built by Nevulo."
         />
         <meta property="og:url" content="https://nev.so/software" />
+        <meta property="og:site_name" content="nevulo" />
         <meta
           property="og:image"
-          content="https://nev.so/api/og?title=Software%20%26%20Games&subtitle=Projects%20by%20Nevulo"
+          content="https://nev.so/api/og?title=Software&subtitle=Projects%20by%20nevulo"
+        />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="nevulo - Software" />
+        <meta name="twitter:description" content="Explore software, games, tools, and projects built by Nevulo." />
+        <meta
+          name="twitter:image"
+          content="https://nev.so/api/og?title=Software&subtitle=Projects%20by%20nevulo"
         />
       </Head>
 
