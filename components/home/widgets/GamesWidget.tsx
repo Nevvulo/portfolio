@@ -1,8 +1,7 @@
 import { useQuery } from "convex/react";
-import { Code2, Gamepad2, Users, Eye } from "lucide-react";
-import Image from "next/image";
+import { Code2, Gamepad2, Users, Eye, Package } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import styled from "styled-components";
 import { api } from "../../../convex/_generated/api";
 import { WidgetContainer } from "./WidgetContainer";
@@ -14,6 +13,20 @@ import { WidgetContainer } from "./WidgetContainer";
 export function SoftwareWidget() {
   const featured = useQuery(api.software.listFeaturedSoftware);
 
+  // Sort by order (hero first), then by name
+  const sortedSoftware = useMemo(() => {
+    if (!featured) return [];
+    return [...featured].sort((a, b) => {
+      // Items with order come first, sorted by order
+      if (typeof a.order === "number" && typeof b.order === "number") {
+        return a.order - b.order;
+      }
+      if (typeof a.order === "number") return -1;
+      if (typeof b.order === "number") return 1;
+      return a.name.localeCompare(b.name);
+    });
+  }, [featured]);
+
   const getHref = (software: NonNullable<typeof featured>[number]) => {
     if (software.openExternally) {
       if (software.links?.website) return software.links.website;
@@ -22,54 +35,108 @@ export function SoftwareWidget() {
     return `/software/${software.slug}`;
   };
 
+  // Separate hero and regular cards, limit to 3 total
+  const heroCard = sortedSoftware.find((sw) => typeof sw.order === "number" && sw.order === 0);
+  const maxRegularCards = heroCard ? 2 : 3;
+  const regularCards = sortedSoftware
+    .filter((sw) => !(typeof sw.order === "number" && sw.order === 0))
+    .slice(0, maxRegularCards);
+
   return (
     <WidgetContainer title="Software" icon={<Code2 size={16} />} headerAction={<Link href="/software">View all</Link>}>
-      <SoftwareGrid>
-        {featured?.map((software) => {
-          const href = getHref(software);
+      <SoftwareWidgetContent>
+        {/* Hero card - full width */}
+        {heroCard && (() => {
+          const href = getHref(heroCard);
           const isExternal = href.startsWith("http");
+          const accent = heroCard.accentColor ?? "#6366f1";
+          const isComingSoon = heroCard.status === "coming-soon";
+          const statusMap: Record<string, "active" | "beta" | "soon"> = {
+            "active": "active",
+            "beta": "beta",
+            "coming-soon": "soon",
+          };
+          const statusLabel: Record<string, string> = {
+            "active": "Active",
+            "beta": "WIP",
+            "coming-soon": "Idea",
+          };
+
           return (
-          <SoftwareCard
-            key={software._id}
-            href={href}
-            target={isExternal ? "_blank" : undefined}
-            rel={isExternal ? "noopener noreferrer" : undefined}
-          >
-            <SoftwareImageContainer $gradient={software.background || "linear-gradient(135deg, rgba(144,116,242,0.2), rgba(59,130,246,0.15))"}>
-              {software.bannerUrl ? (
-                <Image
-                  src={software.bannerUrl}
-                  alt={software.name}
-                  fill
-                  sizes="(max-width: 480px) 100vw, 50vw"
-                  style={{ objectFit: "cover" }}
-                  unoptimized={software.bannerUrl.includes("convex.cloud")}
-                />
-              ) : (
-                <PlaceholderIcon>
-                  <Code2 size={28} />
-                </PlaceholderIcon>
-              )}
-              <CardOverlay />
-              {software.status === "coming-soon" && (
-                <SoonOverlay>
-                  <SoonLabel>soon™</SoonLabel>
-                </SoonOverlay>
-              )}
-              {software.status !== "active" && software.status !== "coming-soon" && (
-                <StatusBadge $status={software.status}>
-                  {software.status === "beta" ? "Beta" : software.status}
-                </StatusBadge>
-              )}
-            </SoftwareImageContainer>
-            <SoftwareCardInfo>
-              <SoftwareCardTitle>{software.name}</SoftwareCardTitle>
-              <SoftwareCardDesc>{software.shortDescription}</SoftwareCardDesc>
-            </SoftwareCardInfo>
-          </SoftwareCard>
+            <SoftwareHeroCard
+              key={heroCard._id}
+              href={isComingSoon ? undefined : href}
+              target={isExternal ? "_blank" : undefined}
+              rel={isExternal ? "noopener noreferrer" : undefined}
+              $accent={accent}
+              $comingSoon={isComingSoon}
+              $heroBanner={heroCard.bannerUrl}
+            >
+              <SoftwareCardGlow $color={accent} />
+              <SoftwareHeroContent>
+                <SoftwareBadgeRow>
+                  <SoftwareBadge $color={accent}>{heroCard.type.toUpperCase()}</SoftwareBadge>
+                  {heroCard.status !== "archived" && (
+                    <SoftwareStatusBadge $status={statusMap[heroCard.status] ?? "active"}>
+                      {statusLabel[heroCard.status] ?? heroCard.status}
+                    </SoftwareStatusBadge>
+                  )}
+                </SoftwareBadgeRow>
+                <SoftwareHeroTitleRow>
+                  {heroCard.logoUrl && (
+                    <SoftwareHeroIcon>
+                      <img src={heroCard.logoUrl} alt={heroCard.name} style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: 8 }} />
+                    </SoftwareHeroIcon>
+                  )}
+                  <SoftwareHeroTitle>{heroCard.name}</SoftwareHeroTitle>
+                </SoftwareHeroTitleRow>
+                <SoftwareHeroDesc>{heroCard.shortDescription}</SoftwareHeroDesc>
+              </SoftwareHeroContent>
+              <SoftwareCardScanlines />
+            </SoftwareHeroCard>
           );
-        })}
-      </SoftwareGrid>
+        })()}
+
+        {/* Regular cards in a 2-column grid */}
+        <SoftwareGrid>
+          {regularCards.map((software) => {
+            const href = getHref(software);
+            const isExternal = href.startsWith("http");
+            const accent = software.accentColor ?? "#6366f1";
+            const isComingSoon = software.status === "coming-soon";
+            const hasBanner = !!software.bannerUrl;
+
+            return (
+              <SoftwareSmallCard
+                key={software._id}
+                href={isComingSoon ? undefined : href}
+                target={isExternal ? "_blank" : undefined}
+                rel={isExternal ? "noopener noreferrer" : undefined}
+                $accent={accent}
+                $comingSoon={isComingSoon}
+                $hasBanner={hasBanner}
+              >
+                <SoftwareCardGlow $color={accent} />
+                {hasBanner && <SoftwareCardBanner $src={software.bannerUrl!} />}
+                <SoftwareSmallContent $hasBanner={hasBanner}>
+                  {!hasBanner && (
+                    <SoftwareSmallIcon $color={accent} $hasLogo={!!software.logoUrl}>
+                      {software.logoUrl ? (
+                        <img src={software.logoUrl} alt={software.name} style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: 8 }} />
+                      ) : (
+                        <Package size={20} />
+                      )}
+                    </SoftwareSmallIcon>
+                  )}
+                  <SoftwareSmallTitle>{software.name}</SoftwareSmallTitle>
+                  <SoftwareSmallDesc>{software.shortDescription}</SoftwareSmallDesc>
+                </SoftwareSmallContent>
+                <SoftwareCardScanlines />
+              </SoftwareSmallCard>
+            );
+          })}
+        </SoftwareGrid>
+      </SoftwareWidgetContent>
     </WidgetContainer>
   );
 }
@@ -244,63 +311,310 @@ function formatNumber(num: number): string {
 // Shared styled components
 // ============================================
 
+const SoftwareWidgetContent = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+`;
+
 const SoftwareGrid = styled.div`
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  gap: 10px;
 
   @media (max-width: 480px) {
     grid-template-columns: 1fr;
   }
 `;
 
-const SoftwareImageContainer = styled.div<{ $gradient?: string }>`
+const SoftwareCardScanlines = styled.div`
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.03) 2px,
+    rgba(0, 0, 0, 0.03) 4px
+  );
+  pointer-events: none;
+  z-index: 3;
+`;
+
+const SoftwareCardGlow = styled.div<{ $color: string }>`
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle at center, ${(props) => props.$color}08 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 1;
+`;
+
+const SoftwareHeroCard = styled.a<{ $accent: string; $comingSoon?: boolean; $heroBanner?: string }>`
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(20, 15, 35, 0.85) 0%, rgba(30, 25, 50, 0.7) 100%);
+  backdrop-filter: blur(12px);
+  border: 1px solid ${(props) => props.$accent}30;
+  text-decoration: none;
+  color: ${(props) => props.theme.contrast};
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: ${(props) => (props.$comingSoon ? "default" : "pointer")};
+
+  ${(props) => props.$heroBanner && `
+    &::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: url(${props.$heroBanner});
+      background-size: cover;
+      background-position: center;
+      z-index: 0;
+      opacity: 0.35;
+    }
+  `}
+
+  ${(props) => props.$comingSoon && `
+    opacity: 0.7;
+    border-style: dashed;
+  `}
+
+  &:hover {
+    transform: ${(props) => (props.$comingSoon ? "none" : "translateY(-2px)")};
+    border-color: ${(props) => props.$accent}60;
+    box-shadow: ${(props) =>
+      props.$comingSoon ? "none" : `0 8px 24px rgba(0, 0, 0, 0.25), 0 0 40px ${props.$accent}10`};
+  }
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, ${(props) => props.$accent}50, transparent);
+    z-index: 2;
+  }
+`;
+
+const SoftwareHeroContent = styled.div`
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  padding: 1rem 1.25rem;
+`;
+
+const SoftwareHeroTitleRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.35rem;
+`;
+
+const SoftwareHeroIcon = styled.div`
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+`;
+
+const SoftwareHeroTitle = styled.h3`
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: ${(props) => props.theme.contrast};
+  margin: 0;
+  letter-spacing: -0.3px;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+`;
+
+const SoftwareHeroDesc = styled.p`
+  font-size: 0.8rem;
+  color: ${(props) => props.theme.contrast}bb;
+  margin: 0;
+  line-height: 1.4;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+`;
+
+const SoftwareBadgeRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.5rem;
+  flex-wrap: wrap;
+`;
+
+const SoftwareBadge = styled.span<{ $color: string }>`
+  display: inline-flex;
+  padding: 2px 6px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-radius: 3px;
+  background: ${(props) => props.$color}15;
+  color: ${(props) => props.$color};
+  border: 1px solid ${(props) => props.$color}30;
+`;
+
+const SoftwareStatusBadge = styled.span<{ $status: "active" | "soon" | "beta" }>`
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 6px;
+  font-family: var(--font-mono);
+  font-size: 8px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  border-radius: 3px;
+  background: ${(props) =>
+    props.$status === "active"
+      ? "rgba(34, 197, 94, 0.15)"
+      : props.$status === "beta"
+        ? "rgba(234, 179, 8, 0.15)"
+        : "rgba(255, 255, 255, 0.05)"};
+  color: ${(props) =>
+    props.$status === "active"
+      ? "#22c55e"
+      : props.$status === "beta"
+        ? "#eab308"
+        : "rgba(255, 255, 255, 0.5)"};
+  border: 1px solid ${(props) =>
+    props.$status === "active"
+      ? "rgba(34, 197, 94, 0.3)"
+      : props.$status === "beta"
+        ? "rgba(234, 179, 8, 0.3)"
+        : "rgba(255, 255, 255, 0.1)"};
+
+  &::before {
+    content: '';
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: currentColor;
+    ${(props) => props.$status === "active" && `
+      animation: statusPulse 2s ease-in-out infinite;
+    `}
+  }
+
+  @keyframes statusPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+`;
+
+const SoftwareSmallCard = styled.a<{ $accent: string; $comingSoon?: boolean; $hasBanner?: boolean }>`
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: ${(props) => props.$hasBanner ? "auto" : "100px"};
+  border-radius: 10px;
+  background: linear-gradient(135deg, rgba(20, 15, 35, 0.9) 0%, rgba(30, 25, 50, 0.8) 100%);
+  backdrop-filter: blur(12px);
+  border: 1px solid ${(props) => props.$accent}25;
+  text-decoration: none;
+  color: ${(props) => props.theme.contrast};
+  overflow: hidden;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: ${(props) => (props.$comingSoon ? "default" : "pointer")};
+
+  ${(props) => props.$comingSoon && `
+    opacity: 0.65;
+    border-style: dashed;
+  `}
+
+  &:hover {
+    transform: ${(props) => (props.$comingSoon ? "none" : "translateY(-2px)")};
+    border-color: ${(props) => props.$accent}50;
+    box-shadow: ${(props) => props.$comingSoon ? "none" : `0 6px 16px rgba(0, 0, 0, 0.2)`};
+  }
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, ${(props) => props.$accent}40, transparent);
+    z-index: 2;
+  }
+`;
+
+const SoftwareCardBanner = styled.div<{ $src: string }>`
   position: relative;
   width: 100%;
-  aspect-ratio: 16 / 9;
-  ${(p) => p.$gradient && `background: ${p.$gradient};`}
+  height: 80px;
+  background-image: url(${(props) => props.$src});
+  background-size: cover;
+  background-position: center;
+  flex-shrink: 0;
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom, transparent 20%, rgba(20, 15, 35, 0.95) 100%);
+  }
 `;
 
-const SoftwareCardInfo = styled.div`
-  padding: 0.7em 0.8em;
+const SoftwareSmallContent = styled.div<{ $hasBanner?: boolean }>`
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  padding: ${(props) => props.$hasBanner ? "0.6rem 0.8rem 0.8rem" : "0.8rem"};
+  ${(props) => props.$hasBanner && "margin-top: -1rem;"}
+  flex: 1;
 `;
 
-const SoftwareCardTitle = styled.h4`
-  margin: 0;
-  font-size: 1em;
+const SoftwareSmallIcon = styled.div<{ $color: string; $hasLogo?: boolean }>`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: ${(props) => props.$hasLogo ? "transparent" : `${props.$color}15`};
+  border: ${(props) => props.$hasLogo ? "none" : `1px solid ${props.$color}30`};
+  border-radius: 8px;
+  color: ${(props) => props.$color};
+  margin-bottom: 0.5rem;
+  overflow: hidden;
+`;
+
+const SoftwareSmallTitle = styled.h4`
+  font-size: 0.9rem;
   font-weight: 600;
   color: ${(props) => props.theme.contrast};
+  margin: 0 0 0.2rem 0;
+  letter-spacing: -0.2px;
 `;
 
-const SoftwareCardDesc = styled.p`
-  margin: 0.2em 0 0;
-  font-size: 0.8em;
-  color: ${(props) => props.theme.textColor};
-  opacity: 0.6;
-  line-height: 1.4;
+const SoftwareSmallDesc = styled.p`
+  font-size: 0.7rem;
+  color: ${(props) => props.theme.contrast}70;
+  margin: 0;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 `;
 
 const GamesList = styled.div`
   display: flex;
   flex-direction: column;
   gap: 12px;
-`;
-
-const SoftwareCard = styled(Link)`
-  display: flex;
-  flex-direction: column;
-  border-radius: 10px;
-  overflow: hidden;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  text-decoration: none;
-  transition: all 0.2s ease;
-
-  &:hover {
-    border-color: rgba(255, 255, 255, 0.12);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  }
 `;
 
 const GameCard = styled(Link)`
@@ -384,12 +698,6 @@ const PlayerDot = styled.div`
   border-radius: 50%;
   background: #4ade80;
   box-shadow: 0 0 4px #4ade80;
-`;
-
-const CardOverlay = styled.div`
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(to bottom, transparent 50%, rgba(0, 0, 0, 0.4) 100%);
 `;
 
 const StatusBadge = styled.div<{ $status?: string }>`

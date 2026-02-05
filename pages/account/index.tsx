@@ -382,51 +382,35 @@ export default function AccountPage() {
           </Section>
         )}
 
-        <Section>
-          <SectionTitle>Subscription</SectionTitle>
-          <SupporterCard $hasSubscription={!!subscription && subscription.status === "active"}>
-            <SupporterIcon>
-              {subscription && subscription.status === "active" ? <StarIcon /> : <SparklesIcon />}
-            </SupporterIcon>
-            <SupporterInfo>
-              {subLoading ? (
-                <>
-                  <SupporterTitle>Loading...</SupporterTitle>
-                  <SupporterDescription>Checking your subscription status...</SupporterDescription>
-                </>
-              ) : subscription && subscription.status === "active" ? (
-                <>
-                  <SupporterTitle>
-                    {subscription.subscriptionItems?.[0]?.plan?.name || "Supporter"}
-                  </SupporterTitle>
-                  <SupporterDescription>
-                    Thanks for supporting! You have access to exclusive features.
-                  </SupporterDescription>
-                  <SubscriptionMeta>
-                    <SubscriptionStatus $status={subscription.status}>
-                      {subscription.status}
-                    </SubscriptionStatus>
-                    {subscription.nextPayment && (
-                      <NextPayment>
-                        Next payment: {formatDate(subscription.nextPayment.date)}
-                      </NextPayment>
-                    )}
-                  </SubscriptionMeta>
-                </>
-              ) : (
-                <>
-                  <SupporterTitle>Become a Supporter</SupporterTitle>
-                  <SupporterDescription>
-                    Subscribe to unlock exclusive features and support my work.
-                  </SupporterDescription>
-                </>
-              )}
-            </SupporterInfo>
-            <SupporterLink href="/support">
-              {subscription && subscription.status === "active" ? "Manage" : "View Plans"}
-            </SupporterLink>
-          </SupporterCard>
-        </Section>
+        {subscription && subscription.status === "active" && (
+          <Section>
+            <SectionTitle>Subscription</SectionTitle>
+            <SupporterCard $hasSubscription>
+              <SupporterIcon>
+                <StarIcon />
+              </SupporterIcon>
+              <SupporterInfo>
+                <SupporterTitle>
+                  {subscription.subscriptionItems?.[0]?.plan?.name || "Supporter"}
+                </SupporterTitle>
+                <SupporterDescription>
+                  Thanks for supporting! You have access to exclusive features.
+                </SupporterDescription>
+                <SubscriptionMeta>
+                  <SubscriptionStatus $status={subscription.status}>
+                    {subscription.status}
+                  </SubscriptionStatus>
+                  {subscription.nextPayment && (
+                    <NextPayment>
+                      Next payment: {formatDate(subscription.nextPayment.date)}
+                    </NextPayment>
+                  )}
+                </SubscriptionMeta>
+              </SupporterInfo>
+              <SupporterLink href="/support">Manage</SupporterLink>
+            </SupporterCard>
+          </Section>
+        )}
 
         <SignOutButton onClick={() => signOut({ redirectUrl: "/" })}>Sign Out</SignOutButton>
       </ContentContainer>
