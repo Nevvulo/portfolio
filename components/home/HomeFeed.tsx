@@ -40,7 +40,7 @@ function HomeFeedCard({ post }: { post: BentoCardProps }) {
   const isTierLocked = visibility === "tier1" || visibility === "tier2";
 
   return (
-    <CardLink href={`/learn/${slug}`}>
+    <CardLink href={`/learn/${slug}`} prefetch={false}>
       <Card>
         {isTierLocked && (
           <TierBadgeWrapper>

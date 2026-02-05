@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { internalMutation, mutation, query } from "./_generated/server";
 import { getCurrentUser, requireUser } from "./auth";
 
 /**
@@ -11,16 +11,11 @@ export const recordView = mutation({
   handler: async (ctx, args) => {
     const user = await getCurrentUser(ctx);
 
-    // Anonymous views don't count for per-user tracking
-    // But we still increment the post's viewCount
+    // Anonymous views: record in blogViews for counting, but do NOT
+    // patch blogPosts.viewCount. Patching blogPosts on every anonymous
+    // page view was invalidating all getForBento reactive subscriptions
+    // for all connected clients, causing ~500+ MB/period of DB bandwidth.
     if (!user) {
-      // For anonymous, just increment the view count
-      const post = await ctx.db.get(args.postId);
-      if (post) {
-        await ctx.db.patch(args.postId, {
-          viewCount: post.viewCount + 1,
-        });
-      }
       return { recorded: true, isNewView: true };
     }
 
@@ -45,13 +40,8 @@ export const recordView = mutation({
       viewedAt: Date.now(),
     });
 
-    // Increment post view count
-    const post = await ctx.db.get(args.postId);
-    if (post) {
-      await ctx.db.patch(args.postId, {
-        viewCount: post.viewCount + 1,
-      });
-    }
+    // viewCount is synced periodically by syncViewCounts cron
+    // to avoid patching blogPosts on every view (which invalidates all getForBento subscriptions)
 
     // Update interaction score
     await updateInteractionScore(ctx, args.postId, user._id, 1);
@@ -121,6 +111,39 @@ export const getReadingHistory = query({
     );
 
     return history.filter(Boolean);
+  },
+});
+
+/**
+ * Sync view counts from blogViews table to blogPosts.viewCount
+ * Runs on a cron schedule to avoid patching blogPosts on every individual view
+ * (which would invalidate all getForBento reactive subscriptions)
+ */
+export const syncViewCounts = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const posts = await ctx.db
+      .query("blogPosts")
+      .withIndex("by_status", (q) => q.eq("status", "published"))
+      .collect();
+
+    let updatedCount = 0;
+    for (const post of posts) {
+      const views = await ctx.db
+        .query("blogViews")
+        .withIndex("by_post", (q) => q.eq("postId", post._id))
+        .collect();
+
+      const actualCount = views.length;
+      if (actualCount !== post.viewCount) {
+        await ctx.db.patch(post._id, { viewCount: actualCount });
+        updatedCount++;
+      }
+    }
+
+    if (updatedCount > 0) {
+      console.log(`syncViewCounts: updated ${updatedCount} posts`);
+    }
   },
 });
 

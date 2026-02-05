@@ -20,7 +20,7 @@ export function NewsBubbles({ posts }: NewsBubblesProps) {
           const newsDate = post.publishedAt ? new Date(post.publishedAt) : null;
 
           return (
-            <BubbleLink key={post._id} href={`/learn/${post.slug}`}>
+            <BubbleLink key={post._id} href={`/learn/${post.slug}`} prefetch={false}>
               <MessageBubble $isFirst={isFirst} $isLast={isLast} $isOnly={posts.length === 1}>
                 <BubbleTitle>{post.title}</BubbleTitle>
                 <BubbleDescription>{post.description}</BubbleDescription>

@@ -407,7 +407,10 @@ export const getForBento = query({
     excludeShorts: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
-    const user = await getCurrentUser(ctx);
+    // Use ctx.auth.getUserIdentity() instead of getCurrentUser() to avoid
+    // creating a reactive dependency on the users table. This prevents
+    // heartbeat/XP mutations from cascading to all getForBento subscriptions.
+    const identity = await ctx.auth.getUserIdentity();
 
     // Use index for published posts only - more efficient than full scan + JS filter
     const posts = await ctx.db
@@ -417,6 +420,16 @@ export const getForBento = query({
 
     // Sort by bentoOrder (can't use two indexes, so sort in memory)
     posts.sort((a, b) => a.bentoOrder - b.bentoOrder);
+
+    // Only look up user document if there are non-public posts to filter
+    const hasNonPublicPosts = posts.some((p) => p.visibility !== "public");
+    let user: Doc<"users"> | null = null;
+    if (hasNonPublicPosts && identity) {
+      user = await ctx.db
+        .query("users")
+        .withIndex("by_clerkId", (q) => q.eq("clerkId", identity.subject))
+        .unique();
+    }
 
     // Filter to accessible posts
     let accessible = posts.filter((post) => canAccessPost(user, post.visibility));
@@ -475,12 +488,21 @@ export const getForBentoPersonalized = query({
     ),
   },
   handler: async (ctx, args) => {
-    const user = await getCurrentUser(ctx);
+    const identity = await ctx.auth.getUserIdentity();
 
     const posts = await ctx.db.query("blogPosts").withIndex("by_bentoOrder").order("asc").collect();
 
-    let accessible = posts.filter((post) => {
-      if (post.status !== "published") return false;
+    const publishedPosts = posts.filter((post) => post.status === "published");
+    const hasNonPublicPosts = publishedPosts.some((p) => p.visibility !== "public");
+    let user: Doc<"users"> | null = null;
+    if (hasNonPublicPosts && identity) {
+      user = await ctx.db
+        .query("users")
+        .withIndex("by_clerkId", (q) => q.eq("clerkId", identity.subject))
+        .unique();
+    }
+
+    let accessible = publishedPosts.filter((post) => {
       return canAccessPost(user, post.visibility);
     });
 
@@ -499,7 +521,7 @@ export const getForBentoPersonalized = query({
       }
     }
 
-    const hasPersonalization = scoreMap.size > 0 && user;
+    const hasPersonalization = scoreMap.size > 0 && identity;
 
     let orderedPosts = accessible;
 
@@ -592,14 +614,23 @@ export const getForBentoPaginated = query({
     offset: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const user = await getCurrentUser(ctx);
+    const identity = await ctx.auth.getUserIdentity();
     const limit = args.limit ?? 20;
     const offset = args.offset ?? 0;
 
     const posts = await ctx.db.query("blogPosts").withIndex("by_bentoOrder").order("asc").collect();
 
-    let accessible = posts.filter((post) => {
-      if (post.status !== "published") return false;
+    const publishedPosts = posts.filter((post) => post.status === "published");
+    const hasNonPublicPosts = publishedPosts.some((p) => p.visibility !== "public");
+    let user: Doc<"users"> | null = null;
+    if (hasNonPublicPosts && identity) {
+      user = await ctx.db
+        .query("users")
+        .withIndex("by_clerkId", (q) => q.eq("clerkId", identity.subject))
+        .unique();
+    }
+
+    let accessible = publishedPosts.filter((post) => {
       return canAccessPost(user, post.visibility);
     });
 
@@ -618,7 +649,7 @@ export const getForBentoPaginated = query({
       }
     }
 
-    const hasPersonalization = scoreMap.size > 0 && user;
+    const hasPersonalization = scoreMap.size > 0 && identity;
 
     let orderedPosts = accessible;
 

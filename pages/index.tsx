@@ -94,8 +94,9 @@ export default function Home({ discordWidget, isLive: serverIsLive }: HomeProps)
 
   const isLive = isLiveOverride !== null ? isLiveOverride : serverIsLive;
 
-  // Fetch learn posts from Convex (exclude news, but keep shorts for Live section)
-  const learnPosts = useQuery(api.blogPosts.getForBento, { excludeNews: true });
+  // Fetch all learn posts from Convex (filter client-side to share subscription across app)
+  const allLearnPosts = useQuery(api.blogPosts.getForBento, {});
+  const learnPosts = allLearnPosts?.filter((p) => p.contentType !== "news");
 
   const handleIntroComplete = () => {
     setShowCanvasIntro(false);

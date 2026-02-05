@@ -1,5 +1,5 @@
-import { useQuery } from "convex/react";
 import Head from "next/head";
+import { useMemo } from "react";
 import styled from "styled-components";
 import { Skeleton } from "../../components/generics/skeleton";
 import { BlogView } from "../../components/layout/blog";
@@ -14,19 +14,24 @@ import {
   useTimeTracking,
 } from "../../components/learn";
 import { SimpleNavbar } from "../../components/navbar/simple";
-import { api } from "../../convex/_generated/api";
 import { useBlogSearch } from "../../hooks/useBlogSearch";
 import { useRecommendations } from "../../hooks/useRecommendations";
 
 export default function Learn() {
-  const newsPosts = useQuery(api.blogPosts.getForBento, { contentType: "news" });
-
-  // Recommendations + infinite scroll (shared hook)
-  const { posts: articlePosts, isLoading: isRecLoading, hasMore, loadMoreRef, isLoadingMore } = useRecommendations({
+  // Single subscription for ALL posts - news is filtered client-side from the same data
+  // This eliminates 2 separate getForBento subscriptions (news + articles)
+  const { posts: articlePosts, allPosts, isLoading: isRecLoading, hasMore, loadMoreRef, isLoadingMore } = useRecommendations({
     excludeNews: true,
     excludeShorts: true,
     postsPerPage: 20,
+    returnAllPosts: true,
   });
+
+  // Filter news from the same subscription (no extra DB query)
+  const newsPosts = useMemo(
+    () => allPosts?.filter((p) => p.contentType === "news") ?? undefined,
+    [allPosts],
+  );
 
   // Track time on site for XP
   useTimeTracking();

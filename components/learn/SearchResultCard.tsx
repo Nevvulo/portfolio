@@ -41,7 +41,7 @@ export function SearchResultCard({ result, prioritizeImage }: SearchResultCardPr
     : null;
 
   return (
-    <Link href={`/learn/${result.slug}`} style={{ textDecoration: "none" }}>
+    <Link href={`/learn/${result.slug}`} prefetch={false} style={{ textDecoration: "none" }}>
       <Card>
         <Content>
           <Title fontSize="24px">{result.title}</Title>

@@ -1,6 +1,6 @@
 import { useUser } from "@clerk/nextjs";
 import { useQuery } from "convex/react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { api } from "../convex/_generated/api";
 import type { BentoCardProps } from "../components/learn/BentoCard";
 
@@ -13,32 +13,46 @@ interface UseRecommendationsOptions {
   excludeNews?: boolean;
   excludeShorts?: boolean;
   postsPerPage?: number;
+  /** If true, also returns unfiltered allPosts (e.g. for news section) from the same subscription */
+  returnAllPosts?: boolean;
 }
 
+/**
+ * Recommendations hook - uses a SINGLE Convex subscription (getForBento)
+ * and does personalization sorting + pagination client-side.
+ * This eliminates the redundant getForBentoPaginated subscription
+ * which was causing ~280 MB/period of unnecessary DB bandwidth.
+ */
 export function useRecommendations(options: UseRecommendationsOptions = {}) {
-  const { excludeNews = false, excludeShorts = false, postsPerPage = 20 } = options;
+  const { excludeNews = false, excludeShorts = false, postsPerPage = 20, returnAllPosts = false } = options;
   const { user: clerkUser, isSignedIn } = useUser();
 
   // Recommendation state
   const [recScores, setRecScores] = useState<RecommendationScore[]>([]);
   const [refreshKey] = useState(() => Date.now());
 
-  // Infinite scroll state
-  const [offset, setOffset] = useState(0);
-  const [accumulatedPosts, setAccumulatedPosts] = useState<BentoCardProps[]>([]);
+  // Client-side pagination state
+  const [visibleCount, setVisibleCount] = useState(postsPerPage);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const loadMoreRef = useRef<HTMLDivElement>(null);
-  const hasResetRef = useRef(false);
 
-  // Queries
+  // Single DB subscription with NO filters - all callers share the same subscription.
+  // Filtering is done client-side. This ensures getForBento({}) is the only subscription
+  // across the entire app (homepage widgets, /learn, AuthenticatedHome all share it).
   const watchHistory = useQuery(
     api.articleWatchTime.getUserWatchHistory,
     isSignedIn ? { limit: 50 } : "skip",
   );
-  const basePosts = useQuery(api.blogPosts.getForBento, {
-    excludeNews: excludeNews || undefined,
-    excludeShorts: excludeShorts || undefined,
-  });
+  const rawPosts = useQuery(api.blogPosts.getForBento, {});
+
+  // Apply client-side filters
+  const basePosts = useMemo(() => {
+    if (!rawPosts) return undefined;
+    let filtered = rawPosts;
+    if (excludeNews) filtered = filtered.filter((p) => p.contentType !== "news");
+    if (excludeShorts) filtered = filtered.filter((p) => !p.labels?.includes("short"));
+    return filtered;
+  }, [rawPosts, excludeNews, excludeShorts]);
 
   // Compute recommendations
   useEffect(() => {
@@ -80,58 +94,77 @@ export function useRecommendations(options: UseRecommendationsOptions = {}) {
     fetchRecs();
   }, [isSignedIn, clerkUser?.id, basePosts, watchHistory, refreshKey]);
 
-  // Paginated query
-  const paginatedResult = useQuery(
-    api.blogPosts.getForBentoPaginated,
-    basePosts
-      ? {
-          excludeNews: excludeNews || undefined,
-          excludeShorts: excludeShorts || undefined,
-          recommendationScores: recScores.length > 0 ? recScores : undefined,
-          limit: postsPerPage,
-          offset,
-        }
-      : "skip",
-  );
-
-  // Reset on recScores change
+  // Reset visible count when scores change (new personalization applied)
+  const prevScoresLen = useRef(0);
   useEffect(() => {
-    if (recScores.length > 0 && !hasResetRef.current) {
-      setAccumulatedPosts([]);
-      setOffset(0);
-      hasResetRef.current = true;
+    if (recScores.length > 0 && prevScoresLen.current === 0) {
+      setVisibleCount(postsPerPage);
     }
-  }, [recScores]);
+    prevScoresLen.current = recScores.length;
+  }, [recScores, postsPerPage]);
 
-  // Accumulate posts
-  useEffect(() => {
-    if (paginatedResult?.posts) {
-      setAccumulatedPosts((prev) => {
-        if (offset === 0) {
-          return paginatedResult.posts as BentoCardProps[];
-        }
-        const existingIds = new Set(prev.map((p) => p._id));
-        const newPosts = paginatedResult.posts.filter((p) => !existingIds.has(p._id));
-        return [...prev, ...(newPosts as BentoCardProps[])];
-      });
-      setIsLoadingMore(false);
+  // Apply recommendation scoring and sorting client-side
+  // (replaces the getForBentoPaginated server-side subscription)
+  const sortedPosts = useMemo(() => {
+    if (!basePosts) return [];
+
+    const scoreMap = new Map<string, number>();
+    for (const { slug, score } of recScores) {
+      scoreMap.set(slug, score);
     }
-  }, [paginatedResult, offset]);
 
-  // Infinite scroll observer
+    const hasPersonalization = scoreMap.size > 0;
+    if (!hasPersonalization) return basePosts as BentoCardProps[];
+
+    // Replicate server-side personalization logic client-side
+    const featuredPosts = basePosts.filter((p) => p.bentoSize === "featured");
+    const nonFeaturedWithIndex = basePosts
+      .map((post, index) => ({ post, bentoIndex: index }))
+      .filter(({ post }) => post.bentoSize !== "featured");
+
+    const maxRecScore = Math.max(...Array.from(scoreMap.values()), 0.01);
+    const MAX_POSITION_SHIFT = 5;
+
+    const scoredNonFeatured = nonFeaturedWithIndex.map(({ post, bentoIndex }) => {
+      const recScore = scoreMap.get(post.slug) ?? 0;
+      const normalizedRecScore = recScore / maxRecScore;
+      const adjustedIndex = bentoIndex - featuredPosts.length;
+      const positionShift = -normalizedRecScore * MAX_POSITION_SHIFT;
+
+      // Size boost for highly recommended posts
+      let bentoSize = post.bentoSize;
+      if (recScore > maxRecScore * 0.5) {
+        if (bentoSize === "small") bentoSize = "medium";
+        else if (bentoSize === "medium") bentoSize = "large";
+      }
+
+      return { ...post, bentoSize, sortKey: adjustedIndex + positionShift };
+    });
+
+    scoredNonFeatured.sort((a, b) => a.sortKey - b.sortKey);
+
+    return [...featuredPosts, ...scoredNonFeatured] as BentoCardProps[];
+  }, [basePosts, recScores]);
+
+  // Client-side pagination
+  const posts = sortedPosts.slice(0, visibleCount);
+  const hasMore = visibleCount < sortedPosts.length;
+
+  // Infinite scroll
   const hasMoreRef = useRef(false);
   const isLoadingMoreRef = useRef(false);
-  hasMoreRef.current = paginatedResult?.hasMore ?? false;
+  hasMoreRef.current = hasMore;
   isLoadingMoreRef.current = isLoadingMore;
 
   const handleLoadMore = useCallback(() => {
     if (hasMoreRef.current && !isLoadingMoreRef.current) {
       setIsLoadingMore(true);
-      setOffset((prev) => prev + postsPerPage);
+      setVisibleCount((prev) => prev + postsPerPage);
+      requestAnimationFrame(() => setIsLoadingMore(false));
     }
   }, [postsPerPage]);
 
-  const hasPosts = accumulatedPosts.length > 0;
+  const hasPosts = posts.length > 0;
 
   useEffect(() => {
     const element = loadMoreRef.current;
@@ -150,17 +183,12 @@ export function useRecommendations(options: UseRecommendationsOptions = {}) {
     return () => observer.disconnect();
   }, [handleLoadMore, hasPosts]);
 
-  // Cache for preventing flash
-  const articlePostsCache = useRef<BentoCardProps[]>([]);
-  if (accumulatedPosts.length > 0) {
-    articlePostsCache.current = accumulatedPosts;
-  }
-  const posts = accumulatedPosts.length > 0 ? accumulatedPosts : articlePostsCache.current;
-
   return {
     posts,
-    isLoading: posts.length === 0,
-    hasMore: paginatedResult?.hasMore ?? false,
+    /** All unfiltered posts from the subscription (only populated when returnAllPosts=true) */
+    allPosts: returnAllPosts ? rawPosts : undefined,
+    isLoading: !basePosts,
+    hasMore,
     loadMoreRef,
     isLoadingMore,
   };

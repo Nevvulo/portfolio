@@ -22,10 +22,17 @@ function getThumbnail(post: { coverImage?: string | null; youtubeId?: string | n
   return null;
 }
 
+interface LatestContentWidgetProps {
+  compact?: boolean;
+  /** Pre-fetched posts to avoid duplicate subscriptions. Falls back to own query if not provided. */
+  posts?: Array<{ _id: string; slug: string; title: string; description: string; contentType: string; coverImage?: string | null; youtubeId?: string | null; publishedAt?: number | null }>;
+}
+
 /** Latest content across all types */
-export function LatestContentWidget({ compact }: { compact?: boolean }) {
+export function LatestContentWidget({ compact, posts: externalPosts }: LatestContentWidgetProps) {
   const [filter, setFilter] = useState<ContentFilter>("all");
-  const posts = useQuery(api.blogPosts.getForBento, { excludeNews: false });
+  const ownPosts = useQuery(api.blogPosts.getForBento, externalPosts ? "skip" : { excludeNews: false });
+  const posts = externalPosts ?? ownPosts;
 
   const maxItems = compact ? 3 : 6;
   const filtered = posts
@@ -145,7 +152,7 @@ function ContentItem({ href, children, ...props }: React.ComponentProps<typeof C
     return <ContentItemBase href={href} {...props}>{children}</ContentItemBase>;
   }
   return (
-    <Link href={href} passHref legacyBehavior>
+    <Link href={href} prefetch={false} passHref legacyBehavior>
       <ContentItemBase {...props}>{children}</ContentItemBase>
     </Link>
   );

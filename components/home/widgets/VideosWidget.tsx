@@ -7,9 +7,15 @@ import styled from "styled-components";
 import { api } from "../../../convex/_generated/api";
 import { WidgetContainer } from "./WidgetContainer";
 
-export function VideosWidget() {
-  const posts = useQuery(api.blogPosts.getForBento, { excludeNews: true });
-  const videoPosts = posts
+interface VideosWidgetProps {
+  /** Pre-fetched posts to avoid duplicate subscriptions. Falls back to own query if not provided. */
+  posts?: Array<{ _id: string; slug: string; title: string; contentType: string; coverImage?: string | null; youtubeId?: string | null; labels: string[]; publishedAt?: number | null }>;
+}
+
+export function VideosWidget({ posts: externalPosts }: VideosWidgetProps = {}) {
+  const ownPosts = useQuery(api.blogPosts.getForBento, externalPosts ? "skip" : { excludeNews: true });
+  const allPosts = externalPosts ?? ownPosts;
+  const videoPosts = allPosts
     ?.filter((p) => p.contentType === "video")
     .sort((a, b) => (b.publishedAt ?? 0) - (a.publishedAt ?? 0))
     .slice(0, 10) ?? [];
@@ -90,7 +96,7 @@ export function VideosWidget() {
                     )}
                   </ThumbnailContainer>
                 )}
-                <VideoTitleLink href={`/learn/${video.slug}`}>
+                <VideoTitleLink href={`/learn/${video.slug}`} prefetch={false}>
                   {video.title}
                 </VideoTitleLink>
               </VideoCardWrapper>

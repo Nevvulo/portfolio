@@ -59,15 +59,18 @@ export function AuthenticatedHome({ isLive = false, discordWidget }: Authenticat
   const interactions = useQuery(api.widgetInteractions.getMyInteractions);
   const sortedWidgets = useBentoLayout(interactions);
 
+  // Single subscription for all widget posts (avoids 3 separate getForBento subscriptions)
+  const allWidgetPosts = useQuery(api.blogPosts.getForBento, {});
+
   const WIDGET_RENDERERS: Record<string, (size: string) => ReactNode> = {
-    "latest-content": (size) => <LatestContentWidget compact={size === "small" || size === "medium"} />,
+    "latest-content": (size) => <LatestContentWidget compact={size === "small" || size === "medium"} posts={allWidgetPosts ?? undefined} />,
     "music":          () => <MusicWidget />,
     "live":           () => <LiveWidget isLive={isLive} />,
     "activity":       () => <ActivityWidget />,
     "community":      () => <CommunityWidget discordWidget={discordWidget} />,
     "integrations":   () => <IntegrationsWidget />,
     "perks":          () => <PerksWidget />,
-    "videos":         () => <VideosWidget />,
+    "videos":         () => <VideosWidget posts={allWidgetPosts ?? undefined} />,
     "software":       () => <SoftwareWidget />,
     "games":          () => <GamesWidget />,
   };

@@ -18,6 +18,10 @@ crons.daily(
   internal.recommendations.rebuildCoViewingMatrix,
 );
 
+// Sync view counts from blogViews table to blogPosts.viewCount hourly
+// Avoids patching blogPosts on every individual view (which invalidates getForBento subscriptions)
+crons.interval("sync-view-counts", { hours: 1 }, internal.blogViews.syncViewCounts);
+
 // Flush Redis watch time buffer to Convex every 5 minutes
 // This syncs the buffered heartbeat data from Redis to the database
 // Much more efficient than writing to Convex on every heartbeat

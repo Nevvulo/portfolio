@@ -78,7 +78,7 @@ export function BentoCard(props: BentoCardProps) {
     const newsDate = publishedAt ? new Date(publishedAt) : null;
     const isFeatured = bentoSize === "featured";
     return (
-      <NewsWrapper href={`/learn/${slug}`} $size={bentoSize}>
+      <NewsWrapper href={`/learn/${slug}`} prefetch={false} $size={bentoSize}>
         <NewsCard $featured={isFeatured}>
           {isTierLocked && <TierBadge tier={visibility as "tier1" | "tier2"} small />}
           {thumbnail && (
@@ -107,7 +107,7 @@ export function BentoCard(props: BentoCardProps) {
   // Render based on size
   if (bentoSize === "featured") {
     return (
-      <FeaturedWrapper href={`/learn/${slug}`} onClick={handleVideoClick}>
+      <FeaturedWrapper href={`/learn/${slug}`} prefetch={false} onClick={handleVideoClick}>
         <FeaturedCard>
           {isTierLocked && <TierBadge tier={visibility as "tier1" | "tier2"} />}
           <FeaturedImage>
@@ -166,7 +166,7 @@ export function BentoCard(props: BentoCardProps) {
 
   if (bentoSize === "large") {
     return (
-      <LargeWrapper href={`/learn/${slug}`} onClick={handleVideoClick}>
+      <LargeWrapper href={`/learn/${slug}`} prefetch={false} onClick={handleVideoClick}>
         <LargeCard>
           {isTierLocked && <TierBadge tier={visibility as "tier1" | "tier2"} />}
           {isPlaying && youtubeId ? (
@@ -215,7 +215,7 @@ export function BentoCard(props: BentoCardProps) {
 
   if (bentoSize === "banner") {
     return (
-      <BannerWrapper href={`/learn/${slug}`} onClick={handleVideoClick}>
+      <BannerWrapper href={`/learn/${slug}`} prefetch={false} onClick={handleVideoClick}>
         <BannerCard>
           {isTierLocked && <TierBadge tier={visibility as "tier1" | "tier2"} />}
           {isPlaying && youtubeId ? (
@@ -264,7 +264,7 @@ export function BentoCard(props: BentoCardProps) {
 
   if (bentoSize === "small") {
     return (
-      <SmallWrapper href={`/learn/${slug}`} onClick={handleVideoClick}>
+      <SmallWrapper href={`/learn/${slug}`} prefetch={false} onClick={handleVideoClick}>
         <SmallCard $isPlaying={isPlaying}>
           {isTierLocked && <TierBadge tier={visibility as "tier1" | "tier2"} small />}
           {isPlaying && youtubeId ? (
@@ -309,7 +309,7 @@ export function BentoCard(props: BentoCardProps) {
 
   // Default: Medium card
   return (
-    <MediumWrapper href={`/learn/${slug}`} onClick={handleVideoClick}>
+    <MediumWrapper href={`/learn/${slug}`} prefetch={false} onClick={handleVideoClick}>
       <MediumCard>
         {isTierLocked && <TierBadge tier={visibility as "tier1" | "tier2"} />}
         {isPlaying && youtubeId ? (
