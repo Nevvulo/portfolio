@@ -1834,6 +1834,28 @@ const Title = styled.h1`
   margin-bottom: 0.5em;
   font-size: 1.9em;
 
+  /* Normalize inline elements within headings */
+  strong, & > span {
+    font-family: inherit;
+    font-size: inherit;
+    letter-spacing: inherit;
+    line-height: inherit;
+    color: inherit;
+    font-weight: inherit;
+  }
+
+  a {
+    font-size: inherit !important;
+    letter-spacing: inherit;
+    word-break: break-word;
+    overflow-wrap: break-word;
+  }
+
+  code {
+    font-size: 0.85em;
+    word-break: break-word;
+  }
+
   @media (max-width: 768px) {
     font-size: 1.5em;
   }
@@ -1850,12 +1872,31 @@ const SubtitleBase = styled.h2`
   letter-spacing: -1.25px;
   font-size: 1.5em;
   font-weight: 600;
-  display: flex;
-  align-items: flex-start;
-  gap: 0.5em;
 
   + p {
     margin-top: 0.5em;
+  }
+
+  /* Normalize inline elements within headings */
+  strong, & > span {
+    font-family: inherit;
+    font-size: inherit;
+    letter-spacing: inherit;
+    line-height: inherit;
+    color: inherit;
+    font-weight: 700;
+  }
+
+  a {
+    font-size: inherit !important;
+    letter-spacing: inherit;
+    word-break: break-word;
+    overflow-wrap: break-word;
+  }
+
+  code {
+    font-size: 0.85em;
+    word-break: break-word;
   }
 
   @media (max-width: 768px) {
@@ -1876,14 +1917,15 @@ const NumberBadge = styled.span`
   min-width: 1.4em;
   height: 1.4em;
   padding: 0.1em;
-  margin-top: 1.15em;
+  vertical-align: middle;
+  margin-right: 0.35em;
   background: linear-gradient(135deg, rgba(79, 77, 193, 0.3), rgba(79, 77, 193, 0.15));
   border: 1px solid rgba(79, 77, 193, 0.5);
   border-radius: 50%;
-  font-size: 0.5em;
-  font-weight: 600;
-  color: #a5a3f5;
-  font-family: var(--font-mono);
+  font-size: 0.5em !important;
+  font-weight: 600 !important;
+  color: #a5a3f5 !important;
+  font-family: var(--font-mono) !important;
 `;
 
 // Helper to generate slug from heading text for TOC navigation
@@ -1893,8 +1935,18 @@ const slugify = (text: string) =>
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/(^-|-$)/g, "");
 
+// Extract plain text from React children (handles nested elements like bold, code, links)
+const extractText = (children: any): string => {
+  if (typeof children === "string") return children;
+  if (typeof children === "number") return String(children);
+  if (!children) return "";
+  if (Array.isArray(children)) return children.map(extractText).join("");
+  if (children.props?.children) return extractText(children.props.children);
+  return "";
+};
+
 const Subtitle = (props: any) => {
-  const text = String(props.children || "");
+  const text = extractText(props.children);
   const match = text.match(/^(\d+)\.\s*(.*)$/);
   // Generate ID from text (strip number prefix if present)
   const idText = match ? match[2] : text;
@@ -1902,7 +1954,7 @@ const Subtitle = (props: any) => {
 
   if (match) {
     return (
-      <SubtitleBase id={id} {...props}>
+      <SubtitleBase id={id}>
         <NumberBadge>{match[1]}</NumberBadge>
         {match[2]}
       </SubtitleBase>
@@ -1919,12 +1971,31 @@ const Heading3Base = styled.h3`
   letter-spacing: -1px;
   font-weight: 500;
   font-size: 1.25em;
-  display: flex;
-  align-items: flex-start;
-  gap: 0.5em;
 
   + p {
     margin-top: 0.5em;
+  }
+
+  /* Normalize inline elements within headings */
+  strong, & > span {
+    font-family: inherit;
+    font-size: inherit;
+    letter-spacing: inherit;
+    line-height: inherit;
+    color: inherit;
+    font-weight: 600;
+  }
+
+  a {
+    font-size: inherit !important;
+    letter-spacing: inherit;
+    word-break: break-word;
+    overflow-wrap: break-word;
+  }
+
+  code {
+    font-size: 0.85em;
+    word-break: break-word;
   }
 
   @media (max-width: 768px) {
@@ -1939,7 +2010,7 @@ const Heading3Base = styled.h3`
 `;
 
 const Heading3 = (props: any) => {
-  const text = String(props.children || "");
+  const text = extractText(props.children);
   const match = text.match(/^(\d+)\.\s*(.*)$/);
   // Generate ID from text (strip number prefix if present)
   const idText = match ? match[2] : text;
@@ -1947,7 +2018,7 @@ const Heading3 = (props: any) => {
 
   if (match) {
     return (
-      <Heading3Base id={id} {...props}>
+      <Heading3Base id={id}>
         <NumberBadge>{match[1]}</NumberBadge>
         {match[2]}
       </Heading3Base>
@@ -1967,6 +2038,28 @@ const Heading4 = styled.h4`
 
   + p {
     margin-top: 0.5em;
+  }
+
+  /* Normalize inline elements within headings */
+  strong, & > span {
+    font-family: inherit;
+    font-size: inherit;
+    letter-spacing: inherit;
+    line-height: inherit;
+    color: inherit;
+    font-weight: 600;
+  }
+
+  a {
+    font-size: inherit !important;
+    letter-spacing: inherit;
+    word-break: break-word;
+    overflow-wrap: break-word;
+  }
+
+  code {
+    font-size: 0.85em;
+    word-break: break-word;
   }
 
   @media (max-width: 768px) {

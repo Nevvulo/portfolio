@@ -102,6 +102,17 @@ export default defineSchema({
     .index("by_status", ["status"])
     .index("by_robloxUserId", ["robloxUserId"]),
 
+  // User Stats - separated from users table to avoid reactive cascades on XP grants
+  // level/experience/totalExperience on users table are DEPRECATED - use this table instead
+  userStats: defineTable({
+    userId: v.id("users"),
+    clerkId: v.string(),
+    totalExperience: v.number(),
+    level: v.number(),
+    experience: v.number(), // XP towards next level
+  })
+    .index("by_userId", ["userId"])
+    .index("by_clerkId", ["clerkId"]),
 
   // Notifications
   notifications: defineTable({
@@ -311,6 +322,7 @@ export default defineSchema({
   articleWatchTime: defineTable({
     postId: v.id("blogPosts"),
     userId: v.id("users"),
+    clerkId: v.optional(v.string()),
     totalSeconds: v.number(),
     lastHeartbeat: v.number(),
     sessionId: v.string(),
@@ -319,7 +331,8 @@ export default defineSchema({
   })
     .index("by_user", ["userId"])
     .index("by_post", ["postId"])
-    .index("by_user_post", ["userId", "postId"]),
+    .index("by_user_post", ["userId", "postId"])
+    .index("by_clerkId", ["clerkId"]),
 
   // Blog Comment Reports - for moderation
   blogCommentReports: defineTable({
@@ -404,6 +417,7 @@ export default defineSchema({
   // Experience Events - tracks XP grants to prevent farming
   experienceEvents: defineTable({
     userId: v.id("users"),
+    clerkId: v.optional(v.string()),
     type: v.union(
       v.literal("post_view"), // 1-3 XP, once per post per day
       v.literal("news_read"), // 2 XP, once per news per day
@@ -418,11 +432,13 @@ export default defineSchema({
   })
     .index("by_user_date", ["userId", "date"])
     .index("by_user_type_date", ["userId", "type", "date"])
-    .index("by_user_type_ref", ["userId", "type", "referenceId"]),
+    .index("by_user_type_ref", ["userId", "type", "referenceId"])
+    .index("by_clerkId_date", ["clerkId", "date"]),
 
   // Time tracking sessions for XP
   timeTrackingSessions: defineTable({
     userId: v.id("users"),
+    clerkId: v.optional(v.string()),
     sessionStart: v.number(),
     lastHeartbeat: v.number(),
     totalMinutes: v.number(), // Minutes tracked this session
@@ -430,7 +446,8 @@ export default defineSchema({
     date: v.string(), // "YYYY-MM-DD"
   })
     .index("by_user", ["userId"])
-    .index("by_user_date", ["userId", "date"]),
+    .index("by_user_date", ["userId", "date"])
+    .index("by_clerkId_date", ["clerkId", "date"]),
 
   // ============================================
   // ADMIN SETTINGS (singleton)
@@ -962,12 +979,14 @@ export default defineSchema({
 
   widgetInteractions: defineTable({
     userId: v.id("users"),
+    clerkId: v.optional(v.string()),
     widgetId: v.string(),
     interactionCount: v.number(),
     lastInteractedAt: v.number(),
   })
     .index("by_user", ["userId"])
-    .index("by_user_widget", ["userId", "widgetId"]),
+    .index("by_user_widget", ["userId", "widgetId"])
+    .index("by_clerkId", ["clerkId"]),
 
   // Pending Roblox verification requests
   robloxVerifications: defineTable({

@@ -1220,6 +1220,12 @@ export function PostEditor({ post, onClose }: { post: BlogPost | null; onClose: 
   const updatePost = useMutation(api.blogPosts.update);
   const updateCollaborators = useMutation(api.blogPosts.updateCollaborators);
 
+  // Fetch content from blogPostContent table (content is no longer on the list query)
+  const loadedContent = useQuery(
+    api.blogPosts.getContent,
+    post ? { postId: post._id } : "skip",
+  );
+
   // Collaborators state - extract IDs from collaborator objects
   const [collaboratorIds, setCollaboratorIds] = useState<Id<"users">[]>(
     (post?.collaborators?.map((c: { _id: Id<"users"> } | Id<"users">) =>
@@ -1297,7 +1303,7 @@ export function PostEditor({ post, onClose }: { post: BlogPost | null; onClose: 
     title: post?.title || "",
     slug: post?.slug || "",
     description: post?.description || "",
-    content: post?.content || "",
+    content: "",
     contentType: post?.contentType || ("article" as const),
     coverImage: post?.coverImage || "",
     coverAuthor: post?.coverAuthor || "",
@@ -1311,6 +1317,17 @@ export function PostEditor({ post, onClose }: { post: BlogPost | null; onClose: 
     bentoSize: post?.bentoSize || ("medium" as const),
     aiDisclosureStatus: post?.aiDisclosureStatus || "",
   });
+
+  // Update form content when loaded from blogPostContent table
+  // For new posts (!post), content is immediately ready (empty)
+  // For existing posts, wait for the query to return
+  const [contentLoaded, setContentLoaded] = useState(!post);
+  useEffect(() => {
+    if (loadedContent !== undefined && !contentLoaded) {
+      setForm((f) => ({ ...f, content: loadedContent ?? "" }));
+      setContentLoaded(true);
+    }
+  }, [loadedContent, contentLoaded]);
 
   const [uploadingCover, setUploadingCover] = useState(false);
 
@@ -1733,11 +1750,15 @@ export function PostEditor({ post, onClose }: { post: BlogPost | null; onClose: 
 
         <FormGroup style={{ flex: 1, display: "flex", flexDirection: "column" }}>
           <Label>Content (MDX)</Label>
-          <MDXEditor
-            initialContent={form.content}
-            onChange={(mdx) => setForm({ ...form, content: mdx })}
-            placeholder="Start writing... Type '/' for commands"
-          />
+          {contentLoaded ? (
+            <MDXEditor
+              initialContent={form.content}
+              onChange={(mdx) => setForm({ ...form, content: mdx })}
+              placeholder="Start writing... Type '/' for commands"
+            />
+          ) : (
+            <div style={{ padding: "20px", color: "#888" }}>Loading content...</div>
+          )}
         </FormGroup>
       </EditorForm>
     </TabPanel>

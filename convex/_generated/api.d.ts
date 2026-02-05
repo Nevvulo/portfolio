@@ -30,6 +30,7 @@ import type * as featuredContent from "../featuredContent.js";
 import type * as http from "../http.js";
 import type * as inventory from "../inventory.js";
 import type * as lib_upstashPubsub from "../lib/upstashPubsub.js";
+import type * as migrations from "../migrations.js";
 import type * as netvulo from "../netvulo.js";
 import type * as notifications from "../notifications.js";
 import type * as projects from "../projects.js";
@@ -77,6 +78,7 @@ declare const fullApi: ApiFromModules<{
   http: typeof http;
   inventory: typeof inventory;
   "lib/upstashPubsub": typeof lib_upstashPubsub;
+  migrations: typeof migrations;
   netvulo: typeof netvulo;
   notifications: typeof notifications;
   projects: typeof projects;

@@ -52,7 +52,8 @@ export default function LearnDebug() {
   const [recScores, setRecScores] = useState<RecommendationScore[]>([]);
   const [simulateNoHistory, setSimulateNoHistory] = useState(false);
 
-  const basePosts = useQuery(api.blogPosts.getForBento, { excludeNews: true });
+  const allPosts = useQuery(api.blogPosts.getForBento, {});
+  const basePosts = allPosts?.filter((p) => p.contentType !== "news");
   const watchHistory = useQuery(
     api.articleWatchTime.getUserWatchHistory,
     isSignedIn ? { limit: 50 } : "skip",

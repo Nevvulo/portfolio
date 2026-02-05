@@ -3,8 +3,9 @@ import { useMutation } from "convex/react";
 import { useCallback, useEffect, useRef } from "react";
 import { api } from "../../convex/_generated/api";
 
-// Heartbeat interval: 60 seconds
-const HEARTBEAT_INTERVAL = 60000;
+// Heartbeat interval: 180 seconds (3 minutes)
+// XP logic handles gaps, so less frequent heartbeats are fine
+const HEARTBEAT_INTERVAL = 180000;
 
 /**
  * Hook that tracks time spent on site and grants XP every 10 minutes.

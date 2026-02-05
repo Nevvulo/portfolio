@@ -65,6 +65,7 @@ export const trackHeartbeat = mutation({
       await ctx.db.insert("articleWatchTime", {
         postId: args.postId,
         userId: user._id,
+        clerkId: user.clerkId,
         totalSeconds: args.secondsIncrement,
         lastHeartbeat: now,
         sessionId: args.sessionId,
@@ -80,21 +81,22 @@ export const trackHeartbeat = mutation({
 /**
  * Get user's watch history sorted by total time spent
  * OPTIMIZED: Batch fetch posts to avoid N+1 queries
+ * OPTIMIZED: Uses identity lookup to avoid reactive dependency on users table.
  */
 export const getUserWatchHistory = query({
   args: {
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const user = await getCurrentUser(ctx);
-    if (!user) return [];
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) return [];
 
     const limit = args.limit ?? 50;
 
-    // Fetch watch records using index - already efficient
+    // Use by_clerkId index — no users table read
     const watchRecords = await ctx.db
       .query("articleWatchTime")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
+      .withIndex("by_clerkId", (q: any) => q.eq("clerkId", identity.subject))
       .collect();
 
     // Sort and limit
@@ -250,6 +252,7 @@ export const upsertFromBuffer = internalMutation({
       await ctx.db.insert("articleWatchTime", {
         postId,
         userId: user._id,
+        clerkId: args.clerkId,
         totalSeconds: args.totalSeconds,
         lastHeartbeat: now,
         sessionId: "redis-flush",

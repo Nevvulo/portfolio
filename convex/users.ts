@@ -360,48 +360,6 @@ export const updatePresence = mutation({
   },
 });
 
-/**
- * Heartbeat - update last seen time
- */
-export const heartbeat = mutation({
-  handler: async (ctx) => {
-    const user = await getCurrentUser(ctx);
-    if (!user) return;
-
-    await ctx.db.patch(user._id, {
-      status: "online",
-      lastSeenAt: Date.now(),
-    });
-  },
-});
-
-/**
- * Get online members
- */
-export const getOnlineMembers = query({
-  handler: async (ctx) => {
-    // Consider users "online" if seen in the last 2 minutes
-    const twoMinutesAgo = Date.now() - 2 * 60 * 1000;
-
-    const onlineUsers = await ctx.db
-      .query("users")
-      .withIndex("by_status", (q) => q.eq("status", "online"))
-      .filter((q) => q.gte(q.field("lastSeenAt"), twoMinutesAgo))
-      .collect();
-
-    return onlineUsers.map((user) => ({
-      _id: user._id,
-      displayName: user.displayName,
-      avatarUrl: user.avatarUrl,
-      tier: user.tier,
-      isCreator: user.isCreator,
-      status: user.status,
-      // Include Discord info for free users who might have role colors
-      discordHighestRole: user.discordHighestRole,
-      discordBooster: user.discordBooster,
-    }));
-  },
-});
 
 /**
  * Update notification preferences

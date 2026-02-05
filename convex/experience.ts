@@ -72,10 +72,16 @@ function randomInt(min: number, max: number): number {
 export const getMyExperience = query({
   args: {},
   handler: async (ctx) => {
-    const user = await getCurrentUser(ctx);
-    if (!user) return null;
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) return null;
 
-    const totalXp = user.totalExperience ?? 0;
+    // Read from userStats by clerkId — no users table dependency
+    const stats = await ctx.db
+      .query("userStats")
+      .withIndex("by_clerkId", (q: any) => q.eq("clerkId", identity.subject))
+      .unique();
+
+    const totalXp = stats?.totalExperience ?? 0;
     const levelData = levelFromTotalXp(totalXp);
 
     return {
@@ -94,10 +100,13 @@ export const getMyExperience = query({
 export const getUserExperience = query({
   args: { userId: v.id("users") },
   handler: async (ctx, args) => {
-    const user = await ctx.db.get(args.userId);
-    if (!user) return null;
+    // Read from userStats by userId — no users table dependency
+    const stats = await ctx.db
+      .query("userStats")
+      .withIndex("by_userId", (q: any) => q.eq("userId", args.userId))
+      .unique();
 
-    const totalXp = user.totalExperience ?? 0;
+    const totalXp = stats?.totalExperience ?? 0;
     const levelData = levelFromTotalXp(totalXp);
 
     return {
@@ -117,18 +126,17 @@ export const getUserExperience = query({
 async function grantXp(
   ctx: any,
   userId: Id<"users">,
+  clerkId: string,
   amount: number,
   type: "post_view" | "news_read" | "reaction" | "comment" | "time_on_site",
   referenceId?: string,
 ) {
-  const user = await ctx.db.get(userId);
-  if (!user) return { success: false, reason: "User not found" };
-
   const today = getTodayString();
 
   // Record the XP event
   await ctx.db.insert("experienceEvents", {
     userId,
+    clerkId,
     type,
     referenceId,
     xpGranted: amount,
@@ -136,15 +144,31 @@ async function grantXp(
     createdAt: Date.now(),
   });
 
-  // Update user's XP
-  const newTotal = (user.totalExperience ?? 0) + amount;
+  // Read/write userStats instead of users table to avoid reactive cascades
+  const stats = await ctx.db
+    .query("userStats")
+    .withIndex("by_userId", (q: any) => q.eq("userId", userId))
+    .unique();
+
+  const oldTotal = stats?.totalExperience ?? 0;
+  const newTotal = oldTotal + amount;
   const levelData = levelFromTotalXp(newTotal);
 
-  await ctx.db.patch(userId, {
-    totalExperience: newTotal,
-    level: levelData.level,
-    experience: levelData.currentXp,
-  });
+  if (stats) {
+    await ctx.db.patch(stats._id, {
+      totalExperience: newTotal,
+      level: levelData.level,
+      experience: levelData.currentXp,
+    });
+  } else {
+    await ctx.db.insert("userStats", {
+      userId,
+      clerkId,
+      totalExperience: newTotal,
+      level: levelData.level,
+      experience: levelData.currentXp,
+    });
+  }
 
   return { success: true, xpGranted: amount, newTotal, newLevel: levelData.level };
 }
@@ -182,7 +206,7 @@ export const grantPostViewXp = mutation({
     const post = await ctx.db.get(args.postId);
     const xpAmount = post?.contentType === "news" ? 2 : randomInt(1, 3);
 
-    return await grantXp(ctx, user._id, xpAmount, "post_view", refId);
+    return await grantXp(ctx, user._id, user.clerkId, xpAmount, "post_view", refId);
   },
 });
 
@@ -209,7 +233,7 @@ export const grantReactionXp = mutation({
       return { success: false, reason: "Already earned XP for reacting to this post" };
     }
 
-    return await grantXp(ctx, user._id, 1, "reaction", refId);
+    return await grantXp(ctx, user._id, user.clerkId, 1, "reaction", refId);
   },
 });
 
@@ -237,7 +261,7 @@ export const grantCommentXp = mutation({
     }
 
     const xpAmount = randomInt(2, 3);
-    return await grantXp(ctx, user._id, xpAmount, "comment", args.postId as string);
+    return await grantXp(ctx, user._id, user.clerkId, xpAmount, "comment", args.postId as string);
   },
 });
 
@@ -264,6 +288,7 @@ export const trackTimeHeartbeat = mutation({
       // Create new session
       await ctx.db.insert("timeTrackingSessions", {
         userId: user._id,
+        clerkId: user.clerkId,
         sessionStart: now,
         lastHeartbeat: now,
         totalMinutes: 0,
@@ -290,7 +315,7 @@ export const trackTimeHeartbeat = mutation({
       // Grant XP for each new 10-minute block
       for (let i = 0; i < newBlocks; i++) {
         const xpAmount = randomInt(3, 10);
-        await grantXp(ctx, user._id, xpAmount, "time_on_site");
+        await grantXp(ctx, user._id, user.clerkId, xpAmount, "time_on_site");
         xpGranted += xpAmount;
       }
     }
@@ -313,18 +338,20 @@ export const trackTimeHeartbeat = mutation({
 
 /**
  * Get today's XP breakdown
+ * OPTIMIZED: Uses identity lookup to avoid reactive dependency on users table.
  */
 export const getTodayXpBreakdown = query({
   args: {},
   handler: async (ctx) => {
-    const user = await getCurrentUser(ctx);
-    if (!user) return null;
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) return null;
 
     const today = getTodayString();
 
+    // Use by_clerkId_date index — no users table read
     const events = await ctx.db
       .query("experienceEvents")
-      .withIndex("by_user_date", (q) => q.eq("userId", user._id).eq("date", today))
+      .withIndex("by_clerkId_date", (q: any) => q.eq("clerkId", identity.subject).eq("date", today))
       .collect();
 
     const breakdown = {

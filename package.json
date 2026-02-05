@@ -7,7 +7,7 @@
   },
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "next build --turbopack",
+    "build": "npx convex deploy --cmd 'next build --turbopack'",
     "start": "next start",
     "lint": "biome check --write .",
     "lint:check": "biome check .",

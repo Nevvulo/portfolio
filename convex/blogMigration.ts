@@ -393,10 +393,10 @@ export const verifyContentMigration = query({
 });
 
 /**
- * Clear old content field from blogPosts after migration is verified
- * This is optional - the old content field is now ignored, but clearing it
- * could save some storage (though not bandwidth, since documents are still
- * read in full by Convex)
+ * Clear old content field from blogPosts after migration is verified.
+ * CRITICAL for bandwidth: Convex reads full documents on every query,
+ * including the ~200KB content field. Clearing it reduces per-document
+ * bandwidth by ~95% for all queries that scan the blogPosts table.
  */
 export const clearOldContentField = internalMutation({
   args: { dryRun: v.optional(v.boolean()) },
@@ -437,6 +437,24 @@ export const runContentMigration = action({
     ctx,
   ): Promise<{ migrated: number; skipped: number; errors: number; total: number }> => {
     return await ctx.runMutation(internal.blogMigration.migrateContentToSeparateTable, {});
+  },
+});
+
+/**
+ * Clear old content field from blogPosts documents.
+ * This is critical for bandwidth: Convex reads full documents on every query,
+ * so the ~200KB content field on each document is read even by list queries
+ * like getForBento that don't return the content. Clearing it reduces
+ * per-document read size by ~95%.
+ *
+ * Run: npx convex run blogMigration:runClearOldContent
+ */
+export const runClearOldContent = action({
+  args: { dryRun: v.optional(v.boolean()) },
+  handler: async (ctx, args): Promise<{ cleared: number; dryRun: boolean }> => {
+    return await ctx.runMutation(internal.blogMigration.clearOldContentField, {
+      dryRun: args.dryRun,
+    });
   },
 });
 

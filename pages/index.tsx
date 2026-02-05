@@ -1,5 +1,5 @@
 import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
-import { useQuery } from "convex/react";
+import { ConvexHttpClient } from "convex/browser";
 import { Calendar, ChevronLeft, ChevronRight, Menu, Package, Play, Radio, X, Zap } from "lucide-react";
 import Head from "next/head";
 import Image from "next/image";
@@ -29,9 +29,15 @@ import { checkTwitchLiveStatus } from "../utils/twitch";
 interface HomeProps {
   discordWidget: DiscordWidget | null;
   isLive: boolean;
+  // Static data for unauthenticated homepage (fetched at build/ISR time)
+  staticLearnPosts: any[] | null;
+  staticProjects: any[] | null;
+  staticFeaturedSoftware: any[] | null;
+  staticStreamSettings: any | null;
+  staticUpcomingEvents: any[] | null;
 }
 
-export default function Home({ discordWidget, isLive: serverIsLive }: HomeProps) {
+export default function Home({ discordWidget, isLive: serverIsLive, staticLearnPosts, staticProjects, staticFeaturedSoftware, staticStreamSettings, staticUpcomingEvents }: HomeProps) {
   const [showCanvasIntro, setShowCanvasIntro] = useState(false);
   const [showContent, setShowContent] = useState(true);
   const [bannerOpacity, setBannerOpacity] = useState(1);
@@ -94,9 +100,9 @@ export default function Home({ discordWidget, isLive: serverIsLive }: HomeProps)
 
   const isLive = isLiveOverride !== null ? isLiveOverride : serverIsLive;
 
-  // Fetch all learn posts from Convex (filter client-side to share subscription across app)
-  const allLearnPosts = useQuery(api.blogPosts.getForBento, {});
-  const learnPosts = allLearnPosts?.filter((p) => p.contentType !== "news");
+  // Use static data from ISR (no Convex subscription for anonymous visitors)
+  const allLearnPosts = staticLearnPosts;
+  const learnPosts = allLearnPosts?.filter((p: any) => p.contentType !== "news");
 
   const handleIntroComplete = () => {
     setShowCanvasIntro(false);
@@ -114,14 +120,13 @@ export default function Home({ discordWidget, isLive: serverIsLive }: HomeProps)
     );
   }
 
-  // Get featured projects from Convex (unloan, flux, compass)
-  const projects = useQuery(api.projects.listActive);
-  const featuredProjects = projects?.filter((p) =>
+  // Use static data from ISR
+  const projects = staticProjects;
+  const featuredProjects = projects?.filter((p: any) =>
     p.slug === "unloan" || p.slug === "flux" || p.slug === "compass"
   ) ?? [];
 
-  // Get featured software & games from Convex
-  const featuredSoftware = useQuery(api.software.listFeatured);
+  const featuredSoftware = staticFeaturedSoftware;
 
   // Get shorts for Live section carousel
   const shortsPosts =
@@ -140,9 +145,9 @@ export default function Home({ discordWidget, isLive: serverIsLive }: HomeProps)
     }
   };
 
-  // Get stream settings and events
-  const streamSettings = useQuery(api.stream.getStreamSettings);
-  const upcomingEvents = useQuery(api.stream.getUpcomingEvents);
+  // Use static data from ISR
+  const streamSettings = staticStreamSettings;
+  const upcomingEvents = staticUpcomingEvents;
 
   // Twitch VODs
   const [vods, setVods] = useState<Array<{ id: string; title: string; url: string; thumbnail_url: string; duration: string; created_at: string; view_count: number }>>([]);
@@ -3031,15 +3036,27 @@ const TierCTA = styled.span`
 `;
 
 export async function getStaticProps() {
-  const [discordWidget, isLive] = await Promise.all([
+  const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
+
+  const [discordWidget, isLive, staticLearnPosts, staticProjects, staticFeaturedSoftware, staticStreamSettings, staticUpcomingEvents] = await Promise.all([
     fetchDiscordWidget(),
     checkTwitchLiveStatus(),
+    convex.query(api.blogPosts.getForBento, {}).catch(() => null),
+    convex.query(api.projects.listActive).catch(() => null),
+    convex.query(api.software.listFeatured).catch(() => null),
+    convex.query(api.stream.getStreamSettings).catch(() => null),
+    convex.query(api.stream.getUpcomingEvents).catch(() => null),
   ]);
 
   return {
     props: {
       discordWidget,
       isLive,
+      staticLearnPosts,
+      staticProjects,
+      staticFeaturedSoftware,
+      staticStreamSettings,
+      staticUpcomingEvents,
     },
     revalidate: 60, // Revalidate every 60 seconds
   };

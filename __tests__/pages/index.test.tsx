@@ -17,11 +17,11 @@ import { renderWithProviders } from "../test-utils";
 
 describe("Home Page", () => {
   test("renders without crashing", () => {
-    renderWithProviders(<Home discordWidget={null} isLive={false} />);
+    renderWithProviders(<Home discordWidget={null} isLive={false} staticLearnPosts={null} staticProjects={null} staticFeaturedSoftware={null} staticStreamSettings={null} staticUpcomingEvents={null} />);
   });
 
   test("displays hero section", () => {
-    renderWithProviders(<Home discordWidget={null} isLive={false} />);
+    renderWithProviders(<Home discordWidget={null} isLive={false} staticLearnPosts={null} staticProjects={null} staticFeaturedSoftware={null} staticStreamSettings={null} staticUpcomingEvents={null} />);
 
     // Check for main title/branding (may appear multiple times)
     const titles = screen.queryAllByText(/nevulo/i);
@@ -29,7 +29,7 @@ describe("Home Page", () => {
   });
 
   test("displays navigation links", () => {
-    renderWithProviders(<Home discordWidget={null} isLive={false} />);
+    renderWithProviders(<Home discordWidget={null} isLive={false} staticLearnPosts={null} staticProjects={null} staticFeaturedSoftware={null} staticStreamSettings={null} staticUpcomingEvents={null} />);
 
     // Check for nav links that are always present
     const aboutLink = document.querySelector('a[href*="about"]');
@@ -40,14 +40,14 @@ describe("Home Page", () => {
   });
 
   test("displays social links", () => {
-    renderWithProviders(<Home discordWidget={null} isLive={false} />);
+    renderWithProviders(<Home discordWidget={null} isLive={false} staticLearnPosts={null} staticProjects={null} staticFeaturedSoftware={null} staticStreamSettings={null} staticUpcomingEvents={null} />);
 
     const socialLinksContainer = document.querySelector('[href*="github.com"]');
     expect(socialLinksContainer).toBeTruthy();
   });
 
   test("has proper page structure", () => {
-    renderWithProviders(<Home discordWidget={null} isLive={false} />);
+    renderWithProviders(<Home discordWidget={null} isLive={false} staticLearnPosts={null} staticProjects={null} staticFeaturedSoftware={null} staticStreamSettings={null} staticUpcomingEvents={null} />);
 
     // Check that page sections exist
     const sections = document.querySelectorAll("section");

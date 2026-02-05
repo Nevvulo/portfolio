@@ -31,7 +31,7 @@ interface LatestContentWidgetProps {
 /** Latest content across all types */
 export function LatestContentWidget({ compact, posts: externalPosts }: LatestContentWidgetProps) {
   const [filter, setFilter] = useState<ContentFilter>("all");
-  const ownPosts = useQuery(api.blogPosts.getForBento, externalPosts ? "skip" : { excludeNews: false });
+  const ownPosts = useQuery(api.blogPosts.getForBento, externalPosts ? "skip" : {});
   const posts = externalPosts ?? ownPosts;
 
   const maxItems = compact ? 3 : 6;

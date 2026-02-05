@@ -13,7 +13,7 @@ interface VideosWidgetProps {
 }
 
 export function VideosWidget({ posts: externalPosts }: VideosWidgetProps = {}) {
-  const ownPosts = useQuery(api.blogPosts.getForBento, externalPosts ? "skip" : { excludeNews: true });
+  const ownPosts = useQuery(api.blogPosts.getForBento, externalPosts ? "skip" : {});
   const allPosts = externalPosts ?? ownPosts;
   const videoPosts = allPosts
     ?.filter((p) => p.contentType === "video")

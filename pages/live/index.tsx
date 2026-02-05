@@ -24,10 +24,10 @@ export default function LivePage({ discordWidget, isLive }: LivePageProps) {
   const mockLive = router.query.mockLive === "true";
   const effectiveIsLive = mockLive || isLive;
 
-  // Get video posts (YouTube content)
-  const posts = useQuery(api.blogPosts.getForBento, { excludeNews: true });
+  // Get video posts (YouTube content) — use {} to share single subscription across app
+  const posts = useQuery(api.blogPosts.getForBento, {});
 
-  // Filter to only video content
+  // Filter to only video content client-side
   const videoPosts = posts?.filter((p) => p.contentType === "video") ?? [];
 
   const onlineCount = discordWidget?.presence_count || 0;
