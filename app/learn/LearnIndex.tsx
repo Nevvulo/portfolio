@@ -141,21 +141,22 @@ export default function LearnIndex({ posts }: LearnIndexProps) {
 
   const isSearchActive = query.length > 0 || selectedLabels.length > 0;
 
-  // Sync selected labels -> URL
+  // Sync selected labels -> URL (only on user-initiated label changes)
+  const isInitialMount = useRef(true);
   useEffect(() => {
-    const current = searchParams.get("label");
-    const next = selectedLabels.length > 0 ? selectedLabels.join(",") : null;
-
-    if (current !== next) {
-      const params = new URLSearchParams(searchParams.toString());
-      if (next) {
-        params.set("label", next);
-      } else {
-        params.delete("label");
-      }
-      const qs = params.toString();
-      router.replace(`/learn${qs ? `?${qs}` : ""}`, { scroll: false });
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
     }
+    const next = selectedLabels.length > 0 ? selectedLabels.join(",") : null;
+    const params = new URLSearchParams(window.location.search);
+    if (next) {
+      params.set("label", next);
+    } else {
+      params.delete("label");
+    }
+    const qs = params.toString();
+    router.replace(`/learn${qs ? `?${qs}` : ""}`, { scroll: false });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedLabels]);
 
