@@ -1,7 +1,5 @@
-import { ConvexHttpClient } from "convex/browser";
 import { createHmac, timingSafeEqual } from "crypto";
 import type { NextApiRequest, NextApiResponse } from "next";
-import { api } from "../../../convex/_generated/api";
 
 // Disable body parsing - we need the raw body for signature verification
 export const config = {
@@ -150,9 +148,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
   }
 
-  // Initialize Convex client
-  const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
-
   try {
     switch (payload.event) {
       case "content.published": {
@@ -174,13 +169,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           status: "published" as const,
           publishedAt: payload.content.publishedAt || Date.now(),
           createdAt: payload.content.createdAt,
-          // Custom fields can store the original Continuous ID for reference
-          // This would need a schema update to support
         };
-
-        // Check if post already exists by slug
-        // If exists, update it; otherwise create new
-        // For now, we'll use createMigrated which handles this internally
 
         console.log("Creating/updating blog post from Continuous:", {
           slug: blogPostData.slug,
@@ -191,9 +180,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         // 1. Check if post exists by external ID
         // 2. Update if exists, create if not
         // 3. Store the Continuous ID for future updates
-
-        // For MVP, we'll respond with success and log
-        // The actual Convex mutation would need the author ID which requires mapping
+        // 4. Map the author from Continuous to a local user
 
         return res.status(200).json({
           success: true,
@@ -201,7 +188,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           data: {
             slug: blogPostData.slug,
             title: blogPostData.title,
-            // In production, return the created post ID
           },
         });
       }

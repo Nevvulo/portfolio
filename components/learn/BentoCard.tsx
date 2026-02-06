@@ -5,7 +5,6 @@ import { SupporterBadge } from "../badges/supporter-badge";
 import Link from "next/link";
 import { useState } from "react";
 import styled from "styled-components";
-import type { Id } from "../../convex/_generated/dataModel";
 import { Label } from "../blog/labels";
 import { SkeletonImage } from "../blog/skeleton-image";
 
@@ -17,7 +16,7 @@ type Difficulty = "beginner" | "intermediate" | "advanced";
 type Visibility = "public" | "members" | "tier1" | "tier2";
 
 export interface BentoCardProps {
-  _id: Id<"blogPosts">;
+  id: number;
   slug: string;
   title: string;
   description: string;
@@ -29,7 +28,7 @@ export interface BentoCardProps {
   readTimeMins?: number;
   bentoSize: BentoSize;
   viewCount: number;
-  publishedAt?: number;
+  publishedAt?: Date | string | null;
   visibility?: Visibility;
   author?: {
     displayName: string;

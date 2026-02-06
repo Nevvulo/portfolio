@@ -1,16 +1,15 @@
-import { useQuery } from "convex/react";
+import { useQuery as useRQ } from "@tanstack/react-query";
 import { AnimatePresence, m } from "framer-motion";
 import { ChevronLeft, Loader2, MessageSquare } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import styled from "styled-components";
-import { api } from "@/convex/_generated/api";
-import type { Id } from "@/convex/_generated/dataModel";
+import { listFeedPosts } from "@/src/db/actions/feed";
 import { FeedComposer } from "./FeedComposer";
 import { FeedPost, type FeedPostData } from "./FeedPost";
 
 interface FeedListProps {
-  profileUserId: Id<"users">;
-  currentUserId?: Id<"users">;
+  profileUserId: number;
+  currentUserId?: number;
   isProfileOwner?: boolean;
   canPost?: boolean;
   requiresApproval?: boolean;
@@ -29,19 +28,18 @@ export function FeedList({
   canPost = false,
   requiresApproval = false,
 }: FeedListProps) {
-  const [cursor, setCursor] = useState<Id<"userFeedPosts"> | undefined>(undefined);
+  const [cursor, setCursor] = useState<number | undefined>(undefined);
   const [allPosts, setAllPosts] = useState<any[]>([]);
-  const [replyingTo, setReplyingTo] = useState<Id<"userFeedPosts"> | null>(null);
+  const [replyingTo, setReplyingTo] = useState<number | null>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
 
   // Thread focus stack - when navigating into deep threads
   const [focusStack, setFocusStack] = useState<FocusedThread[]>([]);
 
   // Fetch posts
-  const feedData = useQuery(api.userFeed.list, {
-    profileUserId,
-    limit: 20,
-    cursor,
+  const { data: feedData } = useRQ({
+    queryKey: ["feedPosts", profileUserId, cursor],
+    queryFn: () => listFeedPosts({ profileUserId, limit: 20, cursor }),
   });
 
   // Update posts when new data arrives
@@ -50,8 +48,8 @@ export function FeedList({
       if (cursor) {
         // Append to existing posts
         setAllPosts((prev) => {
-          const existingIds = new Set(prev.map((p) => p._id));
-          const newPosts = feedData.posts.filter((p: any) => !existingIds.has(p._id));
+          const existingIds = new Set(prev.map((p) => p.id));
+          const newPosts = feedData.posts.filter((p: any) => !existingIds.has(p.id));
           return [...prev, ...newPosts];
         });
       } else {
@@ -84,7 +82,7 @@ export function FeedList({
     return () => observer.disconnect();
   }, [handleLoadMore, feedData?.hasMore]);
 
-  const handleReply = useCallback((postId: Id<"userFeedPosts">) => {
+  const handleReply = useCallback((postId: number) => {
     setReplyingTo(postId);
   }, []);
 
@@ -117,7 +115,7 @@ export function FeedList({
     setFocusStack([]);
   }, []);
 
-  const isLoading = feedData === undefined;
+  const isLoading = !feedData;
   const isEmpty = !isLoading && allPosts.length === 0;
   const currentFocus = focusStack.length > 0 ? focusStack[focusStack.length - 1] : null;
 
@@ -198,7 +196,7 @@ export function FeedList({
             <AnimatePresence mode="popLayout">
               {allPosts.map((post) => (
                 <m.div
-                  key={post._id}
+                  key={post.id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -20 }}
@@ -216,7 +214,7 @@ export function FeedList({
 
                   {/* Reply composer for top-level posts */}
                   <AnimatePresence>
-                    {replyingTo === post._id && (
+                    {replyingTo === post.id && (
                       <ReplyComposerWrapper
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: "auto", opacity: 1 }}
@@ -225,7 +223,7 @@ export function FeedList({
                       >
                         <FeedComposer
                           profileUserId={profileUserId}
-                          parentId={post._id}
+                          parentId={post.id}
                           placeholder={`Reply to ${post.author?.displayName || "this post"}...`}
                           requiresApproval={requiresApproval && !isProfileOwner}
                           onSuccess={handleReplySuccess}

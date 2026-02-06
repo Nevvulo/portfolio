@@ -8,22 +8,16 @@
  * GET /api/health?verbose=true (includes latency details)
  */
 
-import { ConvexHttpClient } from "convex/browser";
+import { count } from "drizzle-orm";
 import type { NextApiRequest, NextApiResponse } from "next";
-import { api } from "../../convex/_generated/api";
+import { db } from "@/src/db";
+import { blogPosts } from "@/src/db/schema";
 import {
   type HealthCheckResult,
   logger,
   runHealthCheck,
   withErrorHandling,
 } from "../../lib/observability";
-
-// Initialize clients lazily
-const getConvexClient = () => {
-  const url = process.env.NEXT_PUBLIC_CONVEX_URL;
-  if (!url) return null;
-  return new ConvexHttpClient(url);
-};
 
 const getRedisClient = async () => {
   const url = process.env.UPSTASH_REDIS_REST_URL;
@@ -43,14 +37,13 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   const startTime = Date.now();
 
   const result = await runHealthCheck([
-    // Convex Database
+    // Postgres Database
     {
-      name: "convex",
+      name: "postgres",
       check: async () => {
-        const client = getConvexClient();
-        if (!client) throw new Error("Convex URL not configured");
+        if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL not configured");
         // Simple query to verify connection
-        await client.query(api.blogPosts.getPublishedCount, {});
+        await db.select({ total: count() }).from(blogPosts);
       },
     },
 

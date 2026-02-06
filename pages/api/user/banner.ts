@@ -1,12 +1,10 @@
 import { getAuth } from "@clerk/nextjs/server";
 import { put } from "@vercel/blob";
-import { ConvexHttpClient } from "convex/browser";
+import { eq } from "drizzle-orm";
 import type { NextApiRequest, NextApiResponse } from "next";
 import sharp from "sharp";
-import { api } from "../../../convex/_generated/api";
-
-// Initialize Convex client
-const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
+import { db } from "@/src/db";
+import { users } from "@/src/db/schema";
 
 // Config for Next.js API route
 export const config = {
@@ -39,15 +37,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     if (req.method === "DELETE") {
-      // Remove banner
-      // Get current banner URL from Convex to delete from Blob
-      const token = await getAuth(req).getToken({ template: "convex" });
-      if (token) {
-        convex.setAuth(token);
-      }
-
-      // Call mutation to clear banner
-      await convex.mutation(api.userProfiles.removeBanner);
+      // Remove banner by setting to null in Postgres
+      await db
+        .update(users)
+        .set({ bannerUrl: null, bannerFocalY: null })
+        .where(eq(users.clerkId, userId));
 
       return res.status(200).json({ success: true });
     }
@@ -108,16 +102,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       contentType: "image/webp",
     });
 
-    // Update Convex with new banner URL
-    const token = await getAuth(req).getToken({ template: "convex" });
-    if (token) {
-      convex.setAuth(token);
-    }
-
-    await convex.mutation(api.userProfiles.updateBanner, {
-      bannerUrl: blob.url,
-      bannerFocalY: focalYValue,
-    });
+    // Update Postgres with new banner URL
+    await db
+      .update(users)
+      .set({ bannerUrl: blob.url, bannerFocalY: focalYValue })
+      .where(eq(users.clerkId, userId));
 
     return res.status(200).json({
       url: blob.url,

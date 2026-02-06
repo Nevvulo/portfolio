@@ -1,11 +1,9 @@
 import { getAuth } from "@clerk/nextjs/server";
-import { ConvexHttpClient } from "convex/browser";
+import { and, asc, desc, eq, ne } from "drizzle-orm";
 import type { NextApiRequest, NextApiResponse } from "next";
-import { api } from "../../../convex/_generated/api";
+import { db } from "@/src/db";
+import { blogPosts, users } from "@/src/db/schema";
 import { redis } from "../../../lib/redis";
-
-// Initialize Convex client
-const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
 // Cache configuration
 const CACHE_TTL_SECONDS = 300; // 5 minutes
@@ -66,18 +64,41 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       });
     }
 
-    // Cache miss - fetch from Convex
-    // Set auth if user is logged in
-    if (userId) {
-      const token = await getAuth(req).getToken({ template: "convex" });
-      if (token) {
-        convex.setAuth(token);
-      }
+    // Cache miss - fetch from Postgres
+    // Build query conditions
+    const conditions = [eq(blogPosts.status, "published")];
+
+    if (contentTypeStr) {
+      conditions.push(eq(blogPosts.contentType, contentTypeStr));
     }
 
-    const posts = await convex.query(api.blogPosts.getForBento, {
-      contentType: contentTypeStr as "article" | "video" | "news" | undefined,
-      excludeNews: excludeNewsFlag,
+    if (excludeNewsFlag) {
+      conditions.push(ne(blogPosts.contentType, "news"));
+    }
+
+    // Filter by visibility based on user tier
+    // Public users only see public posts
+    // Members see public + members
+    // tier1 sees public + members + tier1
+    // tier2 sees everything
+    if (tier === "public") {
+      conditions.push(eq(blogPosts.visibility, "public"));
+    }
+    // For logged-in users, we fetch all and let the client filter, matching original behavior
+
+    const posts = await db.query.blogPosts.findMany({
+      where: and(...conditions),
+      orderBy: [desc(blogPosts.bentoOrder), desc(blogPosts.publishedAt)],
+      with: {
+        author: {
+          columns: {
+            id: true,
+            displayName: true,
+            username: true,
+            avatarUrl: true,
+          },
+        },
+      },
     });
 
     // Cache the result

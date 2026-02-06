@@ -1,4 +1,8 @@
-import { useMutation, useQuery } from "convex/react";
+import {
+  useQuery as useRQ,
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query";
 import {
   AlertCircle,
   Check,
@@ -18,9 +22,18 @@ import { useEffect, useState } from "react";
 import styled from "styled-components";
 import { BlogView } from "../../../components/layout/blog";
 import { SimpleNavbar } from "../../../components/navbar/simple";
-import { api } from "../../../convex/_generated/api";
-import type { Id } from "../../../convex/_generated/dataModel";
-import { useTierAccess } from "../../../hooks/useTierAccess";
+import { getMe } from "@/src/db/client/me";
+import {
+  listTechnologies,
+  listRoles,
+  listProjects,
+  seedTechnologies,
+  seedRoles,
+  seedProjects,
+  toggleProjectStatus,
+  deleteProject,
+  updateProject,
+} from "@/src/db/client/admin-projects";
 
 // Migration data for seeding
 const TECHNOLOGIES_SEED = [
@@ -324,7 +337,12 @@ export const getServerSideProps = () => ({ props: {} });
 
 export default function AdminProjectsPage() {
   const [mounted, setMounted] = useState(false);
-  const { isLoading, isCreator } = useTierAccess();
+  const { data: me, isLoading } = useRQ({
+    queryKey: ["me"],
+    queryFn: () => getMe(),
+    staleTime: 30_000,
+  });
+  const isCreator = me?.isCreator ?? false;
 
   useEffect(() => {
     setMounted(true);
@@ -382,13 +400,39 @@ export default function AdminProjectsPage() {
 }
 
 function MigrationSection() {
-  const technologies = useQuery(api.technologies.list);
-  const roles = useQuery(api.roles.list);
-  const projects = useQuery(api.projects.list, {});
+  const queryClient = useQueryClient();
 
-  const seedTechnology = useMutation(api.technologies.seed);
-  const seedRole = useMutation(api.roles.seed);
-  const seedProject = useMutation(api.projects.seed);
+  const { data: technologies } = useRQ({
+    queryKey: ["admin", "technologies"],
+    queryFn: () => listTechnologies(),
+  });
+  const { data: roles } = useRQ({
+    queryKey: ["admin", "roles"],
+    queryFn: () => listRoles(),
+  });
+  const { data: projects } = useRQ({
+    queryKey: ["admin", "projects"],
+    queryFn: () => listProjects(),
+  });
+
+  const seedTechMutation = useMutation({
+    mutationFn: (items: typeof TECHNOLOGIES_SEED) => seedTechnologies(items),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "technologies"] });
+    },
+  });
+  const seedRoleMutation = useMutation({
+    mutationFn: (items: typeof ROLES_SEED) => seedRoles(items),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "roles"] });
+    },
+  });
+  const seedProjectMutation = useMutation({
+    mutationFn: (items: typeof PROJECTS_SEED) => seedProjects(items),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "projects"] });
+    },
+  });
 
   const [migrating, setMigrating] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
@@ -404,20 +448,9 @@ function MigrationSection() {
     setMessage(null);
 
     try {
-      // Seed technologies
-      for (const tech of TECHNOLOGIES_SEED) {
-        await seedTechnology(tech);
-      }
-
-      // Seed roles
-      for (const role of ROLES_SEED) {
-        await seedRole(role);
-      }
-
-      // Seed projects
-      for (const project of PROJECTS_SEED) {
-        await seedProject(project);
-      }
+      await seedTechMutation.mutateAsync(TECHNOLOGIES_SEED);
+      await seedRoleMutation.mutateAsync(ROLES_SEED);
+      await seedProjectMutation.mutateAsync(PROJECTS_SEED);
 
       setMessage({ type: "success", text: "Migration completed successfully!" });
     } catch (error) {
@@ -435,7 +468,7 @@ function MigrationSection() {
         </SectionTitle>
       </SectionHeader>
 
-      <SectionDescription>Migrate hardcoded project data to Convex database.</SectionDescription>
+      <SectionDescription>Migrate hardcoded project data to Postgres database.</SectionDescription>
 
       {message && (
         <Message $type={message.type}>
@@ -478,18 +511,48 @@ function MigrationSection() {
   );
 }
 
+type ProjectItem = Awaited<ReturnType<typeof listProjects>>[number];
+type TechnologyItem = Awaited<ReturnType<typeof listTechnologies>>[number];
+type RoleItem = Awaited<ReturnType<typeof listRoles>>[number];
+
 function ProjectsListSection() {
-  const projects = useQuery(api.projects.list, {});
-  const technologies = useQuery(api.technologies.list);
-  const roles = useQuery(api.roles.list);
-  const toggleStatus = useMutation(api.projects.toggleStatus);
-  const deleteProject = useMutation(api.projects.deleteProject);
-  const updateProject = useMutation(api.projects.update);
+  const queryClient = useQueryClient();
+
+  const { data: projects } = useRQ({
+    queryKey: ["admin", "projects"],
+    queryFn: () => listProjects(),
+  });
+  const { data: technologies } = useRQ({
+    queryKey: ["admin", "technologies"],
+    queryFn: () => listTechnologies(),
+  });
+  const { data: roles } = useRQ({
+    queryKey: ["admin", "roles"],
+    queryFn: () => listRoles(),
+  });
+
+  const toggleMutation = useMutation({
+    mutationFn: (id: number) => toggleProjectStatus(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "projects"] });
+    },
+  });
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => deleteProject(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "projects"] });
+    },
+  });
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: number; data: Parameters<typeof updateProject>[1] }) =>
+      updateProject(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "projects"] });
+    },
+  });
 
   const [filter, setFilter] = useState<"all" | "active" | "inactive">("all");
-  const [editingProject, setEditingProject] = useState<NonNullable<typeof projects>[number] | null>(
-    null,
-  );
+  const [editingProject, setEditingProject] = useState<ProjectItem | null>(null);
 
   const filteredProjects =
     projects?.filter((p) => {
@@ -497,13 +560,13 @@ function ProjectsListSection() {
       return p.status === filter;
     }) ?? [];
 
-  const handleToggle = async (projectId: Id<"projects">) => {
-    await toggleStatus({ projectId });
+  const handleToggle = async (projectId: number) => {
+    await toggleMutation.mutateAsync(projectId);
   };
 
-  const handleDelete = async (projectId: Id<"projects">, name: string) => {
+  const handleDelete = async (projectId: number, name: string) => {
     if (confirm(`Are you sure you want to delete "${name}"? This cannot be undone.`)) {
-      await deleteProject({ projectId });
+      await deleteMutation.mutateAsync(projectId);
     }
   };
 
@@ -535,7 +598,7 @@ function ProjectsListSection() {
       ) : (
         <ProjectsList>
           {filteredProjects.map((project) => (
-            <ProjectCard key={project._id} $background={project.background}>
+            <ProjectCard key={project.id} $background={project.background}>
               <ProjectCardLeft>
                 <DragHandle>
                   <GripVertical size={16} />
@@ -545,8 +608,10 @@ function ProjectsListSection() {
                   <ProjectMeta>
                     {project.shortDescription}
                     <TimelineBadge>
-                      {project.timeline.startYear}
-                      {project.timeline.endYear ? ` — ${project.timeline.endYear}` : " — Present"}
+                      {(project.timeline as any).startYear}
+                      {(project.timeline as any).endYear
+                        ? ` — ${(project.timeline as any).endYear}`
+                        : " — Present"}
                     </TimelineBadge>
                   </ProjectMeta>
                 </ProjectInfo>
@@ -557,12 +622,12 @@ function ProjectsListSection() {
                 <IconButton onClick={() => setEditingProject(project)} title="Edit project">
                   <Edit size={16} />
                 </IconButton>
-                <IconButton onClick={() => handleToggle(project._id)} title="Toggle visibility">
+                <IconButton onClick={() => handleToggle(project.id)} title="Toggle visibility">
                   {project.status === "active" ? <Eye size={16} /> : <EyeOff size={16} />}
                 </IconButton>
                 <IconButton
                   $danger
-                  onClick={() => handleDelete(project._id, project.name)}
+                  onClick={() => handleDelete(project.id, project.name)}
                   title="Delete project"
                 >
                   <Trash2 size={16} />
@@ -580,9 +645,9 @@ function ProjectsListSection() {
           roles={roles ?? []}
           onClose={() => setEditingProject(null)}
           onSave={async (updates) => {
-            await updateProject({
-              projectId: editingProject._id,
-              ...updates,
+            await updateMutation.mutateAsync({
+              id: editingProject.id,
+              data: updates,
             });
             setEditingProject(null);
           }}
@@ -593,9 +658,9 @@ function ProjectsListSection() {
 }
 
 interface EditProjectModalProps {
-  project: NonNullable<ReturnType<typeof useQuery<typeof api.projects.list>>>[number];
-  technologies: NonNullable<ReturnType<typeof useQuery<typeof api.technologies.list>>>;
-  roles: NonNullable<ReturnType<typeof useQuery<typeof api.roles.list>>>;
+  project: ProjectItem;
+  technologies: TechnologyItem[];
+  roles: RoleItem[];
   onClose: () => void;
   onSave: (updates: {
     slug?: string;
@@ -644,6 +709,9 @@ function EditProjectModal({
     "basic",
   );
 
+  const timeline = project.timeline as any;
+  const links = project.links as any;
+
   // Form state
   const [slug, setSlug] = useState(project.slug);
   const [name, setName] = useState(project.name);
@@ -654,26 +722,34 @@ function EditProjectModal({
   const [logoWidth, setLogoWidth] = useState(project.logoWidth ?? 0);
   const [logoHeight, setLogoHeight] = useState(project.logoHeight ?? 0);
   const [logoIncludesName, setLogoIncludesName] = useState(project.logoIncludesName ?? true);
-  const [status, setStatus] = useState<"active" | "inactive">(project.status);
+  const [status, setStatus] = useState<"active" | "inactive">(
+    project.status as "active" | "inactive",
+  );
   const [maintained, setMaintained] = useState(project.maintained);
 
   // Timeline
-  const [startYear, setStartYear] = useState(project.timeline.startYear);
-  const [endYear, setEndYear] = useState(project.timeline.endYear ?? 0);
-  const [startMonth, setStartMonth] = useState(project.timeline.startMonth ?? 0);
-  const [endMonth, setEndMonth] = useState(project.timeline.endMonth ?? 0);
-  const [isOngoing, setIsOngoing] = useState(!project.timeline.endYear);
+  const [startYear, setStartYear] = useState(timeline.startYear);
+  const [endYear, setEndYear] = useState(timeline.endYear ?? 0);
+  const [startMonth, setStartMonth] = useState(timeline.startMonth ?? 0);
+  const [endMonth, setEndMonth] = useState(timeline.endMonth ?? 0);
+  const [isOngoing, setIsOngoing] = useState(!timeline.endYear);
 
   // Links
-  const [github, setGithub] = useState(project.links?.github ?? "");
-  const [website, setWebsite] = useState(project.links?.website ?? "");
+  const [github, setGithub] = useState(links?.github ?? "");
+  const [website, setWebsite] = useState(links?.website ?? "");
 
   // Technologies & Roles
-  const [selectedTechs, setSelectedTechs] = useState<string[]>(project.technologies);
-  const [selectedRoles, setSelectedRoles] = useState<string[]>(project.roles);
+  const [selectedTechs, setSelectedTechs] = useState<string[]>(
+    (project.technologies as string[]) ?? [],
+  );
+  const [selectedRoles, setSelectedRoles] = useState<string[]>(
+    (project.roles as string[]) ?? [],
+  );
 
   // Content sections
-  const [contentSections, setContentSections] = useState(project.contentSections);
+  const [contentSections, setContentSections] = useState(
+    (project.contentSections as any[]) ?? [],
+  );
 
   const handleSave = async () => {
     setSaving(true);
@@ -730,7 +806,7 @@ function EditProjectModal({
   };
 
   const removeContentSection = (index: number) => {
-    setContentSections(contentSections.filter((_, i) => i !== index));
+    setContentSections(contentSections.filter((_: any, i: number) => i !== index));
   };
 
   return (
@@ -1012,7 +1088,7 @@ function EditProjectModal({
           {activeTab === "content" && (
             <FormSection>
               <Label>Content Sections</Label>
-              {contentSections.map((section, index) => (
+              {contentSections.map((section: any, index: number) => (
                 <ContentSectionCard key={section.id}>
                   <ContentSectionHeader>
                     <ContentSectionTitle>Section {index + 1}</ContentSectionTitle>

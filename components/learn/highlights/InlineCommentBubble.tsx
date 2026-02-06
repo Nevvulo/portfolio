@@ -7,15 +7,14 @@ import { createPortal } from "react-dom";
 import styled from "styled-components";
 import { UserPopoutTrigger } from "@/components/shared/UserPopout";
 import { LOUNGE_COLORS } from "@/constants/theme";
-import type { Id } from "@/convex/_generated/dataModel";
 
 interface Comment {
-  _id: Id<"contentComments">;
+  id: string;
   content: string;
   createdAt: number;
   isEdited: boolean;
   author: {
-    _id: Id<"users">;
+    id: string;
     displayName: string;
     username?: string;
     avatarUrl?: string;
@@ -26,7 +25,7 @@ interface Comment {
 }
 
 interface HighlightAuthor {
-  _id: Id<"users">;
+  id: string;
   displayName: string;
   username?: string;
   avatarUrl?: string;
@@ -231,13 +230,13 @@ export function InlineCommentBubble({
         <BubbleHeader>
           {highlightAuthor && (
             <HighlightAuthorSection>
-              <UserPopoutTrigger userId={highlightAuthor._id}>
+              <UserPopoutTrigger userId={highlightAuthor.id}>
                 <HighlightAuthorAvatar
                   src={highlightAuthor.avatarUrl || "/default-avatar.png"}
                   alt={highlightAuthor.displayName}
                 />
               </UserPopoutTrigger>
-              <UserPopoutTrigger userId={highlightAuthor._id}>
+              <UserPopoutTrigger userId={highlightAuthor.id}>
                 <HighlightAuthorInfo>
                   <HighlightAuthorName>{highlightAuthor.displayName}</HighlightAuthorName>
                   <HighlightedLabel>highlighted</HighlightedLabel>
@@ -253,9 +252,9 @@ export function InlineCommentBubble({
         {comments.length > 0 && (
           <CommentsList>
             {comments.map((comment) => (
-              <CommentItem key={comment._id.toString()}>
+              <CommentItem key={comment.id.toString()}>
                 {comment.author ? (
-                  <UserPopoutTrigger userId={comment.author._id}>
+                  <UserPopoutTrigger userId={comment.author.id}>
                     <CommentAvatar
                       src={comment.author.avatarUrl || "/default-avatar.png"}
                       alt={comment.author.displayName}
@@ -267,7 +266,7 @@ export function InlineCommentBubble({
                 <CommentContent>
                   <CommentHeader>
                     {comment.author ? (
-                      <UserPopoutTrigger userId={comment.author._id}>
+                      <UserPopoutTrigger userId={comment.author.id}>
                         <AuthorName $isCreator={comment.author.isCreator}>
                           {comment.author.displayName}
                         </AuthorName>

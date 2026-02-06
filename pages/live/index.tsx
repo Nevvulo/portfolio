@@ -1,4 +1,4 @@
-import { useQuery } from "convex/react";
+import { useQuery as useRQ } from "@tanstack/react-query";
 import { ExternalLink, Play } from "lucide-react";
 import Head from "next/head";
 import Image from "next/image";
@@ -7,7 +7,7 @@ import { useRouter } from "next/router";
 import Script from "next/script";
 import styled from "styled-components";
 import { SimpleNavbar } from "../../components/navbar/simple";
-import { api } from "../../convex/_generated/api";
+import { getPostsForBento as getPostsForBentoAction } from "@/src/db/client/queries";
 import type { DiscordWidget } from "../../types/discord";
 import { fetchDiscordWidget } from "../../utils/discord-widget";
 import { checkTwitchLiveStatus } from "../../utils/twitch";
@@ -24,8 +24,11 @@ export default function LivePage({ discordWidget, isLive }: LivePageProps) {
   const mockLive = router.query.mockLive === "true";
   const effectiveIsLive = mockLive || isLive;
 
-  // Get video posts (YouTube content) — use {} to share single subscription across app
-  const posts = useQuery(api.blogPosts.getForBento, {});
+  // Get video posts (YouTube content)
+  const { data: posts } = useRQ({
+    queryKey: ["posts", "bento"],
+    queryFn: () => getPostsForBentoAction(),
+  });
 
   // Filter to only video content client-side
   const videoPosts = posts?.filter((p) => p.contentType === "video") ?? [];
@@ -101,7 +104,7 @@ export default function LivePage({ discordWidget, isLive }: LivePageProps) {
         ) : (
           <VideosGrid>
             {videoPosts.map((video) => (
-              <VideoCard key={video._id} href={`/learn/${video.slug}`}>
+              <VideoCard key={video.id} href={`/learn/${video.slug}`}>
                 <VideoThumbnail>
                   {video.coverImage ? (
                     <Image

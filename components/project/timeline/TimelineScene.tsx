@@ -3,16 +3,15 @@ import { Canvas, useFrame } from "@react-three/fiber";
 import { Suspense, useRef } from "react";
 import styled from "styled-components";
 import * as THREE from "three";
-import type { Doc } from "../../../convex/_generated/dataModel";
+import type { Project } from "@/src/db/types";
 
-// Convex project type
-type ConvexProject = Doc<"projects">;
+type ProjectTimeline = { startYear: number; endYear?: number; startMonth?: number; endMonth?: number };
 
 interface TimelineSceneProps {
-  projects: ConvexProject[];
+  projects: Project[];
   timelineYears: number[];
   scrollProgress: number;
-  onProjectClick: (project: ConvexProject) => void;
+  onProjectClick: (project: Project) => void;
   onScrollChange?: (progress: number) => void;
   isMobile?: boolean;
   isLandscape?: boolean;
@@ -29,7 +28,7 @@ function HtmlProjectCard({
   isMobile = false,
   isLandscape = false,
 }: {
-  project: ConvexProject;
+  project: Project;
   position: [number, number, number];
   isActive: boolean;
   index: number;
@@ -73,9 +72,10 @@ function HtmlProjectCard({
     }
   });
 
-  const timelineText = project.timeline.endYear
-    ? `${project.timeline.startYear} — ${project.timeline.endYear}`
-    : `${project.timeline.startYear} — Present`;
+  const timeline = project.timeline as ProjectTimeline;
+  const timelineText = timeline.endYear
+    ? `${timeline.startYear} — ${timeline.endYear}`
+    : `${timeline.startYear} — Present`;
 
   return (
     <group ref={groupRef} position={position}>
@@ -611,8 +611,9 @@ function TimelineContent({
   // Helper: get projects active in a specific year
   const getActiveForYear = (year: number) =>
     projects.filter((p) => {
-      const endYear = p.timeline.endYear ?? currentRealYear;
-      return p.timeline.startYear <= year && endYear >= year;
+      const tl = p.timeline as ProjectTimeline;
+      const endYear = tl.endYear ?? currentRealYear;
+      return tl.startYear <= year && endYear >= year;
     });
 
   const floorActive = getActiveForYear(floorYear);

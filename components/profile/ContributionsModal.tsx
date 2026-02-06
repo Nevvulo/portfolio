@@ -1,4 +1,4 @@
-import { useQuery } from "convex/react";
+import { useQuery as useRQ } from "@tanstack/react-query";
 import { AnimatePresence, m } from "framer-motion";
 import { Clock, FileText, Newspaper, Video, X } from "lucide-react";
 import Link from "next/link";
@@ -6,13 +6,12 @@ import { useCallback, useEffect } from "react";
 import { createPortal } from "react-dom";
 import styled from "styled-components";
 import { LOUNGE_COLORS } from "@/constants/theme";
-import { api } from "@/convex/_generated/api";
-import type { Id } from "@/convex/_generated/dataModel";
+import { getUserContributions } from "@/src/db/client/profile";
 
 interface ContributionsModalProps {
   isOpen: boolean;
   onClose: () => void;
-  userId: Id<"users">;
+  userId: number;
   userName: string;
 }
 
@@ -23,10 +22,11 @@ const contentTypeIcons = {
 };
 
 export function ContributionsModal({ isOpen, onClose, userId, userName }: ContributionsModalProps) {
-  const contributions = useQuery(
-    api.blogPosts.getByUserContributions,
-    isOpen ? { userId } : "skip",
-  );
+  const { data: contributions, isLoading: contributionsLoading } = useRQ({
+    queryKey: ["contributions", userId],
+    queryFn: () => getUserContributions(userId),
+    enabled: isOpen,
+  });
 
   const handleEscape = useCallback(
     (e: KeyboardEvent) => {
@@ -75,9 +75,9 @@ export function ContributionsModal({ isOpen, onClose, userId, userName }: Contri
             </Header>
 
             <Content>
-              {contributions === undefined ? (
+              {contributionsLoading ? (
                 <LoadingState>Loading contributions...</LoadingState>
-              ) : contributions.length === 0 ? (
+              ) : !contributions || contributions.length === 0 ? (
                 <EmptyState>
                   <FileText size={48} />
                   <p>No article contributions yet</p>
@@ -91,7 +91,7 @@ export function ContributionsModal({ isOpen, onClose, userId, userName }: Contri
 
                     return (
                       <ContributionCard
-                        key={post._id}
+                        key={post.id}
                         href={`/learn/${post.slug}`}
                         onClick={onClose}
                       >

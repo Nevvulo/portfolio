@@ -1,9 +1,8 @@
+import { eq } from "drizzle-orm";
 import type { NextApiRequest, NextApiResponse } from "next";
 import { getAuth } from "@clerk/nextjs/server";
-import { ConvexHttpClient } from "convex/browser";
-import { api } from "@/convex/_generated/api";
-
-const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
+import { db } from "@/src/db";
+import { users } from "@/src/db/schema";
 
 type AssertLinkResponse = {
   linked: boolean;
@@ -78,35 +77,24 @@ export default async function handler(
 
     const data: AssertLinkResponse = await response.json();
 
-    // If linked, persist to Convex
+    // If linked, persist to Postgres
     if (data.linked) {
       try {
-        // Get user's Convex auth token from Clerk
-        const tokenRes = await fetch(
-          `https://api.clerk.com/v1/users/${userId}/oauth_access_tokens/convex`,
-          {
-            headers: {
-              Authorization: `Bearer ${process.env.CLERK_SECRET_KEY}`,
-            },
-          }
-        );
+        const user = await db.query.users.findFirst({
+          where: eq(users.clerkId, userId),
+          columns: { id: true, linkedServices: true },
+        });
 
-        if (tokenRes.ok) {
-          const tokenData = await tokenRes.json();
-          const convexToken = tokenData[0]?.token;
-
-          if (convexToken) {
-            convex.setAuth(convexToken);
-            await convex.mutation(api.users.linkService, {
-              slug,
-              serviceUserId: data.service_user_id,
-              serviceUsername: data.service_username,
-            });
+        if (user) {
+          const existing = (user.linkedServices as Array<{ slug: string; serviceUserId?: string; serviceUsername?: string; linkedAt: number }> | null) ?? [];
+          if (!existing.some((s) => s.slug === slug)) {
+            const updated = [...existing, { slug, serviceUserId: data.service_user_id, serviceUsername: data.service_username, linkedAt: Date.now() }];
+            await db.update(users).set({ linkedServices: updated }).where(eq(users.id, user.id));
           }
         }
-      } catch (convexError) {
+      } catch (dbError) {
         // Log but don't fail - the link was still successful
-        console.error("[assert-link] Failed to persist to Convex:", convexError);
+        console.error("[assert-link] Failed to persist to Postgres:", dbError);
       }
     }
 

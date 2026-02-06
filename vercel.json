@@ -1,4 +1,14 @@
 {
+  "crons": [
+    {
+      "path": "/api/cron/sync-views",
+      "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/cron/flush-watchtime",
+      "schedule": "*/5 * * * *"
+    }
+  ],
   "rewrites": [
     {
       "source": "/npm/@clerk/:path*",

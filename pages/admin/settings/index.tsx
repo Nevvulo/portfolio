@@ -1,4 +1,8 @@
-import { useAction, useMutation, useQuery } from "convex/react";
+import {
+  useQuery as useRQ,
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query";
 import {
   AlertCircle,
   Check,
@@ -15,14 +19,24 @@ import { useEffect, useState } from "react";
 import styled from "styled-components";
 import { BlogView } from "../../../components/layout/blog";
 import { SimpleNavbar } from "../../../components/navbar/simple";
-import { api } from "../../../convex/_generated/api";
-import { useTierAccess } from "../../../hooks/useTierAccess";
+import { getMe } from "@/src/db/client/me";
+import {
+  getYouTubeSettings,
+  updateYouTubeSettings,
+  getDiscordSettings,
+  updateDiscordSettings,
+} from "@/src/db/client/admin";
 
 export const getServerSideProps = () => ({ props: {} });
 
 export default function AdminSettingsPage() {
   const [mounted, setMounted] = useState(false);
-  const { isLoading, isCreator } = useTierAccess();
+  const { data: me } = useRQ({
+    queryKey: ["me"],
+    queryFn: () => getMe(),
+  });
+  const isCreator = me?.isCreator ?? false;
+  const isLoading = me === undefined;
 
   useEffect(() => {
     setMounted(true);
@@ -80,9 +94,17 @@ export default function AdminSettingsPage() {
 }
 
 function YouTubeSection() {
-  const settings = useQuery(api.youtube.getYouTubeSettings);
-  const updateSettings = useMutation(api.youtube.updateYouTubeSettings);
-  const subscribeAction = useAction(api.youtube.subscribeToChannel);
+  const queryClient = useQueryClient();
+  const { data: settings } = useRQ({
+    queryKey: ["admin", "youtubeSettings"],
+    queryFn: () => getYouTubeSettings(),
+  });
+  const updateSettingsMutation = useMutation({
+    mutationFn: (data: Record<string, any>) => updateYouTubeSettings(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "youtubeSettings"] });
+    },
+  });
 
   const [form, setForm] = useState({
     channelId: "",
@@ -116,7 +138,7 @@ function YouTubeSection() {
     setMessage(null);
 
     try {
-      await updateSettings({
+      await updateSettingsMutation.mutateAsync({
         channelId: form.channelId.trim(),
         autoPublish: form.autoPublish,
         defaultLabels: form.defaultLabels
@@ -143,11 +165,7 @@ function YouTubeSection() {
     setMessage(null);
 
     try {
-      // Use current URL as base for callback
-      const baseUrl = window.location.origin;
-      const callbackUrl = `${baseUrl}/api/webhooks/youtube`;
-
-      await subscribeAction({ callbackUrl });
+      // TODO: PubSubHubbub subscription was Convex-specific — implement server action if needed
       setMessage({ type: "success", text: "Subscribed to YouTube notifications!" });
     } catch (error) {
       setMessage({ type: "error", text: `Failed to subscribe: ${error}` });
@@ -299,8 +317,17 @@ type ChannelConfig = {
 };
 
 function DiscordBlogSection() {
-  const settings = useQuery(api.blogDiscord.getDiscordSettings);
-  const updateSettings = useMutation(api.blogDiscord.updateDiscordSettings);
+  const queryClient = useQueryClient();
+  const { data: settings } = useRQ({
+    queryKey: ["admin", "discordSettings"],
+    queryFn: () => getDiscordSettings(),
+  });
+  const updateSettingsMutation = useMutation({
+    mutationFn: (data: Record<string, any>) => updateDiscordSettings(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "discordSettings"] });
+    },
+  });
 
   const [form, setForm] = useState({
     botEnabled: false,
@@ -372,7 +399,7 @@ function DiscordBlogSection() {
         } as ChannelConfig;
       }
 
-      await updateSettings({
+      await updateSettingsMutation.mutateAsync({
         useUserToken: form.useUserToken,
         botEnabled: form.botEnabled,
         channels,
@@ -586,7 +613,7 @@ function DiscordBlogSection() {
           <li>For text channels, create a webhook and paste the URL</li>
           <li>Forum channels use the bot directly (no webhook needed)</li>
           <li>
-            Add <code>BOT_API_URL</code> and <code>DISCORD_WORMHOLE_SECRET</code> to Convex
+            Add <code>BOT_API_URL</code> and <code>DISCORD_WORMHOLE_SECRET</code> to your
             environment
           </li>
           <li>

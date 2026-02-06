@@ -1,20 +1,25 @@
-import { useQuery } from "convex/react";
+import { useQuery as useRQ } from "@tanstack/react-query";
 import { ChevronLeft, ChevronRight, Play, Video } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useRef, useState } from "react";
 import styled from "styled-components";
-import { api } from "../../../convex/_generated/api";
+import { getPostsForBentoAction } from "@/src/db/actions/queries";
 import { WidgetContainer } from "./WidgetContainer";
 
 interface VideosWidgetProps {
   /** Pre-fetched posts to avoid duplicate subscriptions. Falls back to own query if not provided. */
-  posts?: Array<{ _id: string; slug: string; title: string; contentType: string; coverImage?: string | null; youtubeId?: string | null; labels: string[]; publishedAt?: number | null }>;
+  posts?: Array<{ id: number; slug: string; title: string; contentType: string; coverImage?: string | null; youtubeId?: string | null; labels: string[]; publishedAt?: Date | string | null }>;
 }
 
 export function VideosWidget({ posts: externalPosts }: VideosWidgetProps = {}) {
-  const ownPosts = useQuery(api.blogPosts.getForBento, externalPosts ? "skip" : {});
-  const allPosts = externalPosts ?? ownPosts;
+  const { data: fetchedPosts } = useRQ({
+    queryKey: ["postsForBento"],
+    queryFn: () => getPostsForBentoAction(),
+    enabled: !externalPosts,
+    staleTime: 30_000,
+  });
+  const allPosts = externalPosts ?? fetchedPosts;
   const videoPosts = allPosts
     ?.filter((p) => p.contentType === "video")
     .sort((a, b) => (b.publishedAt ?? 0) - (a.publishedAt ?? 0))
@@ -65,7 +70,7 @@ export function VideosWidget({ posts: externalPosts }: VideosWidgetProps = {}) {
             const isShort = video.labels?.includes("short");
             const isPreviewing = previewId === video.youtubeId;
             return (
-              <VideoCardWrapper key={video._id} $isShort={isShort}>
+              <VideoCardWrapper key={video.id} $isShort={isShort}>
                 {isPreviewing && video.youtubeId ? (
                   <EmbedContainer $isShort={isShort}>
                     <iframe

@@ -1,13 +1,22 @@
-import { useQuery } from "convex/react";
+import { useQuery as useRQ } from "@tanstack/react-query";
 import { Flame, TrendingUp } from "lucide-react";
 import styled from "styled-components";
-import { api } from "../../../convex/_generated/api";
+import { getMyExperience } from "@/src/db/actions/experience";
+import { getTodayXpBreakdownAction } from "@/src/db/actions/dashboard";
 import { LOUNGE_COLORS } from "../../../constants/theme";
 import { WidgetContainer } from "./WidgetContainer";
 
 export function ActivityWidget() {
-  const experience = useQuery(api.experience.getMyExperience);
-  const todayBreakdown = useQuery(api.experience.getTodayXpBreakdown);
+  const { data: experience } = useRQ({
+    queryKey: ["myExperience"],
+    queryFn: () => getMyExperience(),
+    staleTime: 30_000,
+  });
+  const { data: todayBreakdown } = useRQ({
+    queryKey: ["todayXpBreakdown"],
+    queryFn: () => getTodayXpBreakdownAction(),
+    staleTime: 30_000,
+  });
 
   const todayXp = todayBreakdown?.total ?? 0;
   const level = experience?.level ?? 1;

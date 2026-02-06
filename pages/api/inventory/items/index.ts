@@ -1,8 +1,7 @@
-import { ConvexHttpClient } from "convex/browser";
+import { eq } from "drizzle-orm";
 import type { NextApiRequest, NextApiResponse } from "next";
-import { api } from "../../../../convex/_generated/api";
-
-const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
+import { db } from "@/src/db";
+import { inventoryItems } from "@/src/db/schema";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "GET") {
@@ -16,7 +15,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const items = await convex.query(api.inventory.getPublicItemCatalog, {});
+    const items = await db.query.inventoryItems.findMany({
+      where: eq(inventoryItems.isArchived, false),
+    });
 
     // Cache for 5 minutes
     res.setHeader("Cache-Control", "s-maxage=300, stale-while-revalidate=60");

@@ -17,7 +17,6 @@ import { ErrorBoundary } from "../components/ErrorBoundary";
 import { AuthenticatedUserProvider } from "../components/providers/AuthenticatedUserProvider";
 import { DarkTheme, LightTheme } from "../constants/theme";
 import { useTheme } from "../hooks/useTheme";
-import { ConvexClientProvider } from "../lib/convex";
 import "../styles/globals.css"; // Tailwind CSS
 import "./nprogress.css"; //styles for nprogress
 
@@ -145,8 +144,7 @@ export default function MyApp({ Component, router, pageProps }: AppProps) {
     <React.StrictMode>
       <ErrorBoundary>
         <QueryClientProvider client={queryClient}>
-          <ClerkProvider appearance={clerkAppearance}>
-            <ConvexClientProvider>
+          <ClerkProvider publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY!} appearance={clerkAppearance}>
               <AuthenticatedUserProvider>
                   <ThemeProvider theme={theme}>
                     <LazyMotion key="app" strict features={loadMotionFeatures}>
@@ -160,7 +158,6 @@ export default function MyApp({ Component, router, pageProps }: AppProps) {
                     </LazyMotion>
                   </ThemeProvider>
               </AuthenticatedUserProvider>
-            </ConvexClientProvider>
           </ClerkProvider>
         </QueryClientProvider>
       </ErrorBoundary>

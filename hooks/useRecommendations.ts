@@ -1,7 +1,8 @@
 import { useUser } from "@clerk/nextjs";
-import { useQuery } from "convex/react";
+import { useQuery as useRQ } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { api } from "../convex/_generated/api";
+import { getWatchHistoryForUser } from "@/src/db/actions/blog";
+import { getPostsForBentoAction } from "@/src/db/actions/queries";
 import type { BentoCardProps } from "../components/learn/BentoCard";
 
 interface RecommendationScore {
@@ -18,10 +19,8 @@ interface UseRecommendationsOptions {
 }
 
 /**
- * Recommendations hook - uses a SINGLE Convex subscription (getForBento)
- * and does personalization sorting + pagination client-side.
- * This eliminates the redundant getForBentoPaginated subscription
- * which was causing ~280 MB/period of unnecessary DB bandwidth.
+ * Recommendations hook - fetches posts and watch history via React Query,
+ * then does personalization sorting + pagination client-side.
  */
 export function useRecommendations(options: UseRecommendationsOptions = {}) {
   const { excludeNews = false, excludeShorts = false, postsPerPage = 20, returnAllPosts = false } = options;
@@ -36,14 +35,17 @@ export function useRecommendations(options: UseRecommendationsOptions = {}) {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const loadMoreRef = useRef<HTMLDivElement>(null);
 
-  // Single DB subscription with NO filters - all callers share the same subscription.
-  // Filtering is done client-side. This ensures getForBento({}) is the only subscription
-  // across the entire app (homepage widgets, /learn, AuthenticatedHome all share it).
-  const watchHistory = useQuery(
-    api.articleWatchTime.getUserWatchHistory,
-    isSignedIn ? { limit: 50 } : "skip",
-  );
-  const rawPosts = useQuery(api.blogPosts.getForBento, {});
+  const { data: watchHistory } = useRQ({
+    queryKey: ["watchHistory"],
+    queryFn: () => getWatchHistoryForUser(),
+    enabled: isSignedIn,
+    staleTime: 60_000,
+  });
+  const { data: rawPosts } = useRQ({
+    queryKey: ["postsForBento"],
+    queryFn: () => getPostsForBentoAction(),
+    staleTime: 30_000,
+  });
 
   // Apply client-side filters
   const basePosts = useMemo(() => {

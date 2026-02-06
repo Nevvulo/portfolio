@@ -48,7 +48,7 @@ function DraggableBentoCard({
   isEditing,
 }: DraggableBentoCardProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-    id: post._id,
+    id: post.id,
   });
 
   const style = {
@@ -169,12 +169,12 @@ function DraggableBentoCard({
 interface DraggableBentoGridProps {
   posts: AdminBentoCardProps[];
   onReorder: (posts: AdminBentoCardProps[]) => void;
-  onSizeChange?: (postId: string, size: BentoSize) => void;
-  onEdit?: (postId: string) => void;
-  onDelete?: (postId: string) => void;
-  onPublish?: (postId: string) => void;
-  onUnpublish?: (postId: string) => void;
-  onArchive?: (postId: string) => void;
+  onSizeChange?: (postId: number, size: BentoSize) => void;
+  onEdit?: (postId: number) => void;
+  onDelete?: (postId: number) => void;
+  onPublish?: (postId: number) => void;
+  onUnpublish?: (postId: number) => void;
+  onArchive?: (postId: number) => void;
   compact?: boolean;
   emptyMessage?: ReactNode;
 }
@@ -206,8 +206,8 @@ export function DraggableBentoGrid({
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
-    const oldIndex = posts.findIndex((p) => p._id === active.id);
-    const newIndex = posts.findIndex((p) => p._id === over.id);
+    const oldIndex = posts.findIndex((p) => p.id === active.id);
+    const newIndex = posts.findIndex((p) => p.id === over.id);
     const newPosts = arrayMove(posts, oldIndex, newIndex);
     onReorder(newPosts);
   };
@@ -229,19 +229,19 @@ export function DraggableBentoGrid({
 
   return (
     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-      <SortableContext items={posts.map((p) => p._id)} strategy={rectSortingStrategy}>
+      <SortableContext items={posts.map((p) => p.id)} strategy={rectSortingStrategy}>
         <GridComponent>
           {posts.map((post) => (
             <DraggableBentoCard
-              key={post._id}
+              key={post.id}
               post={post}
               isEditing
-              onSizeChange={(size) => onSizeChange?.(post._id, size)}
-              onEdit={onEdit ? () => onEdit(post._id) : undefined}
-              onDelete={onDelete ? () => onDelete(post._id) : undefined}
-              onPublish={onPublish ? () => onPublish(post._id) : undefined}
-              onUnpublish={onUnpublish ? () => onUnpublish(post._id) : undefined}
-              onArchive={onArchive ? () => onArchive(post._id) : undefined}
+              onSizeChange={(size) => onSizeChange?.(post.id, size)}
+              onEdit={onEdit ? () => onEdit(post.id) : undefined}
+              onDelete={onDelete ? () => onDelete(post.id) : undefined}
+              onPublish={onPublish ? () => onPublish(post.id) : undefined}
+              onUnpublish={onUnpublish ? () => onUnpublish(post.id) : undefined}
+              onArchive={onArchive ? () => onArchive(post.id) : undefined}
             />
           ))}
         </GridComponent>

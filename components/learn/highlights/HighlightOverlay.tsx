@@ -3,7 +3,6 @@ import type React from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import styled, { css, keyframes } from "styled-components";
 import { LOUNGE_COLORS } from "@/constants/theme";
-import type { Id } from "@/convex/_generated/dataModel";
 import { findAllHighlightPositions, mergeOverlappingPositions } from "./textAnchor";
 
 // Emoji mapping for reaction types
@@ -21,14 +20,14 @@ interface ReactionData {
 }
 
 interface Highlight {
-  _id: Id<"contentHighlights">;
+  id: string;
   highlightedText: string;
   prefix: string;
   suffix: string;
-  userId: Id<"users">;
+  userId: string;
   isReactionOnly?: boolean;
   user?: {
-    _id: Id<"users">;
+    id: string;
     displayName: string;
     avatarUrl?: string;
   } | null;
@@ -94,7 +93,7 @@ export function HighlightOverlay({
   reactionsByHighlightRef.current = reactionsByHighlight;
 
   const highlightKey = useMemo(
-    () => highlights.map((h) => h._id.toString()).join(","),
+    () => highlights.map((h) => h.id.toString()).join(","),
     [highlights],
   );
 
@@ -131,7 +130,7 @@ export function HighlightOverlay({
       const allPositions = findAllHighlightPositions(
         fullText,
         allLatestHighlights.map((h) => ({
-          _id: h._id.toString(),
+          _id: h.id.toString(),
           highlightedText: h.highlightedText,
           prefix: h.prefix,
           suffix: h.suffix,
@@ -195,7 +194,7 @@ export function HighlightOverlay({
       const visiblePositions = findAllHighlightPositions(
         fullText,
         latestVisibleHighlights.map((h) => ({
-          _id: h._id.toString(),
+          _id: h.id.toString(),
           highlightedText: h.highlightedText,
           prefix: h.prefix,
           suffix: h.suffix,
@@ -258,7 +257,7 @@ export function HighlightOverlay({
           const isLastMark = i === validRects.length - 1;
 
           const isOwn = ids.some((id) => {
-            const highlight = latestVisibleHighlights.find((h) => h._id.toString() === id);
+            const highlight = latestVisibleHighlights.find((h) => h.id.toString() === id);
             return highlight?.userId.toString() === latestUserId;
           });
 

@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from "convex/react";
+import { useQuery as useRQ, useMutation, useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
 import {
   AlertTriangle,
@@ -20,9 +20,13 @@ import { useEffect, useState } from "react";
 import styled from "styled-components";
 import { BlogView } from "../../../components/layout/blog";
 import { SimpleNavbar } from "../../../components/navbar/simple";
-import { api } from "../../../convex/_generated/api";
-import type { Id } from "../../../convex/_generated/dataModel";
-import { useTierAccess } from "../../../hooks/useTierAccess";
+import {
+  getCommentReports,
+  getContentReports,
+  resolveCommentReport,
+  resolveContentReport,
+} from "@/src/db/client/admin";
+import { getMe } from "@/src/db/client/me";
 
 export const getServerSideProps = () => ({ props: {} });
 
@@ -30,36 +34,69 @@ type ReportStatus = "pending" | "reviewed" | "dismissed";
 type ReportType = "comments" | "content";
 
 export default function ModerationPage() {
+  const queryClient = useQueryClient();
   const [mounted, setMounted] = useState(false);
   const [reportType, setReportType] = useState<ReportType>("content");
   const [statusFilter, setStatusFilter] = useState<ReportStatus | "all">("pending");
-  const { isLoading, isCreator } = useTierAccess();
+
+  const { data: me } = useRQ({ queryKey: ["me"], queryFn: () => getMe() });
+  const isCreator = me?.isCreator ?? false;
+  const isLoading = me === undefined;
 
   // Comment reports
-  const commentReports = useQuery(
-    api.blogComments.getReports,
-    statusFilter === "all" ? {} : { status: statusFilter as ReportStatus },
-  );
-  const resolveCommentReport = useMutation(api.blogComments.resolveReport);
+  const { data: allCommentReports } = useRQ({
+    queryKey: ["admin", "commentReports"],
+    queryFn: () => getCommentReports(),
+    enabled: isCreator,
+  });
 
   // Content reports (from learn posts)
-  const contentReports = useQuery(
-    api.contentReports.getReports,
-    statusFilter === "all" ? {} : { status: statusFilter as ReportStatus },
-  );
-  const resolveContentReport = useMutation(api.contentReports.resolve);
+  const { data: allContentReports } = useRQ({
+    queryKey: ["admin", "contentReports"],
+    queryFn: () => getContentReports(),
+    enabled: isCreator,
+  });
+
+  // Client-side status filter (server actions return all reports)
+  const commentReports = allCommentReports
+    ? statusFilter === "all"
+      ? allCommentReports
+      : allCommentReports.filter((r) => r.status === statusFilter)
+    : undefined;
+
+  const contentReports = allContentReports
+    ? statusFilter === "all"
+      ? allContentReports
+      : allContentReports.filter((r) => r.status === statusFilter)
+    : undefined;
+
+  const resolveCommentMutation = useMutation({
+    mutationFn: (args: { reportId: number; status: string; deleteComment: boolean }) =>
+      resolveCommentReport(args.reportId, args.status, args.deleteComment),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "commentReports"] });
+    },
+  });
+
+  const resolveContentMutation = useMutation({
+    mutationFn: (args: { reportId: number; status: string }) =>
+      resolveContentReport(args.reportId, args.status),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "contentReports"] });
+    },
+  });
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
   const handleResolveComment = async (
-    reportId: Id<"blogCommentReports">,
+    reportId: number,
     status: "reviewed" | "dismissed",
     deleteComment = false,
   ) => {
     try {
-      await resolveCommentReport({ reportId, status, deleteComment });
+      await resolveCommentMutation.mutateAsync({ reportId, status, deleteComment });
     } catch (error) {
       console.error("Failed to resolve report:", error);
       alert("Failed to resolve report");
@@ -67,11 +104,11 @@ export default function ModerationPage() {
   };
 
   const handleResolveContent = async (
-    reportId: Id<"contentReports">,
+    reportId: number,
     status: "reviewed" | "dismissed",
   ) => {
     try {
-      await resolveContentReport({ reportId, status });
+      await resolveContentMutation.mutateAsync({ reportId, status });
     } catch (error) {
       console.error("Failed to resolve report:", error);
       alert("Failed to resolve report");
@@ -106,8 +143,8 @@ export default function ModerationPage() {
     );
   }
 
-  const pendingCommentCount = commentReports?.filter((r) => r.status === "pending").length ?? 0;
-  const pendingContentCount = contentReports?.filter((r) => r.status === "pending").length ?? 0;
+  const pendingCommentCount = allCommentReports?.filter((r) => r.status === "pending").length ?? 0;
+  const pendingContentCount = allContentReports?.filter((r) => r.status === "pending").length ?? 0;
   const totalPendingCount = pendingCommentCount + pendingContentCount;
 
   const reports = reportType === "comments" ? commentReports : contentReports;
@@ -189,7 +226,7 @@ export default function ModerationPage() {
             ) : reportType === "comments" ? (
               /* Comment Reports */
               (commentReports ?? []).map((report) => (
-                <ReportCard key={report._id} $status={report.status}>
+                <ReportCard key={report.id} $status={report.status}>
                   <ReportHeader>
                     <StatusBadge $status={report.status}>
                       {report.status === "pending" && <Clock size={12} />}
@@ -198,7 +235,7 @@ export default function ModerationPage() {
                       {report.status}
                     </StatusBadge>
                     <ReportTime>
-                      Reported {formatDistanceToNow(report._creationTime, { addSuffix: true })}
+                      Reported {formatDistanceToNow(report.createdAt, { addSuffix: true })}
                     </ReportTime>
                   </ReportHeader>
 
@@ -207,7 +244,7 @@ export default function ModerationPage() {
                       <MessageSquare size={14} />
                       <span>Reported Comment</span>
                     </PreviewHeader>
-                    {report.comment ? (
+                    {report.comment?.id ? (
                       <>
                         <CommentAuthor>
                           <User size={12} />
@@ -239,7 +276,7 @@ export default function ModerationPage() {
                     <ActionButtons>
                       <ActionButton
                         $variant="success"
-                        onClick={() => handleResolveComment(report._id, "reviewed", false)}
+                        onClick={() => handleResolveComment(report.id, "reviewed", false)}
                         title="Mark as reviewed (keep comment)"
                       >
                         <Eye size={14} />
@@ -249,7 +286,7 @@ export default function ModerationPage() {
                         $variant="danger"
                         onClick={() => {
                           if (confirm("Delete this comment and resolve the report?")) {
-                            handleResolveComment(report._id, "reviewed", true);
+                            handleResolveComment(report.id, "reviewed", true);
                           }
                         }}
                         title="Delete comment and resolve"
@@ -259,7 +296,7 @@ export default function ModerationPage() {
                       </ActionButton>
                       <ActionButton
                         $variant="muted"
-                        onClick={() => handleResolveComment(report._id, "dismissed", false)}
+                        onClick={() => handleResolveComment(report.id, "dismissed", false)}
                         title="Dismiss report (false positive)"
                       >
                         <XCircle size={14} />
@@ -278,7 +315,7 @@ export default function ModerationPage() {
             ) : (
               /* Content Reports */
               (contentReports ?? []).map((report) => (
-                <ReportCard key={report._id} $status={report.status}>
+                <ReportCard key={report.id} $status={report.status}>
                   <ReportHeader>
                     <StatusBadge $status={report.status}>
                       {report.status === "pending" && <Clock size={12} />}
@@ -296,7 +333,7 @@ export default function ModerationPage() {
                       <FileText size={14} />
                       <span>Reported Post</span>
                     </PreviewHeader>
-                    {report.post ? (
+                    {report.post?.id ? (
                       <>
                         <PostTitle>
                           {report.post.title}
@@ -329,7 +366,7 @@ export default function ModerationPage() {
                     <ActionButtons>
                       <ActionButton
                         $variant="success"
-                        onClick={() => handleResolveContent(report._id, "reviewed")}
+                        onClick={() => handleResolveContent(report.id, "reviewed")}
                         title="Mark as reviewed"
                       >
                         <Eye size={14} />
@@ -337,7 +374,7 @@ export default function ModerationPage() {
                       </ActionButton>
                       <ActionButton
                         $variant="muted"
-                        onClick={() => handleResolveContent(report._id, "dismissed")}
+                        onClick={() => handleResolveContent(report.id, "dismissed")}
                         title="Dismiss report"
                       >
                         <XCircle size={14} />

@@ -1,4 +1,8 @@
-import { useMutation, useQuery } from "convex/react";
+import {
+  useQuery as useRQ,
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query";
 import {
   AlertCircle,
   Check,
@@ -19,9 +23,13 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import { BlogView } from "../../../components/layout/blog";
 import { SimpleNavbar } from "../../../components/navbar/simple";
-import { api } from "../../../convex/_generated/api";
-import type { Id } from "../../../convex/_generated/dataModel";
-import { useTierAccess } from "../../../hooks/useTierAccess";
+import { getMe } from "@/src/db/client/me";
+import {
+  listAllSoftware,
+  createSoftware,
+  updateSoftware,
+  removeSoftware,
+} from "@/src/db/client/admin-software";
 
 const SOFTWARE_TYPES = ["app", "tool", "library", "game", "website", "bot"] as const;
 const SOFTWARE_CATEGORIES = ["open-source", "commercial", "personal", "game"] as const;
@@ -36,7 +44,12 @@ export const getServerSideProps = () => ({ props: {} });
 
 export default function AdminSoftwarePage() {
   const [mounted, setMounted] = useState(false);
-  const { isLoading, isCreator } = useTierAccess();
+  const { data: me } = useRQ({
+    queryKey: ["me"],
+    queryFn: () => getMe(),
+  });
+  const isCreator = me?.isCreator ?? false;
+  const isLoading = me === undefined;
 
   useEffect(() => {
     setMounted(true);
@@ -92,14 +105,33 @@ export default function AdminSoftwarePage() {
   );
 }
 
+type SoftwareItem = Awaited<ReturnType<typeof listAllSoftware>>[number];
+
 function SoftwareListSection() {
-  const software = useQuery(api.software.listAll);
-  const createSoftware = useMutation(api.software.create);
-  const updateSoftware = useMutation(api.software.update);
-  const removeSoftware = useMutation(api.software.remove);
+  const queryClient = useQueryClient();
+  const { data: software } = useRQ({
+    queryKey: ["admin", "software"],
+    queryFn: () => listAllSoftware(),
+  });
+
+  const createMutation = useMutation({
+    mutationFn: (data: Parameters<typeof createSoftware>[0]) => createSoftware(data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin", "software"] }),
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, ...data }: { id: number } & Parameters<typeof updateSoftware>[1]) =>
+      updateSoftware(id, data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin", "software"] }),
+  });
+
+  const removeMutation = useMutation({
+    mutationFn: (id: number) => removeSoftware(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin", "software"] }),
+  });
 
   const [filter, setFilter] = useState<"all" | SoftwareStatus>("all");
-  const [editingItem, setEditingItem] = useState<NonNullable<typeof software>[number] | null>(null);
+  const [editingItem, setEditingItem] = useState<SoftwareItem | null>(null);
   const [showCreate, setShowCreate] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
@@ -109,10 +141,10 @@ function SoftwareListSection() {
       return s.status === filter;
     }) ?? [];
 
-  const handleDelete = async (id: Id<"software">, name: string) => {
+  const handleDelete = async (id: number, name: string) => {
     if (confirm(`Are you sure you want to delete "${name}"? This cannot be undone.`)) {
       try {
-        await removeSoftware({ id });
+        await removeMutation.mutateAsync(id);
         setMessage({ type: "success", text: `Deleted "${name}"` });
       } catch (err) {
         setMessage({ type: "error", text: `Failed to delete: ${err}` });
@@ -120,18 +152,18 @@ function SoftwareListSection() {
     }
   };
 
-  const handleToggleFeatured = async (item: NonNullable<typeof software>[number]) => {
+  const handleToggleFeatured = async (item: SoftwareItem) => {
     try {
-      await updateSoftware({ id: item._id, isFeatured: !item.isFeatured });
+      await updateMutation.mutateAsync({ id: item.id, isFeatured: !item.isFeatured });
     } catch (err) {
       setMessage({ type: "error", text: `Failed to update: ${err}` });
     }
   };
 
-  const handleToggleStatus = async (item: NonNullable<typeof software>[number]) => {
+  const handleToggleStatus = async (item: SoftwareItem) => {
     const newStatus = item.status === "archived" ? "active" : "archived";
     try {
-      await updateSoftware({ id: item._id, status: newStatus as SoftwareStatus });
+      await updateMutation.mutateAsync({ id: item.id, status: newStatus as SoftwareStatus });
     } catch (err) {
       setMessage({ type: "error", text: `Failed to update: ${err}` });
     }
@@ -183,7 +215,7 @@ function SoftwareListSection() {
       ) : (
         <SoftwareList>
           {filtered.map((item) => (
-            <SoftwareCard key={item._id} $background={item.background}>
+            <SoftwareCard key={item.id} $background={item.background ?? undefined}>
               <CardLeft>
                 <DragHandle>
                   <GripVertical size={16} />
@@ -213,7 +245,7 @@ function SoftwareListSection() {
                 <IconButton onClick={() => handleToggleStatus(item)} title="Toggle status">
                   {item.status === "archived" ? <EyeOff size={16} /> : <Eye size={16} />}
                 </IconButton>
-                <IconButton $danger onClick={() => handleDelete(item._id, item.name)} title="Delete">
+                <IconButton $danger onClick={() => handleDelete(item.id, item.name)} title="Delete">
                   <Trash2 size={16} />
                 </IconButton>
               </CardRight>
@@ -232,10 +264,10 @@ function SoftwareListSection() {
           onSave={async (data) => {
             try {
               if (editingItem) {
-                await updateSoftware({ id: editingItem._id, ...data });
+                await updateMutation.mutateAsync({ id: editingItem.id, ...data });
                 setMessage({ type: "success", text: `Updated "${data.name || editingItem.name}"` });
               } else {
-                await createSoftware(data as Parameters<typeof createSoftware>[0]);
+                await createMutation.mutateAsync(data as Parameters<typeof createSoftware>[0]);
                 setMessage({ type: "success", text: `Created "${data.name}"` });
               }
               setEditingItem(null);
@@ -251,7 +283,7 @@ function SoftwareListSection() {
 }
 
 interface EditSoftwareModalProps {
-  item: NonNullable<ReturnType<typeof useQuery<typeof api.software.listAll>>>[number] | null;
+  item: SoftwareItem | null;
   onClose: () => void;
   onSave: (data: Record<string, any>) => Promise<void>;
 }

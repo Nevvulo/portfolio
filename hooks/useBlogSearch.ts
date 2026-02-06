@@ -1,7 +1,7 @@
-import { useQuery } from "convex/react";
+import { useQuery as useRQ } from "@tanstack/react-query";
 import { useRouter } from "next/router";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { api } from "../convex/_generated/api";
+import { getAllLabels } from "@/src/db/actions/blog";
 import { useDebounce } from "./useDebounce";
 
 export interface SearchResult {
@@ -84,8 +84,12 @@ export function useBlogSearch(): UseBlogSearchReturn {
   // Debounce the search query
   const debouncedQuery = useDebounce(query, 300);
 
-  // Get all available labels from Convex
-  const allLabelsQuery = useQuery(api.search.getAllLabels);
+  // Get all available labels
+  const { data: allLabelsQuery } = useRQ({
+    queryKey: ["allLabels"],
+    queryFn: () => getAllLabels(),
+    staleTime: 60_000,
+  });
   const allLabels = allLabelsQuery ?? [];
   const isLabelsLoading = allLabelsQuery === undefined;
 

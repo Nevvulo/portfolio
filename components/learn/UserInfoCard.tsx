@@ -1,7 +1,7 @@
 import { SignInButton, UserButton, useUser } from "@clerk/nextjs";
-import { useQuery } from "convex/react";
+import { useQuery as useRQ } from "@tanstack/react-query";
 import styled, { keyframes } from "styled-components";
-import { api } from "../../convex/_generated/api";
+import { getMyExperience } from "@/src/db/actions/experience";
 
 interface UserInfoCardProps {
   className?: string;
@@ -9,7 +9,12 @@ interface UserInfoCardProps {
 
 export function UserInfoCard({ className }: UserInfoCardProps) {
   const { isSignedIn, user, isLoaded } = useUser();
-  const experienceData = useQuery(api.experience.getMyExperience);
+  const { data: experienceData } = useRQ({
+    queryKey: ["myExperience"],
+    queryFn: () => getMyExperience(),
+    staleTime: 30_000,
+    enabled: isSignedIn,
+  });
 
   if (!isLoaded) {
     return (

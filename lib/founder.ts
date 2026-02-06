@@ -3,12 +3,11 @@
  *
  * Handles the "Founder" badge for the first 10 subscribers.
  * - Uses Redis for atomic slot claiming (source of truth for count)
- * - Syncs to Convex for display purposes
+ * - Syncs to Postgres for display purposes
  * - Founder status is PERMANENT (even if subscription is canceled)
  */
 
-import { ConvexHttpClient } from "convex/browser";
-import { api } from "../convex/_generated/api";
+import { updateFounderStatus } from "../src/db/actions/blog";
 import { logger, trackMetric } from "./observability";
 import {
   claimFounderSlot,
@@ -29,9 +28,6 @@ export {
   MAX_FOUNDERS,
 };
 
-// Convex client for syncing founder status
-const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL;
-const convex = convexUrl ? new ConvexHttpClient(convexUrl) : null;
 
 export type FounderNumber = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
 
@@ -93,8 +89,8 @@ export async function grantFounderStatus(clerkUserId: string): Promise<FounderCl
       founderNumber: founderNumber.toString(),
     });
 
-    // Sync to Convex for display
-    await syncFounderToConvex(clerkUserId, founderNumber);
+    // Sync to Postgres for display
+    await syncFounderToDb(clerkUserId, founderNumber);
 
     logger.info("Founder status granted", {
       clerkUserId,
@@ -125,34 +121,26 @@ export async function grantFounderStatus(clerkUserId: string): Promise<FounderCl
 }
 
 /**
- * Sync founder status to Convex database for display purposes.
+ * Sync founder status to Postgres database for display purposes.
  * This is called after successfully claiming a founder slot.
  */
-export async function syncFounderToConvex(
+export async function syncFounderToDb(
   clerkUserId: string,
   founderNumber: FounderNumber,
 ): Promise<void> {
-  if (!convex) {
-    logger.warn("Convex client not initialized, skipping founder sync", { clerkUserId });
-    return;
-  }
-
   try {
-    await convex.mutation(api.users.updateFounderStatus, {
-      clerkId: clerkUserId,
-      founderNumber,
-    });
+    await updateFounderStatus(clerkUserId, founderNumber);
 
-    logger.info("Synced founder status to Convex", { clerkUserId, founderNumber });
-    trackMetric("founder.convex_sync.success", 1);
+    logger.info("Synced founder status to Postgres", { clerkUserId, founderNumber });
+    trackMetric("founder.db_sync.success", 1);
   } catch (error) {
     // Log but don't fail - Redis is the source of truth
-    logger.error("Failed to sync founder status to Convex", {
+    logger.error("Failed to sync founder status to Postgres", {
       clerkUserId,
       founderNumber,
       error,
     });
-    trackMetric("founder.convex_sync.error", 1);
+    trackMetric("founder.db_sync.error", 1);
   }
 }
 

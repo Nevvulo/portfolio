@@ -1,14 +1,24 @@
-import { useQuery } from "convex/react";
+import { useQuery as useRQ } from "@tanstack/react-query";
 import { ChevronLeft, ChevronRight, ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import styled from "styled-components";
-import { api } from "../../../convex/_generated/api";
+import { getFeaturedContentBySlot } from "@/src/db/actions/dashboard";
 import { LOUNGE_COLORS } from "../../../constants/theme";
 
+interface FeaturedCarouselProps {
+  items?: any[];
+}
+
 /** Hero carousel for admin-configured featured content */
-export function FeaturedCarousel() {
-  const items = useQuery(api.featuredContent.getBySlot, { slot: "hero" });
+export function FeaturedCarousel({ items: externalItems }: FeaturedCarouselProps) {
+  const { data: fetchedItems } = useRQ({
+    queryKey: ["featuredContent", "hero"],
+    queryFn: () => getFeaturedContentBySlot("hero"),
+    enabled: !externalItems,
+    staleTime: 60_000,
+  });
+  const items = externalItems ?? fetchedItems ?? [];
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval>>();
@@ -36,7 +46,7 @@ export function FeaturedCarousel() {
     setCurrentIndex((prev) => (prev - 1 + slideCount) % slideCount);
   }, [slideCount]);
 
-  if (!items || items.length === 0) return null;
+  if (items.length === 0) return null;
 
   const current = items[currentIndex];
   const isExternal = current.linkUrl.startsWith("http");
@@ -69,7 +79,7 @@ export function FeaturedCarousel() {
           <NavBtn $side="right" onClick={goNext}><ChevronRight size={20} /></NavBtn>
           <Dots>
             {items.map((item, i) => (
-              <Dot key={item._id} $active={i === currentIndex} onClick={() => goTo(i)} />
+              <Dot key={item.id ?? i} $active={i === currentIndex} onClick={() => goTo(i)} />
             ))}
           </Dots>
         </>

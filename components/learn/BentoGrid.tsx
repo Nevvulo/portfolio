@@ -21,7 +21,7 @@ export function BentoGrid({ posts, compact }: BentoGridProps) {
     return (
       <CompactGridContainer>
         {posts.map((post) => (
-          <BentoCard key={post._id} {...post} />
+          <BentoCard key={post.id} {...post} />
         ))}
       </CompactGridContainer>
     );
@@ -30,7 +30,7 @@ export function BentoGrid({ posts, compact }: BentoGridProps) {
   return (
     <GridContainer>
       {posts.map((post) => (
-        <BentoCard key={post._id} {...post} />
+        <BentoCard key={post.id} {...post} />
       ))}
     </GridContainer>
   );

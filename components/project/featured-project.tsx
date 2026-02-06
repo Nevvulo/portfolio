@@ -3,7 +3,7 @@ import styled from "styled-components";
 import GolfquestBanner from "../../assets/img/games/golfquest.png";
 import FluxBanner from "../../assets/img/projects/banner/flux.png";
 import UnloanBanner from "../../assets/img/projects/banner/unloan.png";
-import type { Doc } from "../../convex/_generated/dataModel";
+import type { Project } from "@/src/db/types";
 import { StrippedLink } from "../generics";
 
 const projectBanners = {
@@ -21,7 +21,7 @@ function hasProjectBanner(slug: string): boolean {
 }
 
 interface FeaturedProjectCardProps {
-  project: Doc<"projects">;
+  project: Project;
   href: string;
   isSmaller?: boolean;
   isSmallest?: boolean;

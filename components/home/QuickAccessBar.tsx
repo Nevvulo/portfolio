@@ -1,14 +1,18 @@
-import { useQuery } from "convex/react";
+import { useQuery as useRQ } from "@tanstack/react-query";
 import { Boxes, Compass, Download, Newspaper, UserCircle } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import styled from "styled-components";
-import { api } from "../../convex/_generated/api";
+import { getMe } from "@/src/db/client/me";
 import { LOUNGE_COLORS } from "../../constants/theme";
 import loungeIcon from "../../assets/img/lounge.png";
 
 export function QuickAccessBar() {
-  const user = useQuery(api.users.getMe);
+  const { data: user } = useRQ({
+    queryKey: ["me"],
+    queryFn: () => getMe(),
+    staleTime: 30_000,
+  });
   const hasTier1Access = user?.tier === "tier1" || user?.tier === "tier2";
 
   return (

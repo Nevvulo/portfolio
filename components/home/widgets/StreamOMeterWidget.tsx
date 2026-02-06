@@ -1,12 +1,30 @@
-import { useQuery } from "convex/react";
+import { useQuery as useRQ } from "@tanstack/react-query";
 import { Calendar, Radio } from "lucide-react";
 import styled from "styled-components";
-import { api } from "../../../convex/_generated/api";
+import { getStreamSettingsAction, getUpcomingEventsAction } from "@/src/db/actions/queries";
 import { WidgetContainer } from "./WidgetContainer";
 
-export function StreamOMeterWidget() {
-  const streamSettings = useQuery(api.stream.getStreamSettings);
-  const upcomingEvents = useQuery(api.stream.getUpcomingEvents);
+interface StreamOMeterWidgetProps {
+  streamSettings?: any;
+  upcomingEvents?: any[];
+}
+
+export function StreamOMeterWidget({ streamSettings: externalSettings, upcomingEvents: externalEvents }: StreamOMeterWidgetProps = {}) {
+  const { data: fetchedSettings } = useRQ({
+    queryKey: ["streamSettings"],
+    queryFn: () => getStreamSettingsAction(),
+    enabled: !externalSettings,
+    staleTime: 60_000,
+  });
+  const streamSettings = externalSettings ?? fetchedSettings;
+
+  const { data: fetchedEvents } = useRQ({
+    queryKey: ["upcomingEvents"],
+    queryFn: () => getUpcomingEventsAction(),
+    enabled: !externalEvents,
+    staleTime: 60_000,
+  });
+  const upcomingEvents = externalEvents ?? fetchedEvents;
 
   const streamChance = streamSettings?.streamChance ?? 0;
   const message = streamSettings?.streamChanceMessage || "Check back later for updates";

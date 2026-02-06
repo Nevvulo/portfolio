@@ -15,13 +15,23 @@ import {
   faTrash,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { useMutation, useQuery } from "convex/react";
+import { useQuery as useRQ, useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
 import React, { useState } from "react";
 import styled from "styled-components";
 import { LOUNGE_COLORS } from "../../constants/theme";
-import { api } from "../../convex/_generated/api";
-import type { Id } from "../../convex/_generated/dataModel";
+import {
+  addComment,
+  deleteComment,
+  getCommentsForPost,
+  getCommentCountForPost,
+  getCommentReactionsForPost,
+  getMyCommentReactionsForPost,
+  getMe,
+  reportComment,
+  toggleCommentReaction,
+} from "@/src/db/actions/blog";
+import { grantCommentXp } from "@/src/db/actions/experience";
 import { UserPopoutTrigger } from "../shared/UserPopout";
 
 // Reaction types for comments
@@ -36,95 +46,114 @@ const COMMENT_REACTIONS = [
 
 type CommentReactionType = "heart" | "thumbs_up" | "eyes" | "fire" | "thinking" | "laugh";
 
-// Role constants (must match convex/auth.ts)
+// Role constants (must match auth.ts)
 const ROLE_STAFF = 1;
 
 interface CommentSectionProps {
-  postId: Id<"blogPosts">;
+  postId: number;
 }
 
 interface CommentAuthor {
-  _id: Id<"users">;
-  displayName: string;
-  username?: string;
-  avatarUrl?: string;
-  tier?: string;
-  isCreator?: boolean;
+  id: number;
+  displayName: string | null;
+  username: string | null;
+  avatarUrl: string | null;
+  tier: string | null;
+  isCreator: boolean | null;
+  role: number | null;
 }
 
 interface Comment {
-  _id: Id<"blogComments">;
-  postId: Id<"blogPosts">;
-  authorId: Id<"users">;
+  id: number;
+  postId: number;
+  authorId: number | null;
   content: string;
-  parentId?: Id<"blogComments">;
-  isEdited: boolean;
-  isDeleted: boolean;
-  createdAt: number;
-  editedAt?: number;
+  parentId: number | null;
+  isEdited: boolean | null;
+  isDeleted: boolean | null;
+  createdAt: Date;
+  editedAt: Date | null;
   author: CommentAuthor | null;
   replies: (Comment & { author: CommentAuthor | null })[];
-}
-
-interface CommentsResponse {
-  comments: Comment[];
-  hasMore: boolean;
-  nextCursor: number | null;
 }
 
 export function CommentSection({ postId }: CommentSectionProps) {
   const { isSignedIn } = useUser();
   const [newComment, setNewComment] = useState("");
-  const [replyingTo, setReplyingTo] = useState<Id<"blogComments"> | null>(null);
+  const [replyingTo, setReplyingTo] = useState<number | null>(null);
   const [replyContent, setReplyContent] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [cursor, setCursor] = useState<number | undefined>(undefined);
+  const [offset, setOffset] = useState(0);
   const [allComments, setAllComments] = useState<Comment[]>([]);
   const [hasMore, setHasMore] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
 
-  // Get current Convex user for ID comparison and staff check (only when signed in)
-  const currentUser = useQuery(api.users.getMe, isSignedIn ? {} : "skip");
-  const commentsResponse = useQuery(api.blogComments.list, { postId, cursor }) as
-    | CommentsResponse
-    | undefined;
-  const commentCount = useQuery(api.blogComments.getCount, { postId });
-  const createComment = useMutation(api.blogComments.create);
-  const deleteComment = useMutation(api.blogComments.deleteComment);
-  const reportComment = useMutation(api.blogComments.report);
-  const grantCommentXp = useMutation(api.experience.grantCommentXp);
+  const queryClient = useQueryClient();
 
-  // Update comments when response changes
+  // Get current user info
+  const { data: currentUser } = useRQ({
+    queryKey: ["me"],
+    queryFn: () => getMe(),
+    enabled: !!isSignedIn,
+    staleTime: 60_000,
+  });
+
+  // Paginated comments
+  const { data: commentsResponse } = useRQ({
+    queryKey: ["comments", postId, offset],
+    queryFn: () => getCommentsForPost(postId, 20, offset),
+    staleTime: 10_000,
+  });
+
+  // Comment count
+  const { data: commentCount } = useRQ({
+    queryKey: ["comment-count", postId],
+    queryFn: () => getCommentCountForPost(postId),
+    staleTime: 10_000,
+  });
+
+  // Comment reactions
+  const { data: commentReactions } = useRQ({
+    queryKey: ["comment-reactions", postId],
+    queryFn: () => getCommentReactionsForPost(postId),
+    staleTime: 10_000,
+  });
+
+  const { data: myCommentReactions } = useRQ({
+    queryKey: ["my-comment-reactions", postId],
+    queryFn: () => getMyCommentReactionsForPost(postId),
+    enabled: !!isSignedIn,
+    staleTime: 10_000,
+  });
+
+  const invalidateComments = () => {
+    queryClient.invalidateQueries({ queryKey: ["comments", postId] });
+    queryClient.invalidateQueries({ queryKey: ["comment-count", postId] });
+    queryClient.invalidateQueries({ queryKey: ["comment-reactions", postId] });
+    queryClient.invalidateQueries({ queryKey: ["my-comment-reactions", postId] });
+  };
+
+  // Update local comments when response changes
   React.useEffect(() => {
     if (commentsResponse) {
-      if (cursor === undefined) {
-        // Initial load
-        setAllComments(commentsResponse.comments);
+      if (offset === 0) {
+        setAllComments(commentsResponse.comments as Comment[]);
       } else {
-        // Load more - append to existing
-        setAllComments((prev) => [...prev, ...commentsResponse.comments]);
+        setAllComments((prev) => [...prev, ...(commentsResponse.comments as Comment[])]);
       }
       setHasMore(commentsResponse.hasMore);
       setIsLoadingMore(false);
     }
-  }, [commentsResponse, cursor]);
+  }, [commentsResponse, offset]);
 
   const loadMoreComments = () => {
     if (commentsResponse?.nextCursor && !isLoadingMore) {
       setIsLoadingMore(true);
-      setCursor(commentsResponse.nextCursor);
+      setOffset(commentsResponse.nextCursor);
     }
   };
 
-  // Comment reactions
-  const commentReactions = useQuery(api.blogCommentReactions.getForPost, { postId });
-  const myCommentReactions = useQuery(
-    api.blogCommentReactions.getMyReactionsForPost,
-    isSignedIn ? { postId } : "skip",
-  );
-  const toggleReaction = useMutation(api.blogCommentReactions.toggle);
-
-  // Check if current user is staff/creator (role >= 1 or isCreator flag)
+  // Check if current user is staff/creator
   const isStaff = currentUser?.isCreator || (currentUser?.role ?? 0) >= ROLE_STAFF;
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -133,10 +162,10 @@ export function CommentSection({ postId }: CommentSectionProps) {
 
     setIsSubmitting(true);
     try {
-      await createComment({ postId, content: newComment.trim() });
+      await addComment(postId, newComment.trim());
       setNewComment("");
-      // Grant XP for commenting (backend handles daily limits)
-      grantCommentXp({ postId }).catch(console.error);
+      grantCommentXp(postId).catch(console.error);
+      invalidateComments();
     } catch (error) {
       console.error("Failed to post comment:", error);
     } finally {
@@ -144,16 +173,16 @@ export function CommentSection({ postId }: CommentSectionProps) {
     }
   };
 
-  const handleReply = async (parentId: Id<"blogComments">) => {
+  const handleReply = async (parentId: number) => {
     if (!replyContent.trim() || isSubmitting) return;
 
     setIsSubmitting(true);
     try {
-      await createComment({ postId, content: replyContent.trim(), parentId });
+      await addComment(postId, replyContent.trim(), parentId);
       setReplyContent("");
       setReplyingTo(null);
-      // Grant XP for replying too (backend handles daily limits)
-      grantCommentXp({ postId }).catch(console.error);
+      grantCommentXp(postId).catch(console.error);
+      invalidateComments();
     } catch (error) {
       console.error("Failed to post reply:", error);
     } finally {
@@ -161,20 +190,21 @@ export function CommentSection({ postId }: CommentSectionProps) {
     }
   };
 
-  const handleDelete = async (commentId: Id<"blogComments">) => {
+  const handleDelete = async (commentId: number) => {
     if (!confirm("Are you sure you want to delete this comment?")) return;
     try {
-      await deleteComment({ commentId });
+      await deleteComment(commentId);
+      invalidateComments();
     } catch (error) {
       console.error("Failed to delete comment:", error);
     }
   };
 
-  const handleReport = async (commentId: Id<"blogComments">) => {
+  const handleReport = async (commentId: number) => {
     const reason = prompt("Why are you reporting this comment?");
     if (reason === null) return;
     try {
-      await reportComment({ commentId, reason: reason || undefined });
+      await reportComment(commentId, reason || undefined);
       alert("Comment reported. Thank you for helping keep our community safe.");
     } catch (error: any) {
       alert(error.message || "Failed to report comment");
@@ -227,9 +257,9 @@ export function CommentSection({ postId }: CommentSectionProps) {
         )}
         {allComments.map((comment) => (
           <CommentItem
-            key={comment._id}
+            key={comment.id}
             comment={comment}
-            currentUserId={currentUser?._id}
+            currentUserId={currentUser?.id}
             isStaff={isStaff}
             isSignedIn={!!isSignedIn}
             onDelete={handleDelete}
@@ -243,11 +273,15 @@ export function CommentSection({ postId }: CommentSectionProps) {
             setReplyContent={setReplyContent}
             handleReply={handleReply}
             isSubmitting={isSubmitting}
-            reactions={commentReactions?.[comment._id.toString()]}
-            myReaction={myCommentReactions?.[comment._id.toString()]}
-            onToggleReaction={(commentId, type) => toggleReaction({ commentId, type })}
+            reactions={commentReactions?.[String(comment.id)]}
+            myReaction={myCommentReactions?.[String(comment.id)]}
+            onToggleReaction={async (commentId, type) => {
+              await toggleCommentReaction(commentId, postId, type);
+              invalidateComments();
+            }}
             allReactions={commentReactions}
             allMyReactions={myCommentReactions}
+            postId={postId}
           />
         ))}
         {hasMore && (
@@ -262,24 +296,25 @@ export function CommentSection({ postId }: CommentSectionProps) {
 
 interface CommentItemProps {
   comment: Comment;
-  currentUserId?: Id<"users">;
+  currentUserId?: number;
   isStaff: boolean;
   isSignedIn: boolean;
-  onDelete: (id: Id<"blogComments">) => void;
-  onReport: (id: Id<"blogComments">) => void;
-  onReply: (id: Id<"blogComments">) => void;
-  replyingTo: Id<"blogComments"> | null;
+  onDelete: (id: number) => void;
+  onReport: (id: number) => void;
+  onReply: (id: number) => void;
+  replyingTo: number | null;
   replyContent: string;
   setReplyContent: (content: string) => void;
-  handleReply: (parentId: Id<"blogComments">) => void;
+  handleReply: (parentId: number) => void;
   isSubmitting: boolean;
   isReply?: boolean;
   reactions?: { counts: Record<string, number>; total: number };
   myReaction?: string;
-  onToggleReaction: (commentId: Id<"blogComments">, type: CommentReactionType) => void;
+  onToggleReaction: (commentId: number, type: CommentReactionType) => void;
   // Full maps for nested replies
   allReactions?: Record<string, { counts: Record<string, number>; total: number }>;
   allMyReactions?: Record<string, string>;
+  postId: number;
 }
 
 function CommentItem({
@@ -301,11 +336,12 @@ function CommentItem({
   onToggleReaction,
   allReactions,
   allMyReactions,
+  postId,
 }: CommentItemProps) {
   const [showActions, setShowActions] = useState(false);
 
   // Check if current user is the author of this comment
-  const isAuthor = currentUserId && comment.author?._id === currentUserId;
+  const isAuthor = currentUserId && comment.author?.id === currentUserId;
   // Can delete if author of the comment OR is staff
   const canDelete = isAuthor || isStaff;
 
@@ -317,10 +353,10 @@ function CommentItem({
     >
       <CommentHeader>
         <AuthorInfo>
-          {comment.author?._id ? (
-            <AuthorTrigger userId={comment.author._id}>
+          {comment.author?.id ? (
+            <AuthorTrigger userId={comment.author.id}>
               {comment.author.avatarUrl ? (
-                <Avatar src={comment.author.avatarUrl} alt={comment.author.displayName} />
+                <Avatar src={comment.author.avatarUrl} alt={comment.author.displayName || ""} />
               ) : (
                 <AvatarPlaceholder>
                   {comment.author.displayName?.charAt(0) || "?"}
@@ -332,8 +368,8 @@ function CommentItem({
           )}
           <AuthorMeta>
             <AuthorName>
-              {comment.author?._id ? (
-                <AuthorNameTrigger userId={comment.author._id}>
+              {comment.author?.id ? (
+                <AuthorNameTrigger userId={comment.author.id}>
                   {comment.author.displayName || "Unknown"}
                 </AuthorNameTrigger>
               ) : (
@@ -354,7 +390,7 @@ function CommentItem({
               )}
             </AuthorName>
             <Timestamp>
-              {formatDistanceToNow(comment.createdAt, { addSuffix: true })}
+              {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}
               {comment.isEdited && <EditedLabel>(edited)</EditedLabel>}
             </Timestamp>
           </AuthorMeta>
@@ -363,17 +399,17 @@ function CommentItem({
         {/* Hover actions */}
         <Actions $visible={showActions}>
           {isSignedIn && !isReply && (
-            <ActionButton onClick={() => onReply(comment._id)} title="Reply">
+            <ActionButton onClick={() => onReply(comment.id)} title="Reply">
               <FontAwesomeIcon icon={faReply} />
             </ActionButton>
           )}
           {isSignedIn && !isAuthor && (
-            <ActionButton onClick={() => onReport(comment._id)} title="Report" $danger>
+            <ActionButton onClick={() => onReport(comment.id)} title="Report" $danger>
               <FontAwesomeIcon icon={faFlag} />
             </ActionButton>
           )}
           {canDelete && (
-            <ActionButton onClick={() => onDelete(comment._id)} title="Delete" $danger>
+            <ActionButton onClick={() => onDelete(comment.id)} title="Delete" $danger>
               <FontAwesomeIcon icon={faTrash} />
             </ActionButton>
           )}
@@ -392,7 +428,7 @@ function CommentItem({
               <ReactionChip
                 key={type}
                 $active={isActive}
-                onClick={() => onToggleReaction(comment._id, type)}
+                onClick={() => onToggleReaction(comment.id, type)}
                 title={label}
               >
                 <FontAwesomeIcon icon={icon} />
@@ -404,7 +440,7 @@ function CommentItem({
       )}
 
       {/* Reply form */}
-      {replyingTo === comment._id && (
+      {replyingTo === comment.id && (
         <ReplyForm>
           <ReplyInput
             value={replyContent}
@@ -415,7 +451,7 @@ function CommentItem({
           <ReplyActions>
             <CancelButton onClick={() => onReply(null as any)}>Cancel</CancelButton>
             <ReplyButton
-              onClick={() => handleReply(comment._id)}
+              onClick={() => handleReply(comment.id)}
               disabled={!replyContent.trim() || isSubmitting}
             >
               {isSubmitting ? <FontAwesomeIcon icon={faSpinner} spin /> : "Reply"}
@@ -429,7 +465,7 @@ function CommentItem({
         <RepliesContainer>
           {comment.replies.map((reply) => (
             <CommentItem
-              key={reply._id}
+              key={reply.id}
               comment={{ ...reply, replies: [] }}
               currentUserId={currentUserId}
               isStaff={isStaff}
@@ -443,11 +479,12 @@ function CommentItem({
               handleReply={handleReply}
               isSubmitting={isSubmitting}
               isReply
-              reactions={allReactions?.[reply._id.toString()]}
-              myReaction={allMyReactions?.[reply._id.toString()]}
+              reactions={allReactions?.[String(reply.id)]}
+              myReaction={allMyReactions?.[String(reply.id)]}
               onToggleReaction={onToggleReaction}
               allReactions={allReactions}
               allMyReactions={allMyReactions}
+              postId={postId}
             />
           ))}
         </RepliesContainer>

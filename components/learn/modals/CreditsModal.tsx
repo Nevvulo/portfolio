@@ -9,10 +9,9 @@ import {
   getEffectiveAIStatus,
 } from "@/components/badges/ai-disclosure-badge";
 import { LOUNGE_COLORS } from "@/constants/theme";
-import type { Id } from "@/convex/_generated/dataModel";
 
 interface AuthorInfo {
-  _id: Id<"users">;
+  id: number;
   displayName: string;
   username?: string;
   avatarUrl?: string;
@@ -126,7 +125,7 @@ export function CreditsModal({ isOpen, onClose, post }: CreditsModalProps) {
                       <User size={14} />
                       Author
                     </SectionLabel>
-                    <PersonLink href={`/@${post.author.username || post.author._id}`}>
+                    <PersonLink href={`/@${post.author.username || post.author.id}`}>
                       {post.author.avatarUrl ? (
                         <PersonAvatar src={post.author.avatarUrl} alt={post.author.displayName} />
                       ) : (
@@ -146,7 +145,7 @@ export function CreditsModal({ isOpen, onClose, post }: CreditsModalProps) {
                     </SectionLabel>
                     <PersonList>
                       {post.collaborators.map((collab) => (
-                        <PersonLink key={collab._id} href={`/@${collab.username || collab._id}`}>
+                        <PersonLink key={collab.id} href={`/@${collab.username || collab.id}`}>
                           {collab.avatarUrl ? (
                             <PersonAvatar src={collab.avatarUrl} alt={collab.displayName} $small />
                           ) : (

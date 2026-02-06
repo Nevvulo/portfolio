@@ -1,4 +1,4 @@
-import { useQuery } from "convex/react";
+import { useQuery as useRQ } from "@tanstack/react-query";
 import { ArrowRight, Bot, Calendar, CheckCircle, Eye, Search, Sparkles } from "lucide-react";
 import Head from "next/head";
 import Link from "next/link";
@@ -6,10 +6,14 @@ import styled from "styled-components";
 import nevuloImg from "../../assets/img/nevulo.jpg";
 import { TopNavView } from "../../components/layout/topnav";
 import { SimpleNavbar } from "../../components/navbar/simple";
-import { api } from "../../convex/_generated/api";
+import { getPreLLMPosts } from "@/src/db/client/queries";
 
 export default function AIDisclosure() {
-  const preLLMPosts = useQuery(api.blogPosts.getPreLLMPosts, { limit: 6 });
+  const { data: preLLMPosts } = useRQ({
+    queryKey: ["preLLMPosts"],
+    queryFn: () => getPreLLMPosts(6),
+    staleTime: 60_000,
+  });
 
   return (
     <TopNavView>
@@ -189,7 +193,7 @@ export default function AIDisclosure() {
             </PreLLMDescription>
             <PreLLMGrid>
               {preLLMPosts.map((post) => (
-                <PreLLMCard key={post._id} href={`/blog/${post.slug}`}>
+                <PreLLMCard key={post.id} href={`/blog/${post.slug}`}>
                   <PreLLMCardTitle>{post.title}</PreLLMCardTitle>
                   <PreLLMCardDate>
                     {new Date(post.publishedAt).toLocaleDateString("en-US", {

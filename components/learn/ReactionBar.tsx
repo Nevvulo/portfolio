@@ -1,17 +1,26 @@
 import { useUser } from "@clerk/nextjs";
 import { faHeart, faLightbulb, faThumbsUp } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { useMutation, useQuery } from "convex/react";
+import { useQuery as useRQ, useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, m } from "framer-motion";
 import { Eraser, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import styled, { css, keyframes } from "styled-components";
-import { api } from "../../convex/_generated/api";
-import type { Id } from "../../convex/_generated/dataModel";
+import {
+  getReactionCounts,
+  getMyReactions,
+  getMyReactionBudget,
+  getAnonymousReactionBudget,
+  addReaction,
+  addReactionBatch,
+  removeAllReactionsFromPost,
+  removeAllHighlightsFromPost,
+} from "@/src/db/actions/reactions";
+import { grantReactionXp } from "@/src/db/actions/experience";
 import { ReactionToast } from "./ReactionToast";
 
 interface ReactionBarProps {
-  postId: Id<"blogPosts">;
+  postId: number;
   variant?: "hero" | "inline";
 }
 
@@ -114,18 +123,40 @@ export function ReactionBar({ postId, variant = "hero" }: ReactionBarProps) {
     }
   }, [isSignedIn]);
 
-  const counts = useQuery(api.blogReactions.getCounts, { postId });
-  const myReactions = useQuery(api.blogReactions.getMyReactions, { postId });
-  const reactionBudget = useQuery(api.blogReactions.getMyReactionBudget, { postId });
-  const anonymousReactions = useQuery(
-    api.blogReactions.getAnonymousReactions,
-    !isSignedIn && clientIp ? { postId, ip: clientIp } : "skip",
-  );
-  const react = useMutation(api.blogReactions.react);
-  const reactBatch = useMutation(api.blogReactions.reactBatch);
-  const grantReactionXp = useMutation(api.experience.grantReactionXp);
-  const removeAllReactions = useMutation(api.blogReactions.removeAllFromPost);
-  const removeAllHighlights = useMutation(api.contentHighlights.removeAllFromPost);
+  const queryClient = useQueryClient();
+
+  // React Query for data fetching (replaces Convex subscriptions)
+  const { data: counts } = useRQ({
+    queryKey: ["reaction-counts", postId],
+    queryFn: () => getReactionCounts(postId),
+    staleTime: 10_000,
+  });
+  const { data: myReactions } = useRQ({
+    queryKey: ["my-reactions", postId],
+    queryFn: () => getMyReactions(postId),
+    enabled: !!isSignedIn,
+    staleTime: 10_000,
+  });
+  const { data: reactionBudget } = useRQ({
+    queryKey: ["reaction-budget", postId],
+    queryFn: () => getMyReactionBudget(postId),
+    enabled: !!isSignedIn,
+    staleTime: 10_000,
+  });
+  const { data: anonymousReactions } = useRQ({
+    queryKey: ["anon-reactions", postId, clientIp],
+    queryFn: () => getAnonymousReactionBudget(postId, clientIp!),
+    enabled: !isSignedIn && !!clientIp,
+    staleTime: 10_000,
+  });
+
+  // Helper to invalidate reaction queries after mutations
+  const invalidateReactions = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ["reaction-counts", postId] });
+    queryClient.invalidateQueries({ queryKey: ["my-reactions", postId] });
+    queryClient.invalidateQueries({ queryKey: ["reaction-budget", postId] });
+    queryClient.invalidateQueries({ queryKey: ["anon-reactions", postId] });
+  }, [queryClient, postId]);
 
   const hasAnyReactions = myReactions && myReactions.total > 0;
 
@@ -255,11 +286,11 @@ export function ReactionBar({ postId, variant = "hero" }: ReactionBarProps) {
         const types: ReactionType[] = ["like", "helpful", "insightful"];
         for (const type of types) {
           for (let i = 0; i < pending[type]; i++) {
-            const result = await react({
+            const result = await addReaction(
               postId,
               type,
-              ip: isSignedIn ? undefined : (ip ?? undefined),
-            });
+              isSignedIn ? undefined : (ip ?? undefined),
+            );
 
             if (result.action === "rate_limited") {
               triggerShakeAndGlow(type);
@@ -275,7 +306,7 @@ export function ReactionBar({ postId, variant = "hero" }: ReactionBarProps) {
 
             // Grant XP on first reaction
             if (isSignedIn && result.action === "added" && result.postTotal === 1) {
-              grantReactionXp({ postId }).catch(console.error);
+              grantReactionXp(postId).catch(console.error);
             }
 
             if (result.action === "added" && result.postRemaining === 0) {
@@ -299,11 +330,11 @@ export function ReactionBar({ postId, variant = "hero" }: ReactionBarProps) {
           .filter((type) => pending[type] > 0)
           .map((type) => ({ type, count: pending[type] }));
 
-        const result = await reactBatch({
+        const result = await addReactionBatch(
           postId,
           reactions,
-          ip: isSignedIn ? undefined : (ip ?? undefined),
-        });
+          isSignedIn ? undefined : (ip ?? undefined),
+        );
 
         if (result.action === "rate_limited") {
           const type = reactions[0]?.type ?? "like";
@@ -320,7 +351,7 @@ export function ReactionBar({ postId, variant = "hero" }: ReactionBarProps) {
 
         // Grant XP if this was first reaction
         if (isSignedIn && result.postTotal === result.added) {
-          grantReactionXp({ postId }).catch(console.error);
+          grantReactionXp(postId).catch(console.error);
         }
 
         if (result.action === "partial" || result.postRemaining === 0) {
@@ -356,16 +387,17 @@ export function ReactionBar({ postId, variant = "hero" }: ReactionBarProps) {
         helpful: Math.max(0, prev.helpful - pending.helpful),
         insightful: Math.max(0, prev.insightful - pending.insightful),
       }));
+    } finally {
+      // Refresh server data
+      invalidateReactions();
     }
   }, [
     isSignedIn,
     clientIp,
     postId,
-    react,
-    reactBatch,
-    grantReactionXp,
     triggerShakeAndGlow,
     showLimitToast,
+    invalidateReactions,
   ]);
 
   // Add a pending reaction optimistically
@@ -485,29 +517,33 @@ export function ReactionBar({ postId, variant = "hero" }: ReactionBarProps) {
     if (!isSignedIn || isClearing) return;
     setIsClearing(true);
     try {
-      await removeAllReactions({ postId });
+      await removeAllReactionsFromPost(postId);
       setShowClearDropdown(false);
+      setOptimisticOffset({ like: 0, helpful: 0, insightful: 0 });
       haptic.success();
+      invalidateReactions();
     } catch (error) {
       console.error("Failed to clear reactions:", error);
     } finally {
       setIsClearing(false);
     }
-  }, [isSignedIn, isClearing, postId, removeAllReactions]);
+  }, [isSignedIn, isClearing, postId, invalidateReactions]);
 
   const handleClearAll = useCallback(async () => {
     if (!isSignedIn || isClearing) return;
     setIsClearing(true);
     try {
-      await Promise.all([removeAllReactions({ postId }), removeAllHighlights({ postId })]);
+      await Promise.all([removeAllReactionsFromPost(postId), removeAllHighlightsFromPost(postId)]);
       setShowClearDropdown(false);
+      setOptimisticOffset({ like: 0, helpful: 0, insightful: 0 });
       haptic.success();
+      invalidateReactions();
     } catch (error) {
       console.error("Failed to clear all:", error);
     } finally {
       setIsClearing(false);
     }
-  }, [isSignedIn, isClearing, postId, removeAllReactions, removeAllHighlights]);
+  }, [isSignedIn, isClearing, postId, invalidateReactions]);
 
   // Cleanup on unmount
   useEffect(() => {

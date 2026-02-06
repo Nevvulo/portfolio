@@ -1,18 +1,27 @@
-import { useMutation, useQuery } from "convex/react";
+import { useQuery as useRQ, useMutation } from "@tanstack/react-query";
 import { Calendar, Radio, RefreshCw, Zap } from "lucide-react";
 import Head from "next/head";
 import { useEffect, useState } from "react";
 import styled from "styled-components";
 import { BlogView } from "../../../components/layout/blog";
 import { SimpleNavbar } from "../../../components/navbar/simple";
-import { api } from "../../../convex/_generated/api";
-import { useTierAccess } from "../../../hooks/useTierAccess";
+import { getMe } from "@/src/db/client/me";
+import {
+  getStreamSettings,
+  updateStreamChance,
+  getUpcomingEvents,
+} from "@/src/db/client/admin";
 
 export const getServerSideProps = () => ({ props: {} });
 
 export default function AdminStreamPage() {
   const [mounted, setMounted] = useState(false);
-  const { isLoading, isCreator } = useTierAccess();
+  const { data: me, isLoading } = useRQ({
+    queryKey: ["me"],
+    queryFn: () => getMe(),
+    staleTime: 30_000,
+  });
+  const isCreator = me?.isCreator ?? false;
 
   useEffect(() => {
     setMounted(true);
@@ -70,8 +79,14 @@ export default function AdminStreamPage() {
 }
 
 function StreamOMeterSection() {
-  const streamSettings = useQuery(api.stream.getStreamSettings);
-  const updateChance = useMutation(api.stream.updateStreamChance);
+  const { data: streamSettings } = useRQ({
+    queryKey: ["admin", "streamSettings"],
+    queryFn: () => getStreamSettings(),
+  });
+  const updateChanceMutation = useMutation({
+    mutationFn: (data: { streamChance: number; streamChanceMessage?: string }) =>
+      updateStreamChance(data),
+  });
 
   const [chance, setChance] = useState(0);
   const [message, setMessage] = useState("");
@@ -88,7 +103,7 @@ function StreamOMeterSection() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      await updateChance({
+      await updateChanceMutation.mutateAsync({
         streamChance: chance,
         streamChanceMessage: message || undefined,
       });
@@ -184,7 +199,10 @@ function StreamOMeterSection() {
 }
 
 function DiscordEventsSection() {
-  const events = useQuery(api.stream.getUpcomingEvents);
+  const { data: events } = useRQ({
+    queryKey: ["admin", "upcomingEvents"],
+    queryFn: () => getUpcomingEvents(),
+  });
   const [syncing, setSyncing] = useState(false);
   const [syncResult, setSyncResult] = useState<string | null>(null);
 
@@ -227,7 +245,7 @@ function DiscordEventsSection() {
           <EmptyState>No upcoming events scheduled</EmptyState>
         ) : (
           events.map((event) => (
-            <EventCard key={event._id}>
+            <EventCard key={event.id}>
               <EventName>{event.name}</EventName>
               <EventTime>
                 {new Date(event.scheduledStartTime).toLocaleDateString(undefined, {

@@ -1,11 +1,10 @@
-import { useMutation } from "convex/react";
+import { useMutation } from "@tanstack/react-query";
 import { AnimatePresence, m } from "framer-motion";
 import { Image, Loader2, Send, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import { LOUNGE_COLORS } from "@/constants/theme";
-import { api } from "@/convex/_generated/api";
-import type { Id } from "@/convex/_generated/dataModel";
+import { createFeedPost } from "@/src/db/actions/feed";
 import { validateContent } from "@/lib/safeMd";
 
 interface MediaAttachment {
@@ -25,8 +24,8 @@ interface UploadedMedia {
 }
 
 interface FeedComposerProps {
-  profileUserId: Id<"users">;
-  parentId?: Id<"userFeedPosts">;
+  profileUserId: number;
+  parentId?: number;
   placeholder?: string;
   requiresApproval?: boolean;
   onSuccess?: () => void;
@@ -64,7 +63,9 @@ export function FeedComposer({
     }
   }, [autoFocus]);
 
-  const createPost = useMutation(api.userFeed.create);
+  const createPostMutation = useMutation({
+    mutationFn: (args: Parameters<typeof createFeedPost>[0]) => createFeedPost(args),
+  });
 
   const handleContentChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value;
@@ -179,7 +180,7 @@ export function FeedComposer({
       }
 
       // Create post
-      await createPost({
+      await createPostMutation.mutateAsync({
         profileUserId,
         content: content.trim(),
         parentId,

@@ -1,4 +1,4 @@
-import { useQuery } from "convex/react";
+import { useQuery as useRQ } from "@tanstack/react-query";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import dynamic from "next/dynamic";
 import Head from "next/head";
@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 import styled from "styled-components";
 import { BlogView } from "../../../components/layout/blog";
 import { SimpleNavbar } from "../../../components/navbar/simple";
-import { api } from "../../../convex/_generated/api";
+import { getPostBySlugForEdit as getPostBySlugForEditAction } from "@/src/db/client/queries";
 
 // Dynamically import PostEditor to avoid SSR issues
 const PostEditor = dynamic(() => import("../../admin/blog/index").then((mod) => mod.PostEditor), {
@@ -28,13 +28,17 @@ export default function EditContentPage() {
   const [mounted, setMounted] = useState(false);
 
   // Fetch post by slug (includes edit access check)
-  const post = useQuery(api.blogPosts.getBySlugForEdit, slug ? { slug: slug as string } : "skip");
+  const { data: post, isLoading: postLoading } = useRQ({
+    queryKey: ["post", "edit", slug],
+    queryFn: () => getPostBySlugForEditAction(slug as string),
+    enabled: !!slug,
+  });
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  if (!mounted || post === undefined) {
+  if (!mounted || postLoading) {
     return (
       <BlogView>
         <SimpleNavbar title="Edit Content" />

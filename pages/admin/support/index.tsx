@@ -1,25 +1,33 @@
-import { useMutation, useQuery } from "convex/react";
+import {
+  useQuery as useRQ,
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query";
 import {
   Bell,
   CheckCircle2,
   ChevronDown,
   ChevronRight,
   Crown,
-  ExternalLink,
   FileText,
   Send,
   Users,
   XCircle,
 } from "lucide-react";
 import Head from "next/head";
-import Link from "next/link";
 import { useEffect, useState } from "react";
 import styled from "styled-components";
 import { BlogView } from "../../../components/layout/blog";
 import { SimpleNavbar } from "../../../components/navbar/simple";
-import { api } from "../../../convex/_generated/api";
-import type { Id } from "../../../convex/_generated/dataModel";
-import { useTierAccess } from "../../../hooks/useTierAccess";
+import { getMe } from "@/src/db/client/me";
+import {
+  getQuickStats,
+  listSuperLegends,
+  getSubscriberVerification,
+  getContentDeliveryStats,
+  listNotifications,
+  sendNotification,
+} from "@/src/db/client/admin-support";
 
 export const getServerSideProps = () => ({ props: {} });
 
@@ -28,7 +36,12 @@ type TabType = "subscribers" | "content" | "notifications";
 export default function SupportAdminPage() {
   const [mounted, setMounted] = useState(false);
   const [activeTab, setActiveTab] = useState<TabType>("subscribers");
-  const { isLoading, isCreator } = useTierAccess();
+  const { data: me } = useRQ({
+    queryKey: ["me"],
+    queryFn: () => getMe(),
+  });
+  const isCreator = me?.isCreator ?? false;
+  const isLoading = me === undefined;
 
   useEffect(() => {
     setMounted(true);
@@ -116,7 +129,10 @@ export default function SupportAdminPage() {
 // ============================================
 
 function QuickStats() {
-  const stats = useQuery(api.supportAdmin.getQuickStats);
+  const { data: stats } = useRQ({
+    queryKey: ["admin", "support", "quickStats"],
+    queryFn: () => getQuickStats(),
+  });
 
   if (!stats) {
     return (
@@ -132,20 +148,20 @@ function QuickStats() {
   return (
     <StatsBar>
       <StatCard>
-        <StatValue>{stats.totalSubscribers}</StatValue>
+        <StatValue>{stats.tier1 + stats.tier2}</StatValue>
         <StatLabel>Total Subscribers</StatLabel>
       </StatCard>
       <StatCard $accent="purple">
-        <StatValue>{stats.tier1Count}</StatValue>
+        <StatValue>{stats.tier1}</StatValue>
         <StatLabel>Super Legend I</StatLabel>
       </StatCard>
       <StatCard $accent="gold">
-        <StatValue>{stats.tier2Count}</StatValue>
+        <StatValue>{stats.tier2}</StatValue>
         <StatLabel>Super Legend II</StatLabel>
       </StatCard>
       <StatCard>
-        <StatValue>{stats.discordLinkedPercent}%</StatValue>
-        <StatLabel>Discord Linked</StatLabel>
+        <StatValue>{stats.total}</StatValue>
+        <StatLabel>Total Users</StatLabel>
       </StatCard>
     </StatsBar>
   );
@@ -157,17 +173,18 @@ function QuickStats() {
 
 function SubscribersTab() {
   const [tierFilter, setTierFilter] = useState<"all" | "tier1" | "tier2">("all");
-  const [expandedUserId, setExpandedUserId] = useState<Id<"users"> | null>(null);
+  const [expandedUserId, setExpandedUserId] = useState<number | null>(null);
 
-  const subscribers = useQuery(api.supportAdmin.listSuperLegends, {
-    tierFilter,
-    limit: 50,
+  const { data: subscribers } = useRQ({
+    queryKey: ["admin", "support", "superLegends", tierFilter],
+    queryFn: () => listSuperLegends(tierFilter === "all" ? undefined : tierFilter),
   });
 
-  const verification = useQuery(
-    api.supportAdmin.getSubscriberVerification,
-    expandedUserId ? { userId: expandedUserId } : "skip",
-  );
+  const { data: verification } = useRQ({
+    queryKey: ["admin", "support", "verification", expandedUserId],
+    queryFn: () => getSubscriberVerification(expandedUserId!),
+    enabled: !!expandedUserId,
+  });
 
   return (
     <Section>
@@ -182,18 +199,18 @@ function SubscribersTab() {
 
       {!subscribers ? (
         <LoadingText>Loading subscribers...</LoadingText>
-      ) : subscribers.subscribers.length === 0 ? (
+      ) : subscribers.length === 0 ? (
         <EmptyText>No subscribers found</EmptyText>
       ) : (
         <SubscriberList>
-          {subscribers.subscribers.map((sub) => (
-            <SubscriberCard key={sub._id}>
+          {subscribers.map((sub) => (
+            <SubscriberCard key={sub.id}>
               <SubscriberMain
-                onClick={() => setExpandedUserId(expandedUserId === sub._id ? null : sub._id)}
+                onClick={() => setExpandedUserId(expandedUserId === sub.id ? null : sub.id)}
               >
                 <SubscriberAvatar>
                   {sub.avatarUrl ? (
-                    <Avatar src={sub.avatarUrl} alt={sub.displayName} />
+                    <Avatar src={sub.avatarUrl} alt={sub.displayName ?? ""} />
                   ) : (
                     <AvatarPlaceholder>{sub.displayName?.charAt(0) || "?"}</AvatarPlaceholder>
                   )}
@@ -213,7 +230,7 @@ function SubscribersTab() {
                   {sub.clerkPlan === "super_legend_2" ? "II" : "I"}
                 </TierBadge>
                 <ExpandIcon>
-                  {expandedUserId === sub._id ? (
+                  {expandedUserId === sub.id ? (
                     <ChevronDown size={16} />
                   ) : (
                     <ChevronRight size={16} />
@@ -221,48 +238,49 @@ function SubscribersTab() {
                 </ExpandIcon>
               </SubscriberMain>
 
-              {expandedUserId === sub._id && verification && (
+              {expandedUserId === sub.id && verification && (
                 <SubscriberDetails>
                   <ChecklistTitle>Deliverables Checklist</ChecklistTitle>
                   <Checklist>
-                    <ChecklistItem $checked={verification.verification.discordLinked}>
-                      {verification.verification.discordLinked ? (
+                    <ChecklistItem $checked={!!verification.discordHighestRole}>
+                      {verification.discordHighestRole ? (
                         <CheckCircle2 size={14} />
                       ) : (
                         <XCircle size={14} />
                       )}
                       Discord linked
-                      {verification.verification.discordUsername && (
-                        <ChecklistDetail>
-                          @{verification.verification.discordUsername}
-                        </ChecklistDetail>
-                      )}
                     </ChecklistItem>
-                    <ChecklistItem $checked={verification.verification.badgeVerified}>
-                      {verification.verification.badgeVerified ? (
+                    <ChecklistItem $checked={verification.clerkPlanStatus === "active"}>
+                      {verification.clerkPlanStatus === "active" ? (
                         <CheckCircle2 size={14} />
                       ) : (
                         <XCircle size={14} />
                       )}
-                      Badge verified
-                      {!verification.verification.badgeVerified && (
+                      Plan status: {verification.clerkPlanStatus ?? "unknown"}
+                      {verification.clerkPlan && (
                         <ChecklistDetail>
-                          Expected: {verification.verification.expectedTier}, Actual:{" "}
-                          {verification.verification.actualTier}
+                          Plan: {verification.clerkPlan}
                         </ChecklistDetail>
                       )}
                     </ChecklistItem>
-                    <ChecklistItem $checked={true}>
-                      <CheckCircle2 size={14} />
-                      Vault downloads: {verification.analytics.vaultDownloads}
-                    </ChecklistItem>
-                    <ChecklistItem $checked={verification.verification.showOnCredits}>
-                      {verification.verification.showOnCredits ? (
+                    <ChecklistItem $checked={!!verification.tier}>
+                      {verification.tier ? (
                         <CheckCircle2 size={14} />
                       ) : (
                         <XCircle size={14} />
                       )}
-                      Credits opt-in: {verification.verification.showOnCredits ? "Yes" : "No"}
+                      Tier: {verification.tier ?? "none"}
+                    </ChecklistItem>
+                    <ChecklistItem $checked={!!verification.supporterSyncedAt}>
+                      {verification.supporterSyncedAt ? (
+                        <CheckCircle2 size={14} />
+                      ) : (
+                        <XCircle size={14} />
+                      )}
+                      Last synced:{" "}
+                      {verification.supporterSyncedAt
+                        ? new Date(verification.supporterSyncedAt).toLocaleDateString()
+                        : "Never"}
                     </ChecklistItem>
                   </Checklist>
                 </SubscriberDetails>
@@ -270,12 +288,6 @@ function SubscribersTab() {
             </SubscriberCard>
           ))}
         </SubscriberList>
-      )}
-
-      {subscribers && subscribers.hasMore && (
-        <LoadMoreText>
-          Showing {subscribers.subscribers.length} of {subscribers.totalCount}
-        </LoadMoreText>
       )}
     </Section>
   );
@@ -286,124 +298,39 @@ function SubscribersTab() {
 // ============================================
 
 function ContentDeliveryTab() {
-  const now = new Date();
-  const [selectedMonth, setSelectedMonth] = useState(
-    `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`,
-  );
-
-  const stats = useQuery(api.supportAdmin.getContentDeliveryStats, {
-    month: selectedMonth,
+  const { data: stats } = useRQ({
+    queryKey: ["admin", "support", "contentDelivery"],
+    queryFn: () => getContentDeliveryStats(),
   });
-
-  // Generate month options for the last 12 months
-  const monthOptions = [];
-  for (let i = 0; i < 12; i++) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    const value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-    const label = d.toLocaleDateString("en-US", { month: "long", year: "numeric" });
-    monthOptions.push({ value, label });
-  }
 
   return (
     <Section>
       <SectionHeader>
         <SectionTitle>Content Delivery</SectionTitle>
-        <FilterDropdown value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)}>
-          {monthOptions.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
-        </FilterDropdown>
       </SectionHeader>
 
       {!stats ? (
         <LoadingText>Loading content stats...</LoadingText>
       ) : (
         <>
-          {/* Quota Progress */}
-          <QuotaSection>
-            <QuotaCard>
-              <QuotaHeader>
-                <QuotaTier $tier="tier1">Tier I</QuotaTier>
-                <QuotaCount>
-                  {stats.quotaProgress.tier1.totalDelivered} / {stats.quotaProgress.tier1.quota}
-                </QuotaCount>
-              </QuotaHeader>
-              <QuotaBar>
-                <QuotaFill
-                  $percent={Math.min(
-                    100,
-                    (stats.quotaProgress.tier1.totalDelivered / stats.quotaProgress.tier1.quota) *
-                      100,
-                  )}
-                  $tier="tier1"
-                />
-              </QuotaBar>
-              <QuotaDetails>
-                <span>Special Access: {stats.quotaProgress.tier1.specialAccess}</span>
-              </QuotaDetails>
-            </QuotaCard>
-
-            <QuotaCard>
-              <QuotaHeader>
-                <QuotaTier $tier="tier2">Tier II</QuotaTier>
-                <QuotaCount>
-                  {stats.quotaProgress.tier2.totalDelivered} / {stats.quotaProgress.tier2.quota}
-                </QuotaCount>
-              </QuotaHeader>
-              <QuotaBar>
-                <QuotaFill
-                  $percent={Math.min(
-                    100,
-                    (stats.quotaProgress.tier2.totalDelivered / stats.quotaProgress.tier2.quota) *
-                      100,
-                  )}
-                  $tier="tier2"
-                />
-              </QuotaBar>
-              <QuotaDetails>
-                <span>Special Access: {stats.quotaProgress.tier2.specialAccess}</span>
-              </QuotaDetails>
-            </QuotaCard>
-          </QuotaSection>
-
-          {/* Special Access Section */}
-          <ContentSection>
-            <ContentSectionHeader>
-              <FileText size={18} />
-              Special Access (/learn)
-            </ContentSectionHeader>
-            <ContentSectionDesc>Tier-locked articles and videos</ContentSectionDesc>
-            {stats.specialAccess.posts.length === 0 ? (
-              <EmptyText>No special access posts this month</EmptyText>
-            ) : (
-              <ContentList>
-                {stats.specialAccess.posts.map((post) => (
-                  <ContentItem
-                    key={post._id}
-                    as={Link}
-                    href={`/learn/${post.slug}`}
-                    target="_blank"
-                  >
-                    <ContentItemIcon>
-                      <FileText size={14} />
-                    </ContentItemIcon>
-                    <ContentItemInfo>
-                      <ContentItemTitle>{post.title}</ContentItemTitle>
-                      <ContentItemDesc>
-                        {post.contentType} &bull; {post.visibility}
-                      </ContentItemDesc>
-                    </ContentItemInfo>
-                    <ContentItemDate>
-                      {post.publishedAt ? new Date(post.publishedAt).toLocaleDateString() : "-"}
-                    </ContentItemDate>
-                    <ExternalLink size={14} style={{ opacity: 0.5 }} />
-                  </ContentItem>
-                ))}
-              </ContentList>
-            )}
-          </ContentSection>
+          <StatsBar>
+            <StatCard>
+              <StatValue>{stats.totalPublished}</StatValue>
+              <StatLabel>Total Published</StatLabel>
+            </StatCard>
+            <StatCard $accent="purple">
+              <StatValue>{stats.tier1Posts}</StatValue>
+              <StatLabel>Tier I Posts</StatLabel>
+            </StatCard>
+            <StatCard $accent="gold">
+              <StatValue>{stats.tier2Posts}</StatValue>
+              <StatLabel>Tier II Posts</StatLabel>
+            </StatCard>
+            <StatCard $accent="green">
+              <StatValue>{stats.vaultFiles}</StatValue>
+              <StatLabel>Vault Files</StatLabel>
+            </StatCard>
+          </StatsBar>
         </>
       )}
     </Section>
@@ -418,11 +345,21 @@ function NotificationsTab() {
   const [title, setTitle] = useState("");
   const [message, setMessage] = useState("");
   const [targetTier, setTargetTier] = useState<"tier1" | "tier2" | "all">("all");
-  const [sendToDiscord, setSendToDiscord] = useState(false);
   const [sending, setSending] = useState(false);
+  const queryClient = useQueryClient();
 
-  const sentNotifications = useQuery(api.supportAdmin.listNotifications, { limit: 20 });
-  const sendNotification = useMutation(api.supportAdmin.sendSubscriberNotification);
+  const { data: sentNotifications } = useRQ({
+    queryKey: ["admin", "support", "notifications"],
+    queryFn: () => listNotifications(),
+  });
+
+  const sendNotificationMutation = useMutation({
+    mutationFn: (data: { title: string; message: string; targetTier: string }) =>
+      sendNotification(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "support", "notifications"] });
+    },
+  });
 
   const handleSend = async () => {
     if (!title.trim() || !message.trim()) {
@@ -432,11 +369,10 @@ function NotificationsTab() {
 
     setSending(true);
     try {
-      const result = await sendNotification({
+      const result = await sendNotificationMutation.mutateAsync({
         title: title.trim(),
         message: message.trim(),
         targetTier,
-        sendToDiscord,
       });
       alert(`Notification sent to ${result.recipientCount} subscribers!`);
       setTitle("");
@@ -488,18 +424,6 @@ function NotificationsTab() {
               <option value="tier2">Tier II Only</option>
             </FilterDropdown>
           </FormGroup>
-
-          <FormGroup>
-            <FormLabel>&nbsp;</FormLabel>
-            <CheckboxLabel>
-              <input
-                type="checkbox"
-                checked={sendToDiscord}
-                onChange={(e) => setSendToDiscord(e.target.checked)}
-              />
-              Also send to Discord webhook
-            </CheckboxLabel>
-          </FormGroup>
         </FormRow>
 
         <SendButton onClick={handleSend} disabled={sending}>
@@ -518,7 +442,7 @@ function NotificationsTab() {
         ) : (
           <NotificationHistory>
             {sentNotifications.map((notif) => (
-              <NotificationHistoryItem key={notif._id}>
+              <NotificationHistoryItem key={notif.id}>
                 <NotificationHistoryHeader>
                   <NotificationHistoryTitle>{notif.title}</NotificationHistoryTitle>
                   <NotificationHistoryMeta>
@@ -729,14 +653,6 @@ const EmptyText = styled.p`
   padding: 20px;
 `;
 
-const LoadMoreText = styled.p`
-  text-align: center;
-  color: ${(props) => props.theme.textColor};
-  opacity: 0.5;
-  font-size: 12px;
-  margin-top: 16px;
-`;
-
 // Subscriber List
 const SubscriberList = styled.div`
   display: flex;
@@ -885,143 +801,6 @@ const ChecklistDetail = styled.span`
   margin-left: auto;
 `;
 
-// Quota Section
-const QuotaSection = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 16px;
-  margin-bottom: 24px;
-`;
-
-const QuotaCard = styled.div`
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 12px;
-  padding: 16px;
-`;
-
-const QuotaHeader = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 12px;
-`;
-
-const QuotaTier = styled.span<{ $tier: "tier1" | "tier2" }>`
-  font-size: 14px;
-  font-weight: 600;
-  color: ${(props) => (props.$tier === "tier1" ? "#a855f7" : "#ffd700")};
-`;
-
-const QuotaCount = styled.span`
-  font-size: 14px;
-  font-weight: 600;
-  color: ${(props) => props.theme.contrast};
-`;
-
-const QuotaBar = styled.div`
-  height: 8px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 4px;
-  overflow: hidden;
-`;
-
-const QuotaFill = styled.div<{ $percent: number; $tier: "tier1" | "tier2" }>`
-  height: 100%;
-  width: ${(props) => props.$percent}%;
-  background: ${(props) => (props.$tier === "tier1" ? "#a855f7" : "#ffd700")};
-  border-radius: 4px;
-  transition: width 0.3s ease;
-`;
-
-const QuotaDetails = styled.div`
-  display: flex;
-  justify-content: space-between;
-  margin-top: 8px;
-  font-size: 11px;
-  color: ${(props) => props.theme.textColor};
-  opacity: 0.6;
-`;
-
-// Content Section
-const ContentSection = styled.div`
-  margin-top: 24px;
-`;
-
-const ContentSectionHeader = styled.h3`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 0 0 4px;
-  font-size: 14px;
-  font-weight: 600;
-  color: ${(props) => props.theme.contrast};
-`;
-
-const ContentSectionDesc = styled.p`
-  margin: 0 0 12px;
-  font-size: 12px;
-  color: ${(props) => props.theme.textColor};
-  opacity: 0.6;
-`;
-
-const ContentList = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-`;
-
-const ContentItem = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 12px;
-  background: rgba(255, 255, 255, 0.02);
-  border-radius: 8px;
-  text-decoration: none;
-  color: inherit;
-  transition: background 0.15s ease;
-
-  &:hover {
-    background: rgba(255, 255, 255, 0.04);
-  }
-`;
-
-const ContentItemIcon = styled.div`
-  color: ${(props) => props.theme.linkColor};
-  opacity: 0.7;
-`;
-
-const ContentItemInfo = styled.div`
-  flex: 1;
-  min-width: 0;
-`;
-
-const ContentItemTitle = styled.div`
-  font-size: 13px;
-  font-weight: 500;
-  color: ${(props) => props.theme.contrast};
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-`;
-
-const ContentItemDesc = styled.div`
-  font-size: 11px;
-  color: ${(props) => props.theme.textColor};
-  opacity: 0.6;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-`;
-
-const ContentItemDate = styled.div`
-  font-size: 11px;
-  color: ${(props) => props.theme.textColor};
-  opacity: 0.5;
-  white-space: nowrap;
-`;
-
 // History
 const HistorySection = styled.div`
   margin-top: 24px;
@@ -1102,21 +881,6 @@ const FormRow = styled.div`
 
   @media (max-width: 600px) {
     grid-template-columns: 1fr;
-  }
-`;
-
-const CheckboxLabel = styled.label`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 13px;
-  color: ${(props) => props.theme.textColor};
-  cursor: pointer;
-  height: 42px;
-
-  input {
-    width: 16px;
-    height: 16px;
   }
 `;
 

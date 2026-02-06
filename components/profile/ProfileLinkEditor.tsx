@@ -1,4 +1,4 @@
-import { useMutation } from "convex/react";
+import { useMutation } from "@tanstack/react-query";
 import { AnimatePresence, m } from "framer-motion";
 import { ArrowDown, ArrowUp, Plus, Trash2, X } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
@@ -6,7 +6,7 @@ import { createPortal } from "react-dom";
 import styled from "styled-components";
 import { PROFILE_SERVICES, getServiceByKey } from "../../constants/profile-links";
 import { LOUNGE_COLORS } from "../../constants/theme";
-import { api } from "../../convex/_generated/api";
+import { updateProfileLinks } from "@/src/db/client/profile";
 
 interface ProfileLink {
   type: "service" | "custom";
@@ -33,7 +33,9 @@ export function ProfileLinkEditor({ isOpen, onClose, currentLinks, userTier }: P
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
 
-  const updateProfileLinks = useMutation(api.userProfiles.updateProfileLinks);
+  const updateProfileLinksMutation = useMutation({
+    mutationFn: (links: ProfileLink[]) => updateProfileLinks(links),
+  });
 
   // Sync when modal opens
   useEffect(() => {
@@ -107,7 +109,7 @@ export function ProfileLinkEditor({ isOpen, onClose, currentLinks, userTier }: P
     setSaving(true);
     setError("");
     try {
-      await updateProfileLinks({ links });
+      await updateProfileLinksMutation.mutateAsync(links);
       onClose();
     } catch (e: any) {
       setError(e.message || "Failed to save links");

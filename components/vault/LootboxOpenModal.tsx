@@ -1,14 +1,13 @@
-import { useMutation } from "convex/react";
+import { useMutation } from "@tanstack/react-query";
 import { X } from "lucide-react";
 import { useCallback, useState } from "react";
 import styled, { keyframes } from "styled-components";
 import { RARITY_COLORS, type Rarity } from "../../constants/rarity";
-import { api } from "../../convex/_generated/api";
-import type { Id } from "../../convex/_generated/dataModel";
+import { openLootbox } from "@/src/db/client/inventory";
 
 interface LootboxOpenModalProps {
   lootbox: {
-    _id: Id<"userLootboxes">;
+    id: number;
     displayName: string;
     boxStyle: string;
   };
@@ -17,7 +16,7 @@ interface LootboxOpenModalProps {
 }
 
 interface RevealedItem {
-  _id: string;
+  id: number;
   name: string;
   rarity: string;
   iconUrl?: string | null;
@@ -34,7 +33,9 @@ const BOX_EMOJIS: Record<string, string> = {
 type Phase = "idle" | "shaking" | "opening" | "revealing" | "done";
 
 export function LootboxOpenModal({ lootbox, onClose, onOpened }: LootboxOpenModalProps) {
-  const openLootbox = useMutation(api.inventory.openLootbox);
+  const openLootboxMutation = useMutation({
+    mutationFn: (lootboxId: number) => openLootbox(lootboxId),
+  });
   const [phase, setPhase] = useState<Phase>("idle");
   const [revealedItems, setRevealedItems] = useState<RevealedItem[]>([]);
   const [revealIndex, setRevealIndex] = useState(0);
@@ -47,7 +48,7 @@ export function LootboxOpenModal({ lootbox, onClose, onOpened }: LootboxOpenModa
     setPhase("opening");
 
     try {
-      const result = await openLootbox({ lootboxId: lootbox._id });
+      const result = await openLootboxMutation.mutateAsync(lootbox.id);
 
       // Simulate item reveal delay
       await new Promise((r) => setTimeout(r, 800));
@@ -70,7 +71,7 @@ export function LootboxOpenModal({ lootbox, onClose, onOpened }: LootboxOpenModa
       alert(error instanceof Error ? error.message : "Failed to open lootbox");
       setPhase("idle");
     }
-  }, [openLootbox, lootbox._id, onOpened]);
+  }, [openLootboxMutation, lootbox.id, onOpened]);
 
   return (
     <Overlay>

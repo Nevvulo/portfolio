@@ -1,10 +1,10 @@
 import { faDiscord, faTwitch } from "@fortawesome/free-brands-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { useQuery } from "convex/react";
+import { useQuery as useRQ } from "@tanstack/react-query";
 import { Check, Link2, X } from "lucide-react";
 import Link from "next/link";
 import styled from "styled-components";
-import { api } from "../../../convex/_generated/api";
+import { getMyProfile } from "@/src/db/actions/dashboard";
 import { WidgetContainer } from "./WidgetContainer";
 
 // Roblox doesn't have a FontAwesome icon — keep inline SVG
@@ -17,11 +17,14 @@ function RobloxIcon({ size = 14 }: { size?: number }) {
 }
 
 export function IntegrationsWidget() {
-  const user = useQuery(api.users.getMe);
-  const linkedRoblox = useQuery(api.roblox.getLinkedRoblox);
+  const { data: user } = useRQ({
+    queryKey: ["myProfile"],
+    queryFn: () => getMyProfile(),
+    staleTime: 30_000,
+  });
 
   const hasDiscord = !!user?.discordId;
-  const hasRoblox = !!linkedRoblox?.robloxUserId;
+  const hasRoblox = !!user?.robloxUserId;
   const hasTwitch = !!user?.twitchUsername;
 
   return (

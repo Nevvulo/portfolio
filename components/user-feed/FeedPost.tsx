@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from "convex/react";
+import { useMutation, useQuery as useRQ } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
 import { AnimatePresence, m } from "framer-motion";
 import {
@@ -21,13 +21,19 @@ import Link from "next/link";
 import { useCallback, useState } from "react";
 import styled from "styled-components";
 import { LOUNGE_COLORS } from "@/constants/theme";
-import { api } from "@/convex/_generated/api";
-import type { Id } from "@/convex/_generated/dataModel";
+import {
+  toggleFeedReaction,
+  deleteFeedPost,
+  repostFeedPost,
+  getUserReaction,
+  hasUserReposted,
+  getReplies,
+} from "@/src/db/actions/feed";
 import { renderSafeMarkdown } from "@/lib/safeMd";
 import { FeedComposer } from "./FeedComposer";
 
 interface Author {
-  _id: Id<"users">;
+  id: number;
   displayName: string;
   username?: string;
   avatarUrl?: string;
@@ -41,7 +47,7 @@ interface Reactions {
 }
 
 interface RepostedBlogPost {
-  _id: Id<"blogPosts">;
+  id: number;
   slug: string;
   title: string;
   description: string;
@@ -53,9 +59,9 @@ interface RepostedBlogPost {
 }
 
 export interface FeedPostData {
-  _id: Id<"userFeedPosts">;
-  authorId: Id<"users">;
-  profileUserId: Id<"users">;
+  id: number;
+  authorId: number;
+  profileUserId: number;
   content: string;
   replyDepth: number;
   replyCount: number;
@@ -67,15 +73,15 @@ export interface FeedPostData {
     height?: number;
   }>;
   isDeleted: boolean;
-  createdAt: number;
-  editedAt?: number;
+  createdAt: number | string | Date;
+  editedAt?: number | string | Date;
   author: Author | null;
   reactions: Reactions;
   replies?: FeedPostData[];
   hasMoreReplies?: boolean;
-  repostOfFeedId?: Id<"userFeedPosts">;
+  repostOfFeedId?: number;
   repostedFeedPost?: (FeedPostData & { author: Author | null }) | null;
-  repostOfPostId?: Id<"blogPosts">;
+  repostOfPostId?: number;
   repostedPost?: RepostedBlogPost | null;
 }
 
@@ -83,10 +89,10 @@ interface FeedPostProps {
   post: FeedPostData;
   depth?: number;
   maxVisualDepth?: number;
-  onReply?: (postId: Id<"userFeedPosts">) => void;
-  currentUserId?: Id<"users">;
+  onReply?: (postId: number) => void;
+  currentUserId?: number;
   isProfileOwner?: boolean;
-  profileUserId?: Id<"users">;
+  profileUserId?: number;
   onReplySuccess?: () => void;
   // Thread focusing - bubbles up to FeedList to render at full width
   onFocusThread?: (post: FeedPostData, breadcrumb: string[]) => void;
@@ -110,11 +116,24 @@ export function FeedPost({
   const [showReplies, setShowReplies] = useState(depth < 2);
   const [isReplying, setIsReplying] = useState(false);
 
-  const toggleReaction = useMutation(api.userFeed.toggleReaction);
-  const deletePostMutation = useMutation(api.userFeed.deletePost);
-  const repostMutation = useMutation(api.userFeed.repost);
-  const userReaction = useQuery(api.userFeed.getUserReaction, { postId: post._id });
-  const hasReposted = useQuery(api.userFeed.hasUserReposted, { postId: post._id });
+  const toggleReactionMutation = useMutation({
+    mutationFn: (args: { postId: number; type: "like" | "heart" | "fire" }) =>
+      toggleFeedReaction(args),
+  });
+  const deletePostMutation = useMutation({
+    mutationFn: (postId: number) => deleteFeedPost(postId),
+  });
+  const repostMutation = useMutation({
+    mutationFn: (originalPostId: number) => repostFeedPost(originalPostId),
+  });
+  const { data: userReaction } = useRQ({
+    queryKey: ["feedUserReaction", post.id],
+    queryFn: () => getUserReaction(post.id),
+  });
+  const { data: hasReposted } = useRQ({
+    queryKey: ["feedHasReposted", post.id],
+    queryFn: () => hasUserReposted(post.id),
+  });
   const [isReposting, setIsReposting] = useState(false);
 
   // Check if this is a repost (feed post or blog post)
@@ -124,10 +143,11 @@ export function FeedPost({
 
   // Fetch replies on demand for posts without loaded replies
   const needsRepliesFetch = post.replyCount > 0 && (!post.replies || post.replies.length === 0);
-  const fetchedReplies = useQuery(
-    api.userFeed.getReplies,
-    needsRepliesFetch ? { parentId: post._id, limit: 20 } : "skip",
-  );
+  const { data: fetchedReplies } = useRQ({
+    queryKey: ["feedReplies", post.id],
+    queryFn: () => getReplies({ parentId: post.id, limit: 20 }),
+    enabled: needsRepliesFetch,
+  });
 
   // Use fetched replies if we don't have them inline
   const effectiveReplies =
@@ -140,22 +160,22 @@ export function FeedPost({
   const handleReaction = useCallback(
     async (type: "like" | "heart" | "fire") => {
       try {
-        await toggleReaction({ postId: post._id, type });
+        await toggleReactionMutation.mutateAsync({ postId: post.id, type });
       } catch (err) {
         console.error("Failed to toggle reaction:", err);
       }
     },
-    [toggleReaction, post._id],
+    [toggleReactionMutation, post.id],
   );
 
   const handleDelete = useCallback(async () => {
     if (!confirm("Are you sure you want to delete this post?")) return;
     try {
-      await deletePostMutation({ postId: post._id });
+      await deletePostMutation.mutateAsync(post.id);
     } catch (err) {
       console.error("Failed to delete post:", err);
     }
-  }, [deletePostMutation, post._id]);
+  }, [deletePostMutation, post.id]);
 
   // Reply handling - inline composer available at any depth
   const canReplyInline = profileUserId && currentUserId;
@@ -164,9 +184,9 @@ export function FeedPost({
     if (canReplyInline) {
       setIsReplying(true);
     } else if (onReply) {
-      onReply(post._id);
+      onReply(post.id);
     }
-  }, [canReplyInline, onReply, post._id]);
+  }, [canReplyInline, onReply, post.id]);
 
   const handleRepostClick = useCallback(async () => {
     if (!currentUserId || isReposting || hasReposted) return;
@@ -176,8 +196,8 @@ export function FeedPost({
     setIsReposting(true);
     try {
       // Don't repost a repost - repost the original instead
-      const targetPostId = post.repostOfFeedId || post._id;
-      await repostMutation({ originalPostId: targetPostId });
+      const targetPostId = post.repostOfFeedId || post.id;
+      await repostMutation.mutateAsync(targetPostId);
     } catch (err) {
       console.error("Failed to repost:", err);
     } finally {
@@ -188,7 +208,7 @@ export function FeedPost({
     isReposting,
     hasReposted,
     post.authorId,
-    post._id,
+    post.id,
     post.repostOfFeedId,
     repostMutation,
   ]);
@@ -235,14 +255,14 @@ export function FeedPost({
         <PostHeader>
           <AuthorSection>
             {post.author?.avatarUrl ? (
-              <AuthorAvatar as={Link} href={`/@${post.author.username || post.author._id}`}>
+              <AuthorAvatar as={Link} href={`/@${post.author.username || post.author.id}`}>
                 <AvatarImg src={post.author.avatarUrl} alt={post.author.displayName} />
               </AuthorAvatar>
             ) : (
               <AvatarPlaceholder />
             )}
             <AuthorInfo>
-              <AuthorName as={Link} href={`/@${post.author?.username || post.author?._id}`}>
+              <AuthorName as={Link} href={`/@${post.author?.username || post.author?.id}`}>
                 {post.author?.displayName || "Unknown"}
                 {post.author?.isCreator && <CreatorBadge>Creator</CreatorBadge>}
               </AuthorName>
@@ -309,7 +329,7 @@ export function FeedPost({
               {post.repostedFeedPost.author?.avatarUrl ? (
                 <RepostedAvatar
                   as={Link}
-                  href={`/@${post.repostedFeedPost.author.username || post.repostedFeedPost.author._id}`}
+                  href={`/@${post.repostedFeedPost.author.username || post.repostedFeedPost.author.id}`}
                 >
                   <img
                     src={post.repostedFeedPost.author.avatarUrl}
@@ -322,7 +342,7 @@ export function FeedPost({
               <RepostedAuthorInfo>
                 <RepostedAuthorName
                   as={Link}
-                  href={`/@${post.repostedFeedPost.author?.username || post.repostedFeedPost.author?._id}`}
+                  href={`/@${post.repostedFeedPost.author?.username || post.repostedFeedPost.author?.id}`}
                 >
                   {post.repostedFeedPost.author?.displayName || "Unknown"}
                 </RepostedAuthorName>
@@ -460,7 +480,7 @@ export function FeedPost({
               </ReplyIndicator>
               <FeedComposer
                 profileUserId={profileUserId}
-                parentId={post._id}
+                parentId={post.id}
                 placeholder="Write a reply..."
                 onSuccess={handleReplySuccessInternal}
                 onCancel={() => setIsReplying(false)}
@@ -484,7 +504,7 @@ export function FeedPost({
                 ? // Render nested inline for shallow depths
                   effectiveReplies.map((reply) => (
                     <FeedPost
-                      key={reply._id}
+                      key={reply.id}
                       post={reply}
                       depth={depth + 1}
                       maxVisualDepth={maxVisualDepth}
@@ -498,7 +518,7 @@ export function FeedPost({
                   ))
                 : // At depth limit - show expandable thread previews (clickable cards)
                   effectiveReplies.map((reply) => (
-                    <ThreadPreview key={reply._id} onClick={() => handleThreadClick(reply)}>
+                    <ThreadPreview key={reply.id} onClick={() => handleThreadClick(reply)}>
                       <ThreadPreviewAvatar>
                         {reply.author?.avatarUrl ? (
                           <img src={reply.author.avatarUrl} alt={reply.author.displayName} />

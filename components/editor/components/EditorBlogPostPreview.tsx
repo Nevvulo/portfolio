@@ -1,11 +1,15 @@
 import { type NodeViewProps, NodeViewWrapper } from "@tiptap/react";
-import { useQuery } from "convex/react";
-import { api } from "../../../convex/_generated/api";
+import { useQuery as useRQ } from "@tanstack/react-query";
+import { getPostBySlug as getPostBySlugAction } from "@/src/db/client/queries";
 import { BlogPostPreviewWrapper, ComponentWrapper } from "../styles";
 
 export function EditorBlogPostPreview({ node, selected, updateAttributes }: NodeViewProps) {
   const id = node.attrs.id as string | undefined;
-  const post = useQuery(api.blogPosts.getBySlug, id ? { slug: id } : "skip");
+  const { data: post, isLoading } = useRQ({
+    queryKey: ["postBySlug", id],
+    queryFn: () => getPostBySlugAction(id!),
+    enabled: !!id,
+  });
 
   const handleIdChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     updateAttributes({ id: e.target.value });
@@ -40,9 +44,9 @@ export function EditorBlogPostPreview({ node, selected, updateAttributes }: Node
                 }}
               />
             </div>
-          ) : post === undefined ? (
+          ) : isLoading ? (
             <div className="preview-loading">Loading post...</div>
-          ) : post === null ? (
+          ) : !post ? (
             <div className="preview-loading">Post not found: {id}</div>
           ) : (
             <>

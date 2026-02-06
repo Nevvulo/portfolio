@@ -1,8 +1,7 @@
-import { ConvexHttpClient } from "convex/browser";
+import { and, eq } from "drizzle-orm";
 import type { NextApiRequest, NextApiResponse } from "next";
-import { api } from "../../../../convex/_generated/api";
-
-const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
+import { db } from "@/src/db";
+import { inventoryItems } from "@/src/db/schema";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "GET") {
@@ -21,8 +20,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const items = await convex.query(api.inventory.getPublicItemCatalog, {});
-    const item = items.find((i: { slug: string }) => i.slug === slug);
+    const item = await db.query.inventoryItems.findFirst({
+      where: and(eq(inventoryItems.slug, slug), eq(inventoryItems.isArchived, false)),
+    });
 
     if (!item) {
       return res.status(404).json({ error: "Item not found" });

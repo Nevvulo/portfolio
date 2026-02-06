@@ -1,11 +1,11 @@
 import { useUser } from "@clerk/nextjs";
-import { useQuery } from "convex/react";
+import { useQuery as useRQ } from "@tanstack/react-query";
 import Head from "next/head";
 import { useEffect, useState } from "react";
 import styled from "styled-components";
 import { BlogView } from "../../components/layout/blog";
 import { SimpleNavbar } from "../../components/navbar/simple";
-import { api } from "../../convex/_generated/api";
+import { getPostsForBento as getPostsForBentoAction, getWatchHistory as getWatchHistoryAction } from "@/src/db/client/queries";
 
 interface RecommendationScore {
   slug: string;
@@ -13,7 +13,7 @@ interface RecommendationScore {
 }
 
 interface DebugPost {
-  _id: string;
+  id: string;
   slug: string;
   title: string;
   contentType: "article" | "video" | "news";
@@ -52,12 +52,16 @@ export default function LearnDebug() {
   const [recScores, setRecScores] = useState<RecommendationScore[]>([]);
   const [simulateNoHistory, setSimulateNoHistory] = useState(false);
 
-  const allPosts = useQuery(api.blogPosts.getForBento, {});
+  const { data: allPosts } = useRQ({
+    queryKey: ["posts", "bento"],
+    queryFn: () => getPostsForBentoAction(),
+  });
   const basePosts = allPosts?.filter((p) => p.contentType !== "news");
-  const watchHistory = useQuery(
-    api.articleWatchTime.getUserWatchHistory,
-    isSignedIn ? { limit: 50 } : "skip",
-  );
+  const { data: watchHistory } = useRQ({
+    queryKey: ["watchHistory", "mine"],
+    queryFn: () => getWatchHistoryAction(50),
+    enabled: !!isSignedIn,
+  });
 
   useEffect(() => {
     if (!isSignedIn || !user?.id || !basePosts || !watchHistory || simulateNoHistory) {
@@ -72,8 +76,8 @@ export default function LearnDebug() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             clerkId: user.id,
-            watchHistory: watchHistory.map((w) => ({
-              slug: w.slug,
+            watchHistory: watchHistory.map((w: any) => ({
+              slug: w.slug ?? w.postSlug,
               totalSeconds: w.totalSeconds,
             })),
             posts: basePosts.map((p) => ({
@@ -97,15 +101,30 @@ export default function LearnDebug() {
     fetchRecs();
   }, [isSignedIn, user?.id, basePosts, watchHistory, simulateNoHistory]);
 
-  const debugData = useQuery(
-    api.blogPosts.getForBentoDebug,
-    basePosts
-      ? {
-          excludeNews: true,
-          recommendationScores: recScores.length > 0 && !simulateNoHistory ? recScores : undefined,
+  const [debugData, setDebugData] = useState<DebugResponse | undefined>(undefined);
+
+  useEffect(() => {
+    if (!basePosts) return;
+    const fetchDebug = async () => {
+      try {
+        const response = await fetch("/api/recommendations/debug", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            excludeNews: true,
+            recommendationScores: recScores.length > 0 && !simulateNoHistory ? recScores : undefined,
+          }),
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setDebugData(data);
         }
-      : "skip",
-  ) as DebugResponse | undefined;
+      } catch {
+        // Silently fail
+      }
+    };
+    fetchDebug();
+  }, [basePosts, recScores, simulateNoHistory]);
 
   if (!isSignedIn) {
     return (
@@ -169,7 +188,7 @@ export default function LearnDebug() {
 
             <PostList>
               {debugData.posts.map((post, index) => (
-                <PostCard key={post._id} $isFeatured={post.debug.isFeatured}>
+                <PostCard key={post.id} $isFeatured={post.debug.isFeatured}>
                   <RankBadge $rank={index}>{index + 1}</RankBadge>
 
                   <PostInfo>

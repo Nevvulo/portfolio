@@ -1,9 +1,9 @@
-import { useQuery } from "convex/react";
+import { useQuery as useRQ } from "@tanstack/react-query";
 import { Calendar, ChevronLeft, ChevronRight, Radio } from "lucide-react";
 import Image from "next/image";
 import { useCallback, useEffect, useState } from "react";
 import styled, { keyframes } from "styled-components";
-import { api } from "../../../convex/_generated/api";
+import { getStreamSettingsAction, getUpcomingEventsAction } from "@/src/db/actions/queries";
 import { LOUNGE_COLORS } from "../../../constants/theme";
 import { WidgetContainer } from "./WidgetContainer";
 
@@ -19,11 +19,26 @@ interface TwitchVod {
 
 interface LiveWidgetProps {
   isLive: boolean;
+  streamSettings?: any;
+  upcomingEvents?: any[];
 }
 
-export function LiveWidget({ isLive }: LiveWidgetProps) {
-  const streamSettings = useQuery(api.stream.getStreamSettings);
-  const upcomingEvents = useQuery(api.stream.getUpcomingEvents);
+export function LiveWidget({ isLive, streamSettings: externalSettings, upcomingEvents: externalEvents }: LiveWidgetProps) {
+  const { data: fetchedSettings } = useRQ({
+    queryKey: ["streamSettings"],
+    queryFn: () => getStreamSettingsAction(),
+    enabled: !externalSettings,
+    staleTime: 60_000,
+  });
+  const streamSettings = externalSettings ?? fetchedSettings;
+
+  const { data: fetchedEvents } = useRQ({
+    queryKey: ["upcomingEvents"],
+    queryFn: () => getUpcomingEventsAction(),
+    enabled: !externalEvents,
+    staleTime: 60_000,
+  });
+  const upcomingEvents = externalEvents ?? fetchedEvents;
   const [vods, setVods] = useState<TwitchVod[]>([]);
   const [vodIndex, setVodIndex] = useState(0);
 

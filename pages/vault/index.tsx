@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from "convex/react";
+import { useMutation, useQuery as useRQ } from "@tanstack/react-query";
 import { Gift, Package, Sparkles } from "lucide-react";
 import Head from "next/head";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -7,8 +7,7 @@ import { BlogView } from "../../components/layout/blog";
 import { SimpleNavbar } from "../../components/navbar/simple";
 import { PreviewModal, VaultCard, VaultGrid, type VaultItem } from "../../components/vault";
 import { RARITY_COLORS, type Rarity } from "../../constants/rarity";
-import { api } from "../../convex/_generated/api";
-import type { Id } from "../../convex/_generated/dataModel";
+import { getVaultContent, getAvailableClaimables, claimTierItem } from "@/src/db/client/inventory";
 
 const ITEMS_PER_PAGE = 12;
 
@@ -20,14 +19,19 @@ export default function VaultPage() {
   const loadMoreRef = useRef<HTMLDivElement>(null);
 
   // Claimables data
-  const claimables = useQuery(api.inventory.getAvailableClaimables);
-  const claimTierItem = useMutation(api.inventory.claimTierItem);
-  const [claimingId, setClaimingId] = useState<string | null>(null);
+  const { data: claimables } = useRQ({
+    queryKey: ["claimables"],
+    queryFn: () => getAvailableClaimables(),
+  });
+  const claimTierItemMutation = useMutation({
+    mutationFn: (tierClaimableId: number) => claimTierItem(tierClaimableId),
+  });
+  const [claimingId, setClaimingId] = useState<number | null>(null);
 
   // Vault files pagination
-  const result = useQuery(api.vault.getVaultContent, {
-    limit: ITEMS_PER_PAGE,
-    offset,
+  const { data: result } = useRQ({
+    queryKey: ["vault", "content", offset],
+    queryFn: () => getVaultContent(ITEMS_PER_PAGE, offset),
   });
 
   useEffect(() => {
@@ -36,8 +40,8 @@ export default function VaultPage() {
         if (offset === 0) {
           return result.items as VaultItem[];
         }
-        const existingIds = new Set(prev.map((i) => i._id));
-        const newItems = result.items.filter((i) => !existingIds.has(i._id));
+        const existingIds = new Set(prev.map((i) => i.id));
+        const newItems = result.items.filter((i) => !existingIds.has(i.id));
         return [...prev, ...(newItems as VaultItem[])];
       });
       setIsLoadingMore(false);
@@ -71,10 +75,10 @@ export default function VaultPage() {
     return () => observer.disconnect();
   }, [handleLoadMore, hasItems]);
 
-  const handleClaim = async (tierClaimableId: Id<"tierClaimables">) => {
+  const handleClaim = async (tierClaimableId: number) => {
     setClaimingId(tierClaimableId);
     try {
-      await claimTierItem({ tierClaimableId });
+      await claimTierItemMutation.mutateAsync(tierClaimableId);
     } catch (error) {
       alert(error instanceof Error ? error.message : "Failed to claim item");
     } finally {
@@ -111,7 +115,7 @@ export default function VaultPage() {
                 const rarity = item.rarity as Rarity;
                 const config = RARITY_COLORS[rarity] || RARITY_COLORS.common;
                 return (
-                  <ClaimCard key={claimable._id} $glowColor={config.color}>
+                  <ClaimCard key={claimable.id} $glowColor={config.color}>
                     <ClaimCardGlow $gradient={config.gradient} />
                     {item.iconUrl ? (
                       <ClaimIcon src={item.iconUrl} alt={item.name} />
@@ -124,10 +128,10 @@ export default function VaultPage() {
                     <ClaimRarity $color={config.color}>{config.label}</ClaimRarity>
                     {claimable.headline && <ClaimHeadline>{claimable.headline}</ClaimHeadline>}
                     <ClaimButton
-                      onClick={() => handleClaim(claimable._id)}
-                      disabled={claimingId === claimable._id}
+                      onClick={() => handleClaim(claimable.id)}
+                      disabled={claimingId === claimable.id}
                     >
-                      {claimingId === claimable._id ? "Claiming..." : "Claim"}
+                      {claimingId === claimable.id ? "Claiming..." : "Claim"}
                     </ClaimButton>
                   </ClaimCard>
                 );
@@ -153,7 +157,7 @@ export default function VaultPage() {
             <>
               <VaultGrid>
                 {accumulatedItems.map((item) => (
-                  <VaultCard key={item._id} item={item} onPreview={(item) => setPreviewItem(item)} />
+                  <VaultCard key={item.id} item={item} onPreview={(item) => setPreviewItem(item)} />
                 ))}
               </VaultGrid>
               <LoadMoreTrigger ref={loadMoreRef}>

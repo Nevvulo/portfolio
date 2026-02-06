@@ -1,5 +1,5 @@
 import { useUser } from "@clerk/nextjs";
-import { useQuery } from "convex/react";
+import { useQuery as useRQ } from "@tanstack/react-query";
 import { m } from "framer-motion";
 import {
   ChevronDown,
@@ -11,12 +11,11 @@ import {
   Pencil,
   Share2,
 } from "lucide-react";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 import { type RefObject, useCallback, useEffect, useState } from "react";
 import styled from "styled-components";
 import { LOUNGE_COLORS } from "@/constants/theme";
-import { api } from "@/convex/_generated/api";
-import type { Id } from "@/convex/_generated/dataModel";
+import { canEditPost } from "@/src/db/actions/blog";
 import { ReactionFan } from "./ReactionFan";
 import { ReportModal } from "./ReportModal";
 import { ToolbarButton } from "./ToolbarButton";
@@ -28,7 +27,7 @@ interface TOCItem {
 }
 
 interface FloatingToolbarProps {
-  postId: Id<"blogPosts">;
+  postId: number;
   postSlug: string;
   postTitle: string;
   headings: TOCItem[];
@@ -42,7 +41,7 @@ interface FloatingToolbarProps {
 
 // Props for the mobile toolbar content (used by MobileTOCBar)
 export interface MobileToolbarContentProps {
-  postId: Id<"blogPosts">;
+  postId: number;
   postSlug: string;
   postTitle: string;
   headings: TOCItem[];
@@ -75,7 +74,11 @@ export function FloatingToolbar({
   const [reportModalOpen, setReportModalOpen] = useState(false);
 
   // Check if user can edit this post
-  const canEdit = useQuery(api.blogPosts.canEdit, { postId });
+  const { data: canEdit } = useRQ({
+    queryKey: ["canEditPost", postId],
+    queryFn: () => canEditPost(postId),
+    staleTime: 60_000,
+  });
 
   useEffect(() => {
     setMounted(true);
@@ -332,7 +335,11 @@ export function MobileToolbarContent({
   const [reportModalOpen, setReportModalOpen] = useState(false);
 
   // Check if user can edit this post
-  const canEdit = useQuery(api.blogPosts.canEdit, { postId });
+  const { data: canEdit } = useRQ({
+    queryKey: ["canEditPost", postId],
+    queryFn: () => canEditPost(postId),
+    staleTime: 60_000,
+  });
 
   // Navigation functions
   const scrollToHeading = useCallback((id: string) => {

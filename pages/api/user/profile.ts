@@ -1,11 +1,9 @@
 import { clerkClient, getAuth } from "@clerk/nextjs/server";
-import { ConvexHttpClient } from "convex/browser";
+import { eq } from "drizzle-orm";
 import type { NextApiRequest, NextApiResponse } from "next";
-import { api } from "../../../convex/_generated/api";
+import { db } from "@/src/db";
+import { users } from "@/src/db/schema";
 import { filterBio } from "../../../lib/word-filter";
-
-// Initialize Convex client
-const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   // Only allow PATCH
@@ -30,15 +28,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(400).json({ error: filterResult.reason });
       }
 
-      // Update in Convex
-      const token = await getAuth(req).getToken({ template: "convex" });
-      if (token) {
-        convex.setAuth(token);
-      }
-
-      await convex.mutation(api.userProfiles.updateBio, {
-        bio: filterResult.filtered || "",
-      });
+      // Update bio in Postgres
+      await db
+        .update(users)
+        .set({ bio: filterResult.filtered || "" })
+        .where(eq(users.clerkId, userId));
     }
 
     // Handle privacy toggle (stored in Clerk publicMetadata)

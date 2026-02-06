@@ -1,13 +1,13 @@
 import { useUser } from "@clerk/nextjs";
-import { useMutation, useQuery } from "convex/react";
+import { useQuery as useRQ, useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, m } from "framer-motion";
 import { Heart, Lightbulb, Smile, ThumbsUp } from "lucide-react";
 import type React from "react";
 import { useEffect, useRef, useState } from "react";
 import styled, { css, keyframes } from "styled-components";
 import { LOUNGE_COLORS } from "@/constants/theme";
-import { api } from "@/convex/_generated/api";
-import type { Id } from "@/convex/_generated/dataModel";
+import { getReactionCounts, getMyReactions, getAnonymousReactionBudget } from "@/src/db/actions/reactions";
+import { toggleReaction, addAnonymousReaction } from "@/src/db/actions/blog";
 
 type ReactionType = "like" | "helpful" | "insightful";
 
@@ -18,7 +18,7 @@ const REACTIONS: { type: ReactionType; icon: React.ReactNode; label: string; col
 ];
 
 interface ReactionFanProps {
-  postId: Id<"blogPosts">;
+  postId: number;
   isExpanded: boolean;
   onToggle: () => void;
   expandDirection?: "right" | "left";
@@ -46,9 +46,9 @@ export function ReactionFan({
   expandDirection = "right",
 }: ReactionFanProps) {
   const { isSignedIn } = useUser();
+  const queryClient = useQueryClient();
   const [isLoading, setIsLoading] = useState(false);
   const [clientIp, setClientIp] = useState<string | null>(null);
-  const hasGrantedXp = useRef(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Track reaction animations
@@ -72,14 +72,27 @@ export function ReactionFan({
     }
   }, [isSignedIn]);
 
-  const counts = useQuery(api.blogReactions.getCounts, { postId });
-  const myReaction = useQuery(api.blogReactions.getMyReaction, { postId });
-  const anonymousReactions = useQuery(
-    api.blogReactions.getAnonymousReactions,
-    !isSignedIn && clientIp ? { postId, ip: clientIp } : "skip",
-  );
-  const react = useMutation(api.blogReactions.react);
-  const grantReactionXp = useMutation(api.experience.grantReactionXp);
+  const { data: counts } = useRQ({
+    queryKey: ["reactionCounts", postId],
+    queryFn: () => getReactionCounts(postId),
+    staleTime: 5_000,
+  });
+  const { data: myReactions } = useRQ({
+    queryKey: ["myReactions", postId],
+    queryFn: () => getMyReactions(postId),
+    staleTime: 5_000,
+    enabled: isSignedIn,
+  });
+  // Derive the active reaction type (the one with count > 0)
+  const myReaction: ReactionType | null = myReactions
+    ? (["like", "helpful", "insightful"] as ReactionType[]).find((t) => myReactions[t] > 0) ?? null
+    : null;
+  const { data: anonymousReactions } = useRQ({
+    queryKey: ["anonReactionBudget", postId, clientIp],
+    queryFn: () => getAnonymousReactionBudget(postId, clientIp!),
+    enabled: !isSignedIn && !!clientIp,
+    staleTime: 5_000,
+  });
 
   const totalReactions = counts ? counts.like + counts.helpful + counts.insightful : 0;
 
@@ -120,33 +133,30 @@ export function ReactionFan({
 
   const handleReact = async (type: ReactionType) => {
     if (isLoading) return;
-
-    const hadNoReaction = !myReaction;
-
     setIsLoading(true);
     try {
-      // For anonymous users, fetch IP on-demand if not already loaded
-      let ip = clientIp;
-      if (!isSignedIn && !ip) {
-        try {
-          const res = await fetch("/api/client-ip");
-          const data = await res.json();
-          ip = data.ip;
-          setClientIp(ip);
-        } catch {
-          // If IP fetch fails, still try (backend will handle)
+      if (isSignedIn) {
+        await toggleReaction(postId, type);
+      } else {
+        let ip = clientIp;
+        if (!ip) {
+          try {
+            const res = await fetch("/api/client-ip");
+            const data = await res.json();
+            ip = data.ip;
+            setClientIp(ip);
+          } catch {
+            // If IP fetch fails, still try
+          }
+        }
+        if (ip) {
+          await addAnonymousReaction(postId, type, ip);
         }
       }
-
-      await react({
-        postId,
-        type,
-        ip: isSignedIn ? undefined : (ip ?? undefined),
-      });
-      if (isSignedIn && hadNoReaction && !hasGrantedXp.current) {
-        hasGrantedXp.current = true;
-        grantReactionXp({ postId }).catch(console.error);
-      }
+      // Invalidate reaction queries to refetch
+      queryClient.invalidateQueries({ queryKey: ["reactionCounts", postId] });
+      queryClient.invalidateQueries({ queryKey: ["myReactions", postId] });
+      queryClient.invalidateQueries({ queryKey: ["anonReactionBudget", postId] });
     } catch (error) {
       console.error("Failed to react:", error);
     } finally {

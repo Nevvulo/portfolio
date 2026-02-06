@@ -1,11 +1,11 @@
-import { useQuery } from "convex/react";
+import { useQuery as useRQ } from "@tanstack/react-query";
 import { Pencil, Plus, Users } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import styled from "styled-components";
 import loungeIcon from "../../../assets/img/lounge.png";
 import personalAtIcon from "../../../assets/img/personal-at.png";
-import { api } from "../../../convex/_generated/api";
+import { getMe } from "@/src/db/client/me";
 import { LOUNGE_COLORS } from "../../../constants/theme";
 import type { DiscordWidget } from "../../../types/discord";
 import { WidgetContainer } from "./WidgetContainer";
@@ -25,8 +25,12 @@ interface CommunityWidgetProps {
 
 export function CommunityWidget({ discordWidget }: CommunityWidgetProps) {
   const onlineCount = discordWidget?.presence_count ?? 0;
-  const convexUser = useQuery(api.users.getMe);
-  const username = convexUser?.username;
+  const { data: user } = useRQ({
+    queryKey: ["me"],
+    queryFn: () => getMe(),
+    staleTime: 30_000,
+  });
+  const username = user?.username;
   const profileHandle = username ? `@${username}` : "@you";
 
   return (

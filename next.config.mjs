@@ -10,9 +10,26 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  // Turbopack configuration - dynamically set root to current directory
+  // Turbopack configuration
   turbopack: {
     root: __dirname,
+    resolveAlias: {
+      // Pages Router doesn't respect "use server" module boundaries, so Turbopack
+      // traces @clerk/nextjs/server into client bundles and hits "server-only".
+      // { browser } applies only to client bundles — server keeps the real module.
+      "@clerk/nextjs/server": {
+        browser: "./src/lib/clerk-server-stub.ts",
+      },
+    },
+  },
+
+  // Same fix for Webpack: on client builds, replace @clerk/nextjs/server with
+  // an empty module so its "server-only" guard doesn't fire.
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      config.resolve.alias["@clerk/nextjs/server"] = false;
+    }
+    return config;
   },
 
   // Experimental features for maximum performance

@@ -4,16 +4,15 @@ import React, { useCallback, useState } from "react";
 import { createPortal } from "react-dom";
 import styled from "styled-components";
 import { LOUNGE_COLORS } from "@/constants/theme";
-import type { Id } from "@/convex/_generated/dataModel";
 
 interface HighlightWithUser {
-  _id: Id<"contentHighlights">;
+  id: string;
   highlightedText: string;
   prefix: string;
   suffix: string;
   createdAt: number;
   user: {
-    _id: Id<"users">;
+    id: string;
     displayName: string;
     username?: string;
     avatarUrl?: string;
@@ -22,7 +21,7 @@ interface HighlightWithUser {
 
 interface GroupedHighlights {
   user: {
-    _id: Id<"users">;
+    id: string;
     displayName: string;
     username?: string;
     avatarUrl?: string;
@@ -84,7 +83,7 @@ export function HighlightModal({
   // Expand all users by default when modal opens
   React.useEffect(() => {
     if (isOpen) {
-      setExpandedUsers(new Set(highlightsByUser.map((g) => g.user._id.toString())));
+      setExpandedUsers(new Set(highlightsByUser.map((g) => g.user.id.toString())));
     }
   }, [isOpen, highlightsByUser]);
 
@@ -195,7 +194,7 @@ export function HighlightModal({
                   <EmptyState>No highlights yet</EmptyState>
                 ) : (
                   highlightsByUser.map((group) => {
-                    const userId = group.user._id.toString();
+                    const userId = group.user.id.toString();
                     const isExpanded = expandedUsers.has(userId);
 
                     return (
@@ -225,10 +224,10 @@ export function HighlightModal({
                               transition={{ duration: 0.15 }}
                             >
                               {group.highlights
-                                .filter((h) => !deletingIds.has(h._id.toString()))
+                                .filter((h) => !deletingIds.has(h.id.toString()))
                                 .map((highlight) => {
-                                  const isOwn = currentUserId === group.user._id.toString();
-                                  const highlightId = highlight._id.toString();
+                                  const isOwn = currentUserId === group.user.id.toString();
+                                  const highlightId = highlight.id.toString();
                                   const reactions = reactionsByHighlight[highlightId];
 
                                   // Get top emojis for this highlight

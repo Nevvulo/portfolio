@@ -1,7 +1,8 @@
 import { createHmac } from "crypto";
-import { ConvexHttpClient } from "convex/browser";
+import { and, eq } from "drizzle-orm";
 import type { NextApiRequest, NextApiResponse } from "next";
-import { api } from "../../../convex/_generated/api";
+import { db } from "@/src/db";
+import { blogPosts, users } from "@/src/db/schema";
 
 // Disable body parsing - we need the raw body for XML
 export const config = {
@@ -101,24 +102,62 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(200).json({ received: true, processed: false, reason: "deletion" });
       }
 
-      // Process the video via Convex
-      const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL;
-      if (!convexUrl) {
-        console.error("NEXT_PUBLIC_CONVEX_URL not configured");
-        return res.status(500).json({ error: "Server misconfigured" });
-      }
-
-      const client = new ConvexHttpClient(convexUrl);
-
-      const result = await client.action(api.youtube.processVideoNotification, {
-        videoId: parsed.videoId,
-        title: parsed.title,
-        channelId: parsed.channelId,
+      // Check if a blog post with this youtubeId already exists
+      const existingPost = await db.query.blogPosts.findFirst({
+        where: eq(blogPosts.youtubeId, parsed.videoId),
       });
 
-      console.log("Video processing result:", result);
+      if (existingPost) {
+        console.log(`Video ${parsed.videoId} already exists as post: ${existingPost.slug}`);
+        return res.status(200).json({
+          received: true,
+          processed: true,
+          result: { alreadyExists: true, slug: existingPost.slug },
+        });
+      }
 
-      return res.status(200).json({ received: true, processed: true, result });
+      // Get the creator user for authoring
+      const creator = await db.query.users.findFirst({
+        where: eq(users.isCreator, true),
+      });
+
+      if (!creator) {
+        console.error("No creator user found in database");
+        return res.status(200).json({ received: true, processed: false, error: "No creator user" });
+      }
+
+      // Create a new video blog post
+      const slug = parsed.title
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-|-$/g, "")
+        .slice(0, 100);
+
+      const [newPost] = await db
+        .insert(blogPosts)
+        .values({
+          slug: `${slug}-${parsed.videoId}`,
+          title: parsed.title,
+          description: `Watch: ${parsed.title}`,
+          contentType: "video",
+          youtubeId: parsed.videoId,
+          authorId: creator.id,
+          status: "published",
+          visibility: "public",
+          bentoSize: "medium",
+          bentoOrder: 0,
+          publishedAt: new Date(),
+          labels: [],
+        })
+        .returning({ id: blogPosts.id, slug: blogPosts.slug });
+
+      console.log("Created video post:", newPost);
+
+      return res.status(200).json({
+        received: true,
+        processed: true,
+        result: { created: true, slug: newPost.slug, id: newPost.id },
+      });
     } catch (error) {
       console.error("Error processing YouTube notification:", error);
       // Return 200 to prevent retries for permanent failures

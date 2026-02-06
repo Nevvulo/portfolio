@@ -1,11 +1,10 @@
-import { useMutation, useQuery } from "convex/react";
+import { useQuery as useRQ, useQueryClient } from "@tanstack/react-query";
 import { AlertCircle, Check, Crown, ExternalLink, Gift, Link2, Loader2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import styled, { keyframes } from "styled-components";
-import { api } from "../../../convex/_generated/api";
-import type { Id } from "../../../convex/_generated/dataModel";
+import { getMyProfile, getAvailableClaimables, claimTierItem, getLinkedServices, linkServiceAction } from "@/src/db/actions/dashboard";
 import { RARITY_COLORS, type Rarity } from "../../../constants/rarity";
 import { LOUNGE_COLORS } from "../../../constants/theme";
 import { WidgetContainer } from "./WidgetContainer";
@@ -27,12 +26,24 @@ interface LinkedService {
 type LinkingState = "idle" | "loading" | "success" | "error";
 
 export function PerksWidget() {
-  const user = useQuery(api.users.getMe);
-  const claimables = useQuery(api.inventory.getAvailableClaimables);
-  const linkedServices = useQuery(api.users.getLinkedServices);
-  const linkServiceMutation = useMutation(api.users.linkService);
-  const claimItem = useMutation(api.inventory.claimTierItem);
-  const [claimingId, setClaimingId] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+  const { data: user } = useRQ({
+    queryKey: ["myProfile"],
+    queryFn: () => getMyProfile(),
+    staleTime: 30_000,
+  });
+  const { data: claimables } = useRQ({
+    queryKey: ["availableClaimables"],
+    queryFn: () => getAvailableClaimables(),
+    staleTime: 60_000,
+    enabled: !!user && (user.tier === "tier1" || user.tier === "tier2"),
+  });
+  const { data: linkedServices } = useRQ({
+    queryKey: ["linkedServices"],
+    queryFn: () => getLinkedServices(),
+    staleTime: 30_000,
+  });
+  const [claimingId, setClaimingId] = useState<number | null>(null);
   const [superLegendServices, setSuperLegendServices] = useState<SuperLegendService[]>([]);
   const [servicesLoaded, setServicesLoaded] = useState(false);
   const [linkingStates, setLinkingStates] = useState<Record<string, LinkingState>>({});
@@ -52,10 +63,11 @@ export function PerksWidget() {
   const isTier2 = user?.tier === "tier2";
   const isTier1 = user?.tier === "tier1";
 
-  const handleClaim = async (tierClaimableId: Id<"tierClaimables">) => {
+  const handleClaim = async (tierClaimableId: number) => {
     setClaimingId(tierClaimableId);
     try {
-      await claimItem({ tierClaimableId });
+      await claimTierItem(tierClaimableId);
+      queryClient.invalidateQueries({ queryKey: ["availableClaimables"] });
     } catch (error) {
       console.error("Failed to claim item:", error);
     } finally {
@@ -77,12 +89,9 @@ export function PerksWidget() {
       const data = await res.json();
 
       if (data.linked) {
-        // Also persist to Convex directly
-        await linkServiceMutation({
-          slug: service.slug,
-          serviceUserId: data.serviceUserId,
-          serviceUsername: data.serviceUsername,
-        });
+        // Persist to DB directly
+        await linkServiceAction(service.slug, data.serviceUserId, data.serviceUsername);
+        queryClient.invalidateQueries({ queryKey: ["linkedServices"] });
         setLinkingStates((prev) => ({ ...prev, [service.slug]: "success" }));
         // Reset to idle after 2 seconds
         setTimeout(() => {
@@ -136,7 +145,7 @@ export function PerksWidget() {
             {hasClaimables ? (
               <ClaimablesList>
                 {claimables.slice(0, 3).map((claimable) => (
-                  <ClaimableItem key={claimable._id}>
+                  <ClaimableItem key={claimable.id}>
                     <ItemIcon $rarity={(claimable.item?.rarity as Rarity) ?? "common"}>
                       {claimable.item?.iconUrl ? (
                         <Image
@@ -157,10 +166,10 @@ export function PerksWidget() {
                       </ItemRarity>
                     </ItemInfo>
                     <ClaimButton
-                      onClick={() => handleClaim(claimable._id)}
-                      disabled={claimingId === claimable._id}
+                      onClick={() => handleClaim(claimable.id)}
+                      disabled={claimingId === claimable.id}
                     >
-                      {claimingId === claimable._id ? "..." : "Claim"}
+                      {claimingId === claimable.id ? "..." : "Claim"}
                     </ClaimButton>
                   </ClaimableItem>
                 ))}

@@ -1,13 +1,13 @@
 import { useUser } from "@clerk/nextjs";
-import { useQuery } from "convex/react";
+import { useQuery as useRQ } from "@tanstack/react-query";
 import { ChevronRight, Sparkles } from "lucide-react";
-import Head from "next/head";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/router";
+import { useSearchParams } from "next/navigation";
 import { type ReactNode } from "react";
 import styled from "styled-components";
-import { api } from "../../convex/_generated/api";
+import { getMe } from "@/src/db/client/me";
+import { getMyWidgetInteractions } from "@/src/db/actions/dashboard";
 import { LOUNGE_COLORS } from "../../constants/theme";
 import { useBentoLayout } from "../../hooks/useBentoLayout";
 import { useRecommendations } from "../../hooks/useRecommendations";
@@ -38,6 +38,11 @@ import {
 interface AuthenticatedHomeProps {
   isLive?: boolean;
   discordWidget?: DiscordWidget | null;
+  allWidgetPosts?: any[];
+  streamSettings?: any;
+  upcomingEvents?: any[];
+  featuredContent?: any[];
+  featuredGames?: any[];
 }
 
 function getGreeting(): string {
@@ -47,32 +52,39 @@ function getGreeting(): string {
   return "Good evening";
 }
 
-export function AuthenticatedHome({ isLive = false, discordWidget }: AuthenticatedHomeProps) {
+export function AuthenticatedHome({ isLive = false, discordWidget, allWidgetPosts, streamSettings, upcomingEvents, featuredContent, featuredGames }: AuthenticatedHomeProps) {
   const { user: clerkUser } = useUser();
-  const router = useRouter();
-  const mockLevel = router.query.mockLevel ? Number(router.query.mockLevel) : undefined;
-  const convexUser = useQuery(api.users.getMe);
-  const displayName = convexUser?.displayName || clerkUser?.firstName || "there";
-  const avatarUrl = convexUser?.avatarUrl || clerkUser?.imageUrl;
+  const searchParams = useSearchParams();
+  const mockLevel = searchParams.get("mockLevel") ? Number(searchParams.get("mockLevel")) : undefined;
+
+  const { data: dbUser } = useRQ({
+    queryKey: ["me"],
+    queryFn: () => getMe(),
+    staleTime: 30_000,
+  });
+
+  const displayName = dbUser?.displayName || clerkUser?.firstName || "there";
+  const avatarUrl = dbUser?.avatarUrl || clerkUser?.imageUrl;
 
   // Widget interaction ordering
-  const interactions = useQuery(api.widgetInteractions.getMyInteractions);
+  const { data: interactions } = useRQ({
+    queryKey: ["myWidgetInteractions"],
+    queryFn: () => getMyWidgetInteractions(),
+    staleTime: 60_000,
+  });
   const sortedWidgets = useBentoLayout(interactions);
-
-  // Single subscription for all widget posts (avoids 3 separate getForBento subscriptions)
-  const allWidgetPosts = useQuery(api.blogPosts.getForBento, {});
 
   const WIDGET_RENDERERS: Record<string, (size: string) => ReactNode> = {
     "latest-content": (size) => <LatestContentWidget compact={size === "small" || size === "medium"} posts={allWidgetPosts ?? undefined} />,
     "music":          () => <MusicWidget />,
-    "live":           () => <LiveWidget isLive={isLive} />,
+    "live":           () => <LiveWidget isLive={isLive} streamSettings={streamSettings} upcomingEvents={upcomingEvents} />,
     "activity":       () => <ActivityWidget />,
     "community":      () => <CommunityWidget discordWidget={discordWidget} />,
     "integrations":   () => <IntegrationsWidget />,
     "perks":          () => <PerksWidget />,
     "videos":         () => <VideosWidget posts={allWidgetPosts ?? undefined} />,
     "software":       () => <SoftwareWidget />,
-    "games":          () => <GamesWidget />,
+    "games":          () => <GamesWidget games={featuredGames} />,
   };
 
   // Recommendations + infinite scroll (shared hook)
@@ -86,11 +98,6 @@ export function AuthenticatedHome({ isLive = false, discordWidget }: Authenticat
 
   return (
     <>
-      <Head>
-        <title>Home | Nevulo</title>
-        <meta name="description" content="Your personalized dashboard on Nevulo" />
-      </Head>
-
       <AuthenticatedNavbar hideBadges />
 
       <GrainOverlay />
@@ -124,7 +131,7 @@ export function AuthenticatedHome({ isLive = false, discordWidget }: Authenticat
 
         {/* Featured Content Carousel */}
         <WidgetSection>
-          <FeaturedCarousel />
+          <FeaturedCarousel items={featuredContent} />
         </WidgetSection>
 
         {/* Bento widget grid — sorted by interaction count */}
@@ -132,7 +139,7 @@ export function AuthenticatedHome({ isLive = false, discordWidget }: Authenticat
           {sortedWidgets
             .filter((widget) => {
               // Hide perks widget for free users
-              if (widget.id === "perks" && convexUser?.tier === "free") {
+              if (widget.id === "perks" && dbUser?.tier === "free") {
                 return false;
               }
               return true;
@@ -177,7 +184,7 @@ export function AuthenticatedHome({ isLive = false, discordWidget }: Authenticat
         </FeedSection>
 
         {/* Tier promo for free users */}
-        {convexUser?.tier === "free" && (
+        {dbUser?.tier === "free" && (
           <TierPromoSection>
             <TierPromoContainer href="/support">
               <TierPromoContent>

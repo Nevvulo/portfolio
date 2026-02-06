@@ -1,30 +1,42 @@
-import { useQuery } from "convex/react";
 import { m } from "framer-motion";
 import { ExternalLink, Github, X } from "lucide-react";
 import Image from "next/image";
 import styled from "styled-components";
-import { api } from "../../convex/_generated/api";
-import type { Doc } from "../../convex/_generated/dataModel";
+import type { Project, Technology, Role } from "@/src/db/types";
 import { useTheme } from "../../hooks/useTheme";
 
 interface ProjectExpandedProps {
-  project: Doc<"projects">;
+  project: Project;
   onClose: () => void;
+  technologies: Map<string, Technology>;
+  roles: Map<string, Role>;
 }
 
-export function ProjectExpanded({ project, onClose }: ProjectExpandedProps) {
+export function ProjectExpanded({ project, onClose, technologies, roles }: ProjectExpandedProps) {
   const [theme] = useTheme();
-  const technologies = useQuery(api.technologies.getByKeys, {
-    keys: project.technologies,
-  });
-  const roles = useQuery(api.roles.getByKeys, { keys: project.roles });
 
-  // Use dark logo for light mode, regular logo for dark mode
+  const timeline = project.timeline as { startYear: number; endYear?: number };
+  const links = project.links as { github?: string; website?: string } | null;
+  const techKeys = (project.technologies ?? []) as string[];
+  const roleKeys = (project.roles ?? []) as string[];
+  const contentSections = (project.contentSections ?? []) as Array<{
+    id: string;
+    emoji?: string;
+    header: string;
+    subheader?: string;
+    subheaderColor?: string;
+    text: string;
+  }>;
+
+  // Resolve tech and role badges from the maps
+  const resolvedTechnologies = techKeys.map((key) => technologies.get(key)).filter(Boolean) as Technology[];
+  const resolvedRoles = roleKeys.map((key) => roles.get(key)).filter(Boolean) as Role[];
+
   const logoUrl = theme === "light" && project.logoDarkUrl ? project.logoDarkUrl : project.logoUrl;
 
-  const timelineText = project.timeline.endYear
-    ? `${project.timeline.startYear} — ${project.timeline.endYear}`
-    : `${project.timeline.startYear} — Present`;
+  const timelineText = timeline.endYear
+    ? `${timeline.startYear} — ${timeline.endYear}`
+    : `${timeline.startYear} — Present`;
 
   return (
     <Overlay
@@ -69,18 +81,18 @@ export function ProjectExpanded({ project, onClose }: ProjectExpandedProps) {
         </MetaRow>
 
         {/* Badges */}
-        {(technologies || roles) && (
+        {(resolvedTechnologies.length > 0 || resolvedRoles.length > 0) && (
           <BadgesContainer
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
           >
-            {technologies?.map((tech) => (
+            {resolvedTechnologies.map((tech) => (
               <TechBadge key={tech.key} $color={tech.color}>
                 {tech.label}
               </TechBadge>
             ))}
-            {roles?.map((role) => (
+            {resolvedRoles.map((role) => (
               <RoleBadge key={role.key} $color={role.color} title={role.description}>
                 {role.label}
               </RoleBadge>
@@ -89,20 +101,20 @@ export function ProjectExpanded({ project, onClose }: ProjectExpandedProps) {
         )}
 
         {/* Links */}
-        {project.links && (project.links.github || project.links.website) && (
+        {links && (links.github || links.website) && (
           <LinksRow
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.15 }}
           >
-            {project.links.github && (
-              <LinkButton href={project.links.github} target="_blank" rel="noopener noreferrer">
+            {links.github && (
+              <LinkButton href={links.github} target="_blank" rel="noopener noreferrer">
                 <Github size={16} />
                 GitHub
               </LinkButton>
             )}
-            {project.links.website && (
-              <LinkButton href={project.links.website} target="_blank" rel="noopener noreferrer">
+            {links.website && (
+              <LinkButton href={links.website} target="_blank" rel="noopener noreferrer">
                 <ExternalLink size={16} />
                 Website
               </LinkButton>
@@ -112,7 +124,7 @@ export function ProjectExpanded({ project, onClose }: ProjectExpandedProps) {
 
         {/* Content Sections */}
         <ContentSections>
-          {project.contentSections.map((section, index) => (
+          {contentSections.map((section, index) => (
             <ContentSection
               key={section.id}
               initial={{ opacity: 0, y: 20 }}

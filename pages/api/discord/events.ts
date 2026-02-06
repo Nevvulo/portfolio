@@ -1,8 +1,7 @@
-import { ConvexHttpClient } from "convex/browser";
+import { eq } from "drizzle-orm";
 import type { NextApiRequest, NextApiResponse } from "next";
-import { api } from "../../../convex/_generated/api";
-
-const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
+import { db } from "@/src/db";
+import { discordEvents } from "@/src/db/schema";
 
 const DISCORD_BOT_TOKEN = process.env.DISCORD_BOT_TOKEN;
 const DISCORD_GUILD_ID = process.env.DISCORD_GUILD_ID || "854861878498934784";
@@ -82,34 +81,59 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(response.status).json({ error: "Discord API error" });
     }
 
-    const discordEvents: DiscordScheduledEvent[] = await response.json();
+    const discordEventsData: DiscordScheduledEvent[] = await response.json();
 
-    // Transform to our format
-    const events = discordEvents.map((event) => ({
+    // Transform to our format and upsert into Postgres
+    const events = discordEventsData.map((event) => ({
       eventId: event.id,
       guildId: event.guild_id,
       name: event.name,
-      description: event.description,
-      scheduledStartTime: new Date(event.scheduled_start_time).getTime(),
+      description: event.description || null,
+      scheduledStartTime: new Date(event.scheduled_start_time),
       scheduledEndTime: event.scheduled_end_time
-        ? new Date(event.scheduled_end_time).getTime()
-        : undefined,
+        ? new Date(event.scheduled_end_time)
+        : null,
       entityType: mapEntityType(event.entity_type),
       status: mapStatus(event.status),
       coverImageUrl: event.image
         ? `https://cdn.discordapp.com/guild-events/${event.id}/${event.image}.png`
-        : undefined,
-      location: event.entity_metadata?.location,
-      userCount: event.user_count,
+        : null,
+      location: event.entity_metadata?.location || null,
+      userCount: event.user_count || null,
+      syncedAt: new Date(),
     }));
 
-    // Sync to Convex
-    await convex.mutation(api.stream.syncDiscordEvents, { events });
+    // Upsert each event (insert or update on conflict)
+    for (const event of events) {
+      await db
+        .insert(discordEvents)
+        .values(event)
+        .onConflictDoUpdate({
+          target: discordEvents.eventId,
+          set: {
+            name: event.name,
+            description: event.description,
+            scheduledStartTime: event.scheduledStartTime,
+            scheduledEndTime: event.scheduledEndTime,
+            entityType: event.entityType,
+            status: event.status,
+            coverImageUrl: event.coverImageUrl,
+            location: event.location,
+            userCount: event.userCount,
+            syncedAt: event.syncedAt,
+          },
+        });
+    }
 
     return res.status(200).json({
       success: true,
       eventCount: events.length,
-      events,
+      events: events.map((e) => ({
+        ...e,
+        scheduledStartTime: e.scheduledStartTime.getTime(),
+        scheduledEndTime: e.scheduledEndTime?.getTime(),
+        syncedAt: e.syncedAt.getTime(),
+      })),
     });
   } catch (error) {
     console.error("Error syncing Discord events:", error);

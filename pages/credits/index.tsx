@@ -1,25 +1,24 @@
-import { useQuery } from "convex/react";
+import { useQuery as useRQ } from "@tanstack/react-query";
 import Head from "next/head";
 import Image from "next/image";
 import Link from "next/link";
 import styled, { keyframes } from "styled-components";
 import { BackButton } from "../../components/generics";
 import { AnimatedMinimalView } from "../../components/layout/minimal";
-import { api } from "../../convex/_generated/api";
+import { getCreditsPage } from "@/src/db/client/queries";
 
 type CreditUser = {
-  _id: string;
+  id: number;
   displayName: string;
   username: string | null;
   avatarUrl: string | null;
   tier: string;
-  twitchSubTier?: 1 | 2 | 3 | null;
+  twitchSubTier?: number | null;
   discordBooster?: boolean | null;
   clerkPlan?: string | null;
   clerkPlanStatus?: string | null;
   isCreator?: boolean;
-  role?: number;
-  isContributor?: boolean;
+  role?: number | null;
 };
 
 function UserCard({ user, badge }: { user: CreditUser; badge?: string }) {
@@ -83,7 +82,7 @@ function CreditsSection({
       </SectionHeader>
       <UsersGrid>
         {section.items.map((user) => (
-          <UserCard key={user._id} user={user} badge={badge} />
+          <UserCard key={user.id} user={user} badge={badge} />
         ))}
       </UsersGrid>
       {section.hasMore && (
@@ -94,7 +93,11 @@ function CreditsSection({
 }
 
 export default function CreditsPage() {
-  const credits = useQuery(api.users.getCreditsPage, {});
+  const { data: credits } = useRQ({
+    queryKey: ["creditsPage"],
+    queryFn: () => getCreditsPage(),
+    staleTime: 60_000,
+  });
 
   const isLoading = credits === undefined;
 

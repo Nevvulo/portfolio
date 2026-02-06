@@ -1,19 +1,33 @@
 "use client";
 
 import { useUser } from "@clerk/nextjs";
-import { useAction, useQuery } from "convex/react";
-import { createContext, useContext, useEffect, useState } from "react";
-import { api } from "../../convex/_generated/api";
+import { useQuery as useRQ } from "@tanstack/react-query";
+import { createContext, useContext } from "react";
+
+interface MeResponse {
+  id: number;
+  displayName: string;
+  avatarUrl: string | null;
+  username: string;
+  isCreator: boolean;
+  role: number | null;
+}
+
+async function fetchMe(): Promise<MeResponse | null> {
+  const res = await fetch("/api/me");
+  if (!res.ok) return null;
+  return res.json();
+}
 
 interface AuthenticatedUserContextType {
   isReady: boolean;
-  convexUserId: string | null;
+  userId: number | null;
   error: Error | null;
 }
 
 const AuthenticatedUserContext = createContext<AuthenticatedUserContextType>({
   isReady: false,
-  convexUserId: null,
+  userId: null,
   error: null,
 });
 
@@ -26,44 +40,19 @@ interface AuthenticatedUserProviderProps {
 }
 
 export function AuthenticatedUserProvider({ children }: AuthenticatedUserProviderProps) {
-  const { user, isSignedIn, isLoaded } = useUser();
-  const [mounted, setMounted] = useState(false);
-  const [userCreationAttempted, setUserCreationAttempted] = useState(false);
-  const [userCreationError, setUserCreationError] = useState<Error | null>(null);
+  const { isSignedIn, isLoaded } = useUser();
 
-  const getOrCreateUser = useAction(api.users.getOrCreateUser);
-
-  const convexUser = useQuery(api.users.getMe, isSignedIn && userCreationAttempted ? {} : "skip");
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    if (!mounted || !isLoaded || !isSignedIn || !user || userCreationAttempted) return;
-
-    const displayName = user.fullName || user.firstName || user.username || "User";
-    const avatarUrl = user.imageUrl;
-
-    getOrCreateUser({
-      displayName,
-      avatarUrl,
-    })
-      .then(() => {
-        setUserCreationAttempted(true);
-        setUserCreationError(null);
-      })
-      .catch((err) => {
-        console.error("[AuthenticatedUserProvider] Failed to create user:", err);
-        setUserCreationError(err instanceof Error ? err : new Error(String(err)));
-        setUserCreationAttempted(true);
-      });
-  }, [mounted, isLoaded, isSignedIn, user, userCreationAttempted, getOrCreateUser]);
+  const { data: me, error, isLoading } = useRQ({
+    queryKey: ["me"],
+    queryFn: fetchMe,
+    enabled: isLoaded && !!isSignedIn,
+    staleTime: 60_000,
+  });
 
   const contextValue: AuthenticatedUserContextType = {
-    isReady: !isSignedIn || (userCreationAttempted && convexUser !== undefined),
-    convexUserId: convexUser?._id ?? null,
-    error: userCreationError,
+    isReady: !isSignedIn || (!isLoading && me !== undefined),
+    userId: me?.id ?? null,
+    error: error instanceof Error ? error : null,
   };
 
   return (

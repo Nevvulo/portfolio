@@ -1,5 +1,5 @@
 import { useUser } from "@clerk/nextjs";
-import { useQuery } from "convex/react";
+import { useQuery as useRQ } from "@tanstack/react-query";
 import { ArrowLeft, Camera, FileText, ImagePlus, Pencil } from "lucide-react";
 import Head from "next/head";
 import Link from "next/link";
@@ -12,7 +12,7 @@ import { ContributionsModal } from "../../components/profile/ContributionsModal"
 import { ProfileLinkButton } from "../../components/profile/ProfileLinkButton";
 import { ProfileLinkEditor } from "../../components/profile/ProfileLinkEditor";
 import { LOUNGE_COLORS, TIER_INFO } from "../../constants/theme";
-import { api } from "../../convex/_generated/api";
+import { getUserByUsername, getMeForProfile, getUserContributions } from "@/src/db/client/profile";
 import type { Tier } from "../../types/tiers";
 
 export const getServerSideProps = () => ({ props: {} });
@@ -26,19 +26,25 @@ export default function ProfilePage() {
   const [bannerUploading, setBannerUploading] = useState(false);
   const bannerInputRef = useRef<HTMLInputElement>(null);
 
-  const user = useQuery(
-    api.users.getByUsername,
-    typeof username === "string" ? { username } : "skip",
-  );
+  const { data: user } = useRQ({
+    queryKey: ["user", "byUsername", username],
+    queryFn: () => getUserByUsername(username as string),
+    enabled: typeof username === "string",
+  });
 
-  const currentUser = useQuery(api.users.getMe, isSignedIn ? {} : "skip");
+  const { data: currentUser } = useRQ({
+    queryKey: ["user", "me", "profile"],
+    queryFn: () => getMeForProfile(),
+    enabled: !!isSignedIn,
+  });
 
-  const isOwnProfile = currentUser?._id === user?._id;
+  const isOwnProfile = currentUser?.id === user?.id;
 
-  const contributions = useQuery(
-    api.blogPosts.getByUserContributions,
-    user?._id ? { userId: user._id } : "skip",
-  );
+  const { data: contributions } = useRQ({
+    queryKey: ["user", "contributions", user?.id],
+    queryFn: () => getUserContributions(user!.id),
+    enabled: !!user?.id,
+  });
 
   async function handleBannerUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -235,7 +241,7 @@ export default function ProfilePage() {
         <ContributionsModal
           isOpen={showContributions}
           onClose={() => setShowContributions(false)}
-          userId={user._id}
+          userId={user.id}
           userName={user.displayName}
         />
 

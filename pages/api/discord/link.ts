@@ -1,9 +1,8 @@
 import { timingSafeEqual } from "crypto";
-import { ConvexHttpClient } from "convex/browser";
+import { eq } from "drizzle-orm";
 import type { NextApiRequest, NextApiResponse } from "next";
-import { api } from "../../../convex/_generated/api";
-
-const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
+import { db } from "@/src/db";
+import { users } from "@/src/db/schema";
 
 // Secret for bot-to-server authentication
 const DISCORD_BOT_SECRET = process.env.DISCORD_BOT_LINK_SECRET;
@@ -46,8 +45,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   }
 
   try {
-    // Look up user by Discord ID in Convex
-    const user = await convex.query(api.discord.getUserByDiscordId, { discordId });
+    // Look up user by Discord ID
+    const user = await db.query.users.findFirst({
+      where: eq(users.discordId, discordId),
+    });
 
     if (!user) {
       return res.status(404).json({
@@ -62,7 +63,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         username: user.username ?? null,
         displayName: user.displayName,
         avatarUrl: user.avatarUrl ?? null,
-        tier: user.tier,
+        tier: user.tier as "free" | "tier1" | "tier2",
         clerkPlan: user.clerkPlan ?? null,
         clerkPlanStatus: user.clerkPlanStatus ?? null,
         discordBooster: user.discordBooster ?? false,

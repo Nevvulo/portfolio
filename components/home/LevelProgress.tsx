@@ -1,7 +1,7 @@
-import { useQuery } from "convex/react";
+import { useQuery as useRQ } from "@tanstack/react-query";
 import { ArrowUp } from "lucide-react";
 import styled from "styled-components";
-import { api } from "../../convex/_generated/api";
+import { getMyExperience } from "@/src/db/actions/experience";
 import { SupporterBadges } from "../badges/supporter-badges";
 
 // Level color tiers
@@ -23,7 +23,11 @@ interface LevelProgressProps {
 }
 
 export function LevelProgress({ displayName, compact, showBadges, mockLevel }: LevelProgressProps) {
-  const experience = useQuery(api.experience.getMyExperience);
+  const { data: experience } = useRQ({
+    queryKey: ["myExperience"],
+    queryFn: () => getMyExperience(),
+    staleTime: 30_000,
+  });
 
   if (!experience) {
     if (compact) {

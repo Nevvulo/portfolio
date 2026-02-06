@@ -1,6 +1,7 @@
-import { ConvexHttpClient } from "convex/browser";
+import { eq } from "drizzle-orm";
 import type { NextApiRequest, NextApiResponse } from "next";
-import { api } from "../../../convex/_generated/api";
+import { db } from "@/src/db";
+import { blogPosts } from "@/src/db/schema";
 import { upsertArticleWithEmbedding, vectorIndex } from "../../../lib/upstash-vector";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -13,7 +14,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         envCheck: {
           hasVectorUrl: !!process.env.UPSTASH_VECTOR_REST_URL,
           hasVectorToken: !!process.env.UPSTASH_VECTOR_REST_TOKEN,
-          hasConvexUrl: !!process.env.NEXT_PUBLIC_CONVEX_URL,
+          hasDatabaseUrl: !!process.env.DATABASE_URL,
         },
       });
     } catch (error) {
@@ -39,9 +40,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const info = await vectorIndex.info();
     console.log("[bulk-vector-sync] Vector DB info:", info);
 
-    // Fetch all published posts from Convex using getForBento (no auth required)
-    const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
-    const posts = await convex.query(api.blogPosts.getForBento, {});
+    // Fetch all published posts from Postgres
+    const posts = await db.query.blogPosts.findMany({
+      where: eq(blogPosts.status, "published"),
+    });
 
     console.log(`[bulk-vector-sync] Found ${posts.length} published posts`);
 
@@ -51,15 +53,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     for (const post of posts) {
       try {
-        const textToEmbed = `${post.title}. ${post.description || ""}. Topics: ${(post.labels || []).join(", ")}`;
+        const textToEmbed = `${post.title}. ${post.description || ""}. Topics: ${((post.labels as string[]) || []).join(", ")}`;
 
         await upsertArticleWithEmbedding(post.slug, textToEmbed, {
           slug: post.slug,
           title: post.title,
-          labels: post.labels || [],
+          labels: (post.labels as string[]) || [],
           difficulty: post.difficulty || "beginner",
           contentType: post.contentType || "article",
-          publishedAt: post.publishedAt || Date.now(),
+          publishedAt: post.publishedAt ? post.publishedAt.getTime() : Date.now(),
         });
 
         synced++;

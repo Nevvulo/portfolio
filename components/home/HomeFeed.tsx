@@ -25,7 +25,7 @@ export function HomeFeed({ posts }: HomeFeedProps) {
   return (
     <FeedGrid>
       {posts.map((post) => (
-        <HomeFeedCard key={post._id} post={post} />
+        <HomeFeedCard key={post.id} post={post} />
       ))}
     </FeedGrid>
   );

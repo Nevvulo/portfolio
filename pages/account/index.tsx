@@ -1,6 +1,6 @@
 import { useClerk, useUser } from "@clerk/nextjs";
 import { useSubscription } from "@clerk/nextjs/experimental";
-import { useMutation, useQuery } from "convex/react";
+import { useMutation, useQuery as useRQ } from "@tanstack/react-query";
 import { Box, Sparkles } from "lucide-react";
 import Head from "next/head";
 import Link from "next/link";
@@ -14,7 +14,8 @@ import { ItemDetailModal } from "../../components/vault/ItemDetailModal";
 import { LootboxCard } from "../../components/vault/LootboxCard";
 import { LootboxOpenModal } from "../../components/vault/LootboxOpenModal";
 import { RARITY_COLORS, type Rarity } from "../../constants/rarity";
-import { api } from "../../convex/_generated/api";
+import { getMeForProfile, updateShowOnCredits } from "@/src/db/client/profile";
+import { getMyInventory, getMyLootboxes } from "@/src/db/client/inventory";
 import { useSupporterStatus } from "../../hooks/useSupporterStatus";
 
 export default function AccountPage() {
@@ -32,14 +33,28 @@ export default function AccountPage() {
   const [syncStatus, setSyncStatus] = useState<"idle" | "syncing" | "success" | "error">("idle");
   const [syncError, setSyncError] = useState<string | null>(null);
 
-  // Convex data for credits settings
-  const convexUser = useQuery(api.users.getMe);
-  const updateShowOnCredits = useMutation(api.users.updateShowOnCredits);
+  // User data for credits settings
+  const { data: meData } = useRQ({
+    queryKey: ["user", "me", "profile"],
+    queryFn: () => getMeForProfile(),
+    enabled: !!isSignedIn,
+  });
+  const updateShowOnCreditsMutation = useMutation({
+    mutationFn: (showOnCredits: boolean) => updateShowOnCredits(showOnCredits),
+  });
   const [creditsToggleSaving, setCreditsToggleSaving] = useState(false);
 
   // Inventory data
-  const inventory = useQuery(api.inventory.getMyInventory);
-  const lootboxes = useQuery(api.inventory.getMyLootboxes, { opened: false });
+  const { data: inventory } = useRQ({
+    queryKey: ["inventory", "mine"],
+    queryFn: () => getMyInventory(),
+    enabled: !!isSignedIn,
+  });
+  const { data: lootboxes } = useRQ({
+    queryKey: ["lootboxes", "mine", "unopened"],
+    queryFn: () => getMyLootboxes(false),
+    enabled: !!isSignedIn,
+  });
   const [selectedEntry, setSelectedEntry] = useState<any>(null);
   const [selectedLootbox, setSelectedLootbox] = useState<any>(null);
   const [inventoryFilter, setInventoryFilter] = useState<string>("all");
@@ -142,10 +157,10 @@ export default function AccountPage() {
   };
 
   const handleCreditsToggle = async () => {
-    if (!convexUser) return;
+    if (!meData) return;
     setCreditsToggleSaving(true);
     try {
-      await updateShowOnCredits({ showOnCredits: !convexUser.showOnCredits });
+      await updateShowOnCreditsMutation.mutateAsync(!meData.showOnCredits);
     } catch (error) {
       console.error("Failed to update credits preference:", error);
     } finally {
@@ -196,7 +211,7 @@ export default function AccountPage() {
                 <CompactLootboxRow>
                   {lootboxes!.map((box: any) => (
                     <LootboxCard
-                      key={box._id}
+                      key={box.id}
                       lootbox={box}
                       onClick={() => setSelectedLootbox(box)}
                     />
@@ -232,7 +247,7 @@ export default function AccountPage() {
                 <CompactInventoryGrid>
                   {filteredInventory?.map((entry: any) => (
                     <InventoryItemCard
-                      key={entry._id}
+                      key={entry.id}
                       item={entry.item}
                       quantity={entry.quantity}
                       isUsed={entry.isUsed}
@@ -371,11 +386,11 @@ export default function AccountPage() {
                   </SettingDescription>
                 </SettingInfo>
                 <ToggleSwitch
-                  $enabled={convexUser?.showOnCredits ?? false}
-                  $disabled={!convexUser || creditsToggleSaving}
+                  $enabled={meData?.showOnCredits ?? false}
+                  $disabled={!meData || creditsToggleSaving}
                   onClick={handleCreditsToggle}
                 >
-                  <ToggleKnob $enabled={convexUser?.showOnCredits ?? false} />
+                  <ToggleKnob $enabled={meData?.showOnCredits ?? false} />
                 </ToggleSwitch>
               </SettingRow>
             </SettingsCard>

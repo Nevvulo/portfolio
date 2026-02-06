@@ -1,14 +1,13 @@
 import { clerkClient, getAuth } from "@clerk/nextjs/server";
-import { ConvexHttpClient } from "convex/browser";
+import { eq } from "drizzle-orm";
 import type { NextApiRequest, NextApiResponse } from "next";
-import { api } from "../../../convex/_generated/api";
+import { db } from "@/src/db";
+import { users } from "@/src/db/schema";
 import { grantFounderStatus } from "../../../lib/founder";
 import { setSupporterStatus } from "../../../lib/redis";
 import type { DiscordRole, SupporterStatus } from "../../../types/supporter";
 import { checkBoosterStatus, getMemberHighestRole } from "../../../utils/discord-member";
 import { checkUserSubscription } from "../../../utils/twitch";
-
-const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") {
@@ -162,39 +161,44 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     await setSupporterStatus(userId, supporterStatus);
     console.log("[supporter/sync] Stored successfully");
 
-    // Update supporter status in Convex for UserPopout display
+    // Update supporter status in Postgres
     try {
       // Get usernames from Clerk accounts
       const discordUsername = discordAccount?.username || undefined;
       const twitchUsername = twitchAccount?.username || undefined;
 
-      await convex.mutation(api.users.updateSupporterStatus, {
-        clerkId: userId,
-        discordHighestRole: discordHighestRole || undefined,
-        twitchSubTier: twitchSubTier || undefined,
-        discordBooster: discordBooster || undefined,
-        clerkPlan: clerkPlan || undefined,
-        clerkPlanStatus: clerkPlanStatus || undefined,
-        founderNumber: founderNumber ?? undefined,
-        discordUsername,
-        twitchUsername,
-      });
-      console.log("[supporter/sync] Updated supporter status in Convex");
+      await db
+        .update(users)
+        .set({
+          discordHighestRole: discordHighestRole || undefined,
+          twitchSubTier: twitchSubTier || undefined,
+          discordBooster: discordBooster || undefined,
+          clerkPlan: clerkPlan || undefined,
+          clerkPlanStatus: clerkPlanStatus || undefined,
+          founderNumber: founderNumber ?? undefined,
+          discordUsername,
+          twitchUsername,
+          supporterSyncedAt: new Date(),
+        })
+        .where(eq(users.clerkId, userId));
+
+      console.log("[supporter/sync] Updated supporter status in Postgres");
     } catch (error) {
-      console.error("[supporter/sync] Failed to update Convex supporter status:", error);
+      console.error("[supporter/sync] Failed to update Postgres supporter status:", error);
       // Don't fail the whole sync for this
     }
 
-    // Also update Discord → Clerk mapping in Convex for wormhole linking
+    // Also update Discord ID mapping in Postgres
     if (discordUserId) {
       try {
-        await convex.mutation(api.discord.upsertDiscordClerkMapping, {
-          discordId: discordUserId,
-          clerkId: userId,
-        });
-        console.log("[supporter/sync] Updated Discord→Clerk mapping in Convex");
+        await db
+          .update(users)
+          .set({ discordId: discordUserId })
+          .where(eq(users.clerkId, userId));
+
+        console.log("[supporter/sync] Updated Discord ID mapping in Postgres");
       } catch (error) {
-        console.error("[supporter/sync] Failed to update Convex mapping:", error);
+        console.error("[supporter/sync] Failed to update Discord mapping:", error);
         // Don't fail the whole sync for this
       }
     }

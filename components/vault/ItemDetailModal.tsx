@@ -1,19 +1,18 @@
-import { useMutation } from "convex/react";
+import { useMutation } from "@tanstack/react-query";
 import { Download, ExternalLink, Key, Sparkles, X } from "lucide-react";
 import { useState } from "react";
 import styled from "styled-components";
 import { RARITY_COLORS, type Rarity } from "../../constants/rarity";
-import { api } from "../../convex/_generated/api";
-import type { Id } from "../../convex/_generated/dataModel";
+import { useConsumableItem } from "@/src/db/client/inventory";
 
 interface ItemDetailModalProps {
   entry: {
-    _id: Id<"userInventory">;
+    id: number;
     quantity: number;
     isUsed: boolean;
-    acquiredAt: number;
+    acquiredAt: number | string | Date;
     item: {
-      _id: Id<"inventoryItems">;
+      id: number;
       name: string;
       description: string;
       rarity: string;
@@ -30,7 +29,9 @@ interface ItemDetailModalProps {
 }
 
 export function ItemDetailModal({ entry, onClose }: ItemDetailModalProps) {
-  const useItem = useMutation(api.inventory.useConsumableItem);
+  const useItemMutation = useMutation({
+    mutationFn: (inventoryEntryId: number) => useConsumableItem(inventoryEntryId),
+  });
   const [using, setUsing] = useState(false);
   const [showCode, setShowCode] = useState(false);
 
@@ -42,7 +43,7 @@ export function ItemDetailModal({ entry, onClose }: ItemDetailModalProps) {
     if (!confirm("Are you sure you want to use this item? This action cannot be undone.")) return;
     setUsing(true);
     try {
-      await useItem({ inventoryEntryId: entry._id });
+      await useItemMutation.mutateAsync(entry.id);
     } catch (error) {
       alert(error instanceof Error ? error.message : "Failed to use item");
     } finally {

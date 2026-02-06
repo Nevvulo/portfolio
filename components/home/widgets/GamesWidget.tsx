@@ -1,17 +1,27 @@
-import { useQuery } from "convex/react";
+import { useQuery as useRQ } from "@tanstack/react-query";
 import { Code2, Gamepad2, Users, Eye, Package } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState, useMemo } from "react";
 import styled from "styled-components";
-import { api } from "../../../convex/_generated/api";
+import { getFeaturedGamesAction, getFeaturedSoftwareAction, getLiveStatAction } from "@/src/db/actions/queries";
 import { WidgetContainer } from "./WidgetContainer";
 
 // ============================================
 // Software Widget (non-games)
 // ============================================
 
-export function SoftwareWidget() {
-  const featured = useQuery(api.software.listFeaturedSoftware);
+interface SoftwareWidgetProps {
+  software?: any[];
+}
+
+export function SoftwareWidget({ software: externalSoftware }: SoftwareWidgetProps = {}) {
+  const { data: fetchedSoftware } = useRQ({
+    queryKey: ["featuredSoftware"],
+    queryFn: () => getFeaturedSoftwareAction(),
+    enabled: !externalSoftware,
+    staleTime: 60_000,
+  });
+  const featured = externalSoftware ?? fetchedSoftware;
 
   // Sort by order (hero first), then by name
   const sortedSoftware = useMemo(() => {
@@ -64,7 +74,7 @@ export function SoftwareWidget() {
 
           return (
             <SoftwareHeroCard
-              key={heroCard._id}
+              key={heroCard.id}
               href={isComingSoon ? undefined : href}
               target={isExternal ? "_blank" : undefined}
               rel={isExternal ? "noopener noreferrer" : undefined}
@@ -108,7 +118,7 @@ export function SoftwareWidget() {
 
             return (
               <SoftwareSmallCard
-                key={software._id}
+                key={software.id}
                 href={isComingSoon ? undefined : href}
                 target={isExternal ? "_blank" : undefined}
                 rel={isExternal ? "noopener noreferrer" : undefined}
@@ -151,9 +161,23 @@ interface RobloxStats {
   favoritedCount: number;
 }
 
-export function GamesWidget() {
-  const featured = useQuery(api.software.listFeaturedGames);
-  const playerCountStat = useQuery(api.netvulo.getLiveStat, { key: "golfquest_players" });
+interface GamesWidgetProps {
+  games?: any[];
+}
+
+export function GamesWidget({ games: externalGames }: GamesWidgetProps = {}) {
+  const { data: fetchedGames } = useRQ({
+    queryKey: ["featuredGames"],
+    queryFn: () => getFeaturedGamesAction(),
+    enabled: !externalGames,
+    staleTime: 60_000,
+  });
+  const featured = externalGames ?? fetchedGames;
+  const { data: playerCountStat } = useRQ({
+    queryKey: ["liveStat", "golfquest_players"],
+    queryFn: () => getLiveStatAction("golfquest_players"),
+    staleTime: 10_000,
+  });
   const playerCount = typeof playerCountStat?.value === "number" ? playerCountStat.value : 0;
 
   // Roblox stats state
@@ -239,7 +263,7 @@ export function GamesWidget() {
 
           return (
             <GameCard
-              key={game._id}
+              key={game.id}
               href={href}
               target={isExternal ? "_blank" : undefined}
               rel={isExternal ? "noopener noreferrer" : undefined}

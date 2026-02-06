@@ -1,7 +1,7 @@
-import { useQuery } from "convex/react";
+import { useQuery as useRQ } from "@tanstack/react-query";
 import { useCallback, useState } from "react";
 import styled from "styled-components";
-import { api } from "../../convex/_generated/api";
+import { getPostBySlug as getPostBySlugAction } from "@/src/db/client/queries";
 
 // Blog Post Preview Component
 const PreviewWrapper = styled.a`
@@ -52,13 +52,17 @@ const PreviewDescription = styled.p`
 `;
 
 export function BlogPostPreview({ id }: { id: string }) {
-  const post = useQuery(api.blogPosts.getBySlug, id ? { slug: id } : "skip");
+  const { data: post, isLoading } = useRQ({
+    queryKey: ["postBySlug", id],
+    queryFn: () => getPostBySlugAction(id),
+    enabled: !!id,
+  });
 
   if (!id) {
     return null;
   }
 
-  if (post === undefined) {
+  if (isLoading) {
     return (
       <PreviewWrapper as="div">
         <PreviewHeader>

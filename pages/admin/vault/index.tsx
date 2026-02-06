@@ -1,4 +1,8 @@
-import { useMutation, useQuery } from "convex/react";
+import {
+  useMutation,
+  useQuery as useRQ,
+  useQueryClient,
+} from "@tanstack/react-query";
 import {
   Archive,
   Download,
@@ -20,9 +24,16 @@ import { useCallback, useRef, useState } from "react";
 import styled from "styled-components";
 import { BlogView } from "../../../components/layout/blog";
 import { SimpleNavbar } from "../../../components/navbar/simple";
-import { api } from "../../../convex/_generated/api";
-import type { Id } from "../../../convex/_generated/dataModel";
-import { useTierAccess } from "../../../hooks/useTierAccess";
+import { getMe } from "@/src/db/client/me";
+import {
+  archiveVaultFile,
+  createVaultFile,
+  deleteVaultFile,
+  getVaultFile,
+  listVaultFiles,
+  unarchiveVaultFile,
+  updateVaultFile,
+} from "@/src/db/client/admin-vault";
 
 export const getServerSideProps = () => ({ props: {} });
 
@@ -47,7 +58,13 @@ const VISIBILITY_LABELS: Record<Visibility, string> = {
 
 export default function VaultAdminPage() {
   const [activeTab, setActiveTab] = useState<TabType>("files");
-  const { isLoading, isCreator } = useTierAccess();
+  const { data: me } = useRQ({
+    queryKey: ["me"],
+    queryFn: () => getMe(),
+    staleTime: 30_000,
+  });
+  const isCreator = me?.isCreator ?? false;
+  const isLoading = me === undefined;
 
   if (isLoading) {
     return (
@@ -110,11 +127,30 @@ export default function VaultAdminPage() {
 }
 
 function FilesTab() {
-  const files = useQuery(api.vault.list, { includeArchived: true });
-  const archiveMutation = useMutation(api.vault.archive);
-  const unarchiveMutation = useMutation(api.vault.unarchive);
-  const deleteMutation = useMutation(api.vault.deleteFile);
-  const [editingFile, setEditingFile] = useState<Id<"vaultFiles"> | null>(null);
+  const queryClient = useQueryClient();
+  const { data: files } = useRQ({
+    queryKey: ["admin", "vaultFiles", true],
+    queryFn: () => listVaultFiles({ includeArchived: true }),
+  });
+  const archiveMut = useMutation({
+    mutationFn: (id: number) => archiveVaultFile(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "vaultFiles"] });
+    },
+  });
+  const unarchiveMut = useMutation({
+    mutationFn: (id: number) => unarchiveVaultFile(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "vaultFiles"] });
+    },
+  });
+  const deleteMut = useMutation({
+    mutationFn: (id: number) => deleteVaultFile(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "vaultFiles"] });
+    },
+  });
+  const [editingFile, setEditingFile] = useState<number | null>(null);
 
   if (!files) {
     return <LoadingText>Loading files...</LoadingText>;
@@ -130,28 +166,28 @@ function FilesTab() {
     );
   }
 
-  const handleArchive = async (fileId: Id<"vaultFiles">, isArchived: boolean) => {
+  const handleArchive = async (fileId: number, isArchived: boolean) => {
     if (isArchived) {
-      await unarchiveMutation({ fileId });
+      await unarchiveMut.mutateAsync(fileId);
     } else {
-      await archiveMutation({ fileId });
+      await archiveMut.mutateAsync(fileId);
     }
   };
 
-  const handleDelete = async (fileId: Id<"vaultFiles">, title: string) => {
+  const handleDelete = async (fileId: number, title: string) => {
     if (confirm(`Are you sure you want to permanently delete "${title}"?`)) {
-      await deleteMutation({ fileId });
+      await deleteMut.mutateAsync(fileId);
     }
   };
 
   return (
     <FilesGrid>
       {files.map((file) => {
-        const Icon = FILE_TYPE_ICONS[file.fileType];
+        const Icon = FILE_TYPE_ICONS[file.fileType as FileType];
         return (
-          <FileCard key={file._id} $archived={file.isArchived}>
+          <FileCard key={file.id} $archived={file.isArchived}>
             <FileCardHeader>
-              <FileIconWrapper $type={file.fileType}>
+              <FileIconWrapper $type={file.fileType as FileType}>
                 <Icon size={24} />
               </FileIconWrapper>
               <FileInfo>
@@ -167,7 +203,7 @@ function FilesTab() {
               <FileStats>
                 <StatBadge>
                   <Lock size={12} />
-                  {VISIBILITY_LABELS[file.visibility]}
+                  {VISIBILITY_LABELS[file.visibility as Visibility]}
                 </StatBadge>
                 <StatBadge>
                   <Download size={12} />
@@ -180,18 +216,18 @@ function FilesTab() {
               <ActionButton onClick={() => window.open(file.fileUrl, "_blank")} title="Preview">
                 <Eye size={16} />
               </ActionButton>
-              <ActionButton onClick={() => setEditingFile(file._id)} title="Edit">
+              <ActionButton onClick={() => setEditingFile(file.id)} title="Edit">
                 <Edit2 size={16} />
               </ActionButton>
               <ActionButton
-                onClick={() => handleArchive(file._id, file.isArchived)}
+                onClick={() => handleArchive(file.id, file.isArchived)}
                 title={file.isArchived ? "Unarchive" : "Archive"}
               >
                 <Archive size={16} />
               </ActionButton>
               <ActionButton
                 $danger
-                onClick={() => handleDelete(file._id, file.title)}
+                onClick={() => handleDelete(file.id, file.title)}
                 title="Delete permanently"
               >
                 <Trash2 size={16} />
@@ -209,35 +245,37 @@ function FilesTab() {
 }
 
 interface EditModalProps {
-  fileId: Id<"vaultFiles">;
+  fileId: number;
   onClose: () => void;
 }
 
 function EditModal({ fileId, onClose }: EditModalProps) {
-  const file = useQuery(api.vault.get, { fileId });
-  const updateMutation = useMutation(api.vault.update);
+  const queryClient = useQueryClient();
+  const { data: file } = useRQ({
+    queryKey: ["admin", "vaultFile", fileId],
+    queryFn: () => getVaultFile(fileId),
+    enabled: !!fileId,
+  });
+  const updateMut = useMutation({
+    mutationFn: (data: Parameters<typeof updateVaultFile>[1]) =>
+      updateVaultFile(fileId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "vaultFiles"] });
+      queryClient.invalidateQueries({ queryKey: ["admin", "vaultFile", fileId] });
+    },
+  });
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [slug, setSlug] = useState("");
   const [visibility, setVisibility] = useState<Visibility>("public");
   const [saving, setSaving] = useState(false);
 
-  // Initialize form when file loads
-  useState(() => {
-    if (file) {
-      setTitle(file.title);
-      setDescription(file.description || "");
-      setSlug(file.slug);
-      setVisibility(file.visibility);
-    }
-  });
-
   // Update form values when file data changes
   if (file && title === "" && file.title !== "") {
     setTitle(file.title);
     setDescription(file.description || "");
     setSlug(file.slug);
-    setVisibility(file.visibility);
+    setVisibility(file.visibility as Visibility);
   }
 
   const handleSave = async () => {
@@ -245,8 +283,7 @@ function EditModal({ fileId, onClose }: EditModalProps) {
 
     setSaving(true);
     try {
-      await updateMutation({
-        fileId,
+      await updateMut.mutateAsync({
         title,
         description: description || undefined,
         slug,
@@ -330,6 +367,7 @@ interface UploadTabProps {
 }
 
 function UploadTab({ onSuccess }: UploadTabProps) {
+  const queryClient = useQueryClient();
   const [file, setFile] = useState<File | null>(null);
   const [thumbnail, setThumbnail] = useState<File | null>(null);
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
@@ -343,7 +381,12 @@ function UploadTab({ onSuccess }: UploadTabProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const thumbnailInputRef = useRef<HTMLInputElement>(null);
 
-  const createMutation = useMutation(api.vault.create);
+  const createMut = useMutation({
+    mutationFn: (data: Parameters<typeof createVaultFile>[0]) => createVaultFile(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "vaultFiles"] });
+    },
+  });
 
   const handleFileSelect = (selectedFile: File) => {
     setFile(selectedFile);
@@ -451,8 +494,8 @@ function UploadTab({ onSuccess }: UploadTabProps) {
 
       setUploadProgress("Creating vault entry...");
 
-      // Create vault file in Convex
-      await createMutation({
+      // Create vault file in Postgres
+      await createMut.mutateAsync({
         title,
         description: description || undefined,
         slug,

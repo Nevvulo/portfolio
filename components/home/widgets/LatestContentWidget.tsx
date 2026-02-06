@@ -1,9 +1,9 @@
-import { useQuery } from "convex/react";
+import { useQuery as useRQ } from "@tanstack/react-query";
 import { Clock, FileText, Film, Newspaper, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import styled from "styled-components";
-import { api } from "../../../convex/_generated/api";
+import { getPostsForBentoAction } from "@/src/db/actions/queries";
 import { LOUNGE_COLORS } from "../../../constants/theme";
 import { WidgetContainer } from "./WidgetContainer";
 
@@ -25,14 +25,19 @@ function getThumbnail(post: { coverImage?: string | null; youtubeId?: string | n
 interface LatestContentWidgetProps {
   compact?: boolean;
   /** Pre-fetched posts to avoid duplicate subscriptions. Falls back to own query if not provided. */
-  posts?: Array<{ _id: string; slug: string; title: string; description: string; contentType: string; coverImage?: string | null; youtubeId?: string | null; publishedAt?: number | null }>;
+  posts?: Array<{ id: number; slug: string; title: string; description: string; contentType: string; coverImage?: string | null; youtubeId?: string | null; publishedAt?: Date | string | null }>;
 }
 
 /** Latest content across all types */
 export function LatestContentWidget({ compact, posts: externalPosts }: LatestContentWidgetProps) {
   const [filter, setFilter] = useState<ContentFilter>("all");
-  const ownPosts = useQuery(api.blogPosts.getForBento, externalPosts ? "skip" : {});
-  const posts = externalPosts ?? ownPosts;
+  const { data: fetchedPosts } = useRQ({
+    queryKey: ["postsForBento"],
+    queryFn: () => getPostsForBentoAction(),
+    enabled: !externalPosts,
+    staleTime: 30_000,
+  });
+  const posts = externalPosts ?? fetchedPosts;
 
   const maxItems = compact ? 3 : 6;
   const filtered = posts
@@ -68,7 +73,7 @@ export function LatestContentWidget({ compact, posts: externalPosts }: LatestCon
           const isYouTube = post.contentType === "video" && post.youtubeId;
           const href = isYouTube ? `https://www.youtube.com/watch?v=${post.youtubeId}` : `/learn/${post.slug}`;
           return (
-            <ContentItem key={post._id} href={href} {...(isYouTube ? { target: "_blank", rel: "noopener noreferrer" } : {})}>
+            <ContentItem key={post.id} href={href} {...(isYouTube ? { target: "_blank", rel: "noopener noreferrer" } : {})}>
               {thumb && (
                 <ContentBg>
                   <ContentBgImage style={{ backgroundImage: `url(${thumb})` }} />

@@ -1,4 +1,8 @@
-import { useMutation, useQuery } from "convex/react";
+import {
+  useQuery as useRQ,
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query";
 import {
   Check,
   ChevronRight,
@@ -16,39 +20,47 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import styled from "styled-components";
 import { BlogView } from "../../components/layout/blog";
 import { SimpleNavbar } from "../../components/navbar/simple";
-import { api } from "../../convex/_generated/api";
-import type { Id } from "../../convex/_generated/dataModel";
-import { useTierAccess } from "../../hooks/useTierAccess";
+import {
+  getStaffMembers,
+  searchUsers,
+  addStaff,
+  removeStaff,
+} from "@/src/db/client/admin";
+import { getMe } from "@/src/db/client/me";
 
 export const getServerSideProps = () => ({ props: {} });
 
 // Types for staff members
 interface StaffMember {
-  _id: Id<"users">;
+  id: number;
   displayName: string;
   username: string | null;
   avatarUrl: string | null;
-  tier: string;
   role: number;
   isCreator: boolean;
 }
 
 // Types for search results
 interface SearchUser {
-  _id: Id<"users">;
+  id: number;
   displayName: string;
   username: string | null;
   avatarUrl: string | null;
-  tier: string;
+  role: number;
   isCreator: boolean;
 }
 
-// Role constants (must match convex/auth.ts)
+// Role constants (must match src/db/auth.ts)
 const ROLE_STAFF = 1;
 
 export default function AdminPage() {
   const [mounted, setMounted] = useState(false);
-  const { isLoading, isCreator } = useTierAccess();
+  const { data: me } = useRQ({
+    queryKey: ["me"],
+    queryFn: () => getMe(),
+  });
+  const isCreator = me?.isCreator ?? false;
+  const isLoading = me === undefined;
 
   useEffect(() => {
     setMounted(true);
@@ -157,9 +169,27 @@ function QuickLinks() {
 }
 
 function StaffManagement() {
-  const staffMembers = useQuery(api.users.getStaffMembers);
-  const addStaff = useMutation(api.users.addStaff);
-  const removeStaff = useMutation(api.users.removeStaff);
+  const queryClient = useQueryClient();
+
+  const { data: staffMembers } = useRQ({
+    queryKey: ["staffMembers"],
+    queryFn: () => getStaffMembers(),
+  });
+
+  const addStaffMutation = useMutation({
+    mutationFn: ({ userId, role }: { userId: number; role: number }) =>
+      addStaff(userId, role),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["staffMembers"] });
+    },
+  });
+
+  const removeStaffMutation = useMutation({
+    mutationFn: ({ userId }: { userId: number }) => removeStaff(userId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["staffMembers"] });
+    },
+  });
 
   const [showPicker, setShowPicker] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -167,23 +197,24 @@ function StaffManagement() {
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Search users
-  const searchResults = useQuery(
-    api.users.searchUsers,
-    searchQuery.length > 0 ? { query: searchQuery, limit: 10 } : "skip",
-  );
+  const { data: searchResults } = useRQ({
+    queryKey: ["searchUsers", searchQuery],
+    queryFn: () => searchUsers(searchQuery),
+    enabled: searchQuery.length >= 2,
+  });
 
   // Filter out users who are already staff
   const filteredResults = useMemo((): SearchUser[] => {
     if (!searchResults || !staffMembers) return [];
-    const staffIds = new Set(staffMembers.map((s: StaffMember) => s._id));
-    return searchResults.filter((u: SearchUser) => !staffIds.has(u._id));
+    const staffIds = new Set(staffMembers.map((s: StaffMember) => s.id));
+    return searchResults.filter((u: SearchUser) => !staffIds.has(u.id));
   }, [searchResults, staffMembers]);
 
   const handleAddStaff = useCallback(
-    async (userId: Id<"users">) => {
+    async (userId: number) => {
       setIsAdding(true);
       try {
-        await addStaff({ userId });
+        await addStaffMutation.mutateAsync({ userId, role: ROLE_STAFF });
         setSearchQuery("");
         setShowPicker(false);
       } catch (error) {
@@ -193,20 +224,20 @@ function StaffManagement() {
         setIsAdding(false);
       }
     },
-    [addStaff],
+    [addStaffMutation],
   );
 
   const handleRemoveStaff = useCallback(
-    async (userId: Id<"users">) => {
+    async (userId: number) => {
       if (!confirm("Are you sure you want to remove this staff member?")) return;
       try {
-        await removeStaff({ userId });
+        await removeStaffMutation.mutateAsync({ userId });
       } catch (error: any) {
         console.error("Failed to remove staff:", error);
         alert(error.message || "Failed to remove staff member");
       }
     },
-    [removeStaff],
+    [removeStaffMutation],
   );
 
   // Focus input when picker opens
@@ -230,7 +261,7 @@ function StaffManagement() {
 
       <StaffList>
         {staffMembers?.map((member: StaffMember) => (
-          <StaffCard key={member._id}>
+          <StaffCard key={member.id}>
             <StaffAvatar>
               {member.avatarUrl ? (
                 <Avatar src={member.avatarUrl} alt={member.displayName} />
@@ -251,7 +282,7 @@ function StaffManagement() {
               {member.username && <StaffUsername>@{member.username}</StaffUsername>}
             </StaffInfo>
             {!member.isCreator && (
-              <RemoveButton onClick={() => handleRemoveStaff(member._id)} title="Remove from staff">
+              <RemoveButton onClick={() => handleRemoveStaff(member.id)} title="Remove from staff">
                 <Trash2 size={16} />
               </RemoveButton>
             )}
@@ -283,8 +314,8 @@ function StaffManagement() {
               )}
               {filteredResults.map((user) => (
                 <SearchResultItem
-                  key={user._id}
-                  onClick={() => handleAddStaff(user._id)}
+                  key={user.id}
+                  onClick={() => handleAddStaff(user.id)}
                   disabled={isAdding}
                 >
                   {user.avatarUrl ? (

@@ -1,4 +1,3 @@
-import { useMutation } from "convex/react";
 import { AnimatePresence, m } from "framer-motion";
 import {
   AlertCircle,
@@ -20,8 +19,7 @@ import React, { useCallback, useState } from "react";
 import { createPortal } from "react-dom";
 import styled from "styled-components";
 import { LOUNGE_COLORS } from "@/constants/theme";
-import { api } from "@/convex/_generated/api";
-import type { Id } from "@/convex/_generated/dataModel";
+import { submitContentReport } from "@/src/db/actions/blog";
 
 type ReportCategory =
   | "content_quality"
@@ -97,7 +95,7 @@ const REPORT_OPTIONS: ReportOption[] = [
 interface ReportModalProps {
   isOpen: boolean;
   onClose: () => void;
-  postId: Id<"blogPosts">;
+  postId: number;
   postTitle?: string;
 }
 
@@ -109,8 +107,6 @@ export function ReportModal({ isOpen, onClose, postId }: ReportModalProps) {
   const [selectedCategory, setSelectedCategory] = useState<ReportOption | null>(null);
   const [reason, setReason] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const createReport = useMutation(api.contentReports.create);
 
   React.useEffect(() => {
     setMounted(true);
@@ -176,11 +172,7 @@ export function ReportModal({ isOpen, onClose, postId }: ReportModalProps) {
 
       setIsSubmitting(true);
       try {
-        await createReport({
-          postId,
-          category: cat,
-          reason: text || undefined,
-        });
+        await submitContentReport(postId, cat, text || undefined);
         setScreen("success");
       } catch (error: any) {
         if (error.message?.includes("already reported")) {
@@ -193,7 +185,7 @@ export function ReportModal({ isOpen, onClose, postId }: ReportModalProps) {
         setIsSubmitting(false);
       }
     },
-    [createReport, postId, selectedCategory, reason],
+    [postId, selectedCategory, reason],
   );
 
   const handleBack = useCallback(() => {

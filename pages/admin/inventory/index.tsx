@@ -1,10 +1,13 @@
-import { useAction, useMutation, useQuery } from "convex/react";
+import {
+  useMutation,
+  useQuery as useRQ,
+  useQueryClient,
+} from "@tanstack/react-query";
 import {
   Archive,
   Box,
   Edit2,
   Gift,
-  Layers,
   Package,
   Plus,
   Search,
@@ -14,14 +17,29 @@ import {
   X,
 } from "lucide-react";
 import Head from "next/head";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import styled from "styled-components";
 import { BlogView } from "../../../components/layout/blog";
 import { SimpleNavbar } from "../../../components/navbar/simple";
 import { RARITY_COLORS, type Rarity } from "../../../constants/rarity";
-import { api } from "../../../convex/_generated/api";
-import type { Id } from "../../../convex/_generated/dataModel";
-import { useTierAccess } from "../../../hooks/useTierAccess";
+import { getMe } from "@/src/db/client/me";
+import { searchUsers } from "@/src/db/client/admin";
+import {
+  archiveItem,
+  createItem,
+  createLootboxTemplate,
+  createTierClaimable,
+  deactivateTierClaimable,
+  getInventoryAnalytics,
+  getItemCatalog,
+  getLootboxTemplates,
+  getTierClaimables,
+  sendDirectItem,
+  shipLootbox,
+  unarchiveItem,
+  updateItem,
+  updateLootboxTemplate,
+} from "@/src/db/client/admin-inventory";
 
 export const getServerSideProps = () => ({ props: {} });
 
@@ -29,15 +47,15 @@ type TabType = "items" | "lootboxes" | "ship" | "claimables" | "analytics";
 
 export default function InventoryAdminPage() {
   const [activeTab, setActiveTab] = useState<TabType>("items");
-  const { isLoading, isCreator } = useTierAccess();
-  const getNetworkServices = useAction(api.inventory.getNetworkServices);
-  const [networkServices, setNetworkServices] = useState<Array<{ slug: string; name: string }>>([]);
+  const { data: me } = useRQ({
+    queryKey: ["me"],
+    queryFn: () => getMe(),
+  });
+  const isCreator = me?.isCreator ?? false;
+  const isLoading = me === undefined;
 
-  useEffect(() => {
-    if (isCreator) {
-      getNetworkServices().then(setNetworkServices).catch(() => {});
-    }
-  }, [isCreator]);
+  // Stub: getNetworkServices was Convex-specific; keep the UI but use empty array
+  const networkServices: Array<{ slug: string; name: string }> = [];
 
   if (isLoading) {
     return (
@@ -113,11 +131,28 @@ export default function InventoryAdminPage() {
 // ============================================
 
 function ItemsCatalogTab({ networkServices }: { networkServices: Array<{ slug: string; name: string }> }) {
-  const items = useQuery(api.inventory.getItemCatalog, { includeArchived: true });
-  const archiveItem = useMutation(api.inventory.archiveItem);
-  const unarchiveItem = useMutation(api.inventory.unarchiveItem);
+  const queryClient = useQueryClient();
+  const { data: items } = useRQ({
+    queryKey: ["admin", "itemCatalog", true],
+    queryFn: () => getItemCatalog({ includeArchived: true }),
+  });
+
+  const archiveMutation = useMutation({
+    mutationFn: (id: number) => archiveItem(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "itemCatalog"] });
+    },
+  });
+
+  const unarchiveMutation = useMutation({
+    mutationFn: (id: number) => unarchiveItem(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "itemCatalog"] });
+    },
+  });
+
   const [showCreate, setShowCreate] = useState(false);
-  const [editingItem, setEditingItem] = useState<Id<"inventoryItems"> | null>(null);
+  const [editingItem, setEditingItem] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterRarity, setFilterRarity] = useState<string>("all");
 
@@ -166,7 +201,7 @@ function ItemsCatalogTab({ networkServices }: { networkServices: Array<{ slug: s
       ) : (
         <ItemsGrid>
           {filteredItems.map((item) => (
-            <ItemCard key={item._id} $archived={item.isArchived}>
+            <ItemCard key={item.id} $archived={item.isArchived}>
               <ItemCardTop>
                 <RarityBadge $rarity={item.rarity as Rarity}>{item.rarity}</RarityBadge>
                 <TypeBadge>{item.type}</TypeBadge>
@@ -176,24 +211,24 @@ function ItemsCatalogTab({ networkServices }: { networkServices: Array<{ slug: s
               <ItemName>{item.name}</ItemName>
               <ItemSlug>{item.slug}</ItemSlug>
               <ItemDesc>{item.description}</ItemDesc>
-              {(!item.services || item.services.length === 0) ? (
+              {(!item.services || (item.services as string[]).length === 0) ? (
                 <CategoryBadge>All Services</CategoryBadge>
               ) : (
                 <ServiceBadges>
-                  {item.services.map((s: string) => (
+                  {(item.services as string[]).map((s: string) => (
                     <CategoryBadge key={s}>{s}</CategoryBadge>
                   ))}
                 </ServiceBadges>
               )}
               <ItemActions>
-                <ActionButton onClick={() => setEditingItem(item._id)} title="Edit">
+                <ActionButton onClick={() => setEditingItem(item.id)} title="Edit">
                   <Edit2 size={14} />
                 </ActionButton>
                 <ActionButton
                   onClick={() =>
                     item.isArchived
-                      ? unarchiveItem({ id: item._id })
-                      : archiveItem({ id: item._id })
+                      ? unarchiveMutation.mutate(item.id)
+                      : archiveMutation.mutate(item.id)
                   }
                   title={item.isArchived ? "Unarchive" : "Archive"}
                 >
@@ -212,7 +247,13 @@ function ItemsCatalogTab({ networkServices }: { networkServices: Array<{ slug: s
 }
 
 function CreateItemModal({ onClose, networkServices }: { onClose: () => void; networkServices: Array<{ slug: string; name: string }> }) {
-  const createItem = useMutation(api.inventory.createItem);
+  const queryClient = useQueryClient();
+  const createMutation = useMutation({
+    mutationFn: (data: Parameters<typeof createItem>[0]) => createItem(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "itemCatalog"] });
+    },
+  });
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
     slug: "",
@@ -278,7 +319,7 @@ function CreateItemModal({ onClose, networkServices }: { onClose: () => void; ne
     if (!form.slug || !form.name || !form.description) return;
     setSaving(true);
     try {
-      await createItem({
+      await createMutation.mutateAsync({
         slug: form.slug,
         name: form.name,
         description: form.description,
@@ -495,12 +536,21 @@ function CreateItemModal({ onClose, networkServices }: { onClose: () => void; ne
   );
 }
 
-function EditItemModal({ itemId, onClose, networkServices }: { itemId: Id<"inventoryItems">; onClose: () => void; networkServices: Array<{ slug: string; name: string }> }) {
-  const items = useQuery(api.inventory.getItemCatalog, { includeArchived: true });
-  const updateItem = useMutation(api.inventory.updateItem);
+function EditItemModal({ itemId, onClose, networkServices }: { itemId: number; onClose: () => void; networkServices: Array<{ slug: string; name: string }> }) {
+  const queryClient = useQueryClient();
+  const { data: items } = useRQ({
+    queryKey: ["admin", "itemCatalog", true],
+    queryFn: () => getItemCatalog({ includeArchived: true }),
+  });
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: number; data: Parameters<typeof updateItem>[1] }) => updateItem(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "itemCatalog"] });
+    },
+  });
   const [saving, setSaving] = useState(false);
 
-  const item = items?.find((i) => i._id === itemId);
+  const item = items?.find((i) => i.id === itemId);
 
   const [form, setForm] = useState({
     name: "",
@@ -523,13 +573,14 @@ function EditItemModal({ itemId, onClose, networkServices }: { itemId: Id<"inven
   // Initialize form when item loads
   if (item && form.name === "" && item.name !== "") {
     const meta = (item as any).metadata as Record<string, any> | undefined;
+    const services = item.services as string[] | null;
     setForm({
       name: item.name,
       description: item.description,
       rarity: item.rarity,
       type: item.type,
-      services: item.services || [],
-      allServices: !item.services || item.services.length === 0,
+      services: services || [],
+      allServices: !services || services.length === 0,
       iconUrl: item.iconUrl || "",
       backgroundType: meta?.backgroundType || "solid",
       bgColor: meta?.color || "#1a1a2e",
@@ -577,15 +628,17 @@ function EditItemModal({ itemId, onClose, networkServices }: { itemId: Id<"inven
   const handleSave = async () => {
     setSaving(true);
     try {
-      await updateItem({
+      await updateMutation.mutateAsync({
         id: itemId,
-        name: form.name || undefined,
-        description: form.description || undefined,
-        rarity: form.rarity as any,
-        type: form.type as any,
-        services: form.allServices ? [] : form.services,
-        iconUrl: form.iconUrl || undefined,
-        metadata: buildEditMetadata(),
+        data: {
+          name: form.name || undefined,
+          description: form.description || undefined,
+          rarity: form.rarity,
+          type: form.type,
+          services: form.allServices ? [] : form.services,
+          iconUrl: form.iconUrl || undefined,
+          metadata: buildEditMetadata(),
+        },
       });
       onClose();
     } catch (error) {
@@ -772,8 +825,18 @@ function EditItemModal({ itemId, onClose, networkServices }: { itemId: Id<"inven
 // ============================================
 
 function LootboxTemplatesTab() {
-  const templates = useQuery(api.inventory.getLootboxTemplates);
-  const updateTemplate = useMutation(api.inventory.updateLootboxTemplate);
+  const queryClient = useQueryClient();
+  const { data: templates } = useRQ({
+    queryKey: ["admin", "lootboxTemplates"],
+    queryFn: () => getLootboxTemplates(),
+  });
+  const updateTemplateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: number; data: Parameters<typeof updateLootboxTemplate>[1] }) =>
+      updateLootboxTemplate(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "lootboxTemplates"] });
+    },
+  });
   const [showCreate, setShowCreate] = useState(false);
 
   return (
@@ -795,12 +858,12 @@ function LootboxTemplatesTab() {
       ) : (
         <TemplatesGrid>
           {templates.map((template) => (
-            <TemplateCard key={template._id} $active={template.isActive}>
+            <TemplateCard key={template.id} $active={template.isActive}>
               <TemplateCardHeader>
                 <div>
                   <TemplateName>{template.name}</TemplateName>
                   <TemplateMeta>
-                    {template.items.length} items &middot; Super Legends
+                    {(template.items as any[]).length} items &middot; Super Legends
                   </TemplateMeta>
                 </div>
               </TemplateCardHeader>
@@ -811,7 +874,7 @@ function LootboxTemplatesTab() {
                 </StatusBadge>
                 <ActionButton
                   onClick={() =>
-                    updateTemplate({ id: template._id, isActive: !template.isActive })
+                    updateTemplateMutation.mutate({ id: template.id, data: { isActive: !template.isActive } })
                   }
                 >
                   {template.isActive ? "Deactivate" : "Activate"}
@@ -828,18 +891,27 @@ function LootboxTemplatesTab() {
 }
 
 function CreateLootboxModal({ onClose }: { onClose: () => void }) {
-  const createTemplate = useMutation(api.inventory.createLootboxTemplate);
-  const items = useQuery(api.inventory.getItemCatalog, { includeArchived: false });
+  const queryClient = useQueryClient();
+  const createTemplateMutation = useMutation({
+    mutationFn: (data: Parameters<typeof createLootboxTemplate>[0]) => createLootboxTemplate(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "lootboxTemplates"] });
+    },
+  });
+  const { data: items } = useRQ({
+    queryKey: ["admin", "itemCatalog", false],
+    queryFn: () => getItemCatalog({ includeArchived: false }),
+  });
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
     name: "",
     description: "",
   });
   const [selectedItems, setSelectedItems] = useState<
-    Array<{ itemId: Id<"inventoryItems">; name: string }>
+    Array<{ itemId: number; name: string }>
   >([]);
 
-  const handleAddItem = (itemId: Id<"inventoryItems">, name: string) => {
+  const handleAddItem = (itemId: number, name: string) => {
     if (selectedItems.some((i) => i.itemId === itemId)) return;
     setSelectedItems([...selectedItems, { itemId, name }]);
   };
@@ -848,7 +920,7 @@ function CreateLootboxModal({ onClose }: { onClose: () => void }) {
     if (!form.name || selectedItems.length === 0) return;
     setSaving(true);
     try {
-      await createTemplate({
+      await createTemplateMutation.mutateAsync({
         name: form.name,
         description: form.description || undefined,
         items: selectedItems.map((i) => i.itemId),
@@ -893,13 +965,13 @@ function CreateLootboxModal({ onClose }: { onClose: () => void }) {
           {items && (
             <ItemPickerDropdown>
               <Select onChange={(e) => {
-                const item = items.find((i) => i._id === e.target.value);
-                if (item) handleAddItem(item._id, item.name);
+                const item = items.find((i) => i.id === Number(e.target.value));
+                if (item) handleAddItem(item.id, item.name);
                 e.target.value = "";
               }}>
                 <option value="">+ Add item...</option>
-                {items.filter((i) => !selectedItems.some((si) => si.itemId === i._id)).map((item) => (
-                  <option key={item._id} value={item._id}>{item.name} ({item.rarity})</option>
+                {items.filter((i) => !selectedItems.some((si) => si.itemId === i.id)).map((item) => (
+                  <option key={item.id} value={item.id}>{item.name} ({item.rarity})</option>
                 ))}
               </Select>
             </ItemPickerDropdown>
@@ -922,35 +994,74 @@ function CreateLootboxModal({ onClose }: { onClose: () => void }) {
 // ============================================
 
 function ShipAndSendTab() {
-  const templates = useQuery(api.inventory.getLootboxTemplates);
-  const items = useQuery(api.inventory.getItemCatalog, { includeArchived: false });
-  const shipLootbox = useMutation(api.inventory.shipLootbox);
-  const sendDirectItem = useMutation(api.inventory.sendDirectItem);
-  const users = useQuery(api.users.searchUsers, { limit: 50 });
+  const queryClient = useQueryClient();
+  const { data: templates } = useRQ({
+    queryKey: ["admin", "lootboxTemplates"],
+    queryFn: () => getLootboxTemplates(),
+  });
+  const { data: items } = useRQ({
+    queryKey: ["admin", "itemCatalog", false],
+    queryFn: () => getItemCatalog({ includeArchived: false }),
+  });
+
+  const shipLootboxMutation = useMutation({
+    mutationFn: (data: Parameters<typeof shipLootbox>[0]) => shipLootbox(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin"] });
+    },
+  });
+  const sendDirectItemMutation = useMutation({
+    mutationFn: (data: Parameters<typeof sendDirectItem>[0]) => sendDirectItem(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin"] });
+    },
+  });
+
+  // User search
+  const [userSearchQuery, setUserSearchQuery] = useState("");
+  const { data: searchedUsers } = useRQ({
+    queryKey: ["admin", "searchUsers", userSearchQuery],
+    queryFn: () => searchUsers(userSearchQuery),
+    enabled: userSearchQuery.length >= 2,
+  });
+  const users = searchedUsers ?? [];
+
   const [shipping, setShipping] = useState(false);
   const [result, setResult] = useState<string | null>(null);
 
   // Ship lootbox form
   const [shipTemplateId, setShipTemplateId] = useState("");
   const [shipTarget, setShipTarget] = useState<"tier1" | "tier2" | "all" | "specific">("all");
-  const [shipUserIds, setShipUserIds] = useState<Id<"users">[]>([]);
+  const [shipUserIds, setShipUserIds] = useState<number[]>([]);
 
   // Direct send form
   const [sendItemId, setSendItemId] = useState("");
   const [sendTarget, setSendTarget] = useState<"tier1" | "tier2" | "all" | "specific">("all");
-  const [sendUserIds, setSendUserIds] = useState<Id<"users">[]>([]);
+  const [sendUserIds, setSendUserIds] = useState<number[]>([]);
 
   const handleShipLootbox = async () => {
     if (!shipTemplateId) return;
     setShipping(true);
     setResult(null);
     try {
-      const res = await shipLootbox({
-        templateId: shipTemplateId as Id<"lootboxTemplates">,
-        targetUserIds: shipTarget === "specific" ? shipUserIds : undefined,
-        targetTier: shipTarget !== "specific" ? shipTarget : undefined,
-      });
-      setResult(`Shipped to ${res.shipped} users`);
+      if (shipTarget === "specific" && shipUserIds.length > 0) {
+        // Ship to each specific user individually
+        let shipped = 0;
+        const template = templates?.find((t) => t.id === Number(shipTemplateId));
+        for (const userId of shipUserIds) {
+          await shipLootboxMutation.mutateAsync({
+            userId,
+            templateId: Number(shipTemplateId),
+            boxStyle: "mystery_box",
+            displayName: template?.name ?? "Lootbox",
+          });
+          shipped++;
+        }
+        setResult(`Shipped to ${shipped} users`);
+      } else {
+        // TODO: Batch ship by tier not yet supported in new API — ship individually
+        setResult("Batch shipping by tier is not yet supported. Use specific users.");
+      }
     } catch (error) {
       setResult(`Error: ${error instanceof Error ? error.message : "Failed"}`);
     } finally {
@@ -963,12 +1074,21 @@ function ShipAndSendTab() {
     setShipping(true);
     setResult(null);
     try {
-      const res = await sendDirectItem({
-        itemId: sendItemId as Id<"inventoryItems">,
-        targetUserIds: sendTarget === "specific" ? sendUserIds : undefined,
-        targetTier: sendTarget !== "specific" ? sendTarget : undefined,
-      });
-      setResult(`Sent to ${res.sent} users`);
+      if (sendTarget === "specific" && sendUserIds.length > 0) {
+        // Send to each specific user individually
+        let sent = 0;
+        for (const userId of sendUserIds) {
+          await sendDirectItemMutation.mutateAsync({
+            userId,
+            itemId: Number(sendItemId),
+          });
+          sent++;
+        }
+        setResult(`Sent to ${sent} users`);
+      } else {
+        // TODO: Batch send by tier not yet supported in new API
+        setResult("Batch sending by tier is not yet supported. Use specific users.");
+      }
     } catch (error) {
       setResult(`Error: ${error instanceof Error ? error.message : "Failed"}`);
     } finally {
@@ -987,7 +1107,7 @@ function ShipAndSendTab() {
           <Select value={shipTemplateId} onChange={(e) => setShipTemplateId(e.target.value)}>
             <option value="">Select template...</option>
             {templates?.filter((t) => t.isActive).map((t) => (
-              <option key={t._id} value={t._id}>{t.name}</option>
+              <option key={t.id} value={t.id}>{t.name}</option>
             ))}
           </Select>
         </FormGroup>
@@ -1004,9 +1124,11 @@ function ShipAndSendTab() {
           <FormGroup>
             <Label>Select Users</Label>
             <UserMultiSelect
-              users={users || []}
+              users={users}
               selected={shipUserIds}
               onChange={setShipUserIds}
+              searchQuery={userSearchQuery}
+              onSearchChange={setUserSearchQuery}
             />
           </FormGroup>
         )}
@@ -1022,7 +1144,7 @@ function ShipAndSendTab() {
           <Select value={sendItemId} onChange={(e) => setSendItemId(e.target.value)}>
             <option value="">Select item...</option>
             {items?.map((item) => (
-              <option key={item._id} value={item._id}>{item.name} ({item.rarity})</option>
+              <option key={item.id} value={item.id}>{item.name} ({item.rarity})</option>
             ))}
           </Select>
         </FormGroup>
@@ -1039,9 +1161,11 @@ function ShipAndSendTab() {
           <FormGroup>
             <Label>Select Users</Label>
             <UserMultiSelect
-              users={users || []}
+              users={users}
               selected={sendUserIds}
               onChange={setSendUserIds}
+              searchQuery={userSearchQuery}
+              onSearchChange={setUserSearchQuery}
             />
           </FormGroup>
         )}
@@ -1057,20 +1181,32 @@ function UserMultiSelect({
   users,
   selected,
   onChange,
+  searchQuery,
+  onSearchChange,
 }: {
-  users: Array<{ _id: Id<"users">; displayName: string; username: string | null }>;
-  selected: Id<"users">[];
-  onChange: (ids: Id<"users">[]) => void;
+  users: Array<{ id: number; displayName: string; username: string | null }>;
+  selected: number[];
+  onChange: (ids: number[]) => void;
+  searchQuery: string;
+  onSearchChange: (q: string) => void;
 }) {
   return (
     <UserSelectContainer>
+      <SearchBar style={{ marginBottom: 8 }}>
+        <Search size={16} />
+        <SearchInput
+          placeholder="Search users..."
+          value={searchQuery}
+          onChange={(e) => onSearchChange(e.target.value)}
+        />
+      </SearchBar>
       {selected.length > 0 && (
         <SelectedUsers>
           {selected.map((id) => {
-            const user = users.find((u) => u._id === id);
+            const user = users.find((u) => u.id === id);
             return (
               <SelectedUserChip key={id} onClick={() => onChange(selected.filter((s) => s !== id))}>
-                {user?.displayName || id} <X size={12} />
+                {user?.displayName || `User ${id}`} <X size={12} />
               </SelectedUserChip>
             );
           })}
@@ -1078,17 +1214,18 @@ function UserMultiSelect({
       )}
       <Select
         onChange={(e) => {
-          if (e.target.value && !selected.includes(e.target.value as Id<"users">)) {
-            onChange([...selected, e.target.value as Id<"users">]);
+          const val = Number(e.target.value);
+          if (val && !selected.includes(val)) {
+            onChange([...selected, val]);
           }
           e.target.value = "";
         }}
       >
         <option value="">+ Add user...</option>
         {users
-          .filter((u) => !selected.includes(u._id))
+          .filter((u) => !selected.includes(u.id))
           .map((u) => (
-            <option key={u._id} value={u._id}>
+            <option key={u.id} value={u.id}>
               {u.displayName} {u.username ? `(@${u.username})` : ""}
             </option>
           ))}
@@ -1102,10 +1239,27 @@ function UserMultiSelect({
 // ============================================
 
 function TierClaimablesTab() {
-  const claimables = useQuery(api.inventory.getTierClaimables);
-  const items = useQuery(api.inventory.getItemCatalog, { includeArchived: false });
-  const createClaimable = useMutation(api.inventory.createTierClaimable);
-  const deactivate = useMutation(api.inventory.deactivateTierClaimable);
+  const queryClient = useQueryClient();
+  const { data: claimables } = useRQ({
+    queryKey: ["admin", "tierClaimables"],
+    queryFn: () => getTierClaimables(),
+  });
+  const { data: items } = useRQ({
+    queryKey: ["admin", "itemCatalog", false],
+    queryFn: () => getItemCatalog({ includeArchived: false }),
+  });
+  const createClaimableMutation = useMutation({
+    mutationFn: (data: Parameters<typeof createTierClaimable>[0]) => createTierClaimable(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "tierClaimables"] });
+    },
+  });
+  const deactivateMutation = useMutation({
+    mutationFn: (id: number) => deactivateTierClaimable(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "tierClaimables"] });
+    },
+  });
   const [showCreate, setShowCreate] = useState(false);
   const [creating, setCreating] = useState(false);
 
@@ -1118,8 +1272,8 @@ function TierClaimablesTab() {
     if (!newItemId) return;
     setCreating(true);
     try {
-      await createClaimable({
-        itemId: newItemId as Id<"inventoryItems">,
+      await createClaimableMutation.mutateAsync({
+        itemId: Number(newItemId),
         requiredTier: newTier,
         displayOrder: (claimables?.length ?? 0) + 1,
         headline: newHeadline || undefined,
@@ -1153,12 +1307,11 @@ function TierClaimablesTab() {
       ) : (
         <ClaimablesGrid>
           {claimables.map((c) => (
-            <ClaimableCard key={c._id} $active={c.isActive}>
+            <ClaimableCard key={c.id} $active={c.isActive}>
               <ClaimableInfo>
                 <ClaimableName>{c.item?.name || "Unknown Item"}</ClaimableName>
                 <ClaimableMeta>
-                  {c.requiredTier === "tier2" ? "Super Legend II" : "Super Legend"} &middot;{" "}
-                  {c.claimCount} claims
+                  {c.requiredTier === "tier2" ? "Super Legend II" : "Super Legend"}
                 </ClaimableMeta>
                 {c.headline && <ClaimableHeadline>{c.headline}</ClaimableHeadline>}
               </ClaimableInfo>
@@ -1167,7 +1320,7 @@ function TierClaimablesTab() {
                   {c.isActive ? "Active" : "Inactive"}
                 </StatusBadge>
                 {c.isActive && (
-                  <ActionButton onClick={() => deactivate({ id: c._id })}>Deactivate</ActionButton>
+                  <ActionButton onClick={() => deactivateMutation.mutate(c.id)}>Deactivate</ActionButton>
                 )}
               </ClaimableActions>
             </ClaimableCard>
@@ -1187,7 +1340,7 @@ function TierClaimablesTab() {
               <Select value={newItemId} onChange={(e) => setNewItemId(e.target.value)}>
                 <option value="">Select item...</option>
                 {items?.map((item) => (
-                  <option key={item._id} value={item._id}>{item.name} ({item.rarity})</option>
+                  <option key={item.id} value={item.id}>{item.name} ({item.rarity})</option>
                 ))}
               </Select>
             </FormGroup>
@@ -1220,7 +1373,10 @@ function TierClaimablesTab() {
 // ============================================
 
 function AnalyticsTab() {
-  const analytics = useQuery(api.inventory.getInventoryAnalytics);
+  const { data: analytics } = useRQ({
+    queryKey: ["admin", "inventoryAnalytics"],
+    queryFn: () => getInventoryAnalytics(),
+  });
 
   if (!analytics) return <LoadingText>Loading analytics...</LoadingText>;
 
@@ -1228,55 +1384,33 @@ function AnalyticsTab() {
     <AnalyticsContainer>
       <StatCards>
         <StatCard>
-          <StatNumber>{analytics.catalogSize}</StatNumber>
+          <StatNumber>{analytics.totalItems}</StatNumber>
           <StatLabel>Items in Catalog</StatLabel>
         </StatCard>
         <StatCard>
-          <StatNumber>{analytics.totalItemsInCirculation}</StatNumber>
+          <StatNumber>{analytics.totalOwned}</StatNumber>
           <StatLabel>Items in Circulation</StatLabel>
         </StatCard>
         <StatCard>
-          <StatNumber>{analytics.uniqueOwners}</StatNumber>
-          <StatLabel>Unique Owners</StatLabel>
-        </StatCard>
-        <StatCard>
-          <StatNumber>{analytics.lootboxes.total}</StatNumber>
+          <StatNumber>{analytics.totalLootboxes}</StatNumber>
           <StatLabel>Lootboxes Shipped</StatLabel>
         </StatCard>
+        <StatCard>
+          <StatNumber>{analytics.totalClaims}</StatNumber>
+          <StatLabel>Total Claims</StatLabel>
+        </StatCard>
       </StatCards>
-
-      <AnalyticsSection>
-        <SectionTitle><Layers size={20} /> Items by Rarity</SectionTitle>
-        <RarityBars>
-          {(["common", "uncommon", "rare", "epic", "legendary"] as Rarity[]).map((rarity) => {
-            const count = analytics.itemsByRarity[rarity] || 0;
-            const maxCount = Math.max(...Object.values(analytics.itemsByRarity), 1);
-            return (
-              <RarityBar key={rarity}>
-                <RarityBarLabel>
-                  <RarityDot $color={RARITY_COLORS[rarity].color} />
-                  {rarity}
-                </RarityBarLabel>
-                <RarityBarTrack>
-                  <RarityBarFill $color={RARITY_COLORS[rarity].color} $width={(count / maxCount) * 100} />
-                </RarityBarTrack>
-                <RarityBarCount>{count}</RarityBarCount>
-              </RarityBar>
-            );
-          })}
-        </RarityBars>
-      </AnalyticsSection>
 
       <AnalyticsSection>
         <SectionTitle><Box size={20} /> Lootboxes</SectionTitle>
         <StatRow>
           <StatPair>
-            <StatPairLabel>Opened</StatPairLabel>
-            <StatPairValue>{analytics.lootboxes.opened}</StatPairValue>
+            <StatPairLabel>Total</StatPairLabel>
+            <StatPairValue>{analytics.totalLootboxes}</StatPairValue>
           </StatPair>
           <StatPair>
             <StatPairLabel>Unopened</StatPairLabel>
-            <StatPairValue>{analytics.lootboxes.unopened}</StatPairValue>
+            <StatPairValue>{analytics.unopenedLootboxes}</StatPairValue>
           </StatPair>
           <StatPair>
             <StatPairLabel>Total Claims</StatPairLabel>
@@ -1729,58 +1863,6 @@ const AnalyticsSection = styled.div`
   padding: 20px;
 `;
 
-const RarityBars = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-`;
-
-const RarityBar = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 12px;
-`;
-
-const RarityBarLabel = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  width: 100px;
-  font-size: 13px;
-  color: ${(p) => p.theme.textColor};
-  text-transform: capitalize;
-`;
-
-const RarityDot = styled.div<{ $color: string }>`
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: ${(p) => p.$color};
-`;
-
-const RarityBarTrack = styled.div`
-  flex: 1;
-  height: 20px;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 4px;
-  overflow: hidden;
-`;
-
-const RarityBarFill = styled.div<{ $color: string; $width: number }>`
-  height: 100%;
-  width: ${(p) => p.$width}%;
-  background: ${(p) => p.$color};
-  border-radius: 4px;
-  transition: width 0.3s ease;
-`;
-
-const RarityBarCount = styled.div`
-  width: 40px;
-  text-align: right;
-  font-size: 13px;
-  font-weight: 600;
-  color: ${(p) => p.theme.contrast};
-`;
 
 const StatRow = styled.div`
   display: flex;
