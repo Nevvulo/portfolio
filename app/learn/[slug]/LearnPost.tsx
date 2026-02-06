@@ -643,7 +643,7 @@ function PostBody({
         }
 
         // Fallback: find by searching in the content using the highlight data
-        const mappedH = mappedHighlights?.find((h) => h._id === highlightId);
+        const mappedH = mappedHighlights?.find((h) => h.id === highlightId);
         if (mappedH && contentRef.current) {
           const container = contentRef.current;
           const fullText = container.textContent || "";
@@ -795,9 +795,9 @@ function PostBody({
   const heroExtraPadding = enableTitleAnimation ? heroExtraPaddingAnimated : isMobile ? 100 : 70;
   const contentPullUp = enableTitleAnimation ? contentPullUpAnimated : 0;
 
-  // Map highlights for overlay (Drizzle shape -> component expected shape with _id)
+  // Map highlights for overlay (Drizzle shape -> component expected shape)
   const mappedHighlights = highlights?.map((h) => ({
-    _id: String(h.id),
+    id: String(h.id),
     highlightedText: h.highlightedText,
     prefix: h.prefix,
     suffix: h.suffix,
@@ -805,7 +805,7 @@ function PostBody({
     isReactionOnly: h.isReactionOnly,
     user: h.user
       ? {
-          _id: String(h.user.id),
+          id: String(h.user.id),
           displayName: h.user.displayName ?? "",
           avatarUrl: h.user.avatarUrl ?? undefined,
         }
@@ -815,20 +815,20 @@ function PostBody({
   // Map highlights for modal (byUser groups)
   const mappedByUser = highlightsWithDetails?.byUser?.map((group) => ({
     user: {
-      _id: String(group.user.id),
+      id: String(group.user.id),
       displayName: group.user.displayName ?? "",
       username: group.user.username ?? undefined,
       avatarUrl: group.user.avatarUrl ?? undefined,
     },
     highlights: group.highlights.map((h) => ({
-      _id: String(h.id),
+      id: String(h.id),
       highlightedText: h.highlightedText,
       prefix: h.prefix,
       suffix: h.suffix,
       createdAt: new Date(h.createdAt).getTime(),
       user: h.user
         ? {
-            _id: String(h.user.id),
+            id: String(h.user.id),
             displayName: h.user.displayName ?? "",
             username: h.user.username ?? undefined,
             avatarUrl: h.user.avatarUrl ?? undefined,
@@ -839,13 +839,13 @@ function PostBody({
 
   // Map comments for inline bubble
   const mappedComments = activeHighlightComments?.map((c) => ({
-    _id: String(c.id),
+    id: String(c.id),
     content: c.content,
     createdAt: new Date(c.createdAt).getTime(),
     isEdited: c.isEdited,
     author: c.author
       ? {
-          _id: String(c.author.id),
+          id: String(c.author.id),
           displayName: c.author.displayName ?? "",
           username: c.author.username ?? undefined,
           avatarUrl: c.author.avatarUrl ?? undefined,
