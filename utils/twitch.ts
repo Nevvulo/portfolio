@@ -10,14 +10,14 @@ const TWITCH_BROADCASTER_REFRESH_TOKEN = process.env.TWITCH_BROADCASTER_REFRESH_
 let cachedToken: { access_token: string; expires_at: number } | null = null;
 let broadcasterToken: { access_token: string; expires_at: number } | null = null;
 
-export async function getTwitchAccessToken(): Promise<string> {
+export async function getTwitchAccessToken(): Promise<string | null> {
   // Check if we have a valid cached token
   if (cachedToken && cachedToken.expires_at > Date.now()) {
     return cachedToken.access_token;
   }
 
   if (!TWITCH_CLIENT_ID || !TWITCH_CLIENT_SECRET) {
-    throw new Error("Twitch credentials not configured");
+    return null;
   }
 
   try {
@@ -34,7 +34,8 @@ export async function getTwitchAccessToken(): Promise<string> {
     });
 
     if (!response.ok) {
-      throw new Error(`Failed to get Twitch access token: ${response.statusText}`);
+      console.warn(`Twitch token request failed: ${response.statusText}`);
+      return null;
     }
 
     const data = await response.json();
@@ -47,8 +48,8 @@ export async function getTwitchAccessToken(): Promise<string> {
 
     return data.access_token;
   } catch (error) {
-    console.error("Error getting Twitch access token:", error);
-    throw error;
+    console.warn("Twitch token unavailable:", (error as Error).message);
+    return null;
   }
 }
 
@@ -63,11 +64,12 @@ export async function checkTwitchLiveStatus(): Promise<boolean> {
     }
 
     const accessToken = await getTwitchAccessToken();
+    if (!accessToken) return false;
 
     // Check if the user is currently streaming
     const response = await fetch(`https://api.twitch.tv/helix/streams?user_id=${TWITCH_USER_ID}`, {
       headers: {
-        "Client-ID": TWITCH_CLIENT_ID,
+        "Client-ID": TWITCH_CLIENT_ID!,
         Authorization: `Bearer ${accessToken}`,
       },
     });
@@ -80,8 +82,7 @@ export async function checkTwitchLiveStatus(): Promise<boolean> {
 
     // If data.data is not empty, the user is live
     return data.data && data.data.length > 0;
-  } catch (error) {
-    console.error("Error checking Twitch live status:", error);
+  } catch {
     return false;
   }
 }
@@ -90,38 +91,39 @@ export async function checkTwitchLiveStatus(): Promise<boolean> {
  * Get broadcaster access token using refresh token.
  * This token is used to check if users are subscribed to the channel.
  */
-async function getBroadcasterAccessToken(): Promise<string> {
+async function getBroadcasterAccessToken(): Promise<string | null> {
   if (broadcasterToken && broadcasterToken.expires_at > Date.now()) {
     return broadcasterToken.access_token;
   }
 
   if (!TWITCH_BROADCASTER_REFRESH_TOKEN || !TWITCH_CLIENT_ID || !TWITCH_CLIENT_SECRET) {
-    throw new Error("Broadcaster refresh token or Twitch credentials not configured");
+    return null;
   }
 
-  const response = await fetch("https://id.twitch.tv/oauth2/token", {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({
-      client_id: TWITCH_CLIENT_ID,
-      client_secret: TWITCH_CLIENT_SECRET,
-      grant_type: "refresh_token",
-      refresh_token: TWITCH_BROADCASTER_REFRESH_TOKEN,
-    }),
-  });
+  try {
+    const response = await fetch("https://id.twitch.tv/oauth2/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        client_id: TWITCH_CLIENT_ID,
+        client_secret: TWITCH_CLIENT_SECRET,
+        grant_type: "refresh_token",
+        refresh_token: TWITCH_BROADCASTER_REFRESH_TOKEN,
+      }),
+    });
 
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Failed to refresh broadcaster token: ${response.statusText} - ${errorText}`);
+    if (!response.ok) return null;
+
+    const data: TwitchTokenResponse = await response.json();
+    broadcasterToken = {
+      access_token: data.access_token,
+      expires_at: Date.now() + data.expires_in * 1000 - 60000,
+    };
+
+    return data.access_token;
+  } catch {
+    return null;
   }
-
-  const data: TwitchTokenResponse = await response.json();
-  broadcasterToken = {
-    access_token: data.access_token,
-    expires_at: Date.now() + data.expires_in * 1000 - 60000,
-  };
-
-  return data.access_token;
 }
 
 export interface UserSubscriptionResult {
@@ -135,43 +137,44 @@ export interface UserSubscriptionResult {
  */
 export async function checkUserSubscription(userId: string): Promise<UserSubscriptionResult> {
   if (!TWITCH_CLIENT_ID) {
-    throw new Error("Twitch client ID not configured");
-  }
-
-  const accessToken = await getBroadcasterAccessToken();
-
-  const response = await fetch(
-    `https://api.twitch.tv/helix/subscriptions/user?broadcaster_id=${TWITCH_USER_ID}&user_id=${userId}`,
-    {
-      headers: {
-        "Client-ID": TWITCH_CLIENT_ID,
-        Authorization: `Bearer ${accessToken}`,
-      },
-    },
-  );
-
-  if (!response.ok) {
-    if (response.status === 404) {
-      return { tier: null, isGift: false };
-    }
-    const errorText = await response.text();
-    throw new Error(`Twitch API error: ${response.statusText} - ${errorText}`);
-  }
-
-  const data: TwitchSubscriptionResponse = await response.json();
-  const sub = data.data?.[0];
-  if (!sub) {
     return { tier: null, isGift: false };
   }
 
-  const tierMap: Record<string, 1 | 2 | 3> = {
-    "1000": 1,
-    "2000": 2,
-    "3000": 3,
-  };
+  try {
+    const accessToken = await getBroadcasterAccessToken();
+    if (!accessToken) return { tier: null, isGift: false };
 
-  return {
-    tier: tierMap[sub.tier] || null,
-    isGift: sub.is_gift,
-  };
+    const response = await fetch(
+      `https://api.twitch.tv/helix/subscriptions/user?broadcaster_id=${TWITCH_USER_ID}&user_id=${userId}`,
+      {
+        headers: {
+          "Client-ID": TWITCH_CLIENT_ID,
+          Authorization: `Bearer ${accessToken}`,
+        },
+      },
+    );
+
+    if (!response.ok) {
+      return { tier: null, isGift: false };
+    }
+
+    const data: TwitchSubscriptionResponse = await response.json();
+    const sub = data.data?.[0];
+    if (!sub) {
+      return { tier: null, isGift: false };
+    }
+
+    const tierMap: Record<string, 1 | 2 | 3> = {
+      "1000": 1,
+      "2000": 2,
+      "3000": 3,
+    };
+
+    return {
+      tier: tierMap[sub.tier] || null,
+      isGift: sub.is_gift,
+    };
+  } catch {
+    return { tier: null, isGift: false };
+  }
 }
