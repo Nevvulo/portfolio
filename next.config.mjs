@@ -95,14 +95,75 @@ const nextConfig = {
     minimumCacheTTL: 31536000, // 1 year cache
   },
 
-  // Rewrites - map /@username to /u/username
+  // Rewrites
   async rewrites() {
-    return [
-      {
-        source: "/@:username",
-        destination: "/u/:username",
-      },
-    ];
+    return {
+      // beforeFiles: proxy ActivityPub/federation requests to Fly.io backend
+      beforeFiles: [
+        // Well-known endpoints for federation discovery
+        {
+          source: "/.well-known/webfinger",
+          destination: "https://api.nev.so/.well-known/webfinger",
+        },
+        {
+          source: "/.well-known/nodeinfo",
+          destination: "https://api.nev.so/.well-known/nodeinfo",
+        },
+        {
+          source: "/.well-known/host-meta",
+          destination: "https://api.nev.so/.well-known/host-meta",
+        },
+        {
+          source: "/.well-known/oauth-authorization-server",
+          destination: "https://api.nev.so/.well-known/oauth-authorization-server",
+        },
+        // Matrix delegation
+        {
+          source: "/.well-known/matrix/:path*",
+          destination: "https://api.nev.so/.well-known/matrix/:path*",
+        },
+        // NodeInfo
+        {
+          source: "/nodeinfo/:path*",
+          destination: "https://api.nev.so/nodeinfo/:path*",
+        },
+        // ActivityPub actor profiles & inbox
+        {
+          source: "/users/:username",
+          destination: "https://api.nev.so/users/:username",
+        },
+        {
+          source: "/users/:username/:path*",
+          destination: "https://api.nev.so/users/:username/:path*",
+        },
+        {
+          source: "/inbox",
+          destination: "https://api.nev.so/inbox",
+        },
+        // Mastodon API (for apps that use nev.so as instance domain)
+        {
+          source: "/api/v1/:path*",
+          destination: "https://api.nev.so/api/v1/:path*",
+        },
+        {
+          source: "/api/v2/:path*",
+          destination: "https://api.nev.so/api/v2/:path*",
+        },
+        // OAuth (for Mastodon app login flow)
+        {
+          source: "/oauth/:path*",
+          destination: "https://api.nev.so/oauth/:path*",
+        },
+      ],
+      // afterFiles: regular rewrites
+      afterFiles: [
+        {
+          source: "/@:username",
+          destination: "/u/:username",
+        },
+      ],
+      fallback: [],
+    };
   },
 
   // Redirects
