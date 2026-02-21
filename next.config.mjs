@@ -149,6 +149,11 @@ const nextConfig = {
           source: "/api/v2/:path*",
           destination: "https://api.nev.so/api/v2/:path*",
         },
+        // Internal API (connected accounts, Matrix, etc.)
+        {
+          source: "/api/internal/:path*",
+          destination: "https://api.nev.so/api/internal/:path*",
+        },
         // OAuth (for Mastodon app login flow)
         {
           source: "/oauth/:path*",
