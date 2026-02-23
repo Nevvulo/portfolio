@@ -24,6 +24,7 @@ export const users = pgTable(
     id: serial("id").primaryKey(),
     clerkId: varchar("clerk_id", { length: 255 }).notNull().unique(),
     discordId: varchar("discord_id", { length: 255 }),
+    fluxerId: varchar("fluxer_id", { length: 255 }),
     username: varchar("username", { length: 255 }).unique(),
     displayName: varchar("display_name", { length: 255 }).notNull(),
     avatarUrl: text("avatar_url"),
@@ -91,6 +92,7 @@ export const users = pgTable(
   (table) => [
     uniqueIndex("users_clerk_id_idx").on(table.clerkId),
     index("users_discord_id_idx").on(table.discordId),
+    index("users_fluxer_id_idx").on(table.fluxerId),
     index("users_username_idx").on(table.username),
     index("users_status_idx").on(table.status),
     index("users_roblox_user_id_idx").on(table.robloxUserId),

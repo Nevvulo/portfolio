@@ -42,6 +42,7 @@ export async function getMyProfile() {
     role: user.role,
     tier: user.tier,
     discordId: user.discordId,
+    fluxerId: user.fluxerId,
     twitchUsername: user.twitchUsername,
     robloxUserId: user.robloxUserId,
   };

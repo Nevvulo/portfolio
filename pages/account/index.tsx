@@ -83,6 +83,9 @@ export default function AccountPage() {
   const googleAccount = user.externalAccounts.find((account) => account.provider === "google");
   const twitchAccount = user.externalAccounts.find((account) => account.provider === "twitch");
 
+  // Fluxer connection status from query params (after OAuth callback) or DB
+  const fluxerConnected = router.query.fluxer === "connected" || !!meData?.fluxerId;
+
   const handleConnectDiscord = async () => {
     try {
       await user.createExternalAccount({
@@ -340,6 +343,23 @@ export default function AccountPage() {
               </ConnectionInfo>
               {!twitchAccount && (
                 <ConnectButton onClick={handleConnectTwitch}>Connect</ConnectButton>
+              )}
+            </ConnectionCard>
+
+            <ConnectionCard $connected={fluxerConnected}>
+              <ConnectionIcon>
+                <FluxerIcon />
+              </ConnectionIcon>
+              <ConnectionInfo>
+                <ConnectionName>Fluxer</ConnectionName>
+                {fluxerConnected ? (
+                  <ConnectionStatus $connected>Connected</ConnectionStatus>
+                ) : (
+                  <ConnectionStatus>Not connected</ConnectionStatus>
+                )}
+              </ConnectionInfo>
+              {!fluxerConnected && (
+                <ConnectButton as="a" href="/api/fluxer/authorize">Connect</ConnectButton>
               )}
             </ConnectionCard>
           </ConnectionsGrid>
@@ -815,6 +835,12 @@ const SparklesIcon = () => (
 const TwitchIcon = () => (
   <svg width="32" height="32" viewBox="0 0 24 24" fill="#9147ff">
     <path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714Z" />
+  </svg>
+);
+
+const FluxerIcon = () => (
+  <svg width="32" height="32" viewBox="0 0 24 24" fill="#5865F2">
+    <path d="M13 3L4 14h5v7l9-11h-5V3z" />
   </svg>
 );
 
