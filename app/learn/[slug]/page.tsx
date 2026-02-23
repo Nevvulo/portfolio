@@ -1,11 +1,14 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { serialize } from "next-mdx-remote/serialize";
 import remarkGfm from "remark-gfm";
+import remarkParse from "remark-parse";
+import remarkRehype from "remark-rehype";
+import rehypeSlug from "rehype-slug";
+import rehypeStringify from "rehype-stringify";
+import { unified } from "unified";
 import { getPostBySlug, getPublishedSlugs } from "@/src/db/queries/blog";
 import { getCurrentUser } from "@/src/db/auth";
 import { canAccessTier } from "@/src/db/auth-utils";
-import { isLearnTitleAnimationEnabled } from "@/lib/flags";
 import { fetchDiscordWidget } from "@/utils/discord-widget";
 import LearnPost from "./LearnPost";
 
@@ -135,20 +138,8 @@ function stripDuplicates(
   return lines.slice(linesToRemove).join("\n");
 }
 
-function escapeCurlyBraces(content: string): string {
-  const codeBlockRegex = /```[\s\S]*?```|`[^`\n]+`/g;
-  const codeBlocks: string[] = [];
-  const withPlaceholders = content.replace(codeBlockRegex, (match) => {
-    codeBlocks.push(match);
-    return `__CODE_BLOCK_${codeBlocks.length - 1}__`;
-  });
-  const escaped = withPlaceholders.replace(/\{/g, "\\{").replace(/\}/g, "\\}");
-  return escaped.replace(/__CODE_BLOCK_(\d+)__/g, (_, index) => codeBlocks[parseInt(index)] ?? "");
-}
-
 export default async function Page({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const enableTitleAnimation = await isLearnTitleAnimationEnabled();
 
   const post = await getPostBySlug(slug);
 
@@ -156,9 +147,22 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
     notFound();
   }
 
-  // Check tier access
-  const user = await getCurrentUser();
-  const hasAccess = canAccessTier(user?.tier, post.visibility);
+  // Title animation: hardcoded to avoid calling the flag system which uses
+  // Clerk's auth() internally, forcing dynamic rendering and breaking ISR.
+  const enableTitleAnimation = false;
+
+  // For public posts, skip auth entirely so the page stays ISR-cacheable.
+  // Calling auth()/getCurrentUser() reads cookies which forces Next.js into
+  // dynamic streaming SSR — crawlers and LLMs then only see the loading.tsx
+  // spinner because the actual content arrives as RSC payload in <script> tags.
+  //
+  // For non-public (tier-gated) posts, we still need auth to check access.
+  // Those pages become dynamic, which is fine since their content is restricted.
+  let hasAccess = true;
+  if (post.visibility !== "public") {
+    const user = await getCurrentUser();
+    hasAccess = canAccessTier(user?.tier, post.visibility);
+  }
 
   if (!hasAccess) {
     // Return post metadata without body for tier-locked content
@@ -170,7 +174,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
           hasAccess: false,
           requiredTier: post.visibility,
         }}
-        mdxSource={null}
+        contentHtml={null}
         discordWidget={null}
         enableTitleAnimation={enableTitleAnimation}
         hasDuplicateTitle={false}
@@ -195,25 +199,31 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
     hasDuplicateDescription,
   );
 
-  let mdxSource = null;
-  try {
-    const escapedContent = escapeCurlyBraces(processedContent);
-    mdxSource = await serialize(escapedContent, {
-      mdxOptions: {
-        remarkPlugins: [remarkGfm],
-        development: process.env.NODE_ENV === "development",
-      },
-    });
-  } catch (mdxError) {
-    console.error("MDX serialization error:", mdxError);
-  }
-
   const discordWidget = await fetchDiscordWidget().catch(() => null);
+
+  // Compile MDX/markdown → HTML on the server using remark/rehype.
+  // This produces plain HTML that goes directly into the static page,
+  // making article content visible to crawlers, LLMs, and link unfurlers.
+  // The BlogStyle global CSS in LearnPost handles styling.
+  // rehype-slug adds IDs to headings for TOC navigation.
+  let contentHtml: string | null = null;
+  try {
+    const result = await unified()
+      .use(remarkParse)
+      .use(remarkGfm)
+      .use(remarkRehype, { allowDangerousHtml: true })
+      .use(rehypeSlug)
+      .use(rehypeStringify, { allowDangerousHtml: true })
+      .process(processedContent);
+    contentHtml = String(result);
+  } catch (mdxError) {
+    console.error("MDX compilation error:", mdxError);
+  }
 
   return (
     <LearnPost
       post={{ ...post, hasAccess: true }}
-      mdxSource={mdxSource}
+      contentHtml={contentHtml}
       discordWidget={discordWidget}
       enableTitleAnimation={enableTitleAnimation}
       hasDuplicateTitle={hasDuplicateTitle}

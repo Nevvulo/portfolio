@@ -2,22 +2,17 @@
 
 import { useUser } from "@clerk/nextjs";
 import { faDev, faHashnode, faMedium } from "@fortawesome/free-brands-svg-icons";
-import { faExternalLinkAlt } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useQuery as useRQ, useQueryClient } from "@tanstack/react-query";
 import { m, useScroll, useSpring, useTransform } from "framer-motion";
 import { FileText, Share2 } from "lucide-react";
 import Link from "next/link";
-import { MDXRemote, type MDXRemoteSerializeResult } from "next-mdx-remote";
-import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import styled, { createGlobalStyle } from "styled-components";
 import { CircleIndicator } from "@/components/blog/circle-indicator";
-import CodeBlock from "@/components/blog/codeblock";
-import { DiscordInviteLink, isDiscordInvite } from "@/components/blog/discord-invite-link";
 import { Label, Labels } from "@/components/blog/labels";
 import { PostHeader } from "@/components/blog/post-header";
 import { PostHeroImg } from "@/components/blog/post-hero-img";
-import { PostImg } from "@/components/blog/post-img";
 import { PostSubheader } from "@/components/blog/post-sub-header";
 import { Container } from "@/components/container";
 import { IconLink } from "@/components/generics";
@@ -66,15 +61,6 @@ import {
 import { grantPostViewXp } from "@/src/db/actions/experience";
 import type { DiscordWidget } from "@/types/discord";
 
-// Context for Discord widget data
-const DiscordWidgetContext = createContext<DiscordWidget | null>(null);
-
-// Component that uses the context
-function DiscordLink({ href }: { href: string }) {
-  const widget = useContext(DiscordWidgetContext);
-  return <DiscordInviteLink href={href} widget={widget} />;
-}
-
 interface AuthorInfo {
   id: number;
   displayName: string | null;
@@ -113,7 +99,7 @@ interface PostData {
 
 type LearnPostProps = {
   post: PostData | null;
-  mdxSource: MDXRemoteSerializeResult | null;
+  contentHtml: string | null;
   discordWidget: DiscordWidget | null;
   enableTitleAnimation: boolean;
   hasDuplicateTitle: boolean;
@@ -122,7 +108,7 @@ type LearnPostProps = {
 
 export default function LearnPost({
   post,
-  mdxSource,
+  contentHtml,
   discordWidget,
   enableTitleAnimation,
   hasDuplicateTitle,
@@ -236,19 +222,17 @@ export default function LearnPost({
 
   return (
     <UserPopoutProvider>
-      <DiscordWidgetContext.Provider value={discordWidget}>
-        <CircleIndicator onComplete={() => setCompleted(true)} />
-        <PostBody
-          post={post}
-          mdxSource={mdxSource}
-          similarArticles={similarArticles}
-          enableTitleAnimation={enableTitleAnimation}
-          hasDuplicateTitle={hasDuplicateTitle}
-          hasDuplicateDescription={hasDuplicateDescription}
-        />
-        {/* UserPopout rendered at root level for portal positioning */}
-        <UserPopout />
-      </DiscordWidgetContext.Provider>
+      <CircleIndicator onComplete={() => setCompleted(true)} />
+      <PostBody
+        post={post}
+        contentHtml={contentHtml}
+        similarArticles={similarArticles}
+        enableTitleAnimation={enableTitleAnimation}
+        hasDuplicateTitle={hasDuplicateTitle}
+        hasDuplicateDescription={hasDuplicateDescription}
+      />
+      {/* UserPopout rendered at root level for portal positioning */}
+      <UserPopout />
     </UserPopoutProvider>
   );
 }
@@ -270,14 +254,14 @@ interface SimilarArticle {
 
 function PostBody({
   post,
-  mdxSource,
+  contentHtml,
   similarArticles,
   enableTitleAnimation,
   hasDuplicateTitle,
   hasDuplicateDescription,
 }: {
   post: PostData;
-  mdxSource: MDXRemoteSerializeResult | null;
+  contentHtml: string | null;
   similarArticles?: SimilarArticle[];
   enableTitleAnimation: boolean;
   hasDuplicateTitle: boolean;
@@ -1075,8 +1059,8 @@ function PostBody({
         )}
 
         <HighlightableContent ref={contentRef}>
-          {mdxSource ? (
-            <MDXRemote components={mdxComponents} {...mdxSource} />
+          {contentHtml ? (
+            <div dangerouslySetInnerHTML={{ __html: contentHtml }} />
           ) : (
             <FallbackContent>{post.body}</FallbackContent>
           )}
@@ -1284,104 +1268,7 @@ function PostBody({
   );
 }
 
-const getPostImage = (src: string) => {
-  if (src.startsWith("./") || src.startsWith("../")) {
-    return src;
-  }
-  return src;
-};
-
-// Static MDX components - duplicates are stripped server-side
-const mdxComponents = {
-  pre: (props: any) => <CodeBlock {...props} />,
-  img: (props: any) => {
-    const src = getPostImage(props.src || "");
-    return <PostImg loading="lazy" {...props} src={src} />;
-  },
-  a: (props: any) => {
-    let href = props.href || "";
-    let children = props.children;
-
-    // Handle malformed markdown-style hrefs: [text](url) passed as href
-    // This can happen when markdown isn't parsed correctly
-    const markdownLinkMatch = href.match(/^\[([^\]]*)\]\(([^)]+)\)$/);
-    if (markdownLinkMatch) {
-      // Extract the actual URL from the markdown syntax
-      href = markdownLinkMatch[2] || "";
-      // Use the link text as children if current children is just the malformed href
-      if (children === props.href || !children) {
-        children = markdownLinkMatch[1] || href;
-      }
-    }
-
-    // Also handle URL-encoded markdown: %5Btext%5D(url) or %5Btext%5D%28url%29
-    if (href.includes("%5B") || href.includes("%5D")) {
-      try {
-        const decoded = decodeURIComponent(href);
-        const decodedMatch = decoded.match(/^\[([^\]]*)\]\(([^)]+)\)$/);
-        if (decodedMatch) {
-          href = decodedMatch[2] || "";
-          if (children === props.href || !children) {
-            children = decodedMatch[1] || href;
-          }
-        }
-      } catch {
-        // Ignore decoding errors
-      }
-    }
-
-    if (isDiscordInvite(href)) {
-      return <DiscordLink href={href} />;
-    }
-
-    // Check for external links: http(s)://, protocol-relative (//), mailto:, tel:
-    const isExternal =
-      href.startsWith("http://") ||
-      href.startsWith("https://") ||
-      href.startsWith("//") ||
-      href.startsWith("mailto:") ||
-      href.startsWith("tel:");
-
-    // For external links, open in new tab with proper attributes
-    if (isExternal) {
-      // For protocol-relative URLs, ensure they have https
-      const normalizedHref = href.startsWith("//") ? `https:${href}` : href;
-      return (
-        <ExternalLink
-          href={normalizedHref}
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{ textDecorationThickness: "0.125em", fontSize: "0.975em" }}
-        >
-          {children}
-          <ExternalIcon icon={faExternalLinkAlt} />
-        </ExternalLink>
-      );
-    }
-
-    // Internal links use IconLink (uses Next.js Link for SPA navigation)
-    return (
-      <IconLink
-        style={{ textDecorationThickness: "0.125em", fontSize: "0.975em" }}
-        isExternal={false}
-        {...props}
-        href={href}
-      >
-        {children}
-      </IconLink>
-    );
-  },
-  strong: (props: any) => <BoldText {...props} />,
-  h1: (props: any) => <Title {...props} />,
-  h2: (props: any) => <Subtitle {...props} />,
-  h3: (props: any) => <Heading3 {...props} />,
-  h4: (props: any) => <Heading4 {...props} />,
-  p: (props: any) => <Text {...props} />,
-  ol: (props: any) => <DotpointList {...props} />,
-  ul: (props: any) => <NumberedList {...props} />,
-  li: (props: any) => <ListItem {...props} />,
-};
-
+// MDX components moved to ./mdx-components.tsx for server-side compileMDX
 // Styled components for shared element transitions
 const HeroTitleWrapper = styled(m.div)`
   will-change: opacity, transform;
@@ -1468,27 +1355,7 @@ const ContentDescription = styled.p`
   }
 `;
 
-// Styled components
-const ExternalLink = styled.a`
-  color: #9074f2;
-  font-family: var(--font-mono);
-  font-weight: 600;
-  text-decoration: underline;
-  text-underline-offset: 2px;
-  cursor: pointer;
-
-  &:hover {
-    opacity: 0.8;
-  }
-`;
-
-const ExternalIcon = styled(FontAwesomeIcon)`
-  width: 10px;
-  height: 10px;
-  margin-left: 4px;
-  color: #bbbbbb;
-  vertical-align: baseline;
-`;
+// MDX text styling components moved to ./mdx-components.tsx
 
 const AuthorAvatarInline = styled.img`
   width: 18px;
@@ -1802,355 +1669,6 @@ const BlogStyle = createGlobalStyle`
     opacity: 0.9;
     background: rgba(144, 116, 242, 0.05);
     border-radius: 0 8px 8px 0;
-  }
-`;
-
-const ListItem = styled.li`
-  color: ${(props) => props.theme.textColor};
-  font-size: 1em;
-  line-height: 1.75;
-  margin-bottom: 0.35em;
-
-  h1, h2, h3, h4, h5, h6 {
-    font-size: 1em;
-    margin: 0.5em 0 0.25em 0;
-    font-weight: 600;
-  }
-
-  p {
-    font-size: 1em;
-    margin: 0.25em 0;
-  }
-`;
-
-const NumberedList = styled.ul`
-  color: ${(props) => props.theme.textColor};
-  line-height: 1.75;
-  font-size: 1em;
-  margin: 0 0 1em 0;
-  padding-left: 0;
-  list-style: none;
-
-  & > li {
-    position: relative;
-    padding-left: 1.5em;
-    margin-bottom: 0.5em;
-  }
-
-  & > li::before {
-    content: "•";
-    position: absolute;
-    left: 0;
-    color: #a5a3f5;
-    font-weight: bold;
-    font-size: 1.2em;
-  }
-`;
-
-const DotpointList = styled.ol`
-  color: ${(props) => props.theme.textColor};
-  line-height: 1.75;
-  font-size: 1em;
-  margin: 1.5em 0;
-  padding-left: 0;
-  list-style: none;
-
-  & > li {
-    counter-increment: page-list-counter;
-    position: relative;
-    padding-left: 2.5em;
-    margin-bottom: 1.5em;
-  }
-
-  & > li::before {
-    content: counter(page-list-counter);
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 1.6em;
-    height: 1.6em;
-    background: linear-gradient(135deg, rgba(79, 77, 193, 0.3), rgba(79, 77, 193, 0.15));
-    border: 1px solid rgba(79, 77, 193, 0.5);
-    border-radius: 50%;
-    font-size: 0.85em;
-    font-weight: 600;
-    color: #a5a3f5;
-    font-family: var(--font-mono);
-    text-align: center;
-    line-height: 1.6em;
-  }
-`;
-
-const BoldText = styled.span`
-  color: ${(props) => props.theme.contrast};
-  line-height: 1.8;
-  font-size: 1em;
-  font-weight: 600;
-  margin: initial;
-  letter-spacing: 0.3px;
-  font-family: var(--font-sans);
-`;
-
-const Text = styled.p`
-  color: ${(props) => props.theme.textColor};
-  line-height: 1.85;
-  font-size: 1.1em;
-  font-weight: 400;
-  letter-spacing: 0.2px;
-  margin: 1.25em 0;
-  font-family: var(--font-sans);
-
-  @media (max-width: 768px) {
-    font-size: 1em;
-    line-height: 1.75;
-  }
-
-  @media (max-width: 480px) {
-    font-size: 0.95em;
-    line-height: 1.7;
-  }
-`;
-
-const Title = styled.h1`
-  margin-top: 1.5em;
-  letter-spacing: -1.25px;
-  margin-bottom: 0.5em;
-  font-size: 1.9em;
-
-  /* Normalize inline elements within headings */
-  strong, & > span {
-    font-family: inherit;
-    font-size: inherit;
-    letter-spacing: inherit;
-    line-height: inherit;
-    color: inherit;
-    font-weight: inherit;
-  }
-
-  a {
-    font-size: inherit !important;
-    letter-spacing: inherit;
-    word-break: break-word;
-    overflow-wrap: break-word;
-  }
-
-  code {
-    font-size: 0.85em;
-    word-break: break-word;
-  }
-
-  @media (max-width: 768px) {
-    font-size: 1.5em;
-  }
-
-  @media (max-width: 480px) {
-    font-size: 1.35em;
-  }
-`;
-
-const SubtitleBase = styled.h2`
-  margin-top: 2em;
-  margin-bottom: 0.75em;
-  font-family: var(--font-mono);
-  letter-spacing: -1.25px;
-  font-size: 1.5em;
-  font-weight: 600;
-
-  + p {
-    margin-top: 0.5em;
-  }
-
-  /* Normalize inline elements within headings */
-  strong, & > span {
-    font-family: inherit;
-    font-size: inherit;
-    letter-spacing: inherit;
-    line-height: inherit;
-    color: inherit;
-    font-weight: 700;
-  }
-
-  a {
-    font-size: inherit !important;
-    letter-spacing: inherit;
-    word-break: break-word;
-    overflow-wrap: break-word;
-  }
-
-  code {
-    font-size: 0.85em;
-    word-break: break-word;
-  }
-
-  @media (max-width: 768px) {
-    font-size: 1.25em;
-    letter-spacing: -0.75px;
-  }
-
-  @media (max-width: 480px) {
-    font-size: 1.1em;
-    letter-spacing: -0.5px;
-  }
-`;
-
-const NumberBadge = styled.span`
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 1.4em;
-  height: 1.4em;
-  padding: 0.1em;
-  vertical-align: middle;
-  margin-right: 0.35em;
-  background: linear-gradient(135deg, rgba(79, 77, 193, 0.3), rgba(79, 77, 193, 0.15));
-  border: 1px solid rgba(79, 77, 193, 0.5);
-  border-radius: 50%;
-  font-size: 0.5em !important;
-  font-weight: 600 !important;
-  color: #a5a3f5 !important;
-  font-family: var(--font-mono) !important;
-`;
-
-// Helper to generate slug from heading text for TOC navigation
-const slugify = (text: string) =>
-  text
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)/g, "");
-
-// Extract plain text from React children (handles nested elements like bold, code, links)
-const extractText = (children: any): string => {
-  if (typeof children === "string") return children;
-  if (typeof children === "number") return String(children);
-  if (!children) return "";
-  if (Array.isArray(children)) return children.map(extractText).join("");
-  if (children.props?.children) return extractText(children.props.children);
-  return "";
-};
-
-const Subtitle = (props: any) => {
-  const text = extractText(props.children);
-  const match = text.match(/^(\d+)\.\s*(.*)$/);
-  // Generate ID from text (strip number prefix if present)
-  const idText = match ? match[2] : text;
-  const id = slugify(idText);
-
-  if (match) {
-    return (
-      <SubtitleBase id={id}>
-        <NumberBadge>{match[1]}</NumberBadge>
-        {match[2]}
-      </SubtitleBase>
-    );
-  }
-
-  return <SubtitleBase id={id} {...props} />;
-};
-
-const Heading3Base = styled.h3`
-  margin-top: 1.75em;
-  margin-bottom: 0.5em;
-  font-family: var(--font-mono);
-  letter-spacing: -1px;
-  font-weight: 500;
-  font-size: 1.25em;
-
-  + p {
-    margin-top: 0.5em;
-  }
-
-  /* Normalize inline elements within headings */
-  strong, & > span {
-    font-family: inherit;
-    font-size: inherit;
-    letter-spacing: inherit;
-    line-height: inherit;
-    color: inherit;
-    font-weight: 600;
-  }
-
-  a {
-    font-size: inherit !important;
-    letter-spacing: inherit;
-    word-break: break-word;
-    overflow-wrap: break-word;
-  }
-
-  code {
-    font-size: 0.85em;
-    word-break: break-word;
-  }
-
-  @media (max-width: 768px) {
-    font-size: 1.1em;
-    letter-spacing: -0.5px;
-  }
-
-  @media (max-width: 480px) {
-    font-size: 1em;
-    letter-spacing: -0.35px;
-  }
-`;
-
-const Heading3 = (props: any) => {
-  const text = extractText(props.children);
-  const match = text.match(/^(\d+)\.\s*(.*)$/);
-  // Generate ID from text (strip number prefix if present)
-  const idText = match ? match[2] : text;
-  const id = slugify(idText);
-
-  if (match) {
-    return (
-      <Heading3Base id={id}>
-        <NumberBadge>{match[1]}</NumberBadge>
-        {match[2]}
-      </Heading3Base>
-    );
-  }
-
-  return <Heading3Base id={id} {...props} />;
-};
-
-const Heading4 = styled.h4`
-  margin-top: 1.5em;
-  margin-bottom: 0.5em;
-  font-family: var(--font-mono);
-  letter-spacing: -0.35px;
-  font-weight: 500;
-  font-size: 1.05em;
-
-  + p {
-    margin-top: 0.5em;
-  }
-
-  /* Normalize inline elements within headings */
-  strong, & > span {
-    font-family: inherit;
-    font-size: inherit;
-    letter-spacing: inherit;
-    line-height: inherit;
-    color: inherit;
-    font-weight: 600;
-  }
-
-  a {
-    font-size: inherit !important;
-    letter-spacing: inherit;
-    word-break: break-word;
-    overflow-wrap: break-word;
-  }
-
-  code {
-    font-size: 0.85em;
-    word-break: break-word;
-  }
-
-  @media (max-width: 768px) {
-    font-size: 1em;
-  }
-
-  @media (max-width: 480px) {
-    font-size: 0.95em;
   }
 `;
 

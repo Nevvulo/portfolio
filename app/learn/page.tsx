@@ -3,6 +3,9 @@ import { Suspense } from "react";
 import { getPostsForBento } from "@/src/db/queries/blog";
 import LearnIndex from "./LearnIndex";
 
+// ISR: regenerate every 60s so new posts appear without redeploying
+export const revalidate = 60;
+
 export const metadata: Metadata = {
   title: "Learn",
   description: "Articles, tutorials, and deep-dives on web development, software engineering, and more.",
