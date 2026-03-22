@@ -6,6 +6,7 @@ const __dirname = dirname(__filename);
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: "standalone",
   // Skip TypeScript errors during build (temporary for deployment)
   typescript: {
     ignoreBuildErrors: true,
@@ -59,7 +60,12 @@ const nextConfig = {
         hostname: "images.unsplash.com",
       },
       {
-        // Vercel Blob storage for user uploads
+        // S3/MinIO storage for user uploads
+        protocol: "https",
+        hostname: "s3.nev.so",
+      },
+      {
+        // Legacy Vercel Blob URLs (existing data)
         protocol: "https",
         hostname: "*.public.blob.vercel-storage.com",
       },

@@ -27,49 +27,61 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const twitchAccount = user.externalAccounts.find((a) => a.provider === "oauth_twitch");
     const discordAccount = user.externalAccounts.find((a) => a.provider === "oauth_discord");
 
-    // Get Clerk subscription status via Clerk Billing API
+    // Get Clerk subscription status — check manual override first, then Clerk Billing API
     let clerkPlan: SupporterStatus["clerkPlan"] = null;
     let clerkPlanStatus: SupporterStatus["clerkPlanStatus"] = null;
 
-    try {
-      // Fetch user's billing subscription from Clerk
-      const billingRes = await fetch(
-        `https://api.clerk.com/v1/users/${userId}/billing/subscription`,
-        {
-          headers: {
-            Authorization: `Bearer ${process.env.CLERK_SECRET_KEY}`,
+    // Manual override via publicMetadata (for PayPal/external payments)
+    const manualPlan = user.publicMetadata?.manualPlan as string | undefined;
+    const manualStatus = user.publicMetadata?.manualPlanStatus as string | undefined;
+    if (manualPlan === "super_legend" || manualPlan === "super_legend_2") {
+      clerkPlan = manualPlan;
+      clerkPlanStatus = (manualStatus as SupporterStatus["clerkPlanStatus"]) || "active";
+      console.log(`[supporter/sync] Manual plan override: ${clerkPlan} (${clerkPlanStatus})`);
+    }
+
+    // If no manual override, check Clerk Billing API
+    if (!clerkPlan) {
+      try {
+        // Fetch user's billing subscription from Clerk
+        const billingRes = await fetch(
+          `https://api.clerk.com/v1/users/${userId}/billing/subscription`,
+          {
+            headers: {
+              Authorization: `Bearer ${process.env.CLERK_SECRET_KEY}`,
+            },
           },
-        },
-      );
+        );
 
-      if (billingRes.ok) {
-        const billingData = await billingRes.json();
+        if (billingRes.ok) {
+          const billingData = await billingRes.json();
 
-        // Extract plan from subscription_items array (Clerk Billing structure)
-        const item = billingData.subscription_items?.[0];
-        const planSlug = item?.plan?.slug;
-        const planName = item?.plan?.name?.toLowerCase().replace(/\s+/g, "_");
-        const status = billingData.status;
+          // Extract plan from subscription_items array (Clerk Billing structure)
+          const item = billingData.subscription_items?.[0];
+          const planSlug = item?.plan?.slug;
+          const planName = item?.plan?.name?.toLowerCase().replace(/\s+/g, "_");
+          const status = billingData.status;
 
-        // Match against our plan identifiers
-        if (planSlug === "super_legend" || planName === "super_legend") {
-          clerkPlan = "super_legend";
-        } else if (
-          planSlug === "super_legend_2" ||
-          planName === "super_legend_ii" ||
-          planName === "super_legend_2"
-        ) {
-          clerkPlan = "super_legend_2";
+          // Match against our plan identifiers
+          if (planSlug === "super_legend" || planName === "super_legend") {
+            clerkPlan = "super_legend";
+          } else if (
+            planSlug === "super_legend_2" ||
+            planName === "super_legend_ii" ||
+            planName === "super_legend_2"
+          ) {
+            clerkPlan = "super_legend_2";
+          }
+
+          if (status === "active" || status === "past_due" || status === "canceled") {
+            clerkPlanStatus = status;
+          } else if (clerkPlan) {
+            clerkPlanStatus = "active";
+          }
         }
-
-        if (status === "active" || status === "past_due" || status === "canceled") {
-          clerkPlanStatus = status;
-        } else if (clerkPlan) {
-          clerkPlanStatus = "active";
-        }
+      } catch (error) {
+        console.error("Error fetching Clerk subscription:", error);
       }
-    } catch (error) {
-      console.error("Error fetching Clerk subscription:", error);
     }
 
     let twitchSubTier: SupporterStatus["twitchSubTier"] = null;
@@ -188,17 +200,34 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       // Don't fail the whole sync for this
     }
 
-    // Also update Discord ID mapping in Postgres
-    if (discordUserId) {
+    // Also update external account ID mappings in Postgres
+    const idMappings: Record<string, string> = {};
+    if (discordUserId) idMappings.discordId = discordUserId;
+
+    const fluxerAccount = user.externalAccounts.find((a) => a.provider === "oauth_custom_fluxer");
+    if (fluxerAccount) {
+      const fluxerExternalId = (fluxerAccount as unknown as { externalId?: string }).externalId;
+      if (fluxerExternalId) idMappings.fluxerId = fluxerExternalId;
+    }
+
+    const robloxAccount = user.externalAccounts.find((a) => a.provider === "oauth_custom_roblox");
+    if (robloxAccount) {
+      const robloxExternalId = (robloxAccount as unknown as { externalId?: string }).externalId;
+      if (robloxExternalId) idMappings.robloxUserId = robloxExternalId;
+      const robloxUsername = robloxAccount.username;
+      if (robloxUsername) idMappings.robloxUsername = robloxUsername;
+    }
+
+    if (Object.keys(idMappings).length > 0) {
       try {
         await db
           .update(users)
-          .set({ discordId: discordUserId })
+          .set(idMappings)
           .where(eq(users.clerkId, userId));
 
-        console.log("[supporter/sync] Updated Discord ID mapping in Postgres");
+        console.log("[supporter/sync] Updated external account ID mappings in Postgres:", Object.keys(idMappings));
       } catch (error) {
-        console.error("[supporter/sync] Failed to update Discord mapping:", error);
+        console.error("[supporter/sync] Failed to update external account mappings:", error);
         // Don't fail the whole sync for this
       }
     }

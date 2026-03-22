@@ -321,33 +321,8 @@ export function CodePlayground({
   const code = typeof children === "string" ? children : "";
 
   const handleRun = useCallback(async () => {
-    setIsRunning(true);
-    setError(null);
-    setOutput("");
-
-    try {
-      const response = await fetch("/api/blog/sandbox", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code, language }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        setError(data.error || "Failed to execute code");
-      } else {
-        setOutput(data.stdout || "");
-        if (data.stderr) {
-          setError(data.stderr);
-        }
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Network error");
-    } finally {
-      setIsRunning(false);
-    }
-  }, [code, language]);
+    setError("Sandbox is unavailable in self-hosted mode.");
+  }, []);
 
   return (
     <PlaygroundWrapper>

@@ -1,4 +1,4 @@
-import { useClerk, useUser } from "@clerk/nextjs";
+import { useClerk, useReverification, useUser } from "@clerk/nextjs";
 import { useSubscription } from "@clerk/nextjs/experimental";
 import { useMutation, useQuery as useRQ } from "@tanstack/react-query";
 import { Box, Sparkles } from "lucide-react";
@@ -59,6 +59,18 @@ export default function AccountPage() {
   const [selectedLootbox, setSelectedLootbox] = useState<any>(null);
   const [inventoryFilter, setInventoryFilter] = useState<string>("all");
 
+  const connectAccount = useReverification(async (strategy: string) => {
+    const account = await user!.createExternalAccount({
+      strategy,
+      redirectUrl: "/account",
+    });
+    // useReverification can swallow the auto-redirect after retry, so trigger it manually
+    const redirectUrl = (account as any)?.verification?.externalVerificationRedirectURL;
+    if (redirectUrl) {
+      window.location.href = typeof redirectUrl === "string" ? redirectUrl : redirectUrl.href;
+    }
+  });
+
   useEffect(() => {
     if (isLoaded && !isSignedIn) {
       router.push("/sign-in");
@@ -82,42 +94,17 @@ export default function AccountPage() {
   const discordAccount = user.externalAccounts.find((account) => account.provider === "discord");
   const googleAccount = user.externalAccounts.find((account) => account.provider === "google");
   const twitchAccount = user.externalAccounts.find((account) => account.provider === "twitch");
+  const fluxerAccount = user.externalAccounts.find((account) => account.provider === "oauth_custom_fluxer");
+  const robloxAccount = user.externalAccounts.find((account) => account.provider === "oauth_custom_roblox");
 
-  // Fluxer connection status from query params (after OAuth callback) or DB
-  const fluxerConnected = router.query.fluxer === "connected" || !!meData?.fluxerId;
+  const accountName = (account: any) =>
+    account?.username || account?.firstName || account?.emailAddress || account?.label || "linked";
 
-  const handleConnectDiscord = async () => {
-    try {
-      await user.createExternalAccount({
-        strategy: "oauth_discord",
-        redirectUrl: "/account",
-      });
-    } catch (error) {
-      console.error("Failed to connect Discord:", error);
-    }
-  };
-
-  const handleConnectGoogle = async () => {
-    try {
-      await user.createExternalAccount({
-        strategy: "oauth_google",
-        redirectUrl: "/account",
-      });
-    } catch (error) {
-      console.error("Failed to connect Google:", error);
-    }
-  };
-
-  const handleConnectTwitch = async () => {
-    try {
-      await user.createExternalAccount({
-        strategy: "oauth_twitch",
-        redirectUrl: "/account",
-      });
-    } catch (error) {
-      console.error("Failed to connect Twitch:", error);
-    }
-  };
+  const handleConnectDiscord = () => connectAccount("oauth_discord").catch((e) => console.error("Failed to connect Discord:", e));
+  const handleConnectGoogle = () => connectAccount("oauth_google").catch((e) => console.error("Failed to connect Google:", e));
+  const handleConnectTwitch = () => connectAccount("oauth_twitch").catch((e) => console.error("Failed to connect Twitch:", e));
+  const handleConnectFluxer = () => connectAccount("oauth_custom_fluxer").catch((e) => console.error("Failed to connect Fluxer:", e));
+  const handleConnectRoblox = () => connectAccount("oauth_custom_roblox").catch((e) => console.error("Failed to connect Roblox:", e));
 
   const handleSyncDiscordRole = async () => {
     setSyncStatus("syncing");
@@ -281,7 +268,7 @@ export default function AccountPage() {
                 {discordAccount ? (
                   <>
                     <ConnectionStatus $connected>
-                      Connected as {discordAccount.username}
+                      Connected as {accountName(discordAccount)}
                     </ConnectionStatus>
                     {syncError && <SyncError>{syncError}</SyncError>}
                   </>
@@ -316,7 +303,7 @@ export default function AccountPage() {
                 <ConnectionName>Google</ConnectionName>
                 {googleAccount ? (
                   <ConnectionStatus $connected>
-                    Connected as {googleAccount.emailAddress}
+                    Connected as {accountName(googleAccount)}
                   </ConnectionStatus>
                 ) : (
                   <ConnectionStatus>Not connected</ConnectionStatus>
@@ -335,7 +322,7 @@ export default function AccountPage() {
                 <ConnectionName>Twitch</ConnectionName>
                 {twitchAccount ? (
                   <ConnectionStatus $connected>
-                    Connected as {twitchAccount.username}
+                    Connected as {accountName(twitchAccount)}
                   </ConnectionStatus>
                 ) : (
                   <ConnectionStatus>Not connected</ConnectionStatus>
@@ -346,20 +333,41 @@ export default function AccountPage() {
               )}
             </ConnectionCard>
 
-            <ConnectionCard $connected={fluxerConnected}>
+            <ConnectionCard $connected={!!fluxerAccount}>
               <ConnectionIcon>
                 <FluxerIcon />
               </ConnectionIcon>
               <ConnectionInfo>
                 <ConnectionName>Fluxer</ConnectionName>
-                {fluxerConnected ? (
-                  <ConnectionStatus $connected>Connected</ConnectionStatus>
+                {fluxerAccount ? (
+                  <ConnectionStatus $connected>
+                    Connected as {accountName(fluxerAccount)}
+                  </ConnectionStatus>
                 ) : (
                   <ConnectionStatus>Not connected</ConnectionStatus>
                 )}
               </ConnectionInfo>
-              {!fluxerConnected && (
-                <ConnectButton as="a" href="/api/fluxer/authorize">Connect</ConnectButton>
+              {!fluxerAccount && (
+                <ConnectButton onClick={handleConnectFluxer}>Connect</ConnectButton>
+              )}
+            </ConnectionCard>
+
+            <ConnectionCard $connected={!!robloxAccount}>
+              <ConnectionIcon>
+                <RobloxIcon />
+              </ConnectionIcon>
+              <ConnectionInfo>
+                <ConnectionName>Roblox</ConnectionName>
+                {robloxAccount ? (
+                  <ConnectionStatus $connected>
+                    Connected as {accountName(robloxAccount)}
+                  </ConnectionStatus>
+                ) : (
+                  <ConnectionStatus>Not connected</ConnectionStatus>
+                )}
+              </ConnectionInfo>
+              {!robloxAccount && (
+                <ConnectButton onClick={handleConnectRoblox}>Connect</ConnectButton>
               )}
             </ConnectionCard>
           </ConnectionsGrid>
@@ -839,8 +847,16 @@ const TwitchIcon = () => (
 );
 
 const FluxerIcon = () => (
-  <svg width="32" height="32" viewBox="0 0 24 24" fill="#5865F2">
-    <path d="M13 3L4 14h5v7l9-11h-5V3z" />
+  <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+    <circle cx="12" cy="12" r="11" fill="#5865F2" />
+    <path d="M6 9.5C8 7 10 7 12 9.5S16 12 18 9.5" stroke="white" strokeWidth="2.2" strokeLinecap="round" fill="none" />
+    <path d="M6 14.5C8 12 10 12 12 14.5S16 17 18 14.5" stroke="white" strokeWidth="2.2" strokeLinecap="round" fill="none" />
+  </svg>
+);
+
+const RobloxIcon = () => (
+  <svg width="32" height="32" viewBox="0 0 24 24" fill="#999">
+    <path d="M5.164 2L2 18.836 18.836 22 22 5.164 5.164 2zM9.26 9.052l5.688 1.456-1.456 5.688-5.688-1.456L9.26 9.052z" />
   </svg>
 );
 

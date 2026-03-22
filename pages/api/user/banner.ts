@@ -1,5 +1,5 @@
 import { getAuth } from "@clerk/nextjs/server";
-import { put } from "@vercel/blob";
+import { uploadFile } from "@/src/lib/storage";
 import { eq } from "drizzle-orm";
 import type { NextApiRequest, NextApiResponse } from "next";
 import sharp from "sharp";
@@ -96,11 +96,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const timestamp = Date.now();
     const filename = `banners/${userId}/${timestamp}.webp`;
 
-    // Upload to Vercel Blob
-    const blob = await put(filename, processedBuffer, {
-      access: "public",
-      contentType: "image/webp",
-    });
+    // Upload to S3 (MinIO)
+    const blob = await uploadFile(filename, processedBuffer, "image/webp");
 
     // Update Postgres with new banner URL
     await db

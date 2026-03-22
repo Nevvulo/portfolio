@@ -1,5 +1,5 @@
 import { getAuth } from "@clerk/nextjs/server";
-import { put } from "@vercel/blob";
+import { uploadFile } from "@/src/lib/storage";
 import type { NextApiRequest, NextApiResponse } from "next";
 
 // Config for Next.js API route - larger limit for video
@@ -110,11 +110,8 @@ export default async function handler(
     const uniqueFilename = `${timestamp}-${sanitizedFilename}`;
     const filepath = `${config.folder}/${userId}/${uniqueFilename}`;
 
-    // Upload to Vercel Blob - NO processing, preserve original (important for GIFs)
-    const blob = await put(filepath, fileBuffer, {
-      access: "public",
-      contentType: mimeType,
-    });
+    // Upload to S3 (MinIO) - NO processing, preserve original (important for GIFs)
+    const blob = await uploadFile(filepath, fileBuffer, mimeType);
 
     // Build response
     const response: UploadResponse = {

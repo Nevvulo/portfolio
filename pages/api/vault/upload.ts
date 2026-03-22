@@ -1,5 +1,5 @@
 import { getAuth } from "@clerk/nextjs/server";
-import { put } from "@vercel/blob";
+import { uploadFile } from "@/src/lib/storage";
 import type { NextApiRequest, NextApiResponse } from "next";
 
 // Config for Next.js API route - support large files
@@ -140,11 +140,8 @@ export default async function handler(
     const uniqueFilename = `${timestamp}-${sanitizedFilename}`;
     const filepath = `vault/${fileType}/${uniqueFilename}`;
 
-    // Upload to Vercel Blob
-    const blob = await put(filepath, fileBuffer, {
-      access: "public",
-      contentType: mimeType,
-    });
+    // Upload to S3 (MinIO)
+    const blob = await uploadFile(filepath, fileBuffer, mimeType);
 
     return res.status(200).json({
       url: blob.url,

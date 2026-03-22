@@ -1,5 +1,5 @@
 import { getAuth } from "@clerk/nextjs/server";
-import { put } from "@vercel/blob";
+import { uploadFile } from "@/src/lib/storage";
 import type { NextApiRequest, NextApiResponse } from "next";
 
 export const config = {
@@ -67,10 +67,7 @@ export default async function handler(
     const uniqueFilename = `${timestamp}-${sanitizedFilename}.${extension}`;
     const filepath = `software/images/${uniqueFilename}`;
 
-    const blob = await put(filepath, fileBuffer, {
-      access: "public",
-      contentType: mimeType,
-    });
+    const blob = await uploadFile(filepath, fileBuffer, mimeType);
 
     return res.status(200).json({ url: blob.url });
   } catch (error) {

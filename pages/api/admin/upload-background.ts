@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { put } from "@vercel/blob";
+import { uploadFile } from "@/src/lib/storage";
 import { getAuth } from "@clerk/nextjs/server";
 
 export const config = {
@@ -30,10 +30,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const blob = await put(`backgrounds/${filename}`, req, {
-      access: "public",
-      contentType,
-    });
+    const blob = await uploadFile(`backgrounds/${filename}`, req, contentType);
 
     return res.status(200).json({ url: blob.url });
   } catch (error) {

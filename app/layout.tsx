@@ -1,7 +1,5 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { Analytics } from "@vercel/analytics/react";
-import { SpeedInsights } from "@vercel/speed-insights/next";
 import StyledComponentsRegistry from "./registry";
 import Providers from "./providers";
 import { NavigationProgress } from "./NavigationProgress";
@@ -57,8 +55,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <NavigationProgress />
             </Suspense>
             <div id="scroll-container">{children}</div>
-            <Analytics />
-            <SpeedInsights />
           </Providers>
         </StyledComponentsRegistry>
       </body>

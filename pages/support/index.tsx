@@ -1,11 +1,9 @@
 import dynamic from "next/dynamic";
 import { SignedIn, SignedOut } from "@clerk/nextjs";
-import {
-  CheckoutButton,
-  SubscriptionDetailsButton,
-  usePlans,
-  useSubscription,
-} from "@clerk/nextjs/experimental";
+import { loadStripe } from "@stripe/stripe-js";
+import { EmbeddedCheckoutProvider, EmbeddedCheckout } from "@stripe/react-stripe-js";
+
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 import { faCheck, faChevronRight, faCrown, faTrophy } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Head from "next/head";
@@ -138,45 +136,47 @@ function FounderBanner() {
 }
 
 interface PlanCardProps {
-  planId: string;
   planSlug: string;
   isActive: boolean;
   isOtherPlanActive: boolean;
-  monthlyPrice: number | null;
+  monthlyPrice: number;
   annualMonthlyPrice: number | null;
   activePlanPeriod: "month" | "annual" | null;
-  onSubscriptionChange?: () => void;
+  onCheckout?: (period: "month" | "annual" | "lifetime") => void;
+  onManageSubscription?: () => void;
+  isCheckoutLoading?: boolean;
 }
 
 function PlanCard({
-  planId,
   planSlug,
   isActive,
   isOtherPlanActive,
   monthlyPrice,
   annualMonthlyPrice,
   activePlanPeriod,
-  onSubscriptionChange,
+  onCheckout,
+  onManageSubscription,
+  isCheckoutLoading,
 }: PlanCardProps) {
   const meta = PLAN_META[planSlug];
   const features = PLAN_FEATURES[planSlug as keyof typeof PLAN_FEATURES];
-  const [billedAnnually, setBilledAnnually] = useState(false); // Default to monthly
+  const [billingPeriod, setBillingPeriod] = useState<"month" | "annual" | "lifetime">("month");
 
   if (!meta || !features) return null;
 
-  // Calculate display price from Clerk data
+  // Calculate display price
   const hasAnnualOption = annualMonthlyPrice !== null && annualMonthlyPrice > 0;
+  const lifetimePrice = planSlug === PLANS.SUPER_LEGEND_2 ? 275 : 149.99;
   const displayPrice =
-    billedAnnually && hasAnnualOption
-      ? annualMonthlyPrice // Clerk already calculates the monthly equivalent
-      : (monthlyPrice ?? 0);
+    billingPeriod === "lifetime" ? lifetimePrice
+    : billingPeriod === "annual" && hasAnnualOption ? annualMonthlyPrice
+    : monthlyPrice;
 
   // Determine if this exact plan+period combo is active
-  const selectedPeriod = billedAnnually ? "annual" : "month";
   const isExactPlanActive =
-    isActive && activePlanPeriod !== null && activePlanPeriod === selectedPeriod;
+    isActive && activePlanPeriod !== null && activePlanPeriod === billingPeriod;
   const isSwitchingPeriod =
-    isActive && activePlanPeriod !== null && activePlanPeriod !== selectedPeriod;
+    isActive && activePlanPeriod !== null && activePlanPeriod !== billingPeriod;
 
   const planIcon = PLAN_ICONS[planSlug as keyof typeof PLAN_ICONS];
 
@@ -197,19 +197,20 @@ function PlanCard({
 
       <PriceRow>
         <PriceAmount>${displayPrice.toFixed(2)}</PriceAmount>
-        <PricePeriod>/month</PricePeriod>
+        <PricePeriod>{billingPeriod === "lifetime" ? " once" : "/month"}</PricePeriod>
       </PriceRow>
 
-      {hasAnnualOption ? (
-        <BillingToggle>
-          <ToggleSwitch $active={billedAnnually} onClick={() => setBilledAnnually(!billedAnnually)}>
-            <ToggleKnob $active={billedAnnually} />
-          </ToggleSwitch>
-          <BillingLabel>{billedAnnually ? "Billed annually" : "Billed monthly"}</BillingLabel>
-        </BillingToggle>
-      ) : (
-        <BillingLabel>Billed monthly</BillingLabel>
-      )}
+      <BillingToggleGroup>
+        <BillingOption $active={billingPeriod === "month"} onClick={() => setBillingPeriod("month")}>
+          Monthly
+        </BillingOption>
+        <BillingOption $active={billingPeriod === "annual"} onClick={() => setBillingPeriod("annual")}>
+          Yearly
+        </BillingOption>
+        <BillingOption $active={billingPeriod === "lifetime"} onClick={() => setBillingPeriod("lifetime")}>
+          Lifetime
+        </BillingOption>
+      </BillingToggleGroup>
 
       <Divider />
 
@@ -247,20 +248,15 @@ function PlanCard({
       <ButtonContainer>
         <SignedIn>
           {isExactPlanActive ? (
-            <SubscriptionDetailsButton>
-              <ManageButton>Manage subscription</ManageButton>
-            </SubscriptionDetailsButton>
+            <ManageButton onClick={onManageSubscription}>Manage subscription</ManageButton>
           ) : (
-            <CheckoutButton
-              planId={planId}
-              planPeriod={billedAnnually && hasAnnualOption ? "annual" : "month"}
-              newSubscriptionRedirectUrl="/support/thanks"
-              onSubscriptionComplete={onSubscriptionChange}
+            <SubscribeBtn
+              $isSwitch={isOtherPlanActive || isSwitchingPeriod}
+              onClick={() => onCheckout?.(billingPeriod)}
+              disabled={isCheckoutLoading}
             >
-              <SubscribeBtn $isSwitch={isOtherPlanActive || isSwitchingPeriod}>
-                {isOtherPlanActive || isSwitchingPeriod ? "Switch to this plan" : "Subscribe"}
-              </SubscribeBtn>
-            </CheckoutButton>
+              {isCheckoutLoading ? "Redirecting..." : billingPeriod === "lifetime" ? "Buy lifetime" : isOtherPlanActive || isSwitchingPeriod ? "Switch to this plan" : "Subscribe"}
+            </SubscribeBtn>
           )}
         </SignedIn>
         <SignedOut>
@@ -273,118 +269,103 @@ function PlanCard({
   );
 }
 
-// Helper to extract price from Clerk plan
-function getPlanPrices(plan: any): { monthly: number | null; annualMonthly: number | null } {
-  if (!plan) return { monthly: null, annualMonthly: null };
-
-  // Clerk plan structure:
-  // - fee.amount: monthly price in cents
-  // - annualFee.amount: annual price in cents
-  // - annualMonthlyFee.amount: monthly equivalent of annual (already calculated by Clerk)
-  const monthly = plan.fee?.amount ? plan.fee.amount / 100 : null;
-  const annualMonthly = plan.annualMonthlyFee?.amount ? plan.annualMonthlyFee.amount / 100 : null;
-
-  return { monthly, annualMonthly };
-}
+// Stripe price IDs — loaded from env at build time
+const STRIPE_PRICE_MAP: Record<string, Record<string, string>> = {
+  [PLANS.SUPER_LEGEND]: {
+    month: process.env.NEXT_PUBLIC_STRIPE_PRICE_SL1_MONTHLY ?? "",
+    annual: process.env.NEXT_PUBLIC_STRIPE_PRICE_SL1_ANNUAL ?? "",
+    lifetime: process.env.NEXT_PUBLIC_STRIPE_PRICE_SL1_LIFETIME ?? "",
+  },
+  [PLANS.SUPER_LEGEND_2]: {
+    month: process.env.NEXT_PUBLIC_STRIPE_PRICE_SL2_MONTHLY ?? "",
+    annual: process.env.NEXT_PUBLIC_STRIPE_PRICE_SL2_ANNUAL ?? "",
+    lifetime: process.env.NEXT_PUBLIC_STRIPE_PRICE_SL2_LIFETIME ?? "",
+  },
+};
 
 function CustomPricingTable() {
-  const { data: plans, isLoading: plansLoading, revalidate: revalidatePlans } = usePlans();
-  const {
-    data: subscription,
-    isLoading: subLoading,
-    revalidate: revalidateSubscription,
-  } = useSubscription();
+  const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
+  const [checkoutClientSecret, setCheckoutClientSecret] = useState<string | null>(null);
 
-  const isLoading = plansLoading || subLoading;
+  async function handleCheckout(planSlug: string, period: "month" | "annual" | "lifetime") {
+    const priceId = STRIPE_PRICE_MAP[planSlug]?.[period];
+    if (!priceId) return;
 
-  // Callback to refresh subscription data after changes
-  const handleSubscriptionChange = () => {
-    // Revalidate both plans and subscription data
-    revalidateSubscription?.();
-    revalidatePlans?.();
-  };
+    setCheckoutLoading(planSlug);
+    try {
+      const res = await fetch("/api/stripe/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ priceId }),
+      });
+      const data = await res.json();
+      if (data.clientSecret) {
+        setCheckoutClientSecret(data.clientSecret);
+      }
+    } finally {
+      setCheckoutLoading(null);
+    }
+  }
 
-  // Get active plan slug and period from subscription
-  // Clerk nests the plan inside subscriptionItems[0].plan
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const subAny = subscription as any;
-  const activeItem = subAny?.subscriptionItems?.[0];
-  const activePlanSlug = activeItem?.plan?.slug ?? null;
-  const activePlanPeriod: "month" | "annual" | null = activeItem?.planPeriod ?? null;
+  async function handleManageSubscription() {
+    const res = await fetch("/api/stripe/portal", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ customerId: "" }),
+    });
+    const data = await res.json();
+    if (data.url) {
+      window.location.href = data.url;
+    }
+  }
 
-  // Only consider paid plans as "subscribed" - ignore free tier
-  const isPaidPlan =
-    activePlanSlug === PLANS.SUPER_LEGEND || activePlanSlug === PLANS.SUPER_LEGEND_2;
-  const isSubscribed = subAny?.status === "active" && isPaidPlan;
-
-  // Plans is an array directly, not { data: [...] }
-  const plansArray = Array.isArray(plans) ? plans : ((plans as any)?.data ?? []);
-
-  // Find plans from the loaded data
-  const superLegendPlan = plansArray.find(
-    (p: { slug: string; id: string }) => p.slug === PLANS.SUPER_LEGEND,
-  );
-  const superLegend2Plan = plansArray.find(
-    (p: { slug: string; id: string }) => p.slug === PLANS.SUPER_LEGEND_2,
-  );
-
-  // Get prices from Clerk
-  const sl1Prices = getPlanPrices(superLegendPlan);
-  const sl2Prices = getPlanPrices(superLegend2Plan);
-
-  if (isLoading) {
-    return <PricingSkeletons />;
+  // Show embedded checkout when a plan is selected
+  if (checkoutClientSecret) {
+    return (
+      <CheckoutContainer>
+        <BackToPlansButton onClick={() => setCheckoutClientSecret(null)}>
+          ← Back to plans
+        </BackToPlansButton>
+        <EmbeddedCheckoutProvider stripe={stripePromise} options={{ clientSecret: checkoutClientSecret }}>
+          <EmbeddedCheckout />
+        </EmbeddedCheckoutProvider>
+      </CheckoutContainer>
+    );
   }
 
   return (
     <PricingGrid>
-      {superLegendPlan && (
-        <PlanCard
-          planId={superLegendPlan.id}
-          planSlug={PLANS.SUPER_LEGEND}
-          isActive={isSubscribed && activePlanSlug === PLANS.SUPER_LEGEND}
-          isOtherPlanActive={isSubscribed && activePlanSlug !== PLANS.SUPER_LEGEND}
-          monthlyPrice={sl1Prices.monthly}
-          annualMonthlyPrice={sl1Prices.annualMonthly}
-          activePlanPeriod={
-            isSubscribed && activePlanSlug === PLANS.SUPER_LEGEND ? activePlanPeriod : null
-          }
-          onSubscriptionChange={handleSubscriptionChange}
-        />
-      )}
-      {superLegend2Plan && (
-        <PlanCard
-          planId={superLegend2Plan.id}
-          planSlug={PLANS.SUPER_LEGEND_2}
-          isActive={isSubscribed && activePlanSlug === PLANS.SUPER_LEGEND_2}
-          isOtherPlanActive={isSubscribed && activePlanSlug !== PLANS.SUPER_LEGEND_2}
-          monthlyPrice={sl2Prices.monthly}
-          annualMonthlyPrice={sl2Prices.annualMonthly}
-          activePlanPeriod={
-            isSubscribed && activePlanSlug === PLANS.SUPER_LEGEND_2 ? activePlanPeriod : null
-          }
-          onSubscriptionChange={handleSubscriptionChange}
-        />
-      )}
+      <PlanCard
+        planSlug={PLANS.SUPER_LEGEND}
+        isActive={false}
+        isOtherPlanActive={false}
+        monthlyPrice={4.99}
+        annualMonthlyPrice={4.20}
+        activePlanPeriod={null}
+        onCheckout={(period) => handleCheckout(PLANS.SUPER_LEGEND, period)}
+        onManageSubscription={handleManageSubscription}
+        isCheckoutLoading={checkoutLoading === PLANS.SUPER_LEGEND}
+      />
+      <PlanCard
+        planSlug={PLANS.SUPER_LEGEND_2}
+        isActive={false}
+        isOtherPlanActive={false}
+        monthlyPrice={9.99}
+        annualMonthlyPrice={9.08}
+        activePlanPeriod={null}
+        onCheckout={(period) => handleCheckout(PLANS.SUPER_LEGEND_2, period)}
+        onManageSubscription={handleManageSubscription}
+        isCheckoutLoading={checkoutLoading === PLANS.SUPER_LEGEND_2}
+      />
     </PricingGrid>
   );
 }
 
 function SubscriberBenefits() {
   const { status, isLoading } = useSupporterStatus();
-  const { data: subscription, isLoading: subLoading } = useSubscription();
 
-  // Get active plan from subscription
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const subAny = subscription as any;
-  const activeItem = subAny?.subscriptionItems?.[0];
-  const activePlanSlug = activeItem?.plan?.slug ?? null;
-  const isPaidPlan =
-    activePlanSlug === PLANS.SUPER_LEGEND || activePlanSlug === PLANS.SUPER_LEGEND_2;
-  const isSubscribed = subAny?.status === "active" && isPaidPlan;
-
-  // Only show if user has an active paid subscription
-  if (subLoading || !subscription || !activePlanSlug || !isSubscribed) return null;
+  // Show benefits if user has supporter status
+  if (isLoading || !status?.isSupporter) return null;
 
   const isFounder = status?.founderNumber !== undefined && status?.founderNumber !== null;
 
@@ -512,11 +493,7 @@ export default function Support() {
         </PricingContainer>
 
         <LifetimeNote>
-          Not a fan of subscriptions? I don&apos;t have lifetime plans set up right now —{" "}
-          <LifetimeLink href="/contact">reach out to me</LifetimeLink> if you&apos;re interested in
-          a once-off lifetime payment.
-          <br />
-          These are about 2-3x the yearly plans for each tier.
+          All plans include full access to Nevi Pro bot features.
         </LifetimeNote>
 
         <SignedIn>
@@ -846,6 +823,29 @@ const PricingGrid = styled.div`
   }
 `;
 
+const CheckoutContainer = styled.div`
+  max-width: 600px;
+  margin: 0 auto;
+  width: 100%;
+`;
+
+const BackToPlansButton = styled.button`
+  background: none;
+  border: none;
+  color: ${(p) => p.theme.textColor};
+  opacity: 0.6;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  cursor: pointer;
+  padding: 0;
+  margin-bottom: 1.5rem;
+  transition: opacity 0.15s;
+
+  &:hover {
+    opacity: 1;
+  }
+`;
+
 // Pricing Card Styles
 const PricingCard = styled.div<{ $isActive?: boolean }>`
   position: relative;
@@ -971,6 +971,38 @@ const BillingLabel = styled.span`
   font-size: 13px;
   color: ${(props) => props.theme.textColor};
   opacity: 0.7;
+`;
+
+const BillingToggleGroup = styled.div`
+  display: flex;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid ${(p) => (p.theme.isDark ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)")};
+  margin-bottom: 1rem;
+`;
+
+const BillingOption = styled.button<{ $active: boolean }>`
+  flex: 1;
+  padding: 6px 0;
+  border: none;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: ${(p) => (p.$active ? 600 : 400)};
+  cursor: pointer;
+  transition: all 0.15s ease;
+  background: ${(p) =>
+    p.$active
+      ? p.theme.isDark ? "rgba(79, 77, 193, 0.3)" : "rgba(79, 77, 193, 0.1)"
+      : "transparent"};
+  color: ${(p) =>
+    p.$active
+      ? p.theme.isDark ? "#a5a3f0" : "#4f4dc1"
+      : p.theme.textColor};
+  opacity: ${(p) => (p.$active ? 1 : 0.6)};
+
+  &:hover {
+    opacity: 1;
+  }
 `;
 
 const Divider = styled.div`
