@@ -94,7 +94,7 @@ export default function AccountPage() {
   const discordAccount = user.externalAccounts.find((account) => account.provider === "discord");
   const googleAccount = user.externalAccounts.find((account) => account.provider === "google");
   const twitchAccount = user.externalAccounts.find((account) => account.provider === "twitch");
-  const fluxerAccount = user.externalAccounts.find((account) => account.provider === "oauth_custom_fluxer");
+  const fluxerAccount = user.externalAccounts.find((account) => account.provider === "custom_fluxer");
   const robloxAccount = user.externalAccounts.find((account) => account.provider === "oauth_custom_roblox");
 
   const accountName = (account: any) =>
