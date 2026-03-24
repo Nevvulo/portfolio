@@ -98,7 +98,7 @@ export default function AccountPage() {
   const robloxAccount = user.externalAccounts.find((account) => account.provider === "oauth_custom_roblox");
 
   const accountName = (account: any) =>
-    account?.username || account?.firstName || account?.emailAddress || account?.label || "linked";
+    account?.username || account?.firstName || account?.emailAddress || account?.label || account?.providerUserId || "linked";
 
   const handleConnectDiscord = () => connectAccount("oauth_discord").catch((e) => console.error("Failed to connect Discord:", e));
   const handleConnectGoogle = () => connectAccount("oauth_google").catch((e) => console.error("Failed to connect Google:", e));
