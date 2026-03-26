@@ -187,8 +187,17 @@ const nextConfig = {
         permanent: true,
         basePath: false,
       },
-      // Blog -> Learn redirects (keep both routes working)
-      // Note: These are soft redirects, the old routes still work
+      // Blog -> Explore redirects
+      {
+        source: "/blog",
+        destination: "/explore",
+        permanent: true,
+      },
+      {
+        source: "/blog/:slug",
+        destination: "/explore/:slug",
+        permanent: true,
+      },
     ];
   },
 
