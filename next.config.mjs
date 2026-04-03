@@ -187,15 +187,26 @@ const nextConfig = {
         permanent: true,
         basePath: false,
       },
-      // Blog -> Explore redirects
+      // Blog -> Learn redirects (articles moved from /blog to /learn)
       {
         source: "/blog",
-        destination: "/explore",
+        destination: "/learn",
         permanent: true,
       },
       {
         source: "/blog/:slug",
-        destination: "/explore/:slug",
+        destination: "/learn/:slug",
+        permanent: true,
+      },
+      // Legacy /explore redirects (briefly used, now /learn)
+      {
+        source: "/explore",
+        destination: "/learn",
+        permanent: true,
+      },
+      {
+        source: "/explore/:slug",
+        destination: "/learn/:slug",
         permanent: true,
       },
     ];

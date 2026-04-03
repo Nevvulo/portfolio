@@ -1,14 +1,26 @@
 import type { GetServerSidePropsContext } from "next";
-import getFile from "../modules/getFile";
-import type { Blogmap } from "../types/blog";
+import { db } from "@/src/db";
+import { blogPosts } from "@/src/db/schema";
+import { and, eq, desc } from "drizzle-orm";
 
 const URL = "https://nev.so";
 
-function generateSiteMap(posts: Blogmap) {
+function generateSiteMap(
+  posts: { slug: string; updatedAt: Date | null; publishedAt: Date | null }[],
+) {
   return `<?xml version="1.0" encoding="UTF-8"?>
    <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
      <url>
        <loc>${URL}/</loc>
+     </url>
+     <url>
+       <loc>${URL}/learn</loc>
+     </url>
+     <url>
+       <loc>${URL}/projects</loc>
+     </url>
+     <url>
+       <loc>${URL}/software</loc>
      </url>
      <url>
        <loc>${URL}/about</loc>
@@ -17,16 +29,17 @@ function generateSiteMap(posts: Blogmap) {
        <loc>${URL}/contact</loc>
      </url>
      <url>
-       <loc>${URL}/projects</loc>
+       <loc>${URL}/credits</loc>
      </url>
      <url>
-       <loc>${URL}/blog</loc>
+       <loc>${URL}/ai-disclosure</loc>
      </url>
      ${posts
-       .map(({ slug }) => {
+       .map(({ slug, updatedAt, publishedAt }) => {
+         const lastmod = updatedAt ?? publishedAt;
          return `
        <url>
-           <loc>${`${URL}/blog/${slug}`}</loc>
+           <loc>${URL}/learn/${slug}</loc>${lastmod ? `\n           <lastmod>${lastmod.toISOString()}</lastmod>` : ""}
        </url>
      `;
        })
@@ -40,17 +53,26 @@ export default function SiteMap() {
 }
 
 export async function getServerSideProps({ res }: GetServerSidePropsContext) {
-  // We make an API call to gather the URLs for our site
-  const posts = await getFile("blogmap.json");
-  if (!posts) return { notFound: true };
+  try {
+    const posts = await db.query.blogPosts.findMany({
+      where: and(
+        eq(blogPosts.status, "published"),
+        eq(blogPosts.visibility, "public"),
+      ),
+      columns: { slug: true, updatedAt: true, publishedAt: true },
+      orderBy: [desc(blogPosts.publishedAt)],
+    });
 
-  // We generate the XML sitemap with the posts data
-  const sitemap = generateSiteMap(posts);
+    const sitemap = generateSiteMap(posts);
 
-  res.setHeader("Content-Type", "text/xml");
-  // we send the XML to the browser
-  res.write(sitemap);
-  res.end();
+    res.setHeader("Content-Type", "text/xml");
+    res.setHeader("Cache-Control", "public, s-maxage=3600, stale-while-revalidate=600");
+    res.write(sitemap);
+    res.end();
 
-  return { props: {} };
+    return { props: {} };
+  } catch (err) {
+    console.error("Sitemap generation error:", err);
+    return { notFound: true };
+  }
 }
