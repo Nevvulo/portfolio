@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import remarkBreaks from "remark-breaks";
 import remarkGfm from "remark-gfm";
 import remarkParse from "remark-parse";
 import remarkRehype from "remark-rehype";
@@ -211,6 +212,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
     const result = await unified()
       .use(remarkParse)
       .use(remarkGfm)
+      .use(remarkBreaks)
       .use(remarkRehype, { allowDangerousHtml: true })
       .use(rehypeSlug)
       .use(rehypeStringify, { allowDangerousHtml: true })

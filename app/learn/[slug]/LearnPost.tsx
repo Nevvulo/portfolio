@@ -1426,6 +1426,20 @@ const OpinionNavbarWrapper = styled.div`
   img[alt="Nevulo Logo"] {
     filter: invert(1) !important;
   }
+
+  @media (prefers-color-scheme: dark) {
+    h1 {
+      color: #e8e4dc !important;
+    }
+
+    svg {
+      color: #e8e4dc !important;
+    }
+
+    img[alt="Nevulo Logo"] {
+      filter: none !important;
+    }
+  }
 `;
 
 // ---------------------------------------------------------------------------
@@ -1455,6 +1469,17 @@ const OpinionHeroContainer = styled.div`
   @media (max-width: 675px) {
     padding: 60px 20px 36px;
   }
+
+  @media (prefers-color-scheme: dark) {
+    background: linear-gradient(
+      180deg,
+      #0e0b16 0%,
+      #110e1c 30%,
+      #13101f 70%,
+      #13101f 100%
+    );
+    border-bottom-color: rgba(144, 116, 242, 0.15);
+  }
 `;
 
 const OpinionLabel = styled.span`
@@ -1472,6 +1497,10 @@ const OpinionDivider = styled.hr`
   border: none;
   border-top: 2px solid #1a1a1a;
   margin: 0 auto 32px;
+
+  @media (prefers-color-scheme: dark) {
+    border-top-color: #e8e4dc;
+  }
 `;
 
 const OpinionTitle = styled.h1`
@@ -1487,6 +1516,10 @@ const OpinionTitle = styled.h1`
   @media (max-width: 675px) {
     font-size: clamp(28px, 7vw, 40px);
   }
+
+  @media (prefers-color-scheme: dark) {
+    color: #f0ece4;
+  }
 `;
 
 const OpinionDate = styled.span`
@@ -1494,6 +1527,10 @@ const OpinionDate = styled.span`
   font-size: 14px;
   color: #666;
   letter-spacing: 0.5px;
+
+  @media (prefers-color-scheme: dark) {
+    color: #9a9590;
+  }
 `;
 
 const OpinionAuthor = styled.div`
@@ -1505,6 +1542,10 @@ const OpinionAuthor = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
+
+  @media (prefers-color-scheme: dark) {
+    color: #e8e4dc;
+  }
 `;
 
 const OpinionAuthorAvatar = styled.img`
@@ -1539,6 +1580,18 @@ const OpinionActionButton = styled.button`
     background: rgba(255, 255, 255, 0.9);
     border-color: #a8131d;
     color: #a8131d;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    border-color: rgba(144, 116, 242, 0.2);
+    background: rgba(255, 255, 255, 0.06);
+    color: rgba(255, 255, 255, 0.6);
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: #a8131d;
+      color: #c9434d;
+    }
   }
 `;
 
@@ -2173,6 +2226,7 @@ const BlogStyle = createGlobalStyle`
 // ---------------------------------------------------------------------------
 
 const OpinionBlogStyle = createGlobalStyle`
+  /* ====== LIGHT MODE (default) ====== */
   body {
     background: #faf8f3 !important;
   }
@@ -2313,7 +2367,6 @@ const OpinionBlogStyle = createGlobalStyle`
     }
   }
 
-  /* Override theme-colored text for opinion (cream background) */
   [data-content-type="opinion"] {
     color: #333;
   }
@@ -2338,10 +2391,131 @@ const OpinionBlogStyle = createGlobalStyle`
     color: rgba(0, 0, 0, 0.75) !important;
   }
 
-  /* Reaction counts in opinion hero */
   .opinion-actions span {
     color: rgba(0, 0, 0, 0.45) !important;
     text-shadow: none !important;
+  }
+
+  /* ====== DARK MODE — AMOLED with purple tinge ====== */
+  @media (prefers-color-scheme: dark) {
+    body {
+      background: #0d0a14 !important;
+    }
+
+    .article-content {
+      p {
+        color: #c8c3b8 !important;
+      }
+
+      > p:first-of-type::first-letter {
+        color: #f0ece4 !important;
+      }
+
+      strong {
+        color: #f0ece4 !important;
+      }
+
+      h1, h2 {
+        color: #f0ece4 !important;
+      }
+
+      h3, h4, h5, h6 {
+        color: #e0dbd0 !important;
+      }
+
+      a {
+        color: #7db8e0 !important;
+        text-decoration-color: rgba(125, 184, 224, 0.3) !important;
+
+        &:hover {
+          color: #a5d0f0 !important;
+        }
+      }
+
+      a > code {
+        color: #7db8e0 !important;
+      }
+
+      blockquote {
+        background: rgba(168, 19, 29, 0.08) !important;
+        color: #b0a99e !important;
+      }
+
+      ul > li, ol > li, li {
+        color: #c8c3b8 !important;
+      }
+
+      ol > li::before {
+        background: linear-gradient(135deg, rgba(168, 19, 29, 0.25), rgba(168, 19, 29, 0.12)) !important;
+        border-color: rgba(168, 19, 29, 0.4) !important;
+      }
+
+      hr {
+        border-top-color: rgba(144, 116, 242, 0.15) !important;
+      }
+
+      pre {
+        background: rgba(16, 13, 27, 0.8) !important;
+        border-color: rgba(144, 116, 242, 0.15) !important;
+
+        code {
+          color: #e0def4 !important;
+        }
+      }
+
+      code {
+        background: rgba(144, 116, 242, 0.1) !important;
+        border-color: rgba(144, 116, 242, 0.15) !important;
+        color: #d4c4f0 !important;
+      }
+
+      table {
+        th, td {
+          border-color: rgba(144, 116, 242, 0.15) !important;
+          color: #c8c3b8 !important;
+        }
+
+        th {
+          background: rgba(144, 116, 242, 0.08) !important;
+        }
+
+        tr:nth-child(even) {
+          background: rgba(255, 255, 255, 0.02) !important;
+        }
+      }
+
+      img {
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+      }
+    }
+
+    [data-content-type="opinion"] {
+      color: #c8c3b8;
+    }
+
+    /* Reaction buttons — glass on dark */
+    .opinion-actions button > div {
+      background: rgba(255, 255, 255, 0.06) !important;
+      border-color: rgba(255, 255, 255, 0.1) !important;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+    }
+
+    .opinion-actions button > div > span {
+      color: rgba(255, 255, 255, 0.6) !important;
+    }
+
+    .opinion-actions button:hover > div {
+      background: rgba(255, 255, 255, 0.12) !important;
+      border-color: rgba(255, 255, 255, 0.2) !important;
+    }
+
+    .opinion-actions button:hover > div > span {
+      color: rgba(255, 255, 255, 0.85) !important;
+    }
+
+    .opinion-actions span {
+      color: rgba(255, 255, 255, 0.5) !important;
+    }
   }
 `;
 

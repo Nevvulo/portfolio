@@ -1039,6 +1039,16 @@ const OpinionCard = styled.div`
     box-shadow: 0 8px 28px rgba(168, 19, 29, 0.08);
     transform: translateY(-2px);
   }
+
+  @media (prefers-color-scheme: dark) {
+    background: #13101f;
+    border-color: rgba(144, 116, 242, 0.15);
+
+    &:hover {
+      border-color: #c9434d;
+      box-shadow: 0 8px 28px rgba(168, 19, 29, 0.15);
+    }
+  }
 `;
 
 const OpinionBadge = styled.span`
@@ -1066,6 +1076,10 @@ const OpinionCardTitle = styled.h3<{ $size: BentoSize }>`
   @media (max-width: 600px) {
     font-size: 17px;
   }
+
+  @media (prefers-color-scheme: dark) {
+    color: #f0ece4;
+  }
 `;
 
 const OpinionCardDesc = styled.p`
@@ -1079,6 +1093,10 @@ const OpinionCardDesc = styled.p`
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+
+  @media (prefers-color-scheme: dark) {
+    color: #9a9590;
+  }
 `;
 
 const OpinionCardDate = styled.span`
@@ -1086,6 +1104,10 @@ const OpinionCardDate = styled.span`
   font-size: 12px;
   color: #999;
   margin-top: 12px;
+
+  @media (prefers-color-scheme: dark) {
+    color: #6b6560;
+  }
 `;
 
 export default BentoCard;
