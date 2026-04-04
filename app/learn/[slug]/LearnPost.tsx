@@ -75,7 +75,7 @@ interface PostData {
   title: string;
   description: string;
   body: string | null;
-  contentType: "article" | "video" | "news";
+  contentType: "article" | "video" | "news" | "opinion";
   coverImage?: string | null;
   coverAuthor?: string | null;
   coverAuthorUrl?: string | null;
@@ -128,7 +128,7 @@ export default function LearnPost({
   const postLabels = (post?.labels ?? []) as string[];
 
   useEffect(() => {
-    if (!post || post.contentType !== "article") return;
+    if (!post || (post.contentType !== "article" && post.contentType !== "opinion")) return;
 
     // Track viewed articles in sessionStorage to break recommendation loops
     let viewed: string[] = [];
@@ -269,6 +269,8 @@ function PostBody({
 }) {
   const postLabels = (post.labels ?? []) as string[];
   const creationDate = post.publishedAt ? new Date(post.publishedAt) : new Date();
+  const isOpinion = post.contentType === "opinion";
+  const isLongForm = post.contentType === "article" || isOpinion;
 
   // Auth state
   const { isSignedIn, user } = useUser();
@@ -846,13 +848,14 @@ function PostBody({
   const mappedHighlightCommentCounts = highlightCommentCounts ?? {};
 
   return (
-    <BlogView>
+    <BlogView data-content-type={isOpinion ? "opinion" : undefined}>
       <BlogStyle />
-      <ReadingFocusOverlay />
+      {isOpinion && <OpinionBlogStyle />}
+      {!isOpinion && <ReadingFocusOverlay />}
       <SimpleNavbar backRoute="/learn" />
 
-      {/* Table of Contents - only for articles */}
-      {post.contentType === "article" && (
+      {/* Table of Contents - only for long-form content */}
+      {isLongForm && (
         <>
           <TableOfContents
             heroRef={heroContainerRef}
@@ -908,126 +911,168 @@ function PostBody({
         </>
       )}
 
-      <PostHeroImg
-        coverAuthor={post.coverAuthor}
-        coverAuthorUrl={post.coverAuthorUrl}
-        src={post.coverImage || ""}
-        gradientIntensity={post.coverGradientIntensity}
-        style={{ paddingBottom: heroExtraPadding }}
-      >
-        <PostHeader ref={heroContainerRef}>
-          <PostSubheader>
-            <p>
-              Published on{" "}
-              {creationDate.toLocaleDateString("en-US", {
-                year: "numeric",
-                month: "2-digit",
-                day: "2-digit",
-              })}{" "}
-              by{" "}
-              <AuthorList>
-                {post.author?.id ? (
-                  <AuthorTrigger userId={post.author.id}>
-                    {post.author.avatarUrl ? (
-                      <AuthorAvatarInline
-                        src={post.author.avatarUrl}
-                        alt={post.author.displayName ?? "Author"}
-                      />
-                    ) : (
+      {isOpinion ? (
+        <OpinionHeroContainer ref={heroContainerRef}>
+          <OpinionLabel>Opinion</OpinionLabel>
+          <OpinionDivider />
+          <OpinionTitle>{post.title}</OpinionTitle>
+          <OpinionDate>
+            {creationDate.toLocaleDateString("en-US", {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            })}
+          </OpinionDate>
+          {post.author && (
+            <OpinionAuthor>
+              {post.author.avatarUrl && (
+                <OpinionAuthorAvatar
+                  src={post.author.avatarUrl}
+                  alt={post.author.displayName ?? "Author"}
+                />
+              )}
+              By {post.author.displayName ?? "Nevulo"}
+            </OpinionAuthor>
+          )}
+          <OpinionHeroActions>
+            <ReactionBar postId={post.id} variant="hero" />
+            {highlightCounts && highlightCounts.total > 0 && (
+              <HighlightCount
+                count={highlightCounts.total}
+                uniqueUsers={highlightCounts.uniqueUsers}
+                onClick={() => setHighlightModalOpen(true)}
+              />
+            )}
+            <OpinionActionButton onClick={() => setShareModalOpen(true)} title="Share">
+              <Share2 size={18} />
+            </OpinionActionButton>
+            <OpinionActionButton onClick={() => setCreditsModalOpen(true)} title="Credits">
+              <FileText size={18} />
+            </OpinionActionButton>
+          </OpinionHeroActions>
+        </OpinionHeroContainer>
+      ) : (
+        <PostHeroImg
+          coverAuthor={post.coverAuthor}
+          coverAuthorUrl={post.coverAuthorUrl}
+          src={post.coverImage || ""}
+          gradientIntensity={post.coverGradientIntensity}
+          style={{ paddingBottom: heroExtraPadding }}
+        >
+          <PostHeader ref={heroContainerRef}>
+            <PostSubheader>
+              <p>
+                Published on{" "}
+                {creationDate.toLocaleDateString("en-US", {
+                  year: "numeric",
+                  month: "2-digit",
+                  day: "2-digit",
+                })}{" "}
+                by{" "}
+                <AuthorList>
+                  {post.author?.id ? (
+                    <AuthorTrigger userId={post.author.id}>
+                      {post.author.avatarUrl ? (
+                        <AuthorAvatarInline
+                          src={post.author.avatarUrl}
+                          alt={post.author.displayName ?? "Author"}
+                        />
+                      ) : (
+                        <Avatar width="18" height="18" />
+                      )}
+                      <strong>{post.author.displayName ?? "Unknown"}</strong>
+                    </AuthorTrigger>
+                  ) : (
+                    <AuthorChip>
                       <Avatar width="18" height="18" />
-                    )}
-                    <strong>{post.author.displayName ?? "Unknown"}</strong>
-                  </AuthorTrigger>
-                ) : (
-                  <AuthorChip>
-                    <Avatar width="18" height="18" />
-                    <strong>Nevulo</strong>
-                  </AuthorChip>
+                      <strong>Nevulo</strong>
+                    </AuthorChip>
+                  )}
+                </AuthorList>
+              </p>
+            </PostSubheader>
+
+            {/* Hero Title - fades based on scroll if there's duplicate content */}
+            <HeroTitleWrapper
+              style={{
+                opacity: hasDuplicateTitle ? heroTitleOpacity : 1,
+                scale: hasDuplicateTitle ? heroScale : 1,
+              }}
+            >
+              <h1>{post.title}</h1>
+            </HeroTitleWrapper>
+            {/* Hero Description - only fades if description also matches */}
+            <HeroDescriptionWrapper
+              style={{
+                opacity: hasDuplicateDescription ? heroTitleOpacity : 1,
+              }}
+            >
+              <h3>{post.description}</h3>
+            </HeroDescriptionWrapper>
+
+            <HeroBottomSection>
+              {postLabels.length ? (
+                <Labels>
+                  {postLabels
+                    .map((labelText) => labelText.replace(/-/g, " "))
+                    .slice(0, 3)
+                    .map((label) => (
+                      <Label key={label}>{label}</Label>
+                    ))}
+                </Labels>
+              ) : null}
+
+              {/* Reactions and Highlights */}
+              <HeroActionsRow>
+                <ReactionBar postId={post.id} variant="hero" />
+                {highlightCounts && highlightCounts.total > 0 && (
+                  <HighlightCount
+                    count={highlightCounts.total}
+                    uniqueUsers={highlightCounts.uniqueUsers}
+                    onClick={() => setHighlightModalOpen(true)}
+                  />
                 )}
-              </AuthorList>
-            </p>
-          </PostSubheader>
+              </HeroActionsRow>
 
-          {/* Hero Title - fades based on scroll if there's duplicate content */}
-          <HeroTitleWrapper
-            style={{
-              opacity: hasDuplicateTitle ? heroTitleOpacity : 1,
-              scale: hasDuplicateTitle ? heroScale : 1,
-            }}
-          >
-            <h1>{post.title}</h1>
-          </HeroTitleWrapper>
-          {/* Hero Description - only fades if description also matches */}
-          <HeroDescriptionWrapper
-            style={{
-              opacity: hasDuplicateDescription ? heroTitleOpacity : 1,
-            }}
-          >
-            <h3>{post.description}</h3>
-          </HeroDescriptionWrapper>
-
-          <HeroBottomSection>
-            {postLabels.length ? (
-              <Labels>
-                {postLabels
-                  .map((labelText) => labelText.replace(/-/g, " "))
-                  .slice(0, 3)
-                  .map((label) => (
-                    <Label key={label}>{label}</Label>
-                  ))}
-              </Labels>
-            ) : null}
-
-            {/* Reactions and Highlights */}
-            <HeroActionsRow>
-              <ReactionBar postId={post.id} variant="hero" />
-              {highlightCounts && highlightCounts.total > 0 && (
-                <HighlightCount
-                  count={highlightCounts.total}
-                  uniqueUsers={highlightCounts.uniqueUsers}
-                  onClick={() => setHighlightModalOpen(true)}
-                />
-              )}
-            </HeroActionsRow>
-
-            <IconContainer direction="row">
-              <HeroActionButton onClick={() => setShareModalOpen(true)} title="Share this article">
-                <Share2 />
-              </HeroActionButton>
-              <HeroActionButton onClick={() => setCreditsModalOpen(true)} title="View credits">
-                <FileText />
-              </HeroActionButton>
-              {post.mediumUrl && (
-                <IconLink
-                  icon={faMedium}
-                  target="_blank"
-                  href={post.mediumUrl}
-                  width="24"
-                  height="24"
-                />
-              )}
-              {post.hashnodeUrl && (
-                <IconLink
-                  icon={faHashnode}
-                  target="_blank"
-                  href={post.hashnodeUrl}
-                  width="24"
-                  height="24"
-                />
-              )}
-              {post.devToUrl && (
-                <IconLink
-                  icon={faDev}
-                  target="_blank"
-                  href={post.devToUrl}
-                  width="24"
-                  height="24"
-                />
-              )}
-            </IconContainer>
-          </HeroBottomSection>
-        </PostHeader>
-      </PostHeroImg>
+              <IconContainer direction="row">
+                <HeroActionButton onClick={() => setShareModalOpen(true)} title="Share this article">
+                  <Share2 />
+                </HeroActionButton>
+                <HeroActionButton onClick={() => setCreditsModalOpen(true)} title="View credits">
+                  <FileText />
+                </HeroActionButton>
+                {post.mediumUrl && (
+                  <IconLink
+                    icon={faMedium}
+                    target="_blank"
+                    href={post.mediumUrl}
+                    width="24"
+                    height="24"
+                  />
+                )}
+                {post.hashnodeUrl && (
+                  <IconLink
+                    icon={faHashnode}
+                    target="_blank"
+                    href={post.hashnodeUrl}
+                    width="24"
+                    height="24"
+                  />
+                )}
+                {post.devToUrl && (
+                  <IconLink
+                    icon={faDev}
+                    target="_blank"
+                    href={post.devToUrl}
+                    width="24"
+                    height="24"
+                  />
+                )}
+              </IconContainer>
+            </HeroBottomSection>
+          </PostHeader>
+        </PostHeroImg>
+      )}
 
       {/* Video embed for video posts */}
       {post.contentType === "video" && post.youtubeId && (
@@ -1138,7 +1183,7 @@ function PostBody({
         reactionsByHighlight={mappedHighlightReactions}
       />
 
-      {post.contentType === "article" && (
+      {isLongForm && (
         <InfoBanner>
           <InfoLabel>INFO</InfoLabel>
           <InfoText>
@@ -1149,7 +1194,7 @@ function PostBody({
         </InfoBanner>
       )}
 
-      {post.contentType === "article" && (
+      {isLongForm && (
         <ThanksSection ref={thanksSectionRef}>
           <ThanksTitle>thanks for reading</ThanksTitle>
           <ThanksSubtitle>
@@ -1185,7 +1230,7 @@ function PostBody({
       )}
 
       {/* Recommended Articles */}
-      {post.contentType === "article" && similarArticles && similarArticles.length > 0 && (
+      {isLongForm && similarArticles && similarArticles.length > 0 && (
         <RecommendedSection>
           <RecommendedTitle>Recommended for you</RecommendedTitle>
           <RecommendedGrid>
@@ -1196,7 +1241,7 @@ function PostBody({
                 slug={article.slug}
                 title={article.title}
                 description={article.description}
-                contentType={article.contentType as "article" | "video" | "news"}
+                contentType={article.contentType as "article" | "video" | "news" | "opinion"}
                 coverImage={article.coverImage ?? undefined}
                 labels={(article.labels ?? []) as string[]}
                 difficulty={article.difficulty ?? undefined}
@@ -1354,6 +1399,119 @@ const ContentDescription = styled.p`
   }
 `;
 
+// ---------------------------------------------------------------------------
+// Opinion Hero Styled Components
+// ---------------------------------------------------------------------------
+
+const OpinionHeroContainer = styled.div`
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+  margin-top: 1rem;
+  margin-bottom: 12px;
+  background: linear-gradient(
+    180deg,
+    #e8e4dc 0%,
+    #f0ece4 30%,
+    #f7f5f0 70%,
+    #f7f5f0 100%
+  );
+  border-bottom: 1px solid #d5d0c6;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 80px clamp(24px, 8vw, 120px) 48px;
+
+  @media (max-width: 675px) {
+    padding: 60px 20px 36px;
+  }
+`;
+
+const OpinionLabel = styled.span`
+  color: #a8131d;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 5px;
+  margin-bottom: 24px;
+`;
+
+const OpinionDivider = styled.hr`
+  width: 50px;
+  border: none;
+  border-top: 2px solid #1a1a1a;
+  margin: 0 auto 32px;
+`;
+
+const OpinionTitle = styled.h1`
+  font-family: var(--font-serif);
+  font-size: clamp(32px, 5vw, 56px);
+  font-weight: 900;
+  color: #1a1a1a;
+  line-height: 1.1;
+  letter-spacing: -0.5px;
+  max-width: 800px;
+  margin: 0 auto 24px;
+
+  @media (max-width: 675px) {
+    font-size: clamp(28px, 7vw, 40px);
+  }
+`;
+
+const OpinionDate = styled.span`
+  font-family: var(--font-sans);
+  font-size: 14px;
+  color: #666;
+  letter-spacing: 0.5px;
+`;
+
+const OpinionAuthor = styled.div`
+  font-family: var(--font-sans);
+  font-size: 15px;
+  color: #1a1a1a;
+  font-weight: 600;
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+`;
+
+const OpinionAuthorAvatar = styled.img`
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+`;
+
+const OpinionHeroActions = styled.div`
+  margin-top: 28px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+`;
+
+const OpinionActionButton = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid #d5d0c6;
+  background: rgba(255, 255, 255, 0.6);
+  color: #555;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.9);
+    border-color: #a8131d;
+    color: #a8131d;
+  }
+`;
 
 const AuthorAvatarInline = styled.img`
   width: 18px;
@@ -1977,6 +2135,167 @@ const BlogStyle = createGlobalStyle`
       tr:nth-child(even) {
         background: rgba(255, 255, 255, 0.02);
       }
+    }
+  }
+`;
+
+// ---------------------------------------------------------------------------
+// Opinion Body Global Styles — overrides BlogStyle for opinion articles
+// ---------------------------------------------------------------------------
+
+const OpinionBlogStyle = createGlobalStyle`
+  body {
+    background: #faf8f3 !important;
+  }
+
+  .article-content {
+    p {
+      font-family: var(--font-serif) !important;
+      font-size: 1.2em !important;
+      line-height: 2.05 !important;
+      color: #333 !important;
+      letter-spacing: 0.1px !important;
+
+      @media (max-width: 768px) {
+        font-size: 1.1em !important;
+        line-height: 1.9 !important;
+      }
+
+      @media (max-width: 480px) {
+        font-size: 1.05em !important;
+        line-height: 1.8 !important;
+      }
+    }
+
+    /* Drop cap on first paragraph */
+    > p:first-of-type::first-letter {
+      font-family: var(--font-serif);
+      font-size: 4.2em;
+      float: left;
+      line-height: 0.8;
+      padding-right: 10px;
+      padding-top: 6px;
+      color: #1a1a1a;
+      font-weight: 700;
+
+      @media (max-width: 480px) {
+        font-size: 3em;
+        padding-right: 6px;
+        padding-top: 4px;
+      }
+    }
+
+    strong {
+      color: #1a1a1a !important;
+      font-family: var(--font-serif) !important;
+    }
+
+    h1, h2 {
+      font-family: var(--font-serif) !important;
+      color: #1a1a1a !important;
+      letter-spacing: -0.5px !important;
+    }
+
+    h3, h4, h5, h6 {
+      font-family: var(--font-serif) !important;
+      color: #1a1a1a !important;
+    }
+
+    a {
+      color: #326891 !important;
+      font-family: var(--font-serif) !important;
+      text-decoration-color: rgba(50, 104, 145, 0.4) !important;
+
+      &:hover {
+        color: #1a4a6e !important;
+        opacity: 1 !important;
+      }
+    }
+
+    a > code {
+      color: #326891 !important;
+    }
+
+    blockquote {
+      border-left-color: #a8131d !important;
+      background: rgba(168, 19, 29, 0.03) !important;
+      font-family: var(--font-serif) !important;
+      color: #444 !important;
+    }
+
+    ul > li {
+      color: #333 !important;
+
+      &::before {
+        color: #a8131d !important;
+      }
+    }
+
+    ol > li {
+      color: #333 !important;
+
+      &::before {
+        background: linear-gradient(135deg, rgba(168, 19, 29, 0.15), rgba(168, 19, 29, 0.08)) !important;
+        border-color: rgba(168, 19, 29, 0.3) !important;
+        color: #a8131d !important;
+      }
+    }
+
+    li {
+      color: #333 !important;
+    }
+
+    hr {
+      border-top-color: #d5d0c6 !important;
+    }
+
+    pre {
+      background: #f0ede6 !important;
+      border-color: #d5d0c6 !important;
+
+      code {
+        color: #1a1a1a !important;
+      }
+    }
+
+    code {
+      background: rgba(168, 19, 29, 0.06) !important;
+      border-color: rgba(168, 19, 29, 0.12) !important;
+      color: #5a2d2d !important;
+    }
+
+    table {
+      th, td {
+        border-color: #d5d0c6 !important;
+        color: #333 !important;
+      }
+
+      th {
+        background: rgba(168, 19, 29, 0.06) !important;
+      }
+
+      tr:nth-child(even) {
+        background: rgba(0, 0, 0, 0.02) !important;
+      }
+    }
+
+    img {
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    }
+  }
+
+  /* Override theme-colored components for opinion (cream background) */
+  [data-content-type="opinion"] {
+    color: #333;
+
+    /* PostContainer text */
+    & > div {
+      color: #333;
+    }
+
+    /* ThanksSection */
+    h2 {
+      color: #1a1a1a;
     }
   }
 `;

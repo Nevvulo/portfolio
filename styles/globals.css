@@ -14,6 +14,9 @@
   /* Display font - Sixtyfour for headings */
   --font-display: "Sixtyfour", var(--font-mono);
 
+  /* Serif stack - Playfair Display for opinion articles */
+  --font-serif: "Playfair Display", Georgia, "Times New Roman", serif;
+
   /* Sans-serif stack - Inter from Google Fonts */
   --font-sans:
     "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu",

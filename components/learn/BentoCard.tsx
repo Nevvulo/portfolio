@@ -10,7 +10,7 @@ import { SkeletonImage } from "../blog/skeleton-image";
 
 // Types
 type BentoSize = "small" | "medium" | "large" | "banner" | "featured";
-type ContentType = "article" | "video" | "news";
+type ContentType = "article" | "video" | "news" | "opinion";
 type Difficulty = "beginner" | "intermediate" | "advanced";
 
 type Visibility = "public" | "members" | "tier1" | "tier2";
@@ -100,6 +100,30 @@ export function BentoCard(props: BentoCardProps) {
           </NewsContent>
         </NewsCard>
       </NewsWrapper>
+    );
+  }
+
+  // Opinion posts use a distinct typographic card
+  if (contentType === "opinion") {
+    const opinionDate = publishedAt ? new Date(publishedAt) : null;
+    return (
+      <OpinionWrapper href={`/learn/${slug}`} prefetch={false} $size={bentoSize}>
+        <OpinionCard>
+          {isTierLocked && <TierBadge tier={visibility as "tier1" | "tier2"} small />}
+          <OpinionBadge>Opinion</OpinionBadge>
+          <OpinionCardTitle $size={bentoSize}>{title}</OpinionCardTitle>
+          <OpinionCardDesc>{description}</OpinionCardDesc>
+          {opinionDate && (
+            <OpinionCardDate>
+              {opinionDate.toLocaleDateString("en-US", {
+                month: "long",
+                day: "numeric",
+                year: "numeric",
+              })}
+            </OpinionCardDate>
+          )}
+        </OpinionCard>
+      </OpinionWrapper>
     );
   }
 
@@ -983,5 +1007,85 @@ function TierBadge({ tier, small }: { tier: "tier1" | "tier2"; small?: boolean }
     </TierBadgeWrapper>
   );
 }
+
+// ========== OPINION CARD ==========
+
+const OpinionWrapper = styled(Link)<{ $size: BentoSize }>`
+  text-decoration: none;
+  display: block;
+  grid-column: span 2;
+  grid-row: span 1;
+  min-width: 0;
+  overflow: hidden;
+
+  @media (max-width: 600px) {
+    grid-column: span 1;
+  }
+`;
+
+const OpinionCard = styled.div`
+  position: relative;
+  background: #f7f5f0;
+  border: 1px solid #e0ddd5;
+  border-radius: 16px;
+  padding: 28px 24px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.25s ease;
+
+  &:hover {
+    border-color: #a8131d;
+    box-shadow: 0 8px 28px rgba(168, 19, 29, 0.08);
+    transform: translateY(-2px);
+  }
+`;
+
+const OpinionBadge = styled.span`
+  color: #a8131d;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  margin-bottom: 12px;
+`;
+
+const OpinionCardTitle = styled.h3<{ $size: BentoSize }>`
+  margin: 0 0 8px;
+  font-family: var(--font-serif);
+  font-weight: 800;
+  color: #1a1a1a;
+  line-height: 1.2;
+  letter-spacing: -0.3px;
+  font-size: ${(p) =>
+    p.$size === "large" || p.$size === "banner" || p.$size === "featured"
+      ? "22px"
+      : "18px"};
+
+  @media (max-width: 600px) {
+    font-size: 17px;
+  }
+`;
+
+const OpinionCardDesc = styled.p`
+  margin: 0;
+  font-family: var(--font-serif);
+  color: #555;
+  font-size: 14px;
+  line-height: 1.5;
+  flex: 1;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+`;
+
+const OpinionCardDate = styled.span`
+  font-family: var(--font-sans);
+  font-size: 12px;
+  color: #999;
+  margin-top: 12px;
+`;
 
 export default BentoCard;

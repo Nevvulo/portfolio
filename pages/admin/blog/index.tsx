@@ -36,7 +36,7 @@ const MDXEditor = dynamic(
 
 import {
   Archive, ArrowDown, ArrowUp, BarChart3, Calendar, Edit2, Eye, EyeOff, FileText,
-  Heart, Info, Lightbulb, Lock, MessageCircle, MessageSquare, Newspaper, Play, Plus,
+  Heart, Info, Lightbulb, Lock, MessageCircle, MessageSquare, Newspaper, PenLine, Play, Plus,
   RefreshCw, Search, Send, ThumbsUp, Trash2, TrendingUp, UserPlus, Users, X,
 } from "lucide-react";
 import {
@@ -336,7 +336,7 @@ function PostsAnalyticsTab({ postsData, days }: { postsData: any; days: number }
         <tbody>
           {sortedPosts.map((post: any) => (
             <TableRow key={post.id}>
-              <TableCell><PostCellContent><PostCellIcon>{post.contentType === "video" ? <Play size={14} /> : post.contentType === "news" ? <Newspaper size={14} /> : <FileText size={14} />}</PostCellIcon><div><PostCellTitle>{post.title}</PostCellTitle><PostCellSlug>/{post.slug}</PostCellSlug></div></PostCellContent></TableCell>
+              <TableCell><PostCellContent><PostCellIcon>{post.contentType === "video" ? <Play size={14} /> : post.contentType === "news" ? <Newspaper size={14} /> : post.contentType === "opinion" ? <PenLine size={14} /> : <FileText size={14} />}</PostCellIcon><div><PostCellTitle>{post.title}</PostCellTitle><PostCellSlug>/{post.slug}</PostCellSlug></div></PostCellContent></TableCell>
               <TableCell><CellValue>{(post.recentViews ?? 0).toLocaleString()}</CellValue></TableCell>
               <TableCell><CellValue>{(post.recentReactions ?? 0).toLocaleString()}</CellValue></TableCell>
               <TableCell><CellValue>{(post.recentComments ?? 0).toLocaleString()}</CellValue></TableCell>
@@ -402,7 +402,7 @@ function PostsTab() {
                     {post.contentType === "video" && <VideoIndicator><Play size={16} /></VideoIndicator>}
                   </AdminPostImage>
                 ) : (
-                  <AdminPostImagePlaceholder>{post.contentType === "news" ? <Newspaper size={24} /> : <FileText size={24} />}</AdminPostImagePlaceholder>
+                  <AdminPostImagePlaceholder>{post.contentType === "news" ? <Newspaper size={24} /> : post.contentType === "opinion" ? <PenLine size={24} /> : <FileText size={24} />}</AdminPostImagePlaceholder>
                 )}
                 <AdminPostInfo>
                   <AdminPostTitle>{post.title}</AdminPostTitle>
@@ -555,7 +555,7 @@ export function PostEditor({ post, onClose }: { post: BlogPost | null; onClose: 
         </FormRow>
         <FormGroup><Label>Description</Label><Input value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Short description" /></FormGroup>
         <FormRow>
-          <FormGroup><Label>Content Type</Label><Select value={form.contentType} onChange={(e) => setForm({ ...form, contentType: e.target.value as typeof form.contentType })}><option value="article">Article</option><option value="video">Video</option><option value="news">News</option></Select></FormGroup>
+          <FormGroup><Label>Content Type</Label><Select value={form.contentType} onChange={(e) => setForm({ ...form, contentType: e.target.value as typeof form.contentType })}><option value="article">Article</option><option value="video">Video</option><option value="news">News</option><option value="opinion">Opinion</option></Select></FormGroup>
           <FormGroup><Label>Bento Size</Label><Select value={form.bentoSize} onChange={(e) => setForm({ ...form, bentoSize: e.target.value as typeof form.bentoSize })}><option value="small">Small</option><option value="medium">Medium</option><option value="large">Large</option><option value="banner">Banner</option><option value="featured">Featured</option></Select></FormGroup>
         </FormRow>
         <VisibilitySection>
@@ -756,7 +756,7 @@ const AdminPostMeta = styled.div`display: flex; align-items: center; gap: 8px; f
 const AdminPostDate = styled.span`font-size: 12px; color: ${(p) => p.theme.textColor}; opacity: 0.6;`;
 const DifficultyPill = styled.span<{ $difficulty: string }>`font-size: 10px; font-weight: 500; padding: 2px 6px; border-radius: 4px; text-transform: lowercase; background: ${(p) => p.$difficulty === "beginner" ? "rgba(34,197,94,0.12)" : p.$difficulty === "intermediate" ? "rgba(251,191,36,0.12)" : "rgba(239,68,68,0.12)"}; border: 1px solid ${(p) => p.$difficulty === "beginner" ? "rgba(34,197,94,0.3)" : p.$difficulty === "intermediate" ? "rgba(251,191,36,0.3)" : "rgba(239,68,68,0.3)"}; color: ${(p) => p.$difficulty === "beginner" ? "#4ade80" : p.$difficulty === "intermediate" ? "#fbbf24" : "#f87171"};`;
 const LabelPill = styled.span`font-size: 10px; font-weight: 500; padding: 2px 6px; border-radius: 4px; background: rgba(144, 116, 242, 0.15); border: 1px solid rgba(144, 116, 242, 0.3); color: #a5a3f5;`;
-const TypePill = styled.span<{ $type: string }>`font-size: 10px; font-weight: 500; padding: 2px 6px; border-radius: 4px; text-transform: capitalize; background: ${(p) => p.$type === "video" ? "rgba(239,68,68,0.12)" : p.$type === "news" ? "rgba(59,130,246,0.12)" : "rgba(255,255,255,0.08)"}; border: 1px solid ${(p) => p.$type === "video" ? "rgba(239,68,68,0.3)" : p.$type === "news" ? "rgba(59,130,246,0.3)" : "rgba(255,255,255,0.15)"}; color: ${(p) => p.$type === "video" ? "#f87171" : p.$type === "news" ? "#60a5fa" : "rgba(255,255,255,0.7)"};`;
+const TypePill = styled.span<{ $type: string }>`font-size: 10px; font-weight: 500; padding: 2px 6px; border-radius: 4px; text-transform: capitalize; background: ${(p) => p.$type === "video" ? "rgba(239,68,68,0.12)" : p.$type === "news" ? "rgba(59,130,246,0.12)" : p.$type === "opinion" ? "rgba(180,83,9,0.12)" : "rgba(255,255,255,0.08)"}; border: 1px solid ${(p) => p.$type === "video" ? "rgba(239,68,68,0.3)" : p.$type === "news" ? "rgba(59,130,246,0.3)" : p.$type === "opinion" ? "rgba(180,83,9,0.3)" : "rgba(255,255,255,0.15)"}; color: ${(p) => p.$type === "video" ? "#f87171" : p.$type === "news" ? "#60a5fa" : p.$type === "opinion" ? "#d97706" : "rgba(255,255,255,0.7)"};`;
 const StatusPill = styled.span<{ $status?: string }>`font-size: 10px; font-weight: 500; padding: 2px 6px; border-radius: 4px; text-transform: capitalize; background: ${(p) => p.$status === "published" ? "rgba(34,197,94,0.12)" : p.$status === "archived" ? "rgba(107,114,128,0.12)" : "rgba(251,191,36,0.12)"}; border: 1px solid ${(p) => p.$status === "published" ? "rgba(34,197,94,0.3)" : p.$status === "archived" ? "rgba(107,114,128,0.3)" : "rgba(251,191,36,0.3)"}; color: ${(p) => p.$status === "published" ? "#4ade80" : p.$status === "archived" ? "#9ca3af" : "#fbbf24"};`;
 const AdminPostActions = styled.div`display: flex; align-items: center; gap: 12px; flex-shrink: 0;`;
 const SizeButtons = styled.div`display: flex; gap: 4px;`;
