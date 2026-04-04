@@ -934,7 +934,7 @@ function PostBody({
               By {post.author.displayName ?? "Nevulo"}
             </OpinionAuthor>
           )}
-          <OpinionHeroActions>
+          <OpinionHeroActions className="opinion-actions">
             <ReactionBar postId={post.id} variant="hero" />
             {highlightCounts && highlightCounts.total > 0 && (
               <HighlightCount
@@ -2288,15 +2288,53 @@ const OpinionBlogStyle = createGlobalStyle`
   [data-content-type="opinion"] {
     color: #333;
 
-    /* PostContainer text */
-    & > div {
-      color: #333;
+    /* Navbar — dark text on cream */
+    header {
+      h1 {
+        color: #1a1a1a !important;
+      }
+
+      /* Back arrow */
+      svg {
+        color: #1a1a1a !important;
+      }
+
+      /* Logo SVG — invert for light background */
+      img[alt="Nevulo Logo"] {
+        filter: invert(1) !important;
+      }
     }
 
-    /* ThanksSection */
-    h2 {
-      color: #1a1a1a;
+    /* Reaction buttons — dark glass on cream */
+    & > div > div > div > div {
+      /* Let the scoped overrides below handle it */
     }
+  }
+
+  /* Reaction buttons in opinion hero — dark on cream */
+  .opinion-actions button > div {
+    background: rgba(0, 0, 0, 0.05) !important;
+    border-color: rgba(0, 0, 0, 0.12) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.5) !important;
+  }
+
+  .opinion-actions button > div > span {
+    color: rgba(0, 0, 0, 0.5) !important;
+  }
+
+  .opinion-actions button:hover > div {
+    background: rgba(0, 0, 0, 0.1) !important;
+    border-color: rgba(0, 0, 0, 0.2) !important;
+  }
+
+  .opinion-actions button:hover > div > span {
+    color: rgba(0, 0, 0, 0.75) !important;
+  }
+
+  /* Reaction counts in opinion hero */
+  .opinion-actions span {
+    color: rgba(0, 0, 0, 0.45) !important;
+    text-shadow: none !important;
   }
 `;
 
