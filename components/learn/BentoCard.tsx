@@ -1084,7 +1084,7 @@ const OpinionCardTitle = styled.h3<{ $size: BentoSize }>`
 
 const OpinionCardDesc = styled.p`
   margin: 0;
-  font-family: var(--font-serif);
+  font-family: var(--font-serif-body);
   color: #555;
   font-size: 14px;
   line-height: 1.5;

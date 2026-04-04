@@ -2233,7 +2233,7 @@ const OpinionBlogStyle = createGlobalStyle`
 
   .article-content {
     p {
-      font-family: var(--font-serif) !important;
+      font-family: var(--font-serif-body) !important;
       font-size: 1.2em !important;
       line-height: 2.05 !important;
       color: #333 !important;
@@ -2270,7 +2270,7 @@ const OpinionBlogStyle = createGlobalStyle`
 
     strong {
       color: #1a1a1a !important;
-      font-family: var(--font-serif) !important;
+      font-family: var(--font-serif-body) !important;
     }
 
     h1, h2 {
@@ -2286,7 +2286,7 @@ const OpinionBlogStyle = createGlobalStyle`
 
     a {
       color: #326891 !important;
-      font-family: var(--font-serif) !important;
+      font-family: var(--font-serif-body) !important;
       text-decoration-color: rgba(50, 104, 145, 0.4) !important;
 
       &:hover {
@@ -2302,7 +2302,7 @@ const OpinionBlogStyle = createGlobalStyle`
     blockquote {
       border-left-color: #a8131d !important;
       background: rgba(168, 19, 29, 0.03) !important;
-      font-family: var(--font-serif) !important;
+      font-family: var(--font-serif-body) !important;
       color: #444 !important;
     }
 

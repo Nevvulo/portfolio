@@ -14,8 +14,9 @@
   /* Display font - Sixtyfour for headings */
   --font-display: "Sixtyfour", var(--font-mono);
 
-  /* Serif stack - Playfair Display for opinion articles */
+  /* Serif stacks for opinion articles */
   --font-serif: "Playfair Display", Georgia, "Times New Roman", serif;
+  --font-serif-body: "Times New Roman", Times, Georgia, serif;
 
   /* Sans-serif stack - Inter from Google Fonts */
   --font-sans:
