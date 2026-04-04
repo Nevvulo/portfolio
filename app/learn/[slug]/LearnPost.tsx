@@ -443,10 +443,8 @@ function PostBody({
   }, [queryClient, post.id]);
 
   // Text selection hook
-  const selection = useTextSelection({
-    containerRef: contentRef,
-    debounceMs: 150,
-  });
+  // TODO: Highlights disabled — interfering with text selection
+  const selection = { isActive: false, rect: null, anchor: null, clear: () => {} } as ReturnType<typeof useTextSelection>;
 
   // Handle creating a highlight
   const handleHighlight = useCallback(
@@ -878,8 +876,8 @@ function PostBody({
             postTitle={post.title}
             headings={tocHeadings}
             activeHeading={activeHeading}
-            highlightCount={highlightCounts?.total || 0}
-            onOpenHighlights={() => setHighlightModalOpen(true)}
+            highlightCount={0}
+            onOpenHighlights={() => {}}
             heroRef={heroContainerRef}
             thanksSectionRef={thanksSectionRef}
             commentSectionRef={commentSectionRef}
@@ -906,8 +904,8 @@ function PostBody({
                 postTitle={post.title}
                 headings={tocHeadings}
                 activeHeading={activeHeading}
-                highlightCount={highlightCounts?.total || 0}
-                onOpenHighlights={() => setHighlightModalOpen(true)}
+                highlightCount={0}
+                onOpenHighlights={() => {}}
                 onClose={() => {}}
                 commentSectionRef={commentSectionRef}
                 thanksSectionRef={thanksSectionRef}
@@ -942,13 +940,6 @@ function PostBody({
           )}
           <OpinionHeroActions className="opinion-actions">
             <ReactionBar postId={post.id} variant="hero" />
-            {highlightCounts && highlightCounts.total > 0 && (
-              <HighlightCount
-                count={highlightCounts.total}
-                uniqueUsers={highlightCounts.uniqueUsers}
-                onClick={() => setHighlightModalOpen(true)}
-              />
-            )}
             <OpinionActionButton onClick={() => setShareModalOpen(true)} title="Share">
               <Share2 size={18} />
             </OpinionActionButton>
@@ -1028,16 +1019,9 @@ function PostBody({
                 </Labels>
               ) : null}
 
-              {/* Reactions and Highlights */}
+              {/* Reactions */}
               <HeroActionsRow>
                 <ReactionBar postId={post.id} variant="hero" />
-                {highlightCounts && highlightCounts.total > 0 && (
-                  <HighlightCount
-                    count={highlightCounts.total}
-                    uniqueUsers={highlightCounts.uniqueUsers}
-                    onClick={() => setHighlightModalOpen(true)}
-                  />
-                )}
               </HeroActionsRow>
 
               <IconContainer direction="row">
@@ -1116,78 +1100,17 @@ function PostBody({
             <FallbackContent>{post.body}</FallbackContent>
           )}
 
-          {/* Highlight overlay - renders highlight marks and reaction gutter */}
-          {mappedHighlights && (
-            <HighlightOverlay
-              containerRef={contentRef}
-              highlights={mappedHighlights}
-              currentUserId={currentUser ? String(currentUser.id) : undefined}
-              newHighlightIds={newHighlightIds}
-              onHighlightClick={handleHighlightClick}
-              commentCounts={mappedHighlightCommentCounts}
-              reactionsByHighlight={mappedHighlightReactions}
-            />
-          )}
+          {/* Highlight overlay disabled — interfering with text selection */}
         </HighlightableContent>
       </PostContainer>
 
-      {/* Selection toolbar - appears when text is selected */}
-      <SelectionToolbar
-        isVisible={selection.isActive}
-        rect={selection.rect}
-        anchor={selection.anchor}
-        isSignedIn={!!isSignedIn}
-        onHighlight={handleHighlight}
-        onComment={handleComment}
-        onReact={handleReact}
-        isHighlighting={isHighlighting}
-      />
+      {/* Selection toolbar disabled — highlights temporarily off */}
 
-      {/* Comment input - appears when user clicks Comment */}
-      <SelectionCommentInput
-        isVisible={!!pendingComment}
-        position={pendingComment?.position || null}
-        selectedText={pendingComment?.selectedText || ""}
-        onSubmit={handleCommentSubmit}
-        onCancel={handleCommentCancel}
-        isSubmitting={isSubmittingComment}
-      />
+      {/* Comment input disabled — highlights temporarily off */}
 
-      {/* Inline comment bubble - shows when clicking on a highlight */}
-      <InlineCommentBubble
-        highlightId={activeHighlightId || ""}
-        highlightedText={activeHighlight?.highlightedText || ""}
-        rect={activeHighlightRect}
-        isExpanded={!!activeHighlightId}
-        comments={mappedComments || []}
-        isSignedIn={!!isSignedIn}
-        onToggle={() => {}}
-        onSubmit={handleInlineCommentSubmit}
-        onClose={handleCloseInlineComment}
-        isReactionOnly={activeHighlight?.isReactionOnly}
-        highlightAuthor={
-          activeHighlight?.user
-            ? {
-                _id: String(activeHighlight.user.id),
-                displayName: activeHighlight.user.displayName ?? "",
-                username: activeHighlight.user.username ?? undefined,
-                avatarUrl: activeHighlight.user.avatarUrl ?? undefined,
-              }
-            : undefined
-        }
-      />
+      {/* Inline comment bubble disabled — highlights temporarily off */}
 
-      {/* Highlight modal - shows all highlights */}
-      <HighlightModal
-        isOpen={highlightModalOpen}
-        onClose={() => setHighlightModalOpen(false)}
-        highlightsByUser={mappedByUser || []}
-        totalCount={highlightCounts?.total || 0}
-        onScrollToHighlight={scrollToHighlight}
-        currentUserId={currentUser ? String(currentUser.id) : undefined}
-        onDelete={handleDeleteHighlight}
-        reactionsByHighlight={mappedHighlightReactions}
-      />
+      {/* Highlight modal disabled — highlights temporarily off */}
 
       {isLongForm && (
         <InfoBanner>
