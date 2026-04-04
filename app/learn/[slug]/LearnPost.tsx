@@ -852,7 +852,13 @@ function PostBody({
       <BlogStyle />
       {isOpinion && <OpinionBlogStyle />}
       {!isOpinion && <ReadingFocusOverlay />}
-      <SimpleNavbar backRoute="/learn" />
+      {isOpinion ? (
+        <OpinionNavbarWrapper>
+          <SimpleNavbar backRoute="/learn" />
+        </OpinionNavbarWrapper>
+      ) : (
+        <SimpleNavbar backRoute="/learn" />
+      )}
 
       {/* Table of Contents - only for long-form content */}
       {isLongForm && (
@@ -1396,6 +1402,29 @@ const ContentDescription = styled.p`
   @media (max-width: 480px) {
     font-size: 0.95em;
     line-height: 1.7;
+  }
+`;
+
+// ---------------------------------------------------------------------------
+// Opinion Navbar Wrapper — forces dark text/icons on cream background
+// ---------------------------------------------------------------------------
+
+const OpinionNavbarWrapper = styled.div`
+  width: 100%;
+
+  /* Override NevuloTitle color */
+  h1 {
+    color: #1a1a1a !important;
+  }
+
+  /* Override back arrow and all SVG icons */
+  svg {
+    color: #1a1a1a !important;
+  }
+
+  /* Invert the Nevulo logo for light background */
+  img[alt="Nevulo Logo"] {
+    filter: invert(1) !important;
   }
 `;
 
@@ -2284,31 +2313,9 @@ const OpinionBlogStyle = createGlobalStyle`
     }
   }
 
-  /* Override theme-colored components for opinion (cream background) */
+  /* Override theme-colored text for opinion (cream background) */
   [data-content-type="opinion"] {
     color: #333;
-
-    /* Navbar — dark text on cream */
-    header {
-      h1 {
-        color: #1a1a1a !important;
-      }
-
-      /* Back arrow */
-      svg {
-        color: #1a1a1a !important;
-      }
-
-      /* Logo SVG — invert for light background */
-      img[alt="Nevulo Logo"] {
-        filter: invert(1) !important;
-      }
-    }
-
-    /* Reaction buttons — dark glass on cream */
-    & > div > div > div > div {
-      /* Let the scoped overrides below handle it */
-    }
   }
 
   /* Reaction buttons in opinion hero — dark on cream */
