@@ -7,7 +7,7 @@ import { useQuery as useRQ, useQueryClient } from "@tanstack/react-query";
 import { m, useScroll, useSpring, useTransform } from "framer-motion";
 import { FileText, Share2 } from "lucide-react";
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
 import styled, { createGlobalStyle } from "styled-components";
 import { CircleIndicator } from "@/components/blog/circle-indicator";
 import { Label, Labels } from "@/components/blog/labels";
@@ -298,10 +298,13 @@ function PostBody({
 
   // Mobile TOC bar state
   const [tocCollapsed, setTocCollapsed] = useState(false);
-  const [readProgress, setReadProgress] = useState(0);
+  const readProgressRef = useRef(0);
+  const progressRingRef = useRef<SVGCircleElement>(null);
   const [mobileBarVisible, setMobileBarVisible] = useState(false);
+  const mobileBarVisibleRef = useRef(false);
 
   // Track scroll progress and mobile bar visibility
+  // Uses refs + direct DOM updates to avoid re-rendering the entire component on every scroll
   useEffect(() => {
     const handleScroll = () => {
       // Calculate read progress based on how far we've scrolled through the content
@@ -315,17 +318,29 @@ function PostBody({
         const contentHeight = thanksTop - contentTop;
         const scrollProgress = scrollY - contentTop + viewportHeight * 0.3;
         const progress = Math.max(0, Math.min(100, (scrollProgress / contentHeight) * 100));
-        setReadProgress(progress);
+        readProgressRef.current = progress;
+
+        // Update progress ring directly via DOM to avoid re-render
+        if (progressRingRef.current) {
+          const r = progressRingRef.current.r.baseVal.value;
+          const circumference = r * 2 * Math.PI;
+          const offset = circumference - (progress / 100) * circumference;
+          progressRingRef.current.style.strokeDashoffset = String(offset);
+        }
       }
 
       // Show mobile bar when hero is out of view AND we haven't reached thanks section
+      // Only update state when value actually changes to avoid unnecessary re-renders
       if (heroContainerRef.current && thanksSectionRef.current) {
         const heroRect = heroContainerRef.current.getBoundingClientRect();
         const thanksRect = thanksSectionRef.current.getBoundingClientRect();
         const heroOutOfView = heroRect.bottom < 0;
-        // Hide when thanks section comes into view (with small offset)
         const thanksReached = thanksRect.top <= window.innerHeight - 100;
-        setMobileBarVisible(heroOutOfView && !thanksReached);
+        const visible = heroOutOfView && !thanksReached;
+        if (visible !== mobileBarVisibleRef.current) {
+          mobileBarVisibleRef.current = visible;
+          setMobileBarVisible(visible);
+        }
       }
     };
 
@@ -886,7 +901,8 @@ function PostBody({
             articleTitle={post.title}
             headings={tocHeadings}
             activeHeading={activeHeading}
-            readProgress={readProgress}
+            readProgress={readProgressRef.current}
+            progressRingRef={progressRingRef}
             isVisible={mobileBarVisible && tocHeadings.length > 0}
             onHeadingClick={(id) => {
               const element = document.getElementById(id);
@@ -1094,13 +1110,7 @@ function PostBody({
         )}
 
         <HighlightableContent ref={contentRef}>
-          {contentHtml ? (
-            <div className="article-content" dangerouslySetInnerHTML={{ __html: contentHtml }} />
-          ) : (
-            <FallbackContent>{post.body}</FallbackContent>
-          )}
-
-          {/* Highlight overlay disabled — interfering with text selection */}
+          <ArticleContent contentHtml={contentHtml} fallbackBody={post.body} />
         </HighlightableContent>
       </PostContainer>
 
@@ -1694,6 +1704,21 @@ const HeroActionsRow = styled.div`
   margin-top: 16px;
   min-height: 48px; /* Reserve space to prevent CLS */
 `;
+
+// Memoized article content to prevent re-renders from scroll state changes
+// causing images to reload
+const ArticleContent = memo(function ArticleContent({
+  contentHtml,
+  fallbackBody,
+}: {
+  contentHtml: string | null;
+  fallbackBody: string | null;
+}) {
+  if (contentHtml) {
+    return <div className="article-content" dangerouslySetInnerHTML={{ __html: contentHtml }} />;
+  }
+  return <FallbackContent>{fallbackBody}</FallbackContent>;
+});
 
 const HighlightableContent = styled.div`
   position: relative;

@@ -2,7 +2,7 @@ import { AnimatePresence, m } from "framer-motion";
 import { ChevronDown, ChevronUp, MoreVertical, X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { type ReactNode, useCallback, useEffect, useRef, useState } from "react";
+import { type ReactNode, type RefObject, useCallback, useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import NevuloLogo from "@/assets/svg/nevulo-huge-bold-svg.svg";
 import { LOUNGE_COLORS } from "@/constants/theme";
@@ -13,6 +13,7 @@ interface MobileTOCBarProps {
   headings: TOCItem[];
   activeHeading: string;
   readProgress: number;
+  progressRingRef?: RefObject<SVGCircleElement>;
   isVisible: boolean;
   onHeadingClick: (id: string) => void;
   toolbarContent: ReactNode;
@@ -23,6 +24,7 @@ export function MobileTOCBar({
   headings,
   activeHeading,
   readProgress,
+  progressRingRef,
   isVisible,
   onHeadingClick,
   toolbarContent,
@@ -101,7 +103,7 @@ export function MobileTOCBar({
                 if (newState) setToolbarOpen(false);
               }}
             >
-              <ProgressRing progress={readProgress} />
+              <ProgressRing progress={readProgress} ringRef={progressRingRef} />
               <SectionTextContainer>
                 <AnimatePresence mode="wait" initial={false}>
                   {isExpanded ? (
@@ -202,7 +204,7 @@ export function MobileTOCBar({
 }
 
 // Progress ring component
-function ProgressRing({ progress }: { progress: number }) {
+function ProgressRing({ progress, ringRef }: { progress: number; ringRef?: RefObject<SVGCircleElement> }) {
   const size = 22;
   const strokeWidth = 2.5;
   const radius = (size - strokeWidth) / 2;
@@ -220,6 +222,7 @@ function ProgressRing({ progress }: { progress: number }) {
         strokeWidth={strokeWidth}
       />
       <circle
+        ref={ringRef}
         cx={size / 2}
         cy={size / 2}
         r={radius}
