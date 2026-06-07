@@ -40,10 +40,103 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       console.log(`[supporter/sync] Manual plan override: ${clerkPlan} (${clerkPlanStatus})`);
     }
 
-    // If no manual override, check Clerk Billing API
+    // If no manual override, check Stripe (ground truth) via customer metadata search
+    if (!clerkPlan && process.env.STRIPE_SECRET_KEY) {
+      try {
+        const { stripe } = await import("../../../lib/stripe");
+
+        // Search for Stripe customer linked to this Clerk user
+        const customers = await stripe.customers.search({
+          query: `metadata["user_id"]:"${userId}"`,
+          limit: 1,
+        });
+
+        const customer = customers.data[0];
+        if (customer) {
+          // Check active subscriptions
+          const subscriptions = await stripe.subscriptions.list({
+            customer: customer.id,
+            status: "active",
+            limit: 1,
+            expand: ["data.items.data.price.product"],
+          });
+
+          if (subscriptions.data.length > 0) {
+            const sub = subscriptions.data[0]!;
+            const product = sub.items.data[0]?.price?.product;
+            const productId = typeof product === "string" ? product : product?.id;
+
+            // Map product ID to plan tier using env mapping
+            const mapping = process.env.STRIPE_PRODUCT_MAPPING;
+            if (mapping && productId) {
+              for (const entry of mapping.split(",")) {
+                const [pid, tier] = entry.split("=");
+                if (pid === productId && (tier === "super_legend" || tier === "super_legend_2")) {
+                  clerkPlan = tier;
+                  clerkPlanStatus = "active";
+                  break;
+                }
+              }
+            }
+
+            // Fallback: check price metadata
+            if (!clerkPlan) {
+              const planTier = sub.items.data[0]?.price?.metadata?.plan_tier;
+              if (planTier === "super_legend" || planTier === "super_legend_2") {
+                clerkPlan = planTier;
+                clerkPlanStatus = "active";
+              }
+            }
+          }
+
+          // Check for lifetime (one-time) purchases if no active subscription
+          if (!clerkPlan) {
+            const charges = await stripe.charges.list({
+              customer: customer.id,
+              limit: 10,
+            });
+
+            for (const charge of charges.data) {
+              if (charge.paid && !charge.refunded) {
+                const planTier = charge.metadata?.plan_tier;
+                if (planTier === "super_legend" || planTier === "super_legend_2") {
+                  clerkPlan = planTier;
+                  clerkPlanStatus = "active";
+                  break;
+                }
+              }
+            }
+          }
+
+          // Also check checkout sessions for lifetime payments
+          if (!clerkPlan) {
+            const sessions = await stripe.checkout.sessions.list({
+              customer: customer.id,
+              limit: 10,
+            });
+
+            for (const session of sessions.data) {
+              if (session.payment_status === "paid" && session.mode === "payment") {
+                const planTier = session.metadata?.plan_tier;
+                if (planTier === "super_legend" || planTier === "super_legend_2") {
+                  clerkPlan = planTier;
+                  clerkPlanStatus = "active";
+                  break;
+                }
+              }
+            }
+          }
+        }
+
+        console.log(`[supporter/sync] Stripe lookup: plan=${clerkPlan} status=${clerkPlanStatus} customer=${customer?.id}`);
+      } catch (error) {
+        console.error("Error checking Stripe subscription:", error);
+      }
+    }
+
+    // Fallback: check Clerk Billing API (legacy)
     if (!clerkPlan) {
       try {
-        // Fetch user's billing subscription from Clerk
         const billingRes = await fetch(
           `https://api.clerk.com/v1/users/${userId}/billing/subscription`,
           {
@@ -55,14 +148,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         if (billingRes.ok) {
           const billingData = await billingRes.json();
-
-          // Extract plan from subscription_items array (Clerk Billing structure)
           const item = billingData.subscription_items?.[0];
           const planSlug = item?.plan?.slug;
           const planName = item?.plan?.name?.toLowerCase().replace(/\s+/g, "_");
           const status = billingData.status;
 
-          // Match against our plan identifiers
           if (planSlug === "super_legend" || planName === "super_legend") {
             clerkPlan = "super_legend";
           } else if (
