@@ -1,8 +1,17 @@
-import { dirname } from "node:path";
+import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+
+// Clerk is temporarily disabled — alias every @clerk/nextjs entry point to a
+// local no-op stub so no clerk-js is loaded and nothing depends on the (removed)
+// hosted instance. Delete this block + the alias usages below to re-enable.
+const clerkStubAliases = {
+  "@clerk/nextjs": "./src/lib/clerk-stub/client.tsx",
+  "@clerk/nextjs/server": "./src/lib/clerk-stub/server.ts",
+  "@clerk/nextjs/experimental": "./src/lib/clerk-stub/experimental.ts",
+};
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -15,20 +24,16 @@ const nextConfig = {
   turbopack: {
     root: __dirname,
     resolveAlias: {
-      // Pages Router doesn't respect "use server" module boundaries, so Turbopack
-      // traces @clerk/nextjs/server into client bundles and hits "server-only".
-      // { browser } applies only to client bundles — server keeps the real module.
-      "@clerk/nextjs/server": {
-        browser: "./src/lib/clerk-server-stub.ts",
-      },
+      // Clerk disabled — see clerkStubAliases above.
+      ...clerkStubAliases,
     },
   },
 
-  // Same fix for Webpack: on client builds, replace @clerk/nextjs/server with
-  // an empty module so its "server-only" guard doesn't fire.
-  webpack: (config, { isServer }) => {
-    if (!isServer) {
-      config.resolve.alias["@clerk/nextjs/server"] = false;
+  // Same alias for the Webpack fallback (used when not running Turbopack).
+  webpack: (config) => {
+    for (const [pkg, stub] of Object.entries(clerkStubAliases)) {
+      // `$` = exact match so subpaths resolve to their own stub entry.
+      config.resolve.alias[`${pkg}$`] = resolve(__dirname, stub);
     }
     return config;
   },
