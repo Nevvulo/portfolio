@@ -1,4 +1,4 @@
-import { faDiscord, faTwitch } from "@fortawesome/free-brands-svg-icons";
+import { faDiscord } from "@fortawesome/free-brands-svg-icons";
 import { faExternalLinkAlt } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { AnimatePresence, m } from "framer-motion";
@@ -122,63 +122,16 @@ const OnlineDot = styled.span`
   background-color: #43b581;
 `;
 
-const LivePulse = styled.span`
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background-color: #ff0000;
-  animation: pulse 2s ease-in-out infinite;
-
-  @keyframes pulse {
-    0%, 100% {
-      opacity: 1;
-      transform: scale(1);
-    }
-    50% {
-      opacity: 0.7;
-      transform: scale(1.1);
-    }
-  }
-`;
-
 interface AnnouncementBannerProps {
-  isLive: boolean;
   discordWidget: DiscordWidget | null;
 }
 
 export const AnnouncementBanner: React.FC<AnnouncementBannerProps> = ({
-  isLive,
   discordWidget,
 }) => {
   const [isHovered, setIsHovered] = useState(false);
 
   const onlineCount = discordWidget?.presence_count || 0;
-
-  if (isLive) {
-    return (
-      <BannerWrapper>
-        <MovingBorderButton
-          as="a"
-          href="/live"
-          borderRadius="50px"
-          containerClassName="w-full !h-[34px] !min-h-[34px] !max-h-[34px]"
-          className="bg-[#9146ff]/90 dark:bg-[#9146ff]/90 border-[#9146ff]/30 dark:border-[#9146ff]/30 hover:bg-[#a970ff]/95 transition-all duration-300 !p-0 !h-[32px] !min-h-[32px] !max-h-[32px]"
-          style={{ height: "34px", minHeight: "34px", maxHeight: "34px" }}
-          aria-label="Watch live on Twitch"
-        >
-          <BannerContent>
-            <MainContent>
-              <Icon icon={faTwitch} />
-              <LivePulse />
-              LIVE NOW
-              <ExternalIcon icon={faExternalLinkAlt} />
-            </MainContent>
-          </BannerContent>
-        </MovingBorderButton>
-      </BannerWrapper>
-    );
-  }
 
   return (
     <BannerWrapper>

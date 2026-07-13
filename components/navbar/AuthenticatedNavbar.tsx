@@ -103,9 +103,6 @@ export function AuthenticatedNavbar({ hideBadges = false }: AuthenticatedNavbarP
                 <MobileNavLink href="/software" onClick={() => setMenuOpen(false)}>
                   Software
                 </MobileNavLink>
-                <MobileNavLink href="/live" onClick={() => setMenuOpen(false)}>
-                  Live
-                </MobileNavLink>
                 <MobileNavLink href="/support" onClick={() => setMenuOpen(false)}>
                   Support
                 </MobileNavLink>

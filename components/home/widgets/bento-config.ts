@@ -31,7 +31,6 @@ export interface WidgetDefinition {
 export const WIDGET_DEFINITIONS: WidgetDefinition[] = [
   { id: "latest-content", defaultSize: "large",  minSize: "medium" },
   { id: "music",          defaultSize: "small",  minSize: "small" },
-  { id: "live",            defaultSize: "medium", minSize: "small",  promotedSize: "large",  promotionThreshold: 15 },
   { id: "activity",       defaultSize: "medium", minSize: "small",  promotedSize: "large",  promotionThreshold: 25 },
   { id: "community",      defaultSize: "medium", minSize: "small" },
   { id: "integrations",   defaultSize: "medium", minSize: "medium", promotedSize: "large",  promotionThreshold: 15 },
