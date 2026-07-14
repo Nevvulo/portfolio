@@ -27,7 +27,6 @@ import {
   GamesWidget,
   IntegrationsWidget,
   LatestContentWidget,
-  LiveWidget,
   MusicWidget,
   PerksWidget,
   SoftwareWidget,
@@ -36,11 +35,8 @@ import {
 } from "./widgets";
 
 interface AuthenticatedHomeProps {
-  isLive?: boolean;
   discordWidget?: DiscordWidget | null;
   allWidgetPosts?: any[];
-  streamSettings?: any;
-  upcomingEvents?: any[];
   featuredContent?: any[];
   featuredGames?: any[];
 }
@@ -52,7 +48,7 @@ function getGreeting(): string {
   return "Good evening";
 }
 
-export function AuthenticatedHome({ isLive = false, discordWidget, allWidgetPosts, streamSettings, upcomingEvents, featuredContent, featuredGames }: AuthenticatedHomeProps) {
+export function AuthenticatedHome({ discordWidget, allWidgetPosts, featuredContent, featuredGames }: AuthenticatedHomeProps) {
   const { user: clerkUser } = useUser();
   const searchParams = useSearchParams();
   const mockLevel = searchParams.get("mockLevel") ? Number(searchParams.get("mockLevel")) : undefined;
@@ -77,7 +73,6 @@ export function AuthenticatedHome({ isLive = false, discordWidget, allWidgetPost
   const WIDGET_RENDERERS: Record<string, (size: string) => ReactNode> = {
     "latest-content": (size) => <LatestContentWidget compact={size === "small" || size === "medium"} posts={allWidgetPosts ?? undefined} />,
     "music":          () => <MusicWidget />,
-    "live":           () => <LiveWidget isLive={isLive} streamSettings={streamSettings} upcomingEvents={upcomingEvents} />,
     "activity":       () => <ActivityWidget />,
     "community":      () => <CommunityWidget discordWidget={discordWidget} />,
     "integrations":   () => <IntegrationsWidget />,
